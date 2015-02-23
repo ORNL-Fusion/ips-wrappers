@@ -1,0 +1,3 @@
+[submodule "ips-eped"]
+	path = ips-eped
+	url = https://github.com/ORNL-Fusion/ips-eped.git
