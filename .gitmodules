@@ -4,3 +4,6 @@
 [submodule "ips-fastran"]
 	path = ips-fastran
 	url = https://github.com/ORNL-Fusion/ips-fastran.git
+[submodule "ips_gyro"]
+	path = ips_gyro
+	url = https://github.com/ORNL-Fusion/ips_gyro.git
