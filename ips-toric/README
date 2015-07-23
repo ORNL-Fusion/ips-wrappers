@@ -1,0 +1,2 @@
+$NTCCHOME/bin/geqxpl @equigs_gen.ind /g_filename=Run_4_MODEL_00001_ps.geq /equigs_filename=test.out
+For value of $NTCCHOME, see Makefile.config under ips--check to make sure that geqxple is in bin--not in Jan. 09 version

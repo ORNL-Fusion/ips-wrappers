@@ -8,6 +8,8 @@ import math
 from component import Component
 from Scientific.IO.NetCDF import *
 import Numeric
+from plasmastate import *
+import traceback
 
 class basic_time_step_driver(Component):
 
@@ -39,88 +41,17 @@ class basic_time_step_driver(Component):
         # Instantiate components in port_names list, except DRIVER itself
         print (' ')
 
-        # INIT is already instantiated by the framework. This adds it to port_dict
-        if 'INIT' in port_names:
-            initComp = services.get_port('INIT') 
-            if(initComp == None):
-                print 'Error accessing INIT component'
-                raise
-            port_dict['INIT'] = initComp
-            port_id_list.append(initComp)
-            print (' ')
+        # instantiate components in port_names list, except DRIVER itself
 
-        if 'EPA' in port_names:
-            epaComp = services.get_port('EPA')
-            if(epaComp == None):
-                print 'Error accessing EPA component'
-                raise
-            port_dict['EPA'] = epaComp
-            port_id_list.append(epaComp)
-            print (' ')
-        
-        if 'RF_EC' in port_names:
-            rf_ecComp = services.get_port('RF_EC')
-            if(rf_ecComp == None):
-                print 'Error accessing RF_EC component'
-                raise
-            port_dict['RF_EC'] = rf_ecComp
-            port_id_list.append(rf_ecComp)
-            print (' ')
-        
-        if 'RF_IC' in port_names:
-            rf_icComp = services.get_port('RF_IC')
-            if(rf_icComp == None):
-                print 'Error accessing RF_IC component'
-                raise
-            port_dict['RF_IC'] = rf_icComp
-            port_id_list.append(rf_icComp)
-            print (' ')
-        
-        if 'RF_LH' in port_names:
-            rf_lhComp = services.get_port('RF_LH')
-            if(rf_lhComp == None):
-                print 'Error accessing RF_LH component'
-                raise
-            port_dict['RF_LH'] = rf_lhComp
-            port_id_list.append(rf_lhComp)
-            print (' ')
-
-        if 'NB' in port_names:
-            nbComp = services.get_port('NB')
-            if(nbComp == None):
-                print 'Error accessing NB component'
-                raise
-            port_dict['NB'] = nbComp
-            port_id_list.append(nbComp)
-            print (' ')
-
-        if 'FUS' in port_names:
-            fusComp = services.get_port('FUS')
-            if(fusComp == None):
-                print 'Error accessing FUS component'
-                raise
-            port_dict['FUS'] = fusComp
-            port_id_list.append(fusComp)
-            print (' ')
-
-        if 'FP' in port_names:
-            fpComp = services.get_port('FP')
-            if(fpComp == None):
-                print 'Error accessing FP component'
-                raise
-            port_dict['FP'] = fpComp
-            port_id_list.append(fpComp)
-            print (' ')
-
-        if 'MONITOR' in port_names:
-            monitorComp = services.get_port('MONITOR')
-            if(monitorComp == None):
-                print 'Error accessing MONITOR component'
-                raise       
-            port_dict['MONITOR'] = monitorComp
-            port_id_list.append(monitorComp)
-            print (' ')
-
+        for port_name in port_names:
+            if port_name in ["DRIVER"]: continue
+            port = services.get_port(port_name) 
+            if(port == None):
+                logMsg = 'Error accessing '+port_name+' component'
+                raise Exception(logMsg)
+            port_dict[port_name] = port
+            port_id_list.append(port)
+ 
         # Is this a simulation startup or restart
         sim_mode = services.getGlobalConfigParameter('SIMULATION_MODE')
         print 'SIMULATION_MODE =', sim_mode
@@ -136,38 +67,20 @@ class basic_time_step_driver(Component):
         init_mode = 'init'
         if sim_mode == 'RESTART' : init_mode = 'restart'
 
-        if 'EPA' in port_names:
-            self.component_call(services, 'EPA', epaComp, init_mode, t)
-        
-        if 'RF_EC' in port_names:
-            self.component_call(services, 'RF_EC', rf_ecComp, init_mode, t)
-        
-        if 'RF_IC' in port_names:
-            self.component_call(services, 'RF_IC', rf_icComp, init_mode, t)
-        
-        if 'RF_LH' in port_names:
-            self.component_call(services, 'RF_LH', rf_lhComp, init_mode, t)
-
-        if 'NB' in port_names:
-            self.component_call(services, 'NB', nbComp, init_mode, t)
-
-        if 'FUS' in port_names:
-            self.component_call(services, 'FUS', fusComp, init_mode, t)
-
-        if 'FP' in port_names:
-            self.component_call(services, 'FP', fpComp, init_mode, t)
-
-        if 'MONITOR' in port_names:
-            self.component_call(services, 'MONITOR', monitorComp, init_mode, t)
-
+        for port_name in port_names:
+            if port_name in ['INIT','DRIVER']: continue 
+            self.component_call(services,port_name,port_dict[port_name],init_mode,t)
+ 
         # Get plasma state files into driver work directory and copy to psn if there is one
         services.stage_plasma_state()
         cur_state_file = services.get_config_param('CURRENT_STATE')
         try:
             next_state_file = services.get_config_param('NEXT_STATE')
             shutil.copyfile(cur_state_file, next_state_file)
-        except Exception, e:
-            print 'generic_driver: No NEXT_STATE file ', e        
+        except Exception:
+            logMsg = 'generic_driver: No NEXT_STATE file '        
+            services.exception(logMsg)
+            raise
         services.update_plasma_state()
 
         # Get Portal RUNID and save to a file
@@ -182,6 +95,9 @@ class basic_time_step_driver(Component):
         services.stage_output_files(t, self.OUTPUT_FILES)
 
         print ' init sequence complete--ready for time loop'
+
+        ps = PlasmaState("ips",1)
+        ps_work_dir = services.getGlobalConfigParameter('PLASMA_STATE_WORK_DIR')
 
         # Iterate through the timeloop
         for t in tlist_str[1:len(timeloop)]:
@@ -198,30 +114,27 @@ class basic_time_step_driver(Component):
             # Call step for each component
 
             print (' ')
-            if 'RF_EC' in port_names:
-                self.component_call(services, 'RF_EC', rf_ecComp, 'step', t)
 
-            if 'RF_IC' in port_names:
-                self.component_call(services, 'RF_IC', rf_icComp, 'step', t)
+            for port_name in port_names:
+                if port_name in ['INIT','DRIVER']: continue 
+                self.component_call(services,port_name,port_dict[port_name],'step',t)
 
-            if 'RF_LH' in port_names:
-                self.component_call(services, 'RF_LH', rf_lhComp, 'step', t)
+                # Santiy check on plasma state density
 
-            if 'NB' in port_names:
-                self.component_call(services, 'NB', nbComp, 'step', t)
+                this_ps_file = ps_work_dir+'/'+cur_state_file
+                ps.read(this_ps_file)
+                nS = ps["ns"].shape[0]
 
-            if 'FUS' in port_names:
-                self.component_call(services, 'FUS', fusComp, 'step', t)
+                for nn in range(0,nS-1):
 
-            if 'FP' in port_names:
-                self.component_call(services, 'FP', fpComp, 'step', t)
-
-            if 'EPA' in port_names:
-                self.component_call(services, 'EPA', epaComp, 'step', t)
-
-            if 'MONITOR' in port_names:
-                self.component_call(services, 'MONITOR', monitorComp, 'step', t)
-
+                    if np.isnan(np.sum(ps["ns"][nn])):
+                        print 'Sanity checking density values for : '+ port_name
+                        print os.getcwd()
+                        print 'Reading this ps file : ' + this_ps_file
+                        logMsg = 'ERROR : NaN detected after running : '+ port_name
+                        services.exception(logMsg)
+                        raise Exception(logMsg)
+ 
             services.stage_plasma_state()
 
             # Post step processing: stage plasma state, checkpoint components and self
@@ -236,36 +149,19 @@ class basic_time_step_driver(Component):
       
         # Post simulation: call finalize on each component
         print (' ')
-        if 'RF_EC' in port_names:
-            self.component_call(services, 'RF_EC', rf_ecComp, 'finalize', t)
 
-        if 'RF_IC' in port_names:
-            self.component_call(services, 'RF_IC', rf_icComp, 'finalize', t)
+        for port_name in port_names:
+            if port_name in ['INIT','DRIVER']: continue 
+            self.component_call(services, port_name, port_dict[port_name], 'finalize', t)
 
-        if 'RF_LH' in port_names:
-            self.component_call(services, 'RF_LH', rf_lhComp, 'finalize', t)
-
-        if 'NB' in port_names:
-            self.component_call(services, 'NB', nbComp, 'finalize', t)
-
-        if 'FUS' in port_names:
-            self.component_call(services, 'FUS', fusComp, 'finalize', t)
-
-        if 'FP' in port_names:
-            self.component_call(services, 'FP', fpComp, 'finalize', t)
-
-        if 'EPA' in port_names:
-            self.component_call(services, 'EPA', epaComp, 'finalize', t)
-
-        if 'MONITOR' in port_names:
-            self.component_call(services, 'MONITOR', monitorComp, 'finalize', t)
 
     def checkpoint(self, timestamp=0.0):
         print 'generic_driver.checkpoint() called'
         
 
     def finalize(self, timestamp = 0):
-      # Driver finalize - nothing to be done
+        logMsg = 'Finalizing driver - i.e., Simulation End :)'
+        self.services.info(logMsg)
         pass
 
     # "Private" driver methods
@@ -296,7 +192,9 @@ class basic_time_step_driver(Component):
         try:
             next_state_file = services.get_config_param('NEXT_STATE')
             shutil.copyfile(next_state_file, cur_state_file)
-        except Exception, e:
+        except Exception:
+            logMsg = 'INFO : No Next Plasma State'
+            self.services.info(logMsg)
             pass
 
         # Update time stamps

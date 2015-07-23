@@ -1,0 +1,16 @@
+;unixfile (geqxpl):  enter file spec or "r":$
+'g_filename'
+;geqxpl:  data processing control option:$
+e
+;geqxpl:  data processing control option:$
+a
+;xplasma_debug_master: action option:$
+q
+;geqxpl:  write psipqgRZ NetCDF file? (Y/N):$
+e
+;unixfile (TORIC EQUIGS filename):  enter file spec or "r":$
+'equigs_filename'
+;unixfile (geqxpl):  enter file spec or "r":$
+Q
+
+
