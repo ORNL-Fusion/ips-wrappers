@@ -88,18 +88,18 @@ class toric (Component):
       # Copy plasma state files over to working directory
         try:
             services.stage_plasma_state()
-        except Exception, e:
-            print 'Error in call to stage_plasma_state()' , e
-            self.services.error('Error in call to stage_plasma_state()')
-            raise Exception, 'Error in call to stage_plasma_state()'
+        except Exception:
+            logMsg = 'Error in call to stage_plasma_state()'
+            self.services.exception(logMsg)
+            raise 
 
       # Get input files
         try:
             services.stage_input_files(self.INPUT_FILES)
         except Exception, e:
-            print 'Error in call to stageInputFiles()' , e
-            self.services.error('Error in call to stageInputFiles()')
-            raise Exception, 'Error in call to stageInputFiles()'
+            logMsg = 'Error in call to stageInputFiles()'
+            self.services.exception(logMsg)
+            raise
 
       # Copy machine.inp_<suffix> to generic file name -> machine.inp if there is
       # a suffix
@@ -121,26 +121,26 @@ class toric (Component):
             try:
                 shutil.copyfile('machine.inp' + suffix, 'machine.inp')
             except IOError, (errno, strerror):
-                print 'Error copying file %s to %s' % ('machine.inp' + suffix,
-                'machine.inp', strerror)
-                services.error('Error copying machine.inp_<suffix> -> machine.inp')
-                raise Exception, 'Error copying machine.inp_<suffix> -> machine.inp'
+                print 'Error copying file %s to %s' % ('machine.inp' + suffix, 'machine.inp', strerror)
+                logMsg = 'Error copying machine.inp_<suffix> -> machine.inp'
+                services.exception(logMsg)
+                raise
 
       # run TORIC init
         do_input = os.path.join(self.BIN_PATH, 'do_toric_init_abr')
         retcode = subprocess.call([do_input,cur_state_file])
         if (retcode != 0):
-            print 'Error in call to toric_init'
-            self.services.error('Error in call to toric_init')
-            raise Exception, 'Error in call to toric_init'
+            logMsg = 'Error in call to toric_init'
+            self.services.exception(logMsg)
+            raise Exception(logMsg)
 
       # Update plasma state files in plasma_state work directory
         try:
             services.update_plasma_state()
-        except Exception, e:
-            print 'Error in call to update_plasma_state()', e
-            self.services.error('Error in call to update_plasma_state()')
-            raise Exception, 'Error in call to update_plasma_state()'
+        except Exception:
+            logMsg = 'Error in call to update_plasma_state()'
+            self.services.exception(logMsg)
+            raise 
 
       # Archive output files
       # N.B.  do_toric_init does not produce a complete set of TORIC output
@@ -153,10 +153,10 @@ class toric (Component):
       # Now stage them
         try:
             services.stage_output_files(timeStamp, self.OUTPUT_FILES)
-        except Exception, e:
-            print 'Error in call to stage_output_files()', e
-            self.services.error('Error in call to stage_output_files()')
-            raise Exception, 'Error in call to stage_output_files()'
+        except Exception:
+            logMsg = 'Error in call to stage_output_files()'
+            self.services.exception(logMsg)
+            raise 
 
         return 0
 
@@ -179,8 +179,9 @@ class toric (Component):
             restart_root = services.get_config_param('RESTART_ROOT')
             restart_time = services.get_config_param('RESTART_TIME')
             services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
-        except Exception, e:
-            print 'Error in call to get_restart_files()' , e
+        except Exception:
+            logMsg = 'Error in call to get_restart_files()'
+            self.services.exception(logMsg)
             raise
 
       # Get global configuration parameters
@@ -189,9 +190,9 @@ class toric (Component):
             self.eqdsk_file = services.get_config_param('CURRENT_EQDSK')
             self.toric_log = os.path.join(workdir, 'log.toric')
         except:
-            print 'toric restart: error in getting config parameters'
-            self.services.error('error in getting config parameters')
-            raise Exception, 'error in getting config parameters'
+            logMsg = 'toric restart: error in getting config parameters'
+            self.services.exception(logMsg)
+            raise 
 
         return 0
 
@@ -206,26 +207,26 @@ class toric (Component):
         print 'toric.step() called'
 
         if (self.services == None) :
-            print 'Error in toric: step (): No self.services'
-            self.services.error('Error in toric: step (): No self.services')
-            raise Exception, 'Error in toric: step (): No self.services'
+            logMsg = 'Error in toric: step (): No self.services'
+            self.services.exception(logMsg)
+            raise Exception(logMsg)
         services = self.services
 
       # Copy plasma state files over to working directory
         try:
             services.stage_plasma_state()
-        except Exception, e:
-            print 'Error in call to stage_plasma_state()' , e
-            self.services.error('Error in call to stage_plasma_state()')
-            raise Exception, 'Error in call to stage_plasma_state()'
+        except Exception:
+            logMsg = 'Error in call to stage_plasma_state()'
+            self.services.exception(logMsg)
+            raise 
 
       # Get input files
         try:
             services.stage_input_files(self.INPUT_FILES)
-        except Exception, e:
-            print 'Error in call to stageInputFiles()' , e
-            self.services.error('Error in call to stageInputFiles()')
-            raise Exception, 'Error in call to stageInputFiles()'
+        except Exception:
+            logMsg = 'Error in call to stageInputFiles()'
+            self.services.exception(logMsg)
+            raise 
 
       # Copy machine.inp_<suffix> to generic file name -> machine.inp if there is
       # a suffix
@@ -249,8 +250,9 @@ class toric (Component):
             except IOError, (errno, strerror):
                 print 'Error copying file %s to %s' % ('machine.inp' + suffix,
                 'machine.inp', strerror)
-                services.error('Error copying machine.inp_<suffix> -> machine.inp')
-                raise Exception, 'Error copying machine.inp_<suffix> -> machine.inp'
+                logMsg = 'Error copying machine.inp_<suffix> -> machine.inp'
+                services.exception(logMsg)
+                raise 
 
         prepare_input = os.path.join(self.BIN_PATH, 'prepare_toric_input_abr')
         process_output  = os.path.join(self.BIN_PATH, 'process_toric_output_mcmd')
@@ -275,9 +277,9 @@ class toric (Component):
             print zero_RF_IC_power
             retcode = subprocess.call([zero_RF_IC_power, cur_state_file])
             if (retcode != 0):
-                print 'Error executing ', prepare_input
-                self.services.error('Error executing zero_RF_IC_power')
-                raise Exception, 'Error executing zero_RF_IC_power'
+                logMsg = 'Error executing ' + prepare_input
+                self.services.exception(logMsg)
+                raise Exception(logMsg)
 
             # N.B. zero_RF_IC_power does not produce a complete set of TORIC output
             #      files.  This causes an error in stage_output_files().  To
@@ -302,9 +304,9 @@ class toric (Component):
             # Call TORIC prepare_input to generate torica.inpp
             retcode = subprocess.call([prepare_input, cur_state_file]) #, cur_eqdsk_file])
             if (retcode != 0):
-                print 'Error executing ', prepare_input
-                self.services.error('Error executing TORIC prepare_input')
-                raise Exception, 'Error executing TORIC prepare_input'
+                logMsg = 'Error executing ' + prepare_input
+                self.services.exception(logMsg)
+                raise Exception(logMsg)
 
             # Call xeqdsk_setup to generate eqdsk.out file
             print 'prepare_eqdsk', prepare_eqdsk, cur_eqdsk_file
@@ -313,9 +315,9 @@ class toric (Component):
                                        '@equigs_gen', '/g_filename='+cur_eqdsk_file,\
                                        '/equigs_filename=equigs.data'])
             if (retcode != 0):
-                print 'Error in call to prepare_eqdsk'
-                self.services.error('Error executing TORIC prepare_eqdsk')
-                raise Exception, 'Error executing TORIC prepare_eqdsk'
+                logMsg = 'Error in call to prepare_eqdsk'
+                self.services.exception(logMsg)
+                raise Exception(logMsg)
 
             # Launch TORIC executable
             print 'toric processors = ', self.NPROC
@@ -323,9 +325,9 @@ class toric (Component):
             task_id = services.launch_task(self.NPROC, cwd, toric_bin, logfile=toric_log)
             retcode = services.wait_task(task_id)
             if (retcode != 0):
-                print 'Error executing command: ', toric_bin
-                self.services.error('Error executing TORIC')
-                raise Exception, 'Error executing TORIC'
+                logMsg = 'Error executing command: ' + toric_bin
+                self.services.exception(logMsg)
+                raise Exception(logMsg)
 
             # Call process_output
             # First rename default fort.* to expected names by component method as of toric5 r918 from ipp
@@ -333,9 +335,9 @@ class toric (Component):
             os.rename('fort.21','toric.nc')
             retcode = subprocess.call([process_output, cur_state_file])
             if (retcode != 0):
-                print 'Error executing',  process_output
-                self.services.error('Error executing TORIC process_output')
-                raise Exception, 'Error executing TORIC process_output'
+                logMsg = 'Error executing' + process_output
+                self.services.exception(logMsg)
+                raise Exception(logMsg)
 
 
 # Merge partial plasma state containing updated IC data
@@ -343,18 +345,18 @@ class toric (Component):
             partial_file = cwd + '/RF_IC_' + cur_state_file
             services.merge_current_plasma_state(partial_file, logfile='log.update_state')
             print 'merged TORIC plasma state data ', partial_file
-        except Exception, e:
-            print 'Error in call to merge_current_plasma_state(' , partial_file, ')'
-            self.services.error('Error in call to merge_current_plasma_state')
-            raise Exception, 'Error in call to merge_current_plasma_state'
+        except Exception:
+            logMsg = 'Error in call to merge_current_plasma_state(' + partial_file + ')'
+            self.services.exception(logMsg)
+            raise 
 
       # Archive output files
         try:
             services.stage_output_files(timeStamp, self.OUTPUT_FILES)
-        except Exception, e:
-            print 'Error in call to stage_output_files()', e
-            self.services.error('Error in call to stage_output_files()')
-            raise Exception, 'Error in call to stage_output_files()'
+        except Exception:
+            logMsg = 'Error in call to stage_output_files()'
+            self.services.exception(logMsg)
+            raise 
 
         return 0
 

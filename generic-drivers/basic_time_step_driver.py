@@ -161,7 +161,7 @@ class basic_time_step_driver(Component):
 
     def finalize(self, timestamp = 0):
         logMsg = 'Finalizing driver - i.e., Simulation End :)'
-        self.services.info(logMsg)
+        self.services.warning(logMsg)
         pass
 
     # "Private" driver methods
@@ -194,7 +194,7 @@ class basic_time_step_driver(Component):
             shutil.copyfile(next_state_file, cur_state_file)
         except Exception:
             logMsg = 'INFO : No Next Plasma State'
-            self.services.info(logMsg)
+            self.services.warning(logMsg)
             pass
 
         # Update time stamps
