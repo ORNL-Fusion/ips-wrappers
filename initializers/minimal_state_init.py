@@ -90,9 +90,6 @@ class minimal_state_init (Component):
         print (' ')
         print ('minimal_state_init.step() called')
 
-        if (self.services == None) :
-            print 'Error in minimal_state_init: step () : No services'
-            raise Exception('Error in minimal_state_init: step (): No services')
         services = self.services
 
 # Get timeloop for simulation
@@ -105,15 +102,18 @@ class minimal_state_init (Component):
 # Check if this is a restart simulation
         try:
             mode = services.get_config_param('SIMULATION_MODE')
-            if mode == 'RESTART':
-                print 'minimal_state_init: RESTART'
-            if mode not in ['RESTART', 'NORMAL']:
-                print 'minimal_state_init: unrecoginzed SIMULATION_MODE: ', mode
-                raise
-                return
-        except Exception, e:
-            print 'minimal_state_init: No SIMULATION_MODE variable in config file' \
-                  ', NORMAL assumed', e
+        except:
+            logMsg = 'minimal_state_init: No SIMULATION_MODE variable in config file. Please set NORMAL or RESTART'
+            self.services.exception(logMsg)
+            raise
+
+        if mode == 'RESTART':
+            print 'minimal_state_init: RESTART'
+        if mode not in ['RESTART', 'NORMAL']:
+            logMsg = 'minimal_state_init: unrecoginzed SIMULATION_MODE: ' + mode
+            self.services.error(logMsg)
+            raise ValueError(logMsg)
+ 
 # ------------------------------------------------------------------------------
 #
 # RESTART simulation mode
@@ -126,8 +126,9 @@ class minimal_state_init (Component):
                 restart_root = services.get_config_param('RESTART_ROOT')
                 restart_time = services.get_config_param('RESTART_TIME')
                 services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
-            except Exception, e:
-                print 'Error in call to get_restsrt_files()' , e
+            except:
+                logMsg = 'Error in call to get_restsrt_files()'
+                self.services.exception(logMsg)
                 raise
             
             cur_state_file = self.services.get_config_param('CURRENT_STATE')
@@ -171,14 +172,18 @@ class minimal_state_init (Component):
             try:
                 cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
                 subprocess.call(['touch', cur_eqdsk_file])
-            except Exception, e:
-                print 'No CURRENT_EQDSK file ', e
+            except:
+                logMsg = 'No CURRENT_EQDSK file '
+                self.services.exception(logMsg)
+                raise
     
             try:
                 cur_cql_file = services.get_config_param('CURRENT_CQL')
                 subprocess.call(['touch', cur_cql_file])
-            except Exception, e:
-                print 'No CURRENT_CQL file ', e
+            except:
+                logMsg ='No CURRENT_CQL file '
+                self.services.exception(logMsg)
+                raise
     
             try:
                 cur_dql_file = services.get_config_param('CURRENT_DQL')
