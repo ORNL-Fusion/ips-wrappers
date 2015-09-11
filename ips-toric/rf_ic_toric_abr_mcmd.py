@@ -96,7 +96,7 @@ class toric (Component):
       # Get input files
         try:
             services.stage_input_files(self.INPUT_FILES)
-        except Exception, e:
+        except:
             logMsg = 'Error in call to stageInputFiles()'
             self.services.exception(logMsg)
             raise
@@ -115,6 +115,7 @@ class toric (Component):
                 have_suffix = False
         except:
             have_suffix = False
+            pass
 
         # If there is a non-empty suffix, copy to generic filename
         if have_suffix:
@@ -131,7 +132,7 @@ class toric (Component):
         retcode = subprocess.call([do_input,cur_state_file])
         if (retcode != 0):
             logMsg = 'Error in call to toric_init'
-            self.services.exception(logMsg)
+            self.services.error(logMsg)
             raise Exception(logMsg)
 
       # Update plasma state files in plasma_state work directory
@@ -208,14 +209,14 @@ class toric (Component):
 
         if (self.services == None) :
             logMsg = 'Error in toric: step (): No self.services'
-            self.services.exception(logMsg)
+            self.services.error(logMsg)
             raise Exception(logMsg)
         services = self.services
 
       # Copy plasma state files over to working directory
         try:
             services.stage_plasma_state()
-        except Exception:
+        except:
             logMsg = 'Error in call to stage_plasma_state()'
             self.services.exception(logMsg)
             raise 
@@ -223,7 +224,7 @@ class toric (Component):
       # Get input files
         try:
             services.stage_input_files(self.INPUT_FILES)
-        except Exception:
+        except:
             logMsg = 'Error in call to stageInputFiles()'
             self.services.exception(logMsg)
             raise 
@@ -242,6 +243,7 @@ class toric (Component):
                 have_suffix = False
         except:
             have_suffix = False
+            pass
 
         # If there is a non-empty suffix, copy to generic filename
         if have_suffix:
@@ -278,7 +280,7 @@ class toric (Component):
             retcode = subprocess.call([zero_RF_IC_power, cur_state_file])
             if (retcode != 0):
                 logMsg = 'Error executing ' + prepare_input
-                self.services.exception(logMsg)
+                self.services.error(logMsg)
                 raise Exception(logMsg)
 
             # N.B. zero_RF_IC_power does not produce a complete set of TORIC output
@@ -301,11 +303,16 @@ class toric (Component):
 
         else:
 
+            if not os.path.isfile(prepare_input):
+                logMsg = 'Cannot fine TORIC prepare_input binary: ' + prepare_input
+                self.services.error(logMsg)
+                raise Exception(logMsg)
+
             # Call TORIC prepare_input to generate torica.inpp
             retcode = subprocess.call([prepare_input, cur_state_file]) #, cur_eqdsk_file])
             if (retcode != 0):
                 logMsg = 'Error executing ' + prepare_input
-                self.services.exception(logMsg)
+                self.services.error(logMsg)
                 raise Exception(logMsg)
 
             # Call xeqdsk_setup to generate eqdsk.out file
@@ -316,7 +323,7 @@ class toric (Component):
                                        '/equigs_filename=equigs.data'])
             if (retcode != 0):
                 logMsg = 'Error in call to prepare_eqdsk'
-                self.services.exception(logMsg)
+                self.services.error(logMsg)
                 raise Exception(logMsg)
 
             # Launch TORIC executable
@@ -326,7 +333,7 @@ class toric (Component):
             retcode = services.wait_task(task_id)
             if (retcode != 0):
                 logMsg = 'Error executing command: ' + toric_bin
-                self.services.exception(logMsg)
+                self.services.error(logMsg)
                 raise Exception(logMsg)
 
             # Call process_output
@@ -336,7 +343,7 @@ class toric (Component):
             retcode = subprocess.call([process_output, cur_state_file])
             if (retcode != 0):
                 logMsg = 'Error executing' + process_output
-                self.services.exception(logMsg)
+                self.services.error(logMsg)
                 raise Exception(logMsg)
 
 
@@ -345,7 +352,7 @@ class toric (Component):
             partial_file = cwd + '/RF_IC_' + cur_state_file
             services.merge_current_plasma_state(partial_file, logfile='log.update_state')
             print 'merged TORIC plasma state data ', partial_file
-        except Exception:
+        except:
             logMsg = 'Error in call to merge_current_plasma_state(' + partial_file + ')'
             self.services.exception(logMsg)
             raise 
@@ -353,7 +360,7 @@ class toric (Component):
       # Archive output files
         try:
             services.stage_output_files(timeStamp, self.OUTPUT_FILES)
-        except Exception:
+        except:
             logMsg = 'Error in call to stage_output_files()'
             self.services.exception(logMsg)
             raise 
