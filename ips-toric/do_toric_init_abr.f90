@@ -18,7 +18,7 @@ PROGRAM do_toric_init
   integer, parameter :: swim_string_length = 256  !for compatibility LAB
   character(len =swim_string_length) :: cur_state_file, program_name
 
-  INTEGER:: inp_unit, ierr, iarg, i
+  INTEGER:: inp_unit, ierr, iarg, i, lun
   LOGICAL:: lex
 
   include "toric_namelists.h"
@@ -40,6 +40,18 @@ PROGRAM do_toric_init
   END IF
   CLOSE(inp_unit)
 
+    ! This is just to read in 'nspec'
+    call getlun(lun,ierr)
+    call assert(ierr == 0, 'cannot find free i/o unit', ierr )
+    open(unit=lun, file='torica.inp', status='old', form='formatted')
+    inquire(lun, exist=lex)
+    if(lex)then
+        write(*,*) 'TORIC INIT : reading torica.inp'
+        read(lun, nml=equidata)
+    else
+        write(*,*)'torica.inp does not exist or could not be read'
+    endif
+    close(lun)
 
   write(*,*) ' -- get (restore) plasma state from file -- '
   ! this call retrieves the plasma state at the present ps%, and
@@ -57,8 +69,8 @@ PROGRAM do_toric_init
       case(2:)
          write(0,*) 'Error. Illegal number of arguments.'
          write(0,*) 'do_toric_init: '
-	 write(0,*) 'do_toric-init cur_state_file'
-	 stop 'incorrect command line arguments'
+    write(0,*) 'do_toric-init cur_state_file'
+    stop 'incorrect command line arguments'
 
   end select
 
@@ -68,86 +80,89 @@ PROGRAM do_toric_init
   CALL ps_get_plasma_state(ierr, trim(cur_state_file))
   CALL assert( ierr==0,' initialize toric: ps_get_plasma_state: ierr=',ierr )
 
-if(.not. allocated(ps%freq_ic)) then
-   write(iout, *)'RF SRC NOT ALLOCATED'
-   ps%nicrf_src = 1
+    if(.not. allocated(ps%freq_ic)) then
+       write(*,*)'RF SRC NOT ALLOCATED'
+       ps%nicrf_src = 1
+    
+       write(*,*)'Allocating RF in prepare_input'
+       CALL ps_alloc_plasma_state(ierr)
+    
+       if(ierr.ne.0) then
+           write(*,*) trim(cur_state_file),' ps_alloc_plasma_state: ierr = ', &
+           ierr,  'allocating rf component in do_toric_init '
+           stop
+       endif
+    
+    endif
 
-   print *,'Allocating RF in prepare_input'
-   CALL ps_alloc_plasma_state(ierr)
+    ! vars of size ps%nspec_rfmin
+    if(.not.allocated(ps%fracmin))then
+        if(nspec.le.0)then
+            write(*,*)'TORIC INIT : ERROR - nspec read from torica.inp not valid'
+            stop
+        endif
+        ps%nspec_rfmin = nspec
+        write(*,*)'Setting nspec_rfmin = ',nspec
+        CALL ps_alloc_plasma_state(ierr)
+        CALL assert( ierr==0,' initialize toric A: ps_get_plasma_state: ierr=',ierr )
+    endif
 
-   if(ierr.ne.0) then
-       write(iout, *) trim(cur_state_file),' ps_alloc_plasma_state: ierr = ', &
-       ierr,  'allocating rf component in do_toric_init '
-       stop
-   endif
-   !initing the pieces of rf that will be used every time
-!   ps%icrf_src_name(1) = 'TORIC'
-!   ps%freq_ic(1) = 80.0e6     
-!   ps%dist_fun = 'rf_min'!wired for CMOD minority
-   !how to do multiple sources needs to be FIXED
-endif
+    write(*,*)'TORIC INIT : Setting nspec_rfmin sized vars'
 
-!added by DBB Feb 2008
-  !----------------------------------
-  !  form combined species list -- some arrays e.g. RF power coupling will
-  !    want to be defined over the combined list.
-      
-  !  print out the species...
-  ! PTB LAB removed this because it is no longer needed
-  !       
-  ! CALL ps_merge_species_lists(ierr)
-  ! CALL assert((ierr == 0),' ?swim_state_test: ps_merge_species_lists: ierr= ', ierr)
+    ps%fracmin = fracmin 
+    ps%isThermal = isThermal
+    ps%m_RFMIN = m_rfmin * ps_mp
+    ps%qatom_RFMIN = qatom_rfmin * ps_xe
+    ps%q_RFMIN = q_rfmin * ps_xe
+    ps%RFMIN_name = trim(rfmin_name)
 
-  !  Print out combined species list...
-! Added by PTB on 6-28-2012
-! Set the  ICRF minority ion species parameters based on input data from the machine.inp
-! file and then modify the "ALL", the "ALLA" and the "RFMIN" species lists.
+    write(*,*)'TORIC INIT : Setting kdens_rfmin scalar'
 
-! General RFMIN parameters
-  ps%fracmin = fracmin 
-  ps%isThermal = isThermal
-  ps%kdens_rfmin = kdens_rfmin
+    ps%kdens_rfmin = kdens_rfmin
 
-! RFMIN Species list
-  ps%m_RFMIN = m_rfmin * ps_mp
-  ps%qatom_RFMIN = qatom_rfmin * ps_xe
-  ps%q_RFMIN = q_rfmin * ps_xe
-  ps%RFMIN_name = trim(rfmin_name)
+    ! vars of size ps%nspec_alla
+    write(*,*)'TORIC INIT : Setting nspec_alla sized vars'
+    if(.not.allocated(ps%m_ALLA))then
+        if(nspec.le.0)then
+            write(*,*)'TORIC INIT : ERROR - nspec read from torica.inp not valid'
+            stop
+        endif
+ 
+        ps%nspec_alla = nspec
+        write(*,*)'Setting nspec_alla = ',nspec
+        CALL ps_alloc_plasma_state(ierr)
+        CALL assert( ierr==0,' initialize toric B: ps_get_plasma_state: ierr=',ierr )
+    endif
+    ps%m_ALLA(ps%rfmin_to_alla) = m_rfmin * ps_mp
+    ps%qatom_ALLA(ps%rfmin_to_alla) = qatom_rfmin * ps_xe
+    ps%q_ALLA(ps%rfmin_to_alla) = q_rfmin * ps_xe
+    ps%ALLA_name(ps%rfmin_to_alla) = trim(rfmin_name)
 
-! write(*,*) "rfmin_name =", rfmin_name
-! write(*,*) "ps%RFMIN_name =", ps%RFMIN_name 
-
-! "ALLA" Abridged Species list
-  ps%m_ALLA(ps%rfmin_to_alla) = m_rfmin * ps_mp
-  ps%qatom_ALLA(ps%rfmin_to_alla) = qatom_rfmin * ps_xe
-  ps%q_ALLA(ps%rfmin_to_alla) = q_rfmin * ps_xe
-  ps%ALLA_name(ps%rfmin_to_alla) = trim(rfmin_name)
-
-! write(*,*) "rfmin_name =", rfmin_name
-! write(*,*) "ps%rfmin_to_alla =",ps%rfmin_to_alla 
-! write(*,*) "ps%ALLA_name =", ps%ALLA_name(ps%rfmin_to_alla) 
-
-! "ALL" species list
-  ps%m_ALL(ps%rfmin_to_all) = m_rfmin * ps_mp
-  ps%qatom_ALL(ps%rfmin_to_all) = qatom_rfmin * ps_xe
-  ps%q_ALL(ps%rfmin_to_all) = q_rfmin * ps_xe
-  ps%ALL_name(ps%rfmin_to_all)= trim(rfmin_name)
-
-! write(*,*) "rfmin_name =", rfmin_name
-! write(*,*) "ps%ALL_name =", ps%ALL_name(ps%rfmin_to_all) 
+    ! vars of size ps%nspec_all
+    write(*,*)'TORIC INIT : Setting nspec_all sized vars'
+    if(.not.allocated(ps%m_ALL))then
+        if(nspec.le.0)then
+            write(*,*)'TORIC INIT : ERROR - nspec read from torica.inp not valid'
+            stop
+        endif
+ 
+        ps%nspec_all = nspec
+        write(*,*)'Setting nspec_all = ',nspec
+        CALL ps_alloc_plasma_state(ierr)
+        CALL assert( ierr==0,' initialize toric C: ps_get_plasma_state: ierr=',ierr )
+    endif
+    ps%m_ALL(ps%rfmin_to_all) = m_rfmin * ps_mp
+    ps%qatom_ALL(ps%rfmin_to_all) = qatom_rfmin * ps_xe
+    ps%q_ALL(ps%rfmin_to_all) = q_rfmin * ps_xe
+    ps%ALL_name(ps%rfmin_to_all)= trim(rfmin_name)
 
    do i=0,ps%nspec_alla
-!     write(*,1001) i,ps%all_type(i), &
-!          trim(ps%all_name(i)),ps%q_all(i),ps%m_all(i)
-     write(*,1001) i,ps%alla_type(i), &
-          trim(ps%alla_name(i)),ps%q_alla(i),ps%m_alla(i)
+     write(*,*) 'Spec Index : ', i
+     if(allocated(ps%alla_type)) write(*,*) 'Spec Type : ', ps%alla_type(i)
+     if(allocated(ps%alla_name)) write(*,*) 'Spec Name : ', trim(ps%alla_name(i))
+     if(allocated(ps%q_alla)) write(*,*) 'Spec q : ', ps%q_alla(i)
+     if(allocated(ps%m_alla)) write(*,*) 'Spec m : ', ps%m_alla(i)
   enddo
-1001 format(' Species index & type: ',i2,1x,i2,1x, &
-             '"',a,'" charge & mass: ',2(1pe12.5,1x))
-
- !----------------------------------
-
-
 
 !create plasma state rf fields
   ps%freq_ic(1)=freqcy  !who sets #icrf_srcs, ps%icrf_src_name?

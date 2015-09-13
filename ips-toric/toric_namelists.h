@@ -94,7 +94,7 @@
 ! Namelist inputs for profile specification
 !  Density and temperature profiles - namelist and file inputs
 !
-      integer, parameter :: nspmx = 16
+      integer, parameter :: nspmx =30 
 ! NOTE: A maximum of 15 ion species allowed
 ! The place,nspec+1, is reserved for the electrons in mod_direl.
 ! mainsp is used to impose charge neutrality
