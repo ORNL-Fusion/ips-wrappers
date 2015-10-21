@@ -1,0 +1,51 @@
+ &TORICAINP
+ NMOD    =          31
+ NTT     =          64
+ NELM    =         240,
+ NPTVAC  =          -1,
+ MXMVAC  =          15,
+ FREQCY = 56000000.0,
+ NPHI = 11,
+ ANTLEN  =   176.0000000000000     ,
+ ANTLC   =   0.010000000000000     ,
+ THEANT  =  0.000000000000000E+000,
+ USE_INCORE = T,
+ BSCALE = 12,
+ PCBLOCK = 4,
+ /
+ &EQUIDATA
+! These values are for ITER
+ SO_THICKNESS    =  3.000000000000000     ,
+ IUDSYM  =           0,
+ DIST_PLAFARS    =  4.000000000000000E+000,
+ DIST_PLAANT     =  6.000000000000000     ,
+ DIST_PLAWALL    = 75.0, 75.0, 75.0, 75.0,
+! These values are for C-Mod
+! SO_THICKNESS    =  0.500000000000000     ,
+! IUDSYM  =           0,
+! DIST_PLAFARS    =  0.000000000000000E+000,
+! DIST_PLAANT     =  0.500000000000000     ,
+! DIST_PLAWALL    = 10.0000000000000,10.,10.,10.        ,
+ /
+ &NONTHERMALS 
+! Set the name of the ICRF minority ion
+ rfmin_name = 'He3_min',
+! Set the ICRF minority mass ratio
+ m_rfmin = 3.0,
+! Set the ICRF minority charge state
+ q_rfmin = 2.0,
+! Set the ICRF minority atomic number (same as charge state)
+ qatom_rfmin = 2.0,
+! If kdens_rfmin = 'fraction' the set the ICRF minority density 
+! in terms of n_e -> fracmin = n_min / n_e 
+ kdens_rfmin = 'fraction',
+ fracmin = 0.025,
+! If kdens_rfmin = 'data" then the minority density will be 
+! set from the Plasma State data.
+! Set how the minority temperature is determined.
+! isThermal = 1 sets the minority temperature prfofile equal to 
+! the thermal ion species profile.
+! isThermal = 2 assumes the minority temperature profile can be 
+! obtained from avaialble Plasma State data
+ isThermal = 1,
+ /
