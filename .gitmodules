@@ -2,10 +2,6 @@
 	path = ips-eped
 	url = git@github.com:ORNL-Fusion/ips-eped.git
 	branch = master
-[submodule "ips_gyro"]
-	path = ips_gyro
-	url = git@github.com:ORNL-Fusion/ips_gyro.git
-	branch = master
 [submodule "ips-fastran"]
 	path = ips-fastran
 	url = git@github.com:ORNL-Fusion/ips-fastran.git
