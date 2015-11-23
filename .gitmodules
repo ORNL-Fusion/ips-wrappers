@@ -1,8 +1,8 @@
 [submodule "ips-eped"]
 	path = ips-eped
 	url = git@github.com:ORNL-Fusion/ips-eped.git
-	branch = master
+	branch = devel
 [submodule "ips-fastran"]
 	path = ips-fastran
 	url = git@github.com:ORNL-Fusion/ips-fastran.git
-	branch = master
+	branch = devel
