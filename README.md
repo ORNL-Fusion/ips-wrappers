@@ -13,6 +13,14 @@ git checkout dlg-devel
 git submodule update --init --recursive
 ```
 
+You also will want to create your own branch, i.e., 
+
+```
+cd /project/projectdirs/atom/users/$USER/ips-wrappers
+git checkout -b my-branch-name
+
+```
+
 then in your [batchscript.ips.edison](ips-atom/template.batchscript.ips.edison), comment out the default, and add the following
 
 ```
@@ -22,10 +30,4 @@ then in your [batchscript.ips.edison](ips-atom/template.batchscript.ips.edison),
 source /project/projectdirs/atom/users/$USER/code/ips-wrappers/env.ips.edison
 ```
 
-You also will want to create your own branch, i.e., 
 
-```
-cd /project/projectdirs/atom/users/$USER/ips-wrappers
-git checkout -b my-branch-name
-
-```
