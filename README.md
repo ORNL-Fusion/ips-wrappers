@@ -10,6 +10,7 @@ module load git
 git clone https://github.com/ORNL-Fusion/ips-atom.git ips-wrappers
 cd ips-wrappers
 git checkout dlg-devel
+git submodule update --init --recursive
 ```
 
 then in your [batchscript.ips.edison](ips-atom/template.batchscript.ips.edison), comment out the default, and add the following
