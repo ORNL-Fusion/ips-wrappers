@@ -19,7 +19,7 @@ You also will want to create your own branch, i.e.,
 git checkout -b my-branch-name
 ```
 
-then in your [batchscript.ips.edison](ips-atom/template.batchscript.ips.edison), comment out the default, and add the following
+then in your [batchscript.ips.edison](https://github.com/ORNL-Fusion/ips-atom/blob/dlg-devel/template.batchscript.ips.edison), comment out the default, and add the following
 
 ```
 # Production
