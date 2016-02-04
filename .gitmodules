@@ -6,7 +6,3 @@
 	path = ips-fastran
 	url = https://github.com/ORNL-Fusion/ips-fastran.git
 	branch = master
-[submodule "ips-gyro"]
-	path = ips-gyro
-	url = https://github.com/ORNL-Fusion/ips-gyro.git
-	branch = master
