@@ -1,2 +1,30 @@
-# ips-wrappers
-This repo hosts the wrapper / helper codes that interface component codes with the IPS. Some wrappers live in this repo, while others are included as sub-modules to allow for them to also be included in the repo of the host component code as well.
+# How to develop on your own copy of ips-wrappers
+
+**(Assuming you are on Edison and are an ATOM NERSC team member - if not, just ask)**
+
+```
+cd /project/projectdirs/atom/users
+mkdir $USER
+cd $USER
+module load git
+git clone https://github.com/ORNL-Fusion/ips-atom.git ips-wrappers
+cd ips-wrappers
+git checkout dlg-devel
+```
+
+then in your [batchscript.ips.edison](ips-atom/template.batchscript.ips.edison), comment out the default, and add the following
+
+```
+# Production
+# source /project/projectdirs/atom/atom-install-edison/ips-wrappers/env.ips.edison
+# Me
+source /project/projectdirs/atom/users/$USER/code/ips-wrappers/env.ips.edison
+```
+
+You also will want to create your own branch, i.e., 
+
+```
+cd /project/projectdirs/atom/users/$USER/ips-wrappers
+git checkout -b my-branch-name
+
+```
