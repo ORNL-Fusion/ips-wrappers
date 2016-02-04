@@ -1,0 +1,12 @@
+*.o
+*.swp
+*.mod
+load_mdescr_sconfig
+make-result
+model_RF_IC
+model_RF_IC_2
+model_RF_IC_2_mcmd
+model_RF_IC_3
+py_model_RF_IC_2_mcmd
+zero_RF_EC_power
+zero_RF_IC_power
