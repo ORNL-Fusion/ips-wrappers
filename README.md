@@ -16,7 +16,6 @@ git submodule update --init --recursive
 You also will want to create your own branch, i.e., 
 
 ```
-cd /project/projectdirs/atom/users/$USER/ips-wrappers
 git checkout -b my-branch-name
 ```
 
