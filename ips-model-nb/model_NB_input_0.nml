@@ -1,0 +1,14 @@
+&NB_model
+
+ nrho_nbi = 20,
+ Pth_e_beam_MW = 7.0,
+ P_th_i_beam_MW = 3.0,
+ alpha_P_th_e = 1.0,
+ alpha_P_th_i = 1.0,
+ I_beam_MA = 1.1,
+ alpha_I_beam = 0.5,
+ Epll_peak = 600.0,
+ Eperp_peak = 200.0,
+ alpha_Epll = 0.33,
+ alpha_Eperp = 0.33 
+ /

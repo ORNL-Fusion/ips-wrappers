@@ -1,0 +1,70 @@
+&static_state_data
+ model_eqdsk_file = '40700_2_ps.geq',
+ input_state_file = '40700_2_ps.cdf'
+ /
+    
+&evolving_model_data
+ Te_evolution_model = 'relax_profiles',
+ delta_Te = 0.05,
+ f_Te = 2.0,
+ 
+ Ti_evolution_model = 'relax_profiles',
+ delta_Ti = 0.05,
+ f_Ti = 2.0,
+ 
+ n_evolution_model = 'relax_profiles',
+ delta_n = 0.05,
+ f_n = 2.0,
+ 
+ curr_bootstrap_evolution_model = 'relax_profiles',
+ delta_curr_bootstrap = 0.05,
+ 
+ f_curr_bootstrap = 2.0,
+ 
+ curr_ohmic_evolution_model = 'relax_profiles',
+ delta_curr_ohmic = 0.05,
+ f_curr_ohmic = 2.0,
+ 
+ pohme_evolution_model = 'relax_profiles',
+ delta_pohme = 0.05,
+ f_pohme = 2.0,
+ 
+ vsur_evolution_model = 'relax_profiles',
+ delta_vsur = 0.05,
+ f_vsur = 2.0,
+ 
+ Zeff_evolution_model = 'relax_profiles',
+ delta_Zeff = 0.05,
+ f_Zeff = 2.0,
+ 
+ curt_evolution_model = 'relax_profiles',
+ delta_curt = 0.05,
+ f_curt = 2.0,
+ 
+ P_eq_evolution_model = 'relax_profiles',
+ delta_P_eq = 0.05,
+ f_P_eq = 2.0,
+ 
+ q_eq_evolution_model = 'relax_profiles',
+ delta_q_eq = 0.05,
+ f_q_eq = 0.9,
+ 
+ elong_evolution_model = 'relax_profiles',
+ delta_elong = 0.05,
+ f_elong = 1.1,
+ 
+ triang_evolution_model = 'relax_profiles',
+ delta_triang = 0.05,
+ f_triang = 1.2,
+ 
+ power_ic_evolution_model = 'change_power',
+ P_icrf_0 = 0.0 ,
+ P_icrf_1 = 2.0e7,
+ t_icrf_1 = 2.0,
+ 
+ power_nbi_evolution_model = 'change_power',
+ P_nbi_0 = 0.0,
+ P_nbi_1 = 3.0e7,
+ t_nbi_1 = 3.0
+ /
+
