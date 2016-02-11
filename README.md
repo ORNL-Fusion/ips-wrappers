@@ -50,6 +50,6 @@ Now push your changes to the default remote (probably github unless you already 
 ```
 git push
 ```
-Now issue a "Pull Request" on Github with `base:dlg-devel' and your branch.
+Now issue a "Pull Request" on Github with `base:dlg-devel` and your branch.
 
 
