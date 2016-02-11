@@ -25,12 +25,13 @@ then in your [batchscript.ips.edison](https://github.com/ORNL-Fusion/ips-atom/bl
 # Production
 # source /project/projectdirs/atom/atom-install-edison/ips-wrappers/env.ips.edison
 # Me
-source /project/projectdirs/atom/users/$USER/code/ips-wrappers/env.ips.edison
+source /project/projectdirs/atom/users/$USER/ips-wrappers/env.ips.edison
 ```
 
 ## After making some changes you want to make available
 Check was git has to say about the things you changed
 ```
+cd /project/projectdirs/atom/users/$USER/ips-wrappers
 git status
 ```
 Add the files you want to commit to the staging area
