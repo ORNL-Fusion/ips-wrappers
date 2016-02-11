@@ -69,12 +69,17 @@ class existing_ps_file_init (Component):
         print ('existing_ps_file_init.step() called')
 
         if (self.services == None) :
-            logMsg = 'Error in existing_ps_file_init: step () : No services'
-            self.services.error(logMsg)
-            raise Exception(logMsg)
-
+            print 'Error in existing_ps_file_init: step () : No services'
+            raise Exception('Error in existing_ps_file_init: step (): No services')
         services = self.services
 
+# Get timeloop for simulation
+        timeloop = services.get_time_loop()
+        tlist_str = ['%.3f'%t for t in timeloop]
+        t = tlist_str[0]
+        tinit  = tlist_str[0]
+        tfinal  = tlist_str[-1]
+        
 # Check if this is a restart simulation
 
         try:
@@ -82,14 +87,13 @@ class existing_ps_file_init (Component):
             if mode == 'RESTART':
                 print 'existing_ps_file_init: RESTART'
             if mode not in ['RESTART', 'NORMAL']:
-                logMsg = 'existing_ps_file_init: unrecoginzed SIMULATION_MODE: '+mode
-                services.error(logMsg)
-                raise Exception(logMsg)
-
-        except:
-            logMsg = 'existing_ps_file_init: No SIMULATION_MODE variable in config file, NORMAL assumed'
-            self.services.exception(logMsg)
-            raise
+                print 'existing_ps_file_init: unrecoginzed SIMULATION_MODE: ', mode
+                print message
+                services.exception(message)
+                raise
+        except Exception, e:
+            print 'existing_ps_file_init: No SIMULATION_MODE variable in config file' \
+                  ', NORMAL assumed', e
 # ------------------------------------------------------------------------------
 #
 # RESTART simulation mode
@@ -102,20 +106,30 @@ class existing_ps_file_init (Component):
                 restart_root = services.get_config_param('RESTART_ROOT')
                 restart_time = services.get_config_param('RESTART_TIME')
                 services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
-            except:
+            except Exception, e:
                 message = 'existing_ps_file_init: error getting restart config parameters '
+                print message
                 services.exception(message)
-                raise
+                raise e
             
             cur_state_file = self.services.get_config_param('CURRENT_STATE')
     
             # Update ps%t0, ps%t1 and ps%tfinal. Note ps%tinit stays the same in the plasma
             # state file, but this value of tinit is the restart time from the config file
-            ps = NetCDFFile(cur_state_file, 'r+')
+
+            ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
+#             ps = NetCDFFile(cur_state_file, 'r+')
             ps.variables['t0'].assignValue(float(tinit))
             ps.variables['t1'].assignValue(float(tinit))
             ps.variables['tfinal'].assignValue(float(tfinal))
+#             ps.variables['t0'] = float(tinit)
+#             ps.variables['t1'] = float(tinit)
+#             ps.variables['tfinal'] = float(tfinal)
             ps.close()
+            
+            print 'tinit  = ', tinit, '  tfinal = ', tfinal
+
+#            sys.exit('existing_ps_file_init: Intentinally stopped')
         
 # ------------------------------------------------------------------------------
 #
@@ -131,16 +145,18 @@ class existing_ps_file_init (Component):
         # Get name of current plasma state file
             try:
                 cur_state_file = self.services.get_config_param('CURRENT_STATE')
-            except:
+            except Exception, e:
                 message = 'existing_ps_file_init: error getting CURRENT_STATE_FILE name'
+                print message
                 services.exception(message)
-                raise
+                raise e
 
          # Get name of current eqdsk file
             try:
                 cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
             except:
                 message = 'existing_ps_file_init: error getting CURRENT_EQDSK_FILE name'
+                print message
                 services.exception(message)
                 raise
        
@@ -149,29 +165,32 @@ class existing_ps_file_init (Component):
                 INPUT_FILES = self.INPUT_FILES
                 OUTPUT_FILES = self.OUTPUT_FILES
                 RESTART_FILES = self.RESTART_FILES
-                input_state_file = self.INPUT_STATE_FILE
-                input_eqdsk_file = self.INPUT_EQDSK_FILE
-            except:
+                INPUT_STATE_FILE = self.INPUT_STATE_FILE
+                INPUT_EQDSK_FILE = self.INPUT_EQDSK_FILE
+            except Exception, e:
                 message = 'existing_ps_file_init: error getting config parameters'
+                print message
                 services.exception(message)
-                raise
+                raise e
         
         # Get input files  
             try:
               INPUT_FILES = self.INPUT_FILES
               services.stage_input_files(INPUT_FILES)
-            except:
+            except Exception, e:
                 message = 'existing_ps_file_init: Error in call to stageInputFiles()'
+                print message
                 services.exception(message)
-                raise
+                raise e
       
-         # Copy input_state_file to current state file
+         # Copy INPUT_STATE_FILE to current state file
             try:
-                subprocess.call(['cp', input_state_file, cur_state_file ])
-            except:
-                message = 'existing_ps_file_init: Error in copying input_state_file to current state file'
+                subprocess.call(['cp', INPUT_STATE_FILE, cur_state_file ])
+            except Exception, e:
+                message = 'existing_ps_file_init: Error in copying INPUT_STATE_FILE to current state file'
+                print message
                 services.exception(message)
-                raise
+                raise e
 
         #Open Plasma State file and put in t0, t1, tinit, and tfinal from config file
             plasma_state = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
@@ -185,87 +204,47 @@ class existing_ps_file_init (Component):
             plasma_state.variables['tfinal'] = tfinal
             plasma_state.close()
 
-         # Copy input_eqdsk_file to cur_eqdsk_file if there is one
-            if input_eqdsk_file != '':
+         # Copy INPUT_EQDSK_FILE to cur_eqdsk_file if there is one
+            if INPUT_EQDSK_FILE != '':
                 try:
-                    subprocess.call(['cp', input_eqdsk_file, cur_eqdsk_file ])
-                except:
-                    message =  'existing_ps_file_init: Error in renaming input_eqdsk_file' 
+                    subprocess.call(['cp', INPUT_EQDSK_FILE, cur_eqdsk_file ])
+                except Exception, e:
+                    message =  'existing_ps_file_init: Error in renaming INPUT_EQDSK_FILE' 
+                    print message
                     services.exception(message)
-                    raise
+                    raise e
 
-          # Generate other state files as dummies so framework will have a complete set
-#             for file in ps_file_list:
-#                 print 'file = ', file
-#                 subprocess.call(['touch', file])                
+        # Generate other state files as dummies so framework will have a complete set
+            for file in ps_file_list:
+                print 'touching plasma state file = ', file
+                try:
+                    subprocess.call(['touch', file])
+                except Exception, e:
+                    print 'No file ', file
 
-            try:
-                cur_bc_file = services.get_config_param('CURRENT_BC')
-                subprocess.call(['touch', cur_bc_file])
-            except:
-                logMsg = 'No CURRENT_BC file '
-                self.services.info(logMsg)
-                pass
+# Update plasma state files in plasma_state work directory
+        try:
+          services.update_plasma_state()
+        except Exception, e:
+            message = 'existing_ps_file_init: Error in call to update_plasma_state()'
+            print message
+            services.exception(message)
+            raise e
 
-            try:
-                cur_cql_file = services.get_config_param('CURRENT_CQL')
-                subprocess.call(['touch', cur_cql_file])
-            except:
-                logMsg = 'No CURRENT_CQL file '
-                self.services.info(logMsg)
-                pass
-    
-            try:
-                cur_dql_file = services.get_config_param('CURRENT_DQL')
-                subprocess.call(['touch', cur_dql_file])
-            except:
-                logMsg = 'No CURRENT_DQL file '
-                self.services.info(logMsg)
-                pass
-    
-            try:
-                cur_jsdsk_file = services.get_config_param('CURRENT_JSDSK')
-                subprocess.call(['touch', cur_jsdsk_file])
-            except:
-                logMsg = 'No CURRENT_JSDSK file '
-                pass
-
-        # Copy current plasma state to prior state and next state if they are in state
-            try:
-                prior_state_file = services.get_config_param('PRIOR_STATE')
-                shutil.copyfile(cur_state_file, prior_state_file)
-            except:
-                logMsg = 'No PRIOR_STATE file '
-                self.services.info(logMsg)
-                pass
-
-            try:
-                next_state_file = services.get_config_param('NEXT_STATE')
-                shutil.copyfile(cur_state_file, next_state_file)
-            except:
-                logMsg = 'No NEXT_STATE file '
-                self.services.info(logMsg)
-                pass
-
-        # Update plasma state files in plasma_state work directory
-            try:
-              services.update_plasma_state()
-            except:
-                message = 'existing_ps_file_init: Error in call to update_plasma_state()'
-                self.services.exception(message)
-                raise
-
-    # "Archive" output files in history directory
-            try:
-              services.stage_output_files(timeStamp, self.OUTPUT_FILES)
-            except:
-                message = 'existing_ps_file_init: Error in call to stage_output_files()', e
-                self.services.exception(message)
-                raise
+# "Archive" output files in history directory
+        try:
+          services.stage_output_files(timeStamp, self.OUTPUT_FILES)
+        except Exception, e:
+            message = 'existing_ps_file_init: Error in call to stage_output_files()', e
+            print message
+            services.exception(message)
+            raise e
 
             # For benefit of framework file handling generate dummy dakota.out file
             subprocess.call(['touch', 'dakota.out'])
 
+#        print ("Quitting")
+#        sys.exit('existing_ps_file_init: Intentinally stopped')
 # ------------------------------------------------------------------------------
 #
 # checkpoint function
