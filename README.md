@@ -28,4 +28,26 @@ then in your [batchscript.ips.edison](https://github.com/ORNL-Fusion/ips-atom/bl
 source /project/projectdirs/atom/users/$USER/code/ips-wrappers/env.ips.edison
 ```
 
+## After making some changes you want to make available
+Check was git has to say about the things you changed
+```
+git status
+```
+Add the files you want to commit to the staging area
+```
+git add filename1 filename2
+```
+Commit the files (this is only local - it does not push to a remote like SVN)
+```
+git commit -m 'My informative commit message describing a new awesome feature'
+```
+Pull any remote changes prior to pushing
+```
+git pull
+```
+Now push your changes to the default remote (probably github unless you already knew what you are doing)
+```
+git push
+```
+
 
