@@ -1,5 +1,8 @@
 #! /usr/bin/env python
 
+# version 3.0 2/28/2015 (Batchelor)
+# Worked on the exception handling
+
 # version 2.0 3/7/11 (Batchelor)
 # ------------------------------------------------------------------------------
 # Added checkpoint/restart. Made exception handling more uniform across all of the
@@ -50,71 +53,71 @@ class model_RF_IC_3 (Component):
         services = self.services
 
     # Get global configuration parameters
-        try:
-            cur_state_file = services.get_config_param('CURRENT_STATE')
-            cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
-            cur_cql_file = self.services.get_config_param('CURRENT_CQL')
-            cur_dql_file = self.services.get_config_param('CURRENT_DQL')
-        except:
-            logMsg = 'Model RF: error in getting config parameters'
-            self.services.exception(logMsg)
-            raise 
+        cur_state_file = self.try_get_config_param(services,'CURRENT_STATE')
+        cur_eqdsk_file = self.try_get_config_param(services,'CURRENT_EQDSK')
+        cur_cql_file = self.try_get_config_param(services,'CURRENT_CQL')
+        cur_dql_file = self.try_get_config_param(services,'CURRENT_DQL')
 
     # Get component-specific configuration parameters. Note: Not all of these are
     # used in 'init' but if any are missing we get an exception now instead of
     # later
-        try:
-            BIN_PATH = self.BIN_PATH
-            RESTART_FILES = self.RESTART_FILES
-            NPROC = self.NPROC
-        except:
-            logMsg = 'Model RF init: error getting component-specific config parameters'
-            self.services.exception(logMsg)
-            raise 
+        BIN_PATH = self.try_get_config_param(services,'BIN_PATH')
+        RESTART_FILES = self.try_get_config_param(services,'RESTART_FILES')
+        NPROC = self.try_get_config_param(services,'NPROC')
 
     # Copy plasma state files over to working directory
         try:
           services.stage_plasma_state()
-        except Exception:
-          logMsg = 'Error in call to stage_plasma_state()'
-          self.services.exception(logMsg)
-          raise 
+        except Exception, e:
+          print 'Error in call to stage_plasma_state()' , e
+          services.error('Error in call to stage_plasma_state()')
+          raise
       
     # Get input files  
         try:
           services.stage_input_files(self.INPUT_FILES)
-        except Exception:
-          logMsg = 'Error in call to stageInputFiles()'
-          self.services.exception(logMsg)
-          raise 
+        except Exception, e:
+          print 'Error in call to stageInputFiles()' , e
+          self.services.error('Error in call to stageInputFiles()')
+          raise
 
         RF_IC_bin = os.path.join(BIN_PATH, 'model_RF_IC_3')
 
         print 'Executing ', [RF_IC_bin, cur_state_file, 'INIT', timeStamp]
-        retcode = subprocess.call([RF_IC_bin, cur_state_file, cur_eqdsk_file,
-        cur_cql_file, cur_dql_file, 'INIT', timeStamp])
-        if (retcode != 0):
-            logMsg = 'Error executing ' + RF_IC_bin
-            print logMsg
-            self.services.error(logMsg)
+        try:
+            retcode = subprocess.call([RF_IC_bin, cur_state_file, cur_eqdsk_file,
+                cur_cql_file, cur_dql_file, 'INIT', timeStamp])     
+        except Exception: 
+            message = "Error executing " +  RF_IC_bin
+            self.services.error(message)  
+            raise
+        else: 
+            if (retcode != 0):
+                message = "Abnormal termination of " + RF_IC_bin
+                print message
+                self.services.error(message)
+                raise Exception(message)
 
+# Update plasma state files in plasma_state work directory
         try:
           services.update_plasma_state()
         except Exception:
-          logMsg = 'Error in call to update_plasma_state()'
-          print logMsg
-          self.services.exception(logMsg)
+          message = 'Error in call to update_plasma_state()'
+          print message
+          services.error(message)
           raise
 
 # "Archive" output files in history directory
+
         try:
           services.stage_output_files(timeStamp, self.OUTPUT_FILES)
-        except Exception, e:
-          print 'Error in call to stage_output_files()', e
-          services.error('Error in call to stage_output_files()')
-          raise Exception, 'Error in call to stage_output_files()'
+        except Exception:
+          message = 'Error in call to stage_output_files()'
+          print message
+          services.error(message)
+          raise
 
-        return 0
+        return
 
 # ------------------------------------------------------------------------------
 #
@@ -125,21 +128,23 @@ class model_RF_IC_3 (Component):
 # ------------------------------------------------------------------------------
         
     def restart(self, timeStamp):
-      print 'model_RF_IC_2.restart() called'
+        print 'model_RF_IC_3.restart() called'
 
-      services = self.services
-      workdir = services.get_working_dir()
+        services = self.services
+        workdir = services.get_working_dir()
 
-    # Get restart files listed in config file.        
-      try:
-            restart_root = services.get_config_param('RESTART_ROOT')
-            restart_time = services.get_config_param('RESTART_TIME')
+        # Get restart files listed in config file.        
+        restart_root = self.try_get_config_param(services,'RESTART_ROOT')
+        restart_time = self.try_get_config_param(services,'RESTART_TIME')
+
+        try:
             services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
-      except Exception, e:
-            print 'Error in call to get_restart_files()' , e
-            self.services.error('model_RF_IC_2.restart: error in call to get_restart_files()')
-            raise Exception, 'model_RF_IC_2.restart: error in call to get_restart_files()'
-      return 0
+        except Exception:
+            message = 'Error in call to get_restart_files()'
+            print message
+            self.services.error(message)
+            raise
+        return 0
 
 # ------------------------------------------------------------------------------
 #
@@ -153,48 +158,37 @@ class model_RF_IC_3 (Component):
         print 'model_RF_IC_3.step() called'
 
         if (self.services == None) :
-            print 'Error in model_RF_IC:;step () : init() function not called before step().'
-            return 1
+            services.error('Error in model_NB init (): No self.services')
+            raise Exception('Error in model_NB init (): No self.services')
         services = self.services
 
     # Get global configuration parameters
-        try:
-            cur_state_file = services.get_config_param('CURRENT_STATE')
-            cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
-            cur_cql_file = self.services.get_config_param('CURRENT_CQL')
-            cur_dql_file = self.services.get_config_param('CURRENT_DQL')
-        except:
-            print 'model_RF_IC_2_step: error in getting config parameters'
-            services.error('model_RF_IC_2: error in getting config parameters')
-            raise Exception, 'model_RF_IC_2: error in getting config parameters'
+        INPUT_STATE_FILE = self.try_get_config_param(services,'INPUT_STATE_FILE')
+        cur_state_file = self.try_get_config_param(services,'CURRENT_STATE')
+        cur_eqdsk_file = self.try_get_config_param(services,'CURRENT_EQDSK')
+        cur_cql_file = self.try_get_config_param(services,'CURRENT_CQL')
+        cur_dql_file = self.try_get_config_param(services,'CURRENT_DQL')
 
     # Get component-specific configuration parameters.
-        try:
-            BIN_PATH = self.BIN_PATH
-            NPROC = self.NPROC        
-        except:
-            print 'model_RF_IC_2_step: error getting component-specific config parameters'
-            services.error('model_RF_IC_2_step: error getting component-specific\
-            config parameters')
-            raise Exception, 'model_RF_IC_2_step: error getting model_epa-specific\
-            config parameters'
+        BIN_PATH = self.try_get_config_param(services,'BIN_PATH')
+        NPROC = self.try_get_config_param(services,'NPROC ')      
 
     # Copy plasma state files over to working directory
         try:
           services.stage_plasma_state()
-        except Exception:
-          logMsg = 'Error in call to stage_plasma_state()' 
-          self.services.exception(logMsg)
-          raise 
+        except Exception, e:
+          print 'Error in call to stage_plasma_state()' , e
+          services.error('Error in call to stage_plasma_state()')
+          raise
       
     # Get input files  
         try:
           services.stage_input_files(self.INPUT_FILES)
         except Exception:
-          logMsg = 'Error in call to stageInputFiles()'
-          print logMsg
-          self.services.exception(logMsg)
-          raise 
+          print 'Error in call to stageInputFiles()'
+          self.services.error('Error in call to stageInputFiles()')
+          raise
+
 
 # Call model_RF_IC
         RF_IC_bin = os.path.join(BIN_PATH, 'model_RF_IC_3')
@@ -206,15 +200,31 @@ class model_RF_IC_3 (Component):
         retcode = services.wait_task(task_id)
         partial_file = cwd + '/RF_IC_' + cur_state_file
         if (retcode != 0):
-            print 'Error executing ', RF_IC_bin
+            message = 'Error executing ', RF_IC_bin
+            self.services.error(message)
+            raise Exception(message)
             return 1
 
-# Update plasma state
-        services.merge_current_plasma_state(partial_file)
-        print 'merged partial RF_IC update'
+# Update plasma state files in plasma_state work directory
+        try:
+            services.merge_current_plasma_state(partial_file)
+        except Exception:
+            message = 'Error in call merge_current_plasma_state()'
+            print message
+            services.error(message)
+            raise
+
 # "Archive" output files in history directory
-        services.stage_output_files(timeStamp, self.OUTPUT_FILES)
-        return 0
+
+        try:
+            services.stage_output_files(timeStamp, self.OUTPUT_FILES)
+        except Exception:
+            message = 'Error in call to stage_output_files()'
+            print message
+            services.error(message)
+            raise
+
+        return
 
 # ------------------------------------------------------------------------------
 #
@@ -240,3 +250,23 @@ class model_RF_IC_3 (Component):
 
     def finalize(self, timestamp=0.0):
         print 'model_RF_IC_2 finalize() called'
+
+# "Private"  methods
+
+    # Try to get config parameter - wraps the exception handling for get_config_parameter()
+    def try_get_config_param(self, services, param_name, optional=False):
+
+        try:
+            value = services.get_config_param(param_name)
+            print param_name, ' = ', value
+        except Exception :
+            if optional: 
+                print 'config parameter ', param_name, ' not found'
+                value = None
+            else:
+                message = 'required config parameter ', param_name, ' not found'
+                print message
+                services.exception(message)
+                raise
+        
+        return value
