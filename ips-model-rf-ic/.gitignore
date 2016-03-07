@@ -1,0 +1,8 @@
+*.o
+*.pyc
+*.mod
+make-result
+model_RF_IC
+model_RF_IC_2
+model_RF_IC_3
+load_mdescr_sconfig

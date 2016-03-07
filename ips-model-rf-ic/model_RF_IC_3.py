@@ -45,25 +45,27 @@ class model_RF_IC_3 (Component):
 # ------------------------------------------------------------------------------
 
     def init(self, timeStamp=0):
-        print 'model_RF_IC.init() called'
+        print 'model_RF_IC_3.init() called'
 
         if (self.services == None) :
-            services.error('Error in model_NB init (): No self.services')
-            raise Exception('Error in model_NB init (): No self.services')
+            message = 'Error in model_RF_IC_3 init (): No self.services'
+            print message
+            services.error(message)
+            raise
         services = self.services
 
     # Get global configuration parameters
-        cur_state_file = self.try_get_config_param(services,'CURRENT_STATE')
-        cur_eqdsk_file = self.try_get_config_param(services,'CURRENT_EQDSK')
-        cur_cql_file = self.try_get_config_param(services,'CURRENT_CQL')
-        cur_dql_file = self.try_get_config_param(services,'CURRENT_DQL')
+        cur_state_file = self.get_config_param(services,'CURRENT_STATE')
+        cur_eqdsk_file = self.get_config_param(services,'CURRENT_EQDSK')
+        cur_cql_file = self.get_config_param(services,'CURRENT_CQL')
+        cur_dql_file = self.get_config_param(services,'CURRENT_DQL')
 
     # Get component-specific configuration parameters. Note: Not all of these are
     # used in 'init' but if any are missing we get an exception now instead of
     # later
-        BIN_PATH = self.try_get_config_param(services,'BIN_PATH')
-        RESTART_FILES = self.try_get_config_param(services,'RESTART_FILES')
-        NPROC = self.try_get_config_param(services,'NPROC')
+        BIN_PATH = self.get_component_param('BIN_PATH')
+        RESTART_FILES = self.get_component_param('RESTART_FILES')
+        NPROC = self.get_component_param('NPROC')
 
     # Copy plasma state files over to working directory
         try:
@@ -89,6 +91,7 @@ class model_RF_IC_3 (Component):
                 cur_cql_file, cur_dql_file, 'INIT', timeStamp])     
         except Exception: 
             message = "Error executing " +  RF_IC_bin
+            print message
             self.services.error(message)  
             raise
         else: 
@@ -130,12 +133,17 @@ class model_RF_IC_3 (Component):
     def restart(self, timeStamp):
         print 'model_RF_IC_3.restart() called'
 
+        if (self.services == None) :
+            message = 'Error in model_RF_IC_3 init (): No self.services'
+            print message
+            services.error(message)
+            raise
         services = self.services
         workdir = services.get_working_dir()
 
         # Get restart files listed in config file.        
-        restart_root = self.try_get_config_param(services,'RESTART_ROOT')
-        restart_time = self.try_get_config_param(services,'RESTART_TIME')
+        restart_root = self.get_config_param(services,'RESTART_ROOT')
+        restart_time = self.get_config_param(services,'RESTART_TIME')
 
         try:
             services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
@@ -158,20 +166,21 @@ class model_RF_IC_3 (Component):
         print 'model_RF_IC_3.step() called'
 
         if (self.services == None) :
-            services.error('Error in model_NB init (): No self.services')
-            raise Exception('Error in model_NB init (): No self.services')
+            message = 'Error in model_RF_IC_3 init (): No self.services'
+            print message
+            services.error(message)
+            raise
         services = self.services
 
     # Get global configuration parameters
-        INPUT_STATE_FILE = self.try_get_config_param(services,'INPUT_STATE_FILE')
-        cur_state_file = self.try_get_config_param(services,'CURRENT_STATE')
-        cur_eqdsk_file = self.try_get_config_param(services,'CURRENT_EQDSK')
-        cur_cql_file = self.try_get_config_param(services,'CURRENT_CQL')
-        cur_dql_file = self.try_get_config_param(services,'CURRENT_DQL')
+        cur_state_file = self.get_config_param(services,'CURRENT_STATE')
+        cur_eqdsk_file = self.get_config_param(services,'CURRENT_EQDSK')
+        cur_cql_file = self.get_config_param(services,'CURRENT_CQL')
+        cur_dql_file = self.get_config_param(services,'CURRENT_DQL')
 
     # Get component-specific configuration parameters.
-        BIN_PATH = self.try_get_config_param(services,'BIN_PATH')
-        NPROC = self.try_get_config_param(services,'NPROC ')      
+        BIN_PATH = self.get_component_param('BIN_PATH')
+        NPROC = self.get_component_param('NPROC', optional = True)      
 
     # Copy plasma state files over to working directory
         try:
@@ -198,12 +207,13 @@ class model_RF_IC_3 (Component):
         task_id  = services.launch_task(NPROC, cwd, RF_IC_bin, cur_state_file, cur_eqdsk_file,
         cur_cql_file, cur_dql_file, 'STEP', timeStamp)
         retcode = services.wait_task(task_id)
-        partial_file = cwd + '/RF_IC_' + cur_state_file
         if (retcode != 0):
             message = 'Error executing ', RF_IC_bin
+            print message
             self.services.error(message)
             raise Exception(message)
             return 1
+        partial_file = cwd + '/RF_IC_' + cur_state_file
 
 # Update plasma state files in plasma_state work directory
         try:
@@ -234,10 +244,15 @@ class model_RF_IC_3 (Component):
 # ------------------------------------------------------------------------------
 
     def checkpoint(self, timestamp=0.0):
-            print 'model_RF_IC_2.checkpoint() called'
-            services = self.services
-            services.save_restart_files(timestamp, self.RESTART_FILES)
-            return 0
+        print 'model_RF_IC_3.checkpoint() called'
+        if (self.services == None) :
+            message = 'Error in model_RF_IC_3 init (): No self.services'
+            print message
+            services.error(message)
+            raise
+        services = self.services
+        services.save_restart_files(timestamp, self.RESTART_FILES)
+        return 0
 
 # ------------------------------------------------------------------------------
 #
@@ -249,12 +264,17 @@ class model_RF_IC_3 (Component):
 
 
     def finalize(self, timestamp=0.0):
-        print 'model_RF_IC_2 finalize() called'
+        print 'model_RF_IC_3 finalize() called'
 
+# ------------------------------------------------------------------------------
+#
 # "Private"  methods
+#
+# ------------------------------------------------------------------------------
+
 
     # Try to get config parameter - wraps the exception handling for get_config_parameter()
-    def try_get_config_param(self, services, param_name, optional=False):
+    def get_config_param(self, services, param_name, optional=False):
 
         try:
             value = services.get_config_param(param_name)
@@ -270,3 +290,21 @@ class model_RF_IC_3 (Component):
                 raise
         
         return value
+
+    # Try to get component specific config parameter - wraps the exception handling
+    def get_component_param(self, param_name, optional=False):
+
+        if hasattr(self, param_name):
+            value = getattr(self, param_name)
+            print param_name, ' = ', value
+        elif optional:
+            print 'optional config parameter ', param_name, ' not found'
+            value = None
+        else:
+            message = 'required component config parameter ', param_name, ' not found'
+            print message
+            services.exception(message)
+            raise
+        
+        return value
+

@@ -1,12 +1,31 @@
 #! /usr/bin/env python
 
-# version 0.0 9/20/2015 (Batchelor)
+# version 1.0 1/25/2016 (Batchelor)
 #--------------------------------------------------------------------------
 #
 # This init component generates an initial plasma state file from an existing plasma 
-# state.  It takes the existing plasma state file as an input file in the
+# state file.  It takes the existing plasma state file as an input file in the
 # simulation config file, copies it to current plasma state file and updates the plasma
-# state.
+# state.  The input state file must be specified in the [existing_ps_file_init] section
+# of the config file as INPUT_STATE_FILE = <file name>.
+#
+# There should also be an INPUT_EQDSK_FILE = <file name> line in the config file
+# which also is copied to the current eqdsk if the <file name> isn't blank.
+#
+# CAVEAT UTILITOR
+# The plasma state files produced by this code will have have complete arrays allocated 
+# for the components present when the input state file was generated.  Normally the 'init'
+# functions of the physics component scripts will try to allocate the arrays for data 
+# supplied by that component However arrays in Plasma State files can only be allocated 
+# once. Therefore when using the pre-allocated state from the present code either:
+#
+# 1) The physics init should not re-allocate the arrays and should ensure that the array
+#    dimensions of its initial data match those in the input state.
+# or
+# 2) The physics component init should instantiate a new plasma state structure, copy
+#    the data from all components except itself to the new instance, should allocate its
+#    own arrays in the new state with whatever dimensions it likes, and fill the initial
+#    data.  Then the new state instance should be written out as the current plasma state.
 #
 # This version also supports RESTART as specified by the SIMULATION_MODE variable in
 # the config file.  For a restart run the plasma state files are retrieved 
@@ -30,6 +49,10 @@
 #      tinit, as might be needed in a restart.
 #
 # ------------------------------------------------------------------------------
+
+# Working notes
+#
+# 1/25/2016 Changed old Scientific.IO.NetCDF format to netCDF4
 
 import sys
 import os
@@ -118,18 +141,13 @@ class existing_ps_file_init (Component):
             # state file, but this value of tinit is the restart time from the config file
 
             ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
-#             ps = NetCDFFile(cur_state_file, 'r+')
             ps.variables['t0'].assignValue(float(tinit))
             ps.variables['t1'].assignValue(float(tinit))
             ps.variables['tfinal'].assignValue(float(tfinal))
-#             ps.variables['t0'] = float(tinit)
-#             ps.variables['t1'] = float(tinit)
-#             ps.variables['tfinal'] = float(tfinal)
             ps.close()
             
-            print 'tinit  = ', tinit, '  tfinal = ', tfinal
+            print 'existing_ps_file_init RESTART: tinit  = ', tinit, '  tfinal = ', tfinal
 
-#            sys.exit('existing_ps_file_init: Intentinally stopped')
         
 # ------------------------------------------------------------------------------
 #
@@ -138,7 +156,7 @@ class existing_ps_file_init (Component):
 # ------------------------------------------------------------------------------
         
         else:
-
+            print 'existing_ps_file_init: simulation mode NORMAL'
             ps_file_list = services.get_config_param('PLASMA_STATE_FILES').split(' ')
             print 'ps_file_list = ', ps_file_list
 
@@ -240,11 +258,9 @@ class existing_ps_file_init (Component):
             services.exception(message)
             raise e
 
-            # For benefit of framework file handling generate dummy dakota.out file
-            subprocess.call(['touch', 'dakota.out'])
+        # For benefit of framework file handling generate dummy dakota.out file
+        subprocess.call(['touch', 'dakota.out'])
 
-#        print ("Quitting")
-#        sys.exit('existing_ps_file_init: Intentinally stopped')
 # ------------------------------------------------------------------------------
 #
 # checkpoint function
@@ -271,3 +287,4 @@ class existing_ps_file_init (Component):
 
     def finalize(self, timestamp=0.0):
         print 'existing_ps_file_init.finalize() called'
+
