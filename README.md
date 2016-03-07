@@ -18,10 +18,7 @@ You also will want to create your own branch, i.e.,
 ```
 git checkout -b my-branch-name
 ```
-update the following line in `env.ips.edison` to match your present directory
-```
-export IPS_WRAPPER_PATH_EDISON=$ATOM/users/greendl1/code/ips-wrappers
-```
+
 then in your [batchscript.ips.edison](https://github.com/ORNL-Fusion/ips-atom/blob/dlg-devel/template.batchscript.ips.edison), comment out the default, and add the following
 
 ```
