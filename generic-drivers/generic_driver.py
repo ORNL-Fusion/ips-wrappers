@@ -384,11 +384,11 @@ class generic_driver(Component):
 
             try:
                 services.call(comp, mode, time)
-            except Exception, e:
+            except Exception:
                 message = comp_mode_string + ' failed'
                 print message
                 services.exception(message)
-                raise e
+                raise 
             
             return
     
