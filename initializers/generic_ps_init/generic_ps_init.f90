@@ -7,11 +7,13 @@ PROGRAM generic_ps_init
 ! This version combines several previous initializer routines and extends them.  There are
 ! X modes of initialization to be specified by the config file variable INIT_MODE
 ! 
-! N.B. The metadata that was previously inserted into CURRENT_STATE by minimal_state_init.f90  i.e. 
+! INIT_MODE = minimal
+! This fortran code only generates a completely empty current state file.
+! The metadata that was previously inserted into CURRENT_STATE by minimal_state_init.f90  i.e. 
 ! time variables - ps%t0, ps%t1, ps%tinit, and ps%tfinal 
 ! simulation identifiers - ps%tokamak_id, ps%shot_number, ps%run_id.  
 ! ps%Global_label -> run_id_tokamak_id_shot_number.
-! is now done in the python, generic_ps_init.py.  If INIT_MODE = minimal, this fortran code is not run at all.
+! is now done in the python, generic_ps_init.py.  
 ! 
 ! INIT_MODE = existing_ps_file
 ! The copy of the input plasma state to CURRENT_PLASMA_STATE is done in the python.  However if the config variable
@@ -46,9 +48,13 @@ PROGRAM generic_ps_init
     INTEGER :: istat, ierr = 0
     INTEGER :: iarg
     
-	CHARACTER (len=256) :: cur_state_file
-	CHARACTER*32 :: tokamak_id, shot_number, run_id
-    CHARACTER(len=32) :: time_stamp, char_tinit, char_tfinal
+	CHARACTER (len=256) :: cur_state_file, cur_eqdsk_file, 
+	CHARACTER (len=256) :: 	mdescr_file
+	CHARACTER (len=256) :: 	sconfig_file = ' '
+	CHARACTER (len=256) :: 	input_eqdsk_file = ' '
+	CHARACTER(len=32) :: init_mode	
+	CHARACTER(len=32) :: generate_eqdsk = 'False'
+
 
 
 !--------------------------------------------------------------------------
@@ -67,7 +73,9 @@ PROGRAM generic_ps_init
 !------------------------------------------------------------------------------------
 
     namelist /genric_ps_init/ &
-          init_mode, cur_state_file, mdescr_file
+          init_mode, generate_eqdsk, cur_state_file, cur_eqdsk_file, &
+          mdescr_file, input_eqdsk_file, sconfig_file
+          
            
 	WRITE (*,*)
 	WRITE (*,*) 'generic_ps_init'      
@@ -83,7 +91,8 @@ PROGRAM generic_ps_init
             IF (istat /= 0 ) THEN
                 CALL SWIM_error ('open', 'generic_ps_init.f90',ps_init_nml_file)
                 ierr = istat
-                stop 'cannot open ps_init_nml_file'
+                WRITE (*,*) 'generic_ps_init.f90: Cannot open ', TRIM(input_namelist_file)
+                stop 'generic_ps_init.f90: Cannot open ps_init_nml_file'
             END IF
         ierr = 0
 
@@ -93,34 +102,65 @@ PROGRAM generic_ps_init
 
 !------------------------------------------------------------------------------------
 !     
-!   Do initalizations from input plasma state file
-!
-!------------------------------------------------------------------------------------
-
-	IF TRIM(init_mode) == 'existing_ps_file'
-    	call ps_mdescr_read(trim(mdescr_file), ierr, state=ps)
-
-!------------------------------------------------------------------------------------
-!     
 !   Do initalizations from machine description file
 !
 !------------------------------------------------------------------------------------
 
 	IF TRIM(init_mode) == 'mdescr'
-    	call ps_mdescr_read(trim(mdescr_file), ierr, state=ps)
+		call ps_mdescr_namelist_read(.False., trim(mdescr_file), ' ',  &
+				TRIM(input_eqdsk_file), ps, ierr)
+		IF (ierr .ne. 0) THEN
+			print*, 'Could not get namelist mdescr'
+			call exit(1)
+	END IF
 
 !------------------------------------------------------------------------------------
 !     
-!   Store minimal initial plasma state
+!   Load shot configuration data from sconfig file
 !
 !------------------------------------------------------------------------------------
 
-	CALL PS_STORE_PLASMA_STATE(ierr, cur_state_file)
+	IF TRIM(sconfig_file) != ' '
+		call ps_sconfig_namelist_read(.False., TRIM(sconfig_file), ' ',  ' ', ps, ierr)
+		IF (ierr .ne. 0) THEN
+			print*, 'Could not get namelist sconfig'
+			call exit(1)
+	END IF
+	
+!------------------------------------------------------------------------------------
+!     
+!   Extract eqdsk file from plasma state
+!
+!------------------------------------------------------------------------------------
+	
+	IF TRIM(generate_eqdsk) == 'True'
+	!  Get current plasma state 
+			
+		call ps_get_plasma_state(ierr, trim(cur_state_file))
+		if(ierr .ne. 0) then
+		   print*, 'model_EPA:failed to get_plasma_state'
+		   stop 1
+		end if
+
+		CALL ps_wr_geqdsk(ier, cur_eqdsk_file)
+		IF (ierr .ne. 0) THEN
+			print*, 'Could not get generate eqdsk file from plasma state'
+			call exit(1)
+		
+
+!------------------------------------------------------------------------------------
+!     
+!   Store initial plasma state.  If init_mode == 'minimal' the plasma statei file is
+!   initialized but otherwise completely empty.
+!
+!------------------------------------------------------------------------------------
+
+	CALL PS_STORE_PLASMA_STATE(ierr, trim(cur_state_file))
 	
 	WRITE (*,*) "generic_ps_init.f90: Stored initial Plasma State"    
 
 	ELSE
-		WRITE (*,*) 'Unknown initialization moe = ', init_mode
+		WRITE (*,*) 'Unknown initialization mode = ', init_mode
 
 END PROGRAM generic_ps_init
 
