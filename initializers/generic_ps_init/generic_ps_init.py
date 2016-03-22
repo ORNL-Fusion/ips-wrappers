@@ -126,7 +126,7 @@ class generic_ps_init (Component):
         tfinal  = tlist_str[-1]
 
 # Check if this is a restart simulation
-        mode = self.get_config_parameter('SIMULATION_MODE')
+        mode = self.try_get_config_param(services, 'SIMULATION_MODE')
 
         if mode == 'RESTART':
             print 'generic_ps_init: RESTART'
@@ -171,7 +171,7 @@ class generic_ps_init (Component):
         
         else:
             print 'generic_ps_init: simulation mode NORMAL'
-            ps_file_list = self.get_config_param('PLASMA_STATE_FILES').split(' ')
+            ps_file_list = self.try_get_config_param(services, 'PLASMA_STATE_FILES').split(' ')
             print 'ps_file_list = ', ps_file_list
  
             try:       
@@ -312,7 +312,7 @@ class generic_ps_init (Component):
 
 
     # Try to get config parameter - wraps the exception handling for get_config_parameter()
-    def get_config_param(self, services, param_name, optional=False):
+    def try_get_config_param(self, services, param_name, optional=False):
 
         try:
             value = services.get_config_param(param_name)
@@ -330,7 +330,7 @@ class generic_ps_init (Component):
         return value
 
     # Try to get component specific config parameter - wraps the exception handling
-    def get_component_param(self, param_name, optional=False):
+    def try_get_component_param(self, param_name, optional=False):
 
         if hasattr(self, param_name):
             value = getattr(self, param_name)
