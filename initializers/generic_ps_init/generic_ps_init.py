@@ -183,13 +183,12 @@ class generic_ps_init (Component):
 
             cur_state_file = self.try_get_config_param(services, 'CURRENT_STATE')
 
-            init_mode = self.try_get_component_param(services,'INIT_MODE')
-            print 'generic_ps_init: INIT_MODE = ', INIT_MODE
+            init_mode = self.try_get_component_param(services, 'INIT_MODE')
 
             # init from existing plasma state file
-            if init_mode == 'existing_ps_file' or 'EXISTING_PS_FILE' :    
-                INPUT_STATE_FILE = self.get_config_parameter('INPUT_STATE_FILE')
-                INPUT_EQDSK_FILE = self.get_config_parameter('INPUT_EQDSK_FILE', optional)
+            if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE'] :    
+                INPUT_STATE_FILE = self.try_get_component_param(services, 'INPUT_STATE_FILE')
+                INPUT_EQDSK_FILE = self.try_get_component_param(services, 'INPUT_EQDSK_FILE', optional)
      
                 # Copy INPUT_STATE_FILE to current state file
                 try:
@@ -202,28 +201,26 @@ class generic_ps_init (Component):
                     raise
 
             # init from machine description file
-            if init_mode == 'mdescr' or 'MDESCR' :
+            if init_mode in ['mdescr', 'MDESCR'] :
                 print 'MDESCR not implemented yet'
                 raise
-                mdescr_file = self.get_config_parameter('MDESCR_FILE')
+                mdescr_file = self.try_get_component_param(services, 'MDESCR_FILE')
                 
-
-
-            init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
-    
-            print 'Executing ', [init_bin, cur_state_file]
-            retcode = subprocess.call([init_bin, cur_state_file, 
-                tokamak, shot_number, run_id, tinit, tfinal, t])
-            if (retcode != 0):
-               print 'Error executing ', init_bin
-               raise
+#                 init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
+#     
+#                 print 'Executing ', [init_bin, cur_state_file]
+#                 retcode = subprocess.call([init_bin, cur_state_file, 
+#                     tokamak, shot_number, run_id, tinit, tfinal, t])
+#                 if (retcode != 0):
+#                    print 'Error executing ', init_bin
+#                    raise
 
             # For all init init modes insert run identifiers and time data 
             # (do it here in python instead of in minimal_state_init.f90 as before)
             # For minimal this is the only thing done
-            tokamak = self.get_config_parameter('TOKAMAK_ID', optional)
-            shot_number = self.get_config_parameter('SHOT_NUMBER', optional)
-            run_id = self.get_config_parameter('RUN_ID', optional)
+            tokamak = self.try_get_config_param(services, 'TOKAMAK_ID')
+            shot_number = self.try_get_config_param(services, 'SHOT_NUMBER')
+            run_id = self.try_get_config_param(services, 'RUN_ID')
 
             timeloop = services.get_time_loop()
             t0 = timeloop[0]
@@ -329,7 +326,7 @@ class generic_ps_init (Component):
         return value
 
     # Try to get component specific config parameter - wraps the exception handling
-    def try_get_component_param(self, param_name, optional=False):
+    def try_get_component_param(self, services, param_name, optional=False):
 
         if hasattr(self, param_name):
             value = getattr(self, param_name)
