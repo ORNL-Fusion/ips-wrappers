@@ -9,19 +9,19 @@ This version combines several previous initializer routines and extends them.  T
 X modes of initialization to be specified by the config file variable INIT_MODE
 
 INIT_MODE = minimal
-This is exctly the same as the previous generic_ps_init.py. It produces a CURRENT_STATE 
-that is empty except for:
+This is exactly the same as the previous generic_ps_init.py. It produces a CURRENT_STATE 
+that is empty except for some metadata:
 time variables - ps%t0, ps%t1, ps%tinit, and ps%tfinal 
 simulation identifiers - ps%tokamak_id, ps%shot_number, ps%run_id.  
 ps%Global_label is set to run_id_tokamak_id_shot_number.
-
-
-INIT_MODE = mdescr
-This performs a minimal init as descrbed above then initializes all machine description 
-data from a plasma state machine description file <tokamak>.mdescr
+This data is set for all initialization modes, but for 'minimal' this is all that is done.
 
 INIT_MODE = existing_ps_file
 This copies an existing input plasma state file
+
+INIT_MODE = mdescr
+This initializes all machine description data from a plasma state machine description 
+file <tokamak>.mdescr
 
 INIT_MODE = mixed (yet to be implemented)
 
@@ -84,8 +84,7 @@ import getopt
 import shutil
 import string
 from  component import Component
-from Scientific.IO.NetCDF import *
-import Numeric
+from netCDF4 import *
 
 class generic_ps_init (Component):
     def __init__(self, services, config):
@@ -146,7 +145,7 @@ class generic_ps_init (Component):
             # Get restart files listed in config file. Here just the plasma state files.
             restart_root = self.get_config_parameter('RESTART_ROOT')
             restart_time = self.get_config_parameter('RESTART_TIME')
-             try:
+            try:
                  services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
             except:
                 logMsg = 'Error in call to get_restart_files()'
@@ -158,7 +157,7 @@ class generic_ps_init (Component):
             # Update ps%t0, ps%t1 and ps%tfinal. 
             # Note ps%tinit stays the same in the plasma state file, 
             # tinit from the config file timeloop is the restart time 
-            ps = NetCDFFile(cur_state_file, 'r+')
+            ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
             ps.variables['t0'].assignValue(float(tinit))
             ps.variables['t1'].assignValue(float(tinit))
             ps.variables['tfinal'].assignValue(float(tfinal))
@@ -175,40 +174,40 @@ class generic_ps_init (Component):
             ps_file_list = self.get_config_param('PLASMA_STATE_FILES').split(' ')
             print 'ps_file_list = ', ps_file_list
  
- 			try:       
-				services.stage_input_files(self.INPUT_FILES)
-			except Exception:
-				message = 'generic_ps_init: Error in staging input files'
-				print message
-				services.exception(message)
-				raise
+            try:       
+                services.stage_input_files(self.INPUT_FILES)
+            except Exception:
+                message = 'generic_ps_init: Error in staging input files'
+                print message
+                services.exception(message)
+                raise
 
             cur_state_file = self.get_config_param('CURRENT_STATE')
 
-			init_mode = self.get_component_param(services,'INIT_MODE')
-			print 'generic_ps_init: INIT_MODE = ', INIT_MODE
+            init_mode = self.get_component_param(services,'INIT_MODE')
+            print 'generic_ps_init: INIT_MODE = ', INIT_MODE
 
-			# init from existing plasma state file
-			if init_mode == 'existing_ps_file' or 'EXISTING_PS_FILE' :    
+            # init from existing plasma state file
+            if init_mode == 'existing_ps_file' or 'EXISTING_PS_FILE' :    
                 INPUT_STATE_FILE = self.get_config_parameter('INPUT_STATE_FILE')
                 INPUT_EQDSK_FILE = self.get_config_parameter('INPUT_EQDSK_FILE', optional)
-	 
-				# Copy INPUT_STATE_FILE to current state file
-				try:
-					subprocess.call(['cp', INPUT_STATE_FILE, cur_state_file ])
-				except Exception:
-					message = 'generic_ps_init: Error in copying INPUT_STATE_FILE \
-						to current state file'
-					print message
-					services.exception(message)
-					raise
+     
+                # Copy INPUT_STATE_FILE to current state file
+                try:
+                    subprocess.call(['cp', INPUT_STATE_FILE, cur_state_file ])
+                except Exception:
+                    message = 'generic_ps_init: Error in copying INPUT_STATE_FILE \
+                        to current state file'
+                    print message
+                    services.exception(message)
+                    raise
 
-			# init from machine description file
-			if init_mode == 'mdescr' or 'MDESCR' :
-				print 'MDESCR not implemented yet'
-				raise
-				mdescr_file = self.get_config_parameter('MDESCR_FILE')
-				
+            # init from machine description file
+            if init_mode == 'mdescr' or 'MDESCR' :
+                print 'MDESCR not implemented yet'
+                raise
+                mdescr_file = self.get_config_parameter('MDESCR_FILE')
+                
 
 
             init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
@@ -220,9 +219,9 @@ class generic_ps_init (Component):
                print 'Error executing ', init_bin
                raise
 
-			# For all init init modes insert run identifiers and time data 
-			# (do it here in python instead of in minimal_state_init.f90 as before)
-			# For minimal this is the only thing done
+            # For all init init modes insert run identifiers and time data 
+            # (do it here in python instead of in minimal_state_init.f90 as before)
+            # For minimal this is the only thing done
             tokamak = self.get_config_parameter('TOKAMAK_ID', optional)
             shot_number = self.get_config_parameter('SHOT_NUMBER', optional)
             run_id = self.get_config_parameter('RUN_ID', optional)
@@ -232,7 +231,7 @@ class generic_ps_init (Component):
             t1 = t0
             tfinal = timeloop[-1]
 
-	        # Put into current plasma state
+            # Put into current plasma state
             plasma_state = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
             plasma_state.variables['tokamak_id'] = tokamak
             plasma_state.variables['shot_number'] = shot_number
