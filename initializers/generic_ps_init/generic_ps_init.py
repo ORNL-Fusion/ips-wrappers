@@ -172,7 +172,6 @@ class generic_ps_init (Component):
         else:
             print 'generic_ps_init: simulation mode NORMAL'
             ps_file_list = self.try_get_config_param(services, 'PLASMA_STATE_FILES').split(' ')
-            print 'ps_file_list = ', ps_file_list
  
             try:       
                 services.stage_input_files(self.INPUT_FILES)
@@ -182,9 +181,9 @@ class generic_ps_init (Component):
                 services.exception(message)
                 raise
 
-            cur_state_file = self.get_config_param('CURRENT_STATE')
+            cur_state_file = self.try_get_config_param(services, 'CURRENT_STATE')
 
-            init_mode = self.get_component_param(services,'INIT_MODE')
+            init_mode = self.try_get_component_param(services,'INIT_MODE')
             print 'generic_ps_init: INIT_MODE = ', INIT_MODE
 
             # init from existing plasma state file
