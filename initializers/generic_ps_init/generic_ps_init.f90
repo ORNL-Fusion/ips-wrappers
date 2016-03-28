@@ -64,7 +64,7 @@ PROGRAM generic_ps_init
 !--------------------------------------------------------------------------
 
 	REAL(KIND=rspec) :: t, tinit, tfinal
-	CHARACTER* :: ps_init_nml_file = 'generic_ps_init.nml'
+	CHARACTER(LEN=*) :: ps_init_nml_file = 'generic_ps_init.nml'
 
 !------------------------------------------------------------------------------------
 !     
@@ -106,7 +106,7 @@ PROGRAM generic_ps_init
 !
 !------------------------------------------------------------------------------------
 
-	IF (TRIM(init_mode) == 'mdescr')
+	IF (TRIM(init_mode) == 'mdescr') THEN
 		call ps_mdescr_namelist_read(.False., trim(mdescr_file), ' ',  &
 				TRIM(input_eqdsk_file), ps, ierr)
 		IF (ierr .ne. 0) THEN
@@ -120,7 +120,7 @@ PROGRAM generic_ps_init
 !
 !------------------------------------------------------------------------------------
 
-	IF (TRIM(sconfig_file) != ' ')
+	IF (TRIM(sconfig_file) != ' ') THEN
 		call ps_sconfig_namelist_read(.False., TRIM(sconfig_file), ' ',  ' ', ps, ierr)
 		IF (ierr .ne. 0) THEN
 			print*, 'Could not get namelist sconfig'
@@ -133,7 +133,7 @@ PROGRAM generic_ps_init
 !
 !------------------------------------------------------------------------------------
 	
-	IF (TRIM(generate_eqdsk) == 'True')
+	IF (TRIM(generate_eqdsk) == 'True') THEN
 	!  Get current plasma state 
 			
 		call ps_get_plasma_state(ierr, trim(cur_state_file))
