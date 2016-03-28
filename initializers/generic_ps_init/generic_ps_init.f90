@@ -64,7 +64,7 @@ PROGRAM generic_ps_init
 !--------------------------------------------------------------------------
 
 	REAL(KIND=rspec) :: t, tinit, tfinal
-	CHARACTER(LEN=*) :: ps_init_nml_file = 'generic_ps_init.nml'
+	CHARACTER(LEN=*), PARAMETER :: ps_init_nml_file = 'generic_ps_init.nml'
 
 !------------------------------------------------------------------------------------
 !     
@@ -120,7 +120,7 @@ PROGRAM generic_ps_init
 !
 !------------------------------------------------------------------------------------
 
-	IF (TRIM(sconfig_file) != ' ') THEN
+	IF (TRIM(sconfig_file) /= ' ') THEN
 		call ps_sconfig_namelist_read(.False., TRIM(sconfig_file), ' ',  ' ', ps, ierr)
 		IF (ierr .ne. 0) THEN
 			print*, 'Could not get namelist sconfig'
@@ -146,6 +146,7 @@ PROGRAM generic_ps_init
 		IF (ierr .ne. 0) THEN
 			print*, 'Could not get generate eqdsk file from plasma state'
 			call exit(1)
+	END IF
 		
 
 !------------------------------------------------------------------------------------
