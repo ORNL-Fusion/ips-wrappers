@@ -162,6 +162,7 @@ PROGRAM generic_ps_init
 
 	ELSE
 		WRITE (*,*) 'Unknown initialization mode = ', init_mode
+		
 
 END PROGRAM generic_ps_init
 
