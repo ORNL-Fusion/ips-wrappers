@@ -86,12 +86,12 @@ PROGRAM generic_ps_init
 !
 !---------------------------------------------------------------------------------
 
-       OPEN (unit=21, file=TRIM(input_namelist_file), status='unknown', &
+       OPEN (unit=21, file=TRIM(ps_init_nml_file), status='unknown', &
             action='write', iostat=istat, form='formatted')
             IF (istat /= 0 ) THEN
                 CALL SWIM_error ('open', 'generic_ps_init.f90',ps_init_nml_file)
                 ierr = istat
-                WRITE (*,*) 'generic_ps_init.f90: Cannot open ', TRIM(input_namelist_file)
+                WRITE (*,*) 'generic_ps_init.f90: Cannot open ', TRIM(ps_init_nml_file)
                 stop 'generic_ps_init.f90: Cannot open ps_init_nml_file'
             END IF
         ierr = 0
@@ -112,6 +112,7 @@ PROGRAM generic_ps_init
 		IF (ierr .ne. 0) THEN
 			print*, 'Could not get namelist mdescr'
 			call exit(1)
+		END IF
 	END IF
 
 !------------------------------------------------------------------------------------
@@ -125,6 +126,7 @@ PROGRAM generic_ps_init
 		IF (ierr .ne. 0) THEN
 			print*, 'Could not get namelist sconfig'
 			call exit(1)
+		END IF
 	END IF
 	
 !------------------------------------------------------------------------------------
@@ -146,6 +148,7 @@ PROGRAM generic_ps_init
 		IF (ierr .ne. 0) THEN
 			print*, 'Could not get generate eqdsk file from plasma state'
 			call exit(1)
+		END IF
 	END IF
 		
 
