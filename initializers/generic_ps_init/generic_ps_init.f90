@@ -144,7 +144,7 @@ PROGRAM generic_ps_init
 		   stop 1
 		end if
 
-		CALL ps_wr_geqdsk(ier, cur_eqdsk_file)
+		CALL ps_wr_geqdsk(ierr, cur_eqdsk_file)
 		IF (ierr .ne. 0) THEN
 			print*, 'Could not get generate eqdsk file from plasma state'
 			call exit(1)
@@ -161,11 +161,7 @@ PROGRAM generic_ps_init
 
 	CALL PS_STORE_PLASMA_STATE(ierr, trim(cur_state_file))
 	
-	WRITE (*,*) "generic_ps_init.f90: Stored initial Plasma State"    
-
-	ELSE
-		WRITE (*,*) 'Unknown initialization mode = ', init_mode
-		
+	WRITE (*,*) "generic_ps_init.f90: Stored initial Plasma State"    		
 
 END PROGRAM generic_ps_init
 
