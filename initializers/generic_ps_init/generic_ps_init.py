@@ -193,9 +193,9 @@ class generic_ps_init (Component):
             if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE'] :    
                 INPUT_STATE_FILE = self.try_get_component_param(services, 'INPUT_STATE_FILE')
                 INPUT_EQDSK_FILE = ' '
-                input_eqdsk_file = self.try_get_component_param(services, 'INPUT_EQDSK_FILE', \
+                INPUT_EQDSK_FILE = self.try_get_component_param(services, 'INPUT_EQDSK_FILE', \
                 optional = True)
-                nml_lines.append(' input_eqdsk_file = ' + input_eqdsk_file + '\n')
+                nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
                 
      
                 # Copy INPUT_STATE_FILE to current state file
@@ -207,6 +207,16 @@ class generic_ps_init (Component):
                     print message
                     services.exception(message)
                     raise
+
+         # Copy INPUT_EQDSK_FILE to cur_eqdsk_file if there is one
+            if INPUT_EQDSK_FILE != '':
+                try:
+                    subprocess.call(['cp', INPUT_EQDSK_FILE, cur_eqdsk_file ])
+                except Exception, e:
+                    message =  'existing_ps_file_init: Error in copying input_eqdsk_file' 
+                    print message
+                    services.exception(message)
+                    raise e
 
             # init from machine description file
             if init_mode in ['mdescr', 'MDESCR'] :
