@@ -216,7 +216,7 @@ class generic_ps_init (Component):
 
             #  For 'minimal' and 'mdescr' modes generate namelist for the fortran  
             # helper code generic_ps_init.f90 and execute it
-            if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE', 'mdescr', 'MDESCR'] :
+            if init_mode in ['minimal', 'MINIMAL', 'mdescr', 'MDESCR'] :
 				nml_lines.append('/')
 				self.put_lines('generic_ps_init.nml', nml_lines)
 							
