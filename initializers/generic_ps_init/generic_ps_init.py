@@ -209,15 +209,15 @@ class generic_ps_init (Component):
                     services.exception(message)
                     raise
 
-	         # Copy INPUT_EQDSK_FILE to cur_eqdsk_file if there is one
-				if INPUT_EQDSK_FILE != '':
-					try:
-						subprocess.call(['cp', INPUT_EQDSK_FILE, cur_eqdsk_file ])
-					except Exception, e:
-						message =  'existing_ps_file_init: Error in copying input_eqdsk_file' 
-						print message
-						services.exception(message)
-						raise e
+             # Copy INPUT_EQDSK_FILE to cur_eqdsk_file if there is one
+                if INPUT_EQDSK_FILE != '':
+                    try:
+                        subprocess.call(['cp', INPUT_EQDSK_FILE, cur_eqdsk_file ])
+                    except Exception, e:
+                        message =  'existing_ps_file_init: Error in copying input_eqdsk_file' 
+                        print message
+                        services.exception(message)
+                        raise e
 
             # init from machine description file
             if init_mode in ['mdescr', 'MDESCR'] :
@@ -228,15 +228,15 @@ class generic_ps_init (Component):
             #  For 'minimal' and 'mdescr' modes generate namelist for the fortran  
             # helper code generic_ps_init.f90 and execute it
             if init_mode in ['minimal', 'MINIMAL', 'mdescr', 'MDESCR'] :
-				nml_lines.append('/')
-				self.put_lines('generic_ps_init.nml', nml_lines)
-							
-				init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
-				print 'Executing ', init_bin
-				retcode = subprocess.call(init_bin)
-				if (retcode != 0):
-				   print 'Error executing ', init_bin
-				   raise
+                nml_lines.append('/')
+                self.put_lines('generic_ps_init.nml', nml_lines)
+                            
+                init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
+                print 'Executing ', init_bin
+                retcode = subprocess.call(init_bin)
+                if (retcode != 0):
+                   print 'Error executing ', init_bin
+                   raise
 
             # For all init init modes insert run identifiers and time data 
             # (do it here in python instead of in minimal_state_init.f90 as before)
