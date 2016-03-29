@@ -214,16 +214,18 @@ class generic_ps_init (Component):
                 raise
                 mdescr_file = self.try_get_component_param(services, 'MDESCR_FILE')
 
-            #  Generate namelist for the fortran helper generic_ps_init.f90 and execute it
-            nml_lines.append('/')
-            self.put_lines('generic_ps_init.nml', nml_lines)
-                            
-            init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
-            print 'Executing ', init_bin
-            retcode = subprocess.call(init_bin)
-            if (retcode != 0):
-               print 'Error executing ', init_bin
-               raise
+            #  For 'minimal' and 'mdescr' modes generate namelist for the fortran  
+            # helper code generic_ps_init.f90 and execute it
+            if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE', 'mdescr', 'MDESCR'] :
+				nml_lines.append('/')
+				self.put_lines('generic_ps_init.nml', nml_lines)
+							
+				init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
+				print 'Executing ', init_bin
+				retcode = subprocess.call(init_bin)
+				if (retcode != 0):
+				   print 'Error executing ', init_bin
+				   raise
 
             # For all init init modes insert run identifiers and time data 
             # (do it here in python instead of in minimal_state_init.f90 as before)
