@@ -6,7 +6,7 @@ generic_init.py  Batchelor (2-15-2016)
 The Swiss army knife of Plasma State initializers.
 
 This version combines several previous initializer routines and extends them.  There are
-X modes of initialization to be specified by the config file variable INIT_MODE
+X modes of initialization which must be specified by the config file variable INIT_MODE
 
 INIT_MODE = minimal
 This is exactly the same as the previous generic_ps_init.py. It produces a CURRENT_STATE 
@@ -14,16 +14,22 @@ that is empty except for some metadata:
 time variables - ps%t0, ps%t1, ps%tinit, and ps%tfinal 
 simulation identifiers - ps%tokamak_id, ps%shot_number, ps%run_id.  
 ps%Global_label is set to run_id_tokamak_id_shot_number.
-This data is set for all initialization modes, but for 'minimal' this is all that is done.
+This data is set for all initialization modes, but for 'minimal' this is all the data
+included.
 
 INIT_MODE = existing_ps_file
-This copies an existing input plasma state file
+This copies an existing input plasma state file and optionally an existing eqdsk file.
+These must be specified as variables INPUT_STATE_FILE and INPUT_EQDSK_FILE in the config
+file.
 
 INIT_MODE = mdescr
 This initializes all machine description data from a plasma state machine description 
 file <tokamak>.mdescr
 
 INIT_MODE = mixed (yet to be implemented)
+
+Except for existing_ps_file mode, all modes call on the fortran helper code 
+generic_ps_file_init.f90 to interact with the Plasma State.
 
 """
 
