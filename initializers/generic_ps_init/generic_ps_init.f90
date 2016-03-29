@@ -72,7 +72,7 @@ PROGRAM generic_ps_init
 !
 !------------------------------------------------------------------------------------
 
-    namelist /generic_ps_init/ &
+    namelist /ps_init_nml/ &
           init_mode, generate_eqdsk, cur_state_file, cur_eqdsk_file, &
           mdescr_file, input_eqdsk_file, sconfig_file
           
@@ -96,9 +96,9 @@ PROGRAM generic_ps_init
             END IF
         ierr = 0
 
-        read(21, nml=generic_ps_init)
+        read(21, nml=ps_init_nml)
         CLOSE (21)
-        WRITE (*, nml = generic_ps_init)
+        WRITE (*, nml = ps_init_nml)
 
 !------------------------------------------------------------------------------------
 !     

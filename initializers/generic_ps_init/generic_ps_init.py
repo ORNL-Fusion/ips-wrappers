@@ -171,7 +171,7 @@ class generic_ps_init (Component):
         
         else:
             print 'generic_ps_init: simulation mode NORMAL'
-            nml_lines = ['&generic_ps_init\n']
+            nml_lines = ['&ps_init_nml\n']
             ps_file_list = self.try_get_config_param(services, 'PLASMA_STATE_FILES').split(' ')
 
 
