@@ -214,7 +214,7 @@ class generic_ps_init (Component):
                 mdescr_file = self.try_get_component_param(services, 'MDESCR_FILE')
 
             #  Generate namelist for the fortran helper generic_ps_init.f90 and execute it
-            nml_lines.append('/\n')
+            nml_lines.append('/')
             self.put_lines('generic_ps_init.nml', nml_lines)
                             
             init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
