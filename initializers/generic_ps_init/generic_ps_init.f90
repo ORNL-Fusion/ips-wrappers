@@ -96,9 +96,9 @@ PROGRAM generic_ps_init
             END IF
         ierr = 0
 
-        read(21, nml=genric_ps_init)
+        read(21, nml=generic_ps_init)
         CLOSE (21)
-        WRITE (*, nml = genric_ps_init)
+        WRITE (*, nml = generic_ps_init)
 
 !------------------------------------------------------------------------------------
 !     
