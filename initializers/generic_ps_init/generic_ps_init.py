@@ -126,11 +126,11 @@ class generic_ps_init (Component):
         tfinal  = tlist_str[-1]
 
 # Check if this is a restart simulation
-        mode = self.try_get_config_param(services, 'SIMULATION_MODE')
+        simulation_mode = self.try_get_config_param(services, 'SIMULATION_MODE')
 
-        if mode == 'RESTART':
+        if simulation_mode == 'RESTART':
             print 'generic_ps_init: RESTART'
-        if mode not in ['RESTART', 'NORMAL']:
+        if simulation_mode not in ['RESTART', 'NORMAL']:
             logMsg = 'generic_ps_init: unrecoginzed SIMULATION_MODE: ' + mode
             self.services.error(logMsg)
             raise ValueError(logMsg)
@@ -141,7 +141,7 @@ class generic_ps_init (Component):
 #
 # ------------------------------------------------------------------------------
             
-        if mode == 'RESTART':
+        if simulation_mode == 'RESTART':
             # Get restart files listed in config file. Here just the plasma state files.
             restart_root = self.get_config_parameter('RESTART_ROOT')
             restart_time = self.get_config_parameter('RESTART_TIME')
@@ -171,8 +171,13 @@ class generic_ps_init (Component):
         
         else:
             print 'generic_ps_init: simulation mode NORMAL'
+            nml_lines = ['&genric_ps_init\n']
             ps_file_list = self.try_get_config_param(services, 'PLASMA_STATE_FILES').split(' ')
- 
+
+
+            init_mode = self.try_get_component_param(services, 'INIT_MODE')
+            nml_lines.append(' init_mode = ' + init_mode + '\n')
+
             try:       
                 services.stage_input_files(self.INPUT_FILES)
             except Exception:
@@ -182,13 +187,15 @@ class generic_ps_init (Component):
                 raise
 
             cur_state_file = self.try_get_config_param(services, 'CURRENT_STATE')
-
-            init_mode = self.try_get_component_param(services, 'INIT_MODE')
-
+            nml_lines.append(' cur_state_file = ' + cur_state_file + '\n')
+            
             # init from existing plasma state file
             if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE'] :    
                 INPUT_STATE_FILE = self.try_get_component_param(services, 'INPUT_STATE_FILE')
-                INPUT_EQDSK_FILE = self.try_get_component_param(services, 'INPUT_EQDSK_FILE', optional)
+                INPUT_EQDSK_FILE = ' '
+                input_eqdsk_file = self.try_get_component_param(services, 'INPUT_EQDSK_FILE', optional)
+                nml_lines.append(' input_eqdsk_file = ' + input_eqdsk_file + '\n')
+                
      
                 # Copy INPUT_STATE_FILE to current state file
                 try:
@@ -205,19 +212,21 @@ class generic_ps_init (Component):
                 print 'MDESCR not implemented yet'
                 raise
                 mdescr_file = self.try_get_component_param(services, 'MDESCR_FILE')
-                
-#                 init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
-#     
-#                 print 'Executing ', [init_bin, cur_state_file]
-#                 retcode = subprocess.call([init_bin, cur_state_file, 
-#                     tokamak, shot_number, run_id, tinit, tfinal, t])
-#                 if (retcode != 0):
-#                    print 'Error executing ', init_bin
-#                    raise
+
+            #  Generate namelist for the fortran helper generic_ps_init.f90 and execute it
+            nml_lines.append('/\n')
+            self.put_lines('generic_ps_init.nml', nml_lines)
+                            
+            init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
+            print 'Executing ', init_bin
+            retcode = subprocess.call(init_bin)
+            if (retcode != 0):
+               print 'Error executing ', init_bin
+               raise
 
             # For all init init modes insert run identifiers and time data 
             # (do it here in python instead of in minimal_state_init.f90 as before)
-            # For minimal this is the only thing done
+            # For minimal this is the only data in initial state
             tokamak = self.try_get_config_param(services, 'TOKAMAK_ID')
             shot_number = self.try_get_config_param(services, 'SHOT_NUMBER')
             run_id = self.try_get_config_param(services, 'RUN_ID')
@@ -341,3 +350,11 @@ class generic_ps_init (Component):
             raise
 
         return value
+
+
+    #---------------------------------------------------------------------------------------
+    # Open an output file and write lines into it
+    def put_lines(self, filename, lines):
+        file = open(filename, 'w')
+        file.writelines(lines)
+        file.close()
