@@ -86,15 +86,20 @@ PROGRAM generic_ps_init
 !
 !---------------------------------------------------------------------------------
 
-       OPEN (unit=21, file=TRIM(ps_init_nml_file), status='unknown', &
-            action='read', iostat=istat, form='formatted')
-            IF (istat /= 0 ) THEN
-                CALL SWIM_error ('open', 'generic_ps_init.f90',ps_init_nml_file)
-                ierr = istat
-                WRITE (*,*) 'generic_ps_init.f90: Cannot open ', TRIM(ps_init_nml_file)
-                stop 'generic_ps_init.f90: Cannot open ps_init_nml_file'
-            END IF
-        ierr = 0
+    OPEN (unit=21, file = 'generic_ps_init.nml', status = 'old',   &
+         form = 'formatted', iostat = ierr)
+    IF (ierr .ne. 0) STOP 'cannot open EPA_model.nml'
+
+
+!        OPEN (unit=21, file=TRIM(ps_init_nml_file), status='unknown', &
+!             action='read', iostat=istat, form='formatted')
+!             IF (istat /= 0 ) THEN
+!                 CALL SWIM_error ('open', 'generic_ps_init.f90',ps_init_nml_file)
+!                 ierr = istat
+!                 WRITE (*,*) 'generic_ps_init.f90: Cannot open ', TRIM(ps_init_nml_file)
+!                 stop 'generic_ps_init.f90: Cannot open ps_init_nml_file'
+!             END IF
+!         ierr = 0
 
         read(21, nml=ps_init_nml)
         CLOSE (21)
