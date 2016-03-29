@@ -193,7 +193,8 @@ class generic_ps_init (Component):
             if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE'] :    
                 INPUT_STATE_FILE = self.try_get_component_param(services, 'INPUT_STATE_FILE')
                 INPUT_EQDSK_FILE = ' '
-                input_eqdsk_file = self.try_get_component_param(services, 'INPUT_EQDSK_FILE', optional)
+                input_eqdsk_file = self.try_get_component_param(services, 'INPUT_EQDSK_FILE', \
+                optional = True)
                 nml_lines.append(' input_eqdsk_file = ' + input_eqdsk_file + '\n')
                 
      
