@@ -208,15 +208,15 @@ class generic_ps_init (Component):
                     services.exception(message)
                     raise
 
-         # Copy INPUT_EQDSK_FILE to cur_eqdsk_file if there is one
-            if INPUT_EQDSK_FILE != '':
-                try:
-                    subprocess.call(['cp', INPUT_EQDSK_FILE, cur_eqdsk_file ])
-                except Exception, e:
-                    message =  'existing_ps_file_init: Error in copying input_eqdsk_file' 
-                    print message
-                    services.exception(message)
-                    raise e
+	         # Copy INPUT_EQDSK_FILE to cur_eqdsk_file if there is one
+				if INPUT_EQDSK_FILE != '':
+					try:
+						subprocess.call(['cp', INPUT_EQDSK_FILE, cur_eqdsk_file ])
+					except Exception, e:
+						message =  'existing_ps_file_init: Error in copying input_eqdsk_file' 
+						print message
+						services.exception(message)
+						raise e
 
             # init from machine description file
             if init_mode in ['mdescr', 'MDESCR'] :
