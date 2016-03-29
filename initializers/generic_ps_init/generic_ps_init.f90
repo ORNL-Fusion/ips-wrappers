@@ -72,7 +72,7 @@ PROGRAM generic_ps_init
 !
 !------------------------------------------------------------------------------------
 
-    namelist /genric_ps_init/ &
+    namelist /generic_ps_init/ &
           init_mode, generate_eqdsk, cur_state_file, cur_eqdsk_file, &
           mdescr_file, input_eqdsk_file, sconfig_file
           
@@ -87,7 +87,7 @@ PROGRAM generic_ps_init
 !---------------------------------------------------------------------------------
 
        OPEN (unit=21, file=TRIM(ps_init_nml_file), status='unknown', &
-            action='write', iostat=istat, form='formatted')
+            action='read', iostat=istat, form='formatted')
             IF (istat /= 0 ) THEN
                 CALL SWIM_error ('open', 'generic_ps_init.f90',ps_init_nml_file)
                 ierr = istat
