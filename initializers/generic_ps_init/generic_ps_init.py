@@ -238,7 +238,7 @@ class generic_ps_init (Component):
             tfinal = timeloop[-1]
 
             # Put into current plasma state
-            plasma_state = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
+            plasma_state = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
             plasma_state.variables['tokamak_id'] = tokamak
             plasma_state.variables['shot_number'] = shot_number
             plasma_state.variables['run_id'] = run_id
