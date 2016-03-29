@@ -189,6 +189,7 @@ class generic_ps_init (Component):
             cur_state_file = self.try_get_config_param(services, 'CURRENT_STATE')
             cur_eqdsk_file = self.try_get_config_param(services, 'CURRENT_EQDSK')
             nml_lines.append(' cur_state_file = ' + cur_state_file + '\n')
+            nml_lines.append(' cur_eqdsk_file = ' + cur_eqdsk_file + '\n')
             
             # init from existing plasma state file
             if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE'] :    
