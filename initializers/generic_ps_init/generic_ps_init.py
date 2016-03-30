@@ -197,6 +197,7 @@ class generic_ps_init (Component):
             nml_lines.append(' cur_state_file = ' + cur_state_file + '\n')
             nml_lines.append(' cur_eqdsk_file = ' + cur_eqdsk_file + '\n')
             
+# ------------------------------------------------------------------------------
             # init from existing plasma state file
             if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE'] :    
                 INPUT_STATE_FILE = self.try_get_component_param(services, 'INPUT_STATE_FILE')
@@ -226,13 +227,18 @@ class generic_ps_init (Component):
                         services.exception(message)
                         raise e
 
+# ------------------------------------------------------------------------------
             # init from machine description file
             if init_mode in ['mdescr', 'MDESCR'] :
-                print 'MDESCR not implemented yet'
-                raise
-                mdescr_file = self.try_get_component_param(services, 'MDESCR_FILE')
+                MDESCR_FILE = self.try_get_component_param(services, 'MDESCR_FILE')
+                nml_lines.append(' mdescr_file = ' + MDESCR_FILE + '\n')
+                SCONFIG_FILE = ' '
+                SCONFIG_FILE = self.try_get_component_param(services, 'SCONFIG_FILE', \
+                optional = 'TRUE')
+                nml_lines.append(' sconfig_file = ' + SCONFIG_FILE + '\n')
 
-            #  For 'minimal' and 'mdescr' modes generate namelist for the fortran  
+# ------------------------------------------------------------------------------
+            # For 'minimal' and 'mdescr' modes generate namelist for the fortran  
             # helper code generic_ps_init.f90 and execute it
             if init_mode in ['minimal', 'MINIMAL', 'mdescr', 'MDESCR'] :
                 nml_lines.append('/')
@@ -245,9 +251,10 @@ class generic_ps_init (Component):
                    print 'Error executing ', init_bin
                    raise
 
+# ------------------------------------------------------------------------------
             # For all init init modes insert run identifiers and time data 
             # (do it here in python instead of in minimal_state_init.f90 as before)
-            # For minimal this is the only data in initial state
+            # For minimal mode this is the only data in initial state
             tokamak = self.try_get_config_param(services, 'TOKAMAK_ID')
             shot_number = self.try_get_config_param(services, 'SHOT_NUMBER')
             run_id = self.try_get_config_param(services, 'RUN_ID')

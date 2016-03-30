@@ -48,14 +48,10 @@ PROGRAM generic_ps_init
     INTEGER :: istat, ierr = 0
     INTEGER :: iarg
     
-! 	CHARACTER (len=256) :: cur_state_file, cur_eqdsk_file
-! 	CHARACTER (len=256) :: 	mdescr_file
-! 	CHARACTER (len=256) :: 	sconfig_file = ' '
-! 	CHARACTER (len=256) :: 	input_eqdsk_file = ' '
-	CHARACTER (len=64) :: cur_state_file, cur_eqdsk_file
-	CHARACTER (len=64) :: 	mdescr_file
-	CHARACTER (len=64) :: 	sconfig_file = ' '
-	CHARACTER (len=64) :: 	input_eqdsk_file = ' '
+	CHARACTER (len=256) :: cur_state_file, cur_eqdsk_file
+	CHARACTER (len=256) :: 	mdescr_file
+	CHARACTER (len=256) :: 	sconfig_file = ' '
+	CHARACTER (len=256) :: 	input_eqdsk_file = ' '
 	CHARACTER(len=32) :: init_mode	
 	CHARACTER(len=32) :: generate_eqdsk = 'False'
 
