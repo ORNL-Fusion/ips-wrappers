@@ -40,7 +40,7 @@ PROGRAM generic_ps_init
     use swim_global_data_mod, only : &
             & rspec, ispec, &               ! int: kind specification for real and integer
             & SWIM_name, SWIM_filename, &   ! derived data types: containing one character
-            								! string
+                                            ! string
             & SWIM_error                    ! subroutine: a simple error handling routine
     
     IMPLICIT none
@@ -48,12 +48,12 @@ PROGRAM generic_ps_init
     INTEGER :: istat, ierr = 0
     INTEGER :: iarg
     
-	CHARACTER (len=256) :: cur_state_file, cur_eqdsk_file
-	CHARACTER (len=256) :: 	mdescr_file
-	CHARACTER (len=256) :: 	sconfig_file = ' '
-	CHARACTER (len=256) :: 	input_eqdsk_file = ' '
-	CHARACTER(len=32) :: init_mode	
-	CHARACTER(len=32) :: generate_eqdsk = 'False'
+    CHARACTER (len=256) :: cur_state_file, cur_eqdsk_file
+    CHARACTER (len=256) ::  input_eqdsk_file = ' '
+    CHARACTER (len=32) ::   mdescr_file
+    CHARACTER (len=32) ::   sconfig_file = ' '
+    CHARACTER(len=32) :: init_mode  
+    CHARACTER(len=32) :: generate_eqdsk = 'False'
 
 
 
@@ -63,8 +63,8 @@ PROGRAM generic_ps_init
 !
 !--------------------------------------------------------------------------
 
-	REAL(KIND=rspec) :: t, tinit, tfinal
-	CHARACTER(LEN=*), PARAMETER :: ps_init_nml_file = 'generic_ps_init.nml'
+    REAL(KIND=rspec) :: t, tinit, tfinal
+    CHARACTER(LEN=*), PARAMETER :: ps_init_nml_file = 'generic_ps_init.nml'
 
 !------------------------------------------------------------------------------------
 !     
@@ -77,8 +77,8 @@ PROGRAM generic_ps_init
           mdescr_file, input_eqdsk_file, sconfig_file
           
            
-	WRITE (*,*)
-	WRITE (*,*) 'generic_ps_init'      
+    WRITE (*,*)
+    WRITE (*,*) 'generic_ps_init'      
 
 !---------------------------------------------------------------------------------
 !     
@@ -111,14 +111,23 @@ PROGRAM generic_ps_init
 !
 !------------------------------------------------------------------------------------
 
-	IF (TRIM(init_mode) == 'mdescr') THEN
-		call ps_mdescr_namelist_read(.False., trim(mdescr_file), ' ',  &
-				TRIM(input_eqdsk_file), ps, ierr)
-		IF (ierr .ne. 0) THEN
-			print*, 'Could not get namelist mdescr'
-			call exit(1)
-		END IF
-	END IF
+    IF (TRIM(init_mode) == 'mdescr') THEN
+        inquire(file=trim(mdescr_file), exist=file_exists)
+        if(.not.file_exists)then
+            write(*,*)'MDESCR INIT : ERROR - mdescr_file not found'  
+            write(*,*) trim(mdescr_file)
+            status = 1
+            call exit(status)
+        endif
+        call ps_mdescr_read(trim(mdescr_file), ierr, state=ps)
+
+!       call ps_mdescr_namelist_read(.False., trim(mdescr_file), ' ',  &
+!               TRIM(input_eqdsk_file), ps, ierr)
+!       IF (ierr .ne. 0) THEN
+!           print*, 'Could not get namelist mdescr'
+!           call exit(1)
+!       END IF
+    END IF
 
 !------------------------------------------------------------------------------------
 !     
@@ -126,36 +135,36 @@ PROGRAM generic_ps_init
 !
 !------------------------------------------------------------------------------------
 
-	IF (TRIM(sconfig_file) /= ' ') THEN
-		call ps_sconfig_namelist_read(.False., TRIM(sconfig_file), ' ',  ' ', ps, ierr)
-		IF (ierr .ne. 0) THEN
-			print*, 'Could not get namelist sconfig'
-			call exit(1)
-		END IF
-	END IF
-	
+    IF (TRIM(sconfig_file) /= ' ') THEN
+        call ps_sconfig_namelist_read(.False., TRIM(sconfig_file), ' ',  ' ', ps, ierr)
+        IF (ierr .ne. 0) THEN
+            print*, 'Could not get namelist sconfig'
+            call exit(1)
+        END IF
+    END IF
+    
 !------------------------------------------------------------------------------------
 !     
 !   Extract eqdsk file from plasma state
 !
 !------------------------------------------------------------------------------------
-	
-	IF (TRIM(generate_eqdsk) == 'True') THEN
-	!  Get current plasma state 
-			
-		call ps_get_plasma_state(ierr, trim(cur_state_file))
-		if(ierr .ne. 0) then
-		   print*, 'model_EPA:failed to get_plasma_state'
-		   stop 1
-		end if
+    
+    IF (TRIM(generate_eqdsk) == 'True') THEN
+    !  Get current plasma state 
+            
+        call ps_get_plasma_state(ierr, trim(cur_state_file))
+        if(ierr .ne. 0) then
+           print*, 'model_EPA:failed to get_plasma_state'
+           stop 1
+        end if
 
-		CALL ps_wr_geqdsk(ierr, cur_eqdsk_file)
-		IF (ierr .ne. 0) THEN
-			print*, 'Could not get generate eqdsk file from plasma state'
-			call exit(1)
-		END IF
-	END IF
-		
+        CALL ps_wr_geqdsk(ierr, cur_eqdsk_file)
+        IF (ierr .ne. 0) THEN
+            print*, 'Could not get generate eqdsk file from plasma state'
+            call exit(1)
+        END IF
+    END IF
+        
 
 !------------------------------------------------------------------------------------
 !     
@@ -164,9 +173,9 @@ PROGRAM generic_ps_init
 !
 !------------------------------------------------------------------------------------
 
-	CALL PS_STORE_PLASMA_STATE(ierr, trim(cur_state_file))
-	
-	WRITE (*,*) "generic_ps_init.f90: Stored initial Plasma State"    		
+    CALL PS_STORE_PLASMA_STATE(ierr, trim(cur_state_file))
+    
+    WRITE (*,*) "generic_ps_init.f90: Stored initial Plasma State"          
 
 END PROGRAM generic_ps_init
 
