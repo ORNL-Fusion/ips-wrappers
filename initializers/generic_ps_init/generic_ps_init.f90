@@ -55,6 +55,7 @@ PROGRAM generic_ps_init
     CHARACTER(len=32) :: init_mode  
     CHARACTER(len=32) :: generate_eqdsk = 'False'
 
+    LOGICAL :: file_exists
 
 
 !--------------------------------------------------------------------------
