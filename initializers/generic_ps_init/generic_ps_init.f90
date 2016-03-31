@@ -46,7 +46,7 @@ PROGRAM generic_ps_init
     IMPLICIT none
     
     INTEGER :: istat, ierr = 0
-    INTEGER :: iarg
+    INTEGER :: iarg, status
     
     CHARACTER (len=256) :: cur_state_file, cur_eqdsk_file
     CHARACTER (len=256) ::  input_eqdsk_file = ' '
