@@ -46,7 +46,7 @@ PROGRAM generic_ps_init
     IMPLICIT none
     
     INTEGER :: istat, ierr = 0
-    INTEGER :: iarg, status
+    INTEGER :: iarg, status = 0
     
     CHARACTER (len=256) :: cur_state_file, cur_eqdsk_file
     CHARACTER (len=256) ::  input_eqdsk_file = ' '
@@ -120,6 +120,7 @@ PROGRAM generic_ps_init
             status = 1
             call exit(status)
         endif
+        write(*,*) 'generic_ps_init: mdescr_file = ', trim(mdescr_file)
         call ps_mdescr_read(trim(mdescr_file), ierr, state=ps)
 
 !       call ps_mdescr_namelist_read(.False., trim(mdescr_file), ' ',  &
