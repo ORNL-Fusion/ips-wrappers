@@ -138,11 +138,15 @@ PROGRAM generic_ps_init
 !------------------------------------------------------------------------------------
 
     IF (TRIM(sconfig_file) /= ' ') THEN
-        call ps_sconfig_namelist_read(.False., TRIM(sconfig_file), ' ',  ' ', ps, ierr)
-        IF (ierr .ne. 0) THEN
-            print*, 'Could not get namelist sconfig'
-            call exit(1)
-        END IF
+        inquire(file=trim(sconfig_file), exist=file_exists)
+        if(.not.file_exists)then
+            write(*,*)'MDESCR INIT : ERROR - sconfig_file not found'  
+            write(*,*) trim(sconfig_file)
+            status = 1
+            call exit(status)
+        endif
+        write(*,*) 'generic_ps_init: sconfig_file = ', trim(sconfig_file)
+        call ps_mdescr_read(trim(sconfig_file), ierr, state=ps)
     END IF
     
 !------------------------------------------------------------------------------------
