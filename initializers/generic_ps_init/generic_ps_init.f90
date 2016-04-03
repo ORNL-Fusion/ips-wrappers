@@ -50,7 +50,7 @@ PROGRAM generic_ps_init
     
     CHARACTER (len=256) :: cur_state_file, cur_eqdsk_file
     CHARACTER (len=256) ::  input_eqdsk_file = ' '
-    CHARACTER (len=32) ::   mdescr_file
+    CHARACTER (len=32) ::   mdescr_file = ' '
     CHARACTER (len=32) ::   sconfig_file = ' '
     CHARACTER(len=32) :: init_mode  
     CHARACTER(len=32) :: generate_eqdsk = 'False'
@@ -115,7 +115,7 @@ PROGRAM generic_ps_init
     IF (TRIM(init_mode) == 'mdescr') THEN
         inquire(file=trim(mdescr_file), exist=file_exists)
         if(.not.file_exists)then
-            write(*,*)'MDESCR INIT : ERROR - mdescr_file not found'  
+            write(*,*)'generic_ps_init : ERROR - mdescr_file not found'  
             write(*,*) trim(mdescr_file)
             status = 1
             call exit(status)
@@ -140,7 +140,7 @@ PROGRAM generic_ps_init
     IF (TRIM(sconfig_file) /= ' ') THEN
         inquire(file=trim(sconfig_file), exist=file_exists)
         if(.not.file_exists)then
-            write(*,*)'MDESCR INIT : ERROR - sconfig_file not found'  
+            write(*,*)'generic_ps_init : ERROR - sconfig_file not found'  
             write(*,*) trim(sconfig_file)
             status = 1
             call exit(status)
@@ -148,6 +148,25 @@ PROGRAM generic_ps_init
         write(*,*) 'generic_ps_init: sconfig_file = ', trim(sconfig_file)
         call ps_sconfig_read(trim(sconfig_file), ierr, state=ps)
     END IF
+
+!--------------------------------------------------------------------------
+! 
+! Load equilibrium data from input_eqdsk_file if one is provided.
+!
+!--------------------------------------------------------------------------
+
+    IF (TRIM(input_eqdsk_file) /= ' ') THEN
+        inquire(file=trim(input_eqdsk_file), exist=file_exists)
+        if(.not.file_exists)then
+            write(*,*)'generic_ps_init : ERROR - input_eqdsk_file not found'  
+            write(*,*) trim(input_eqdsk_file)
+            status = 1
+            call exit(status)
+        endif
+        write(*,*) 'generic_ps_init: input_eqdsk_file = ', trim(input_eqdsk_file)
+		CALL ps_update_equilibrium(ierr, TRIM(input_eqdsk_file) )
+    END IF
+
     
 !------------------------------------------------------------------------------------
 !     
