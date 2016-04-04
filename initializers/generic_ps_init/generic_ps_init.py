@@ -216,10 +216,6 @@ class generic_ps_init (Component):
                 nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
                 GENERATE_EQDSK = self.try_get_component_param(services, 'GENERATE_EQDSK', \
                 optional = True)
-                if GENERATE_EQDSK == 'True':
-					nml_lines.append(' generate_eqdsk = ' + GENERATE_EQDSK + '\n')
-					nml_lines.append('/')
-					self.put_lines('generic_ps_init.nml', nml_lines)
                 
      
                 # Copy INPUT_STATE_FILE to current state file
@@ -233,7 +229,11 @@ class generic_ps_init (Component):
                     raise
                     
                 # Generate cur_eqdsk_file from cur_state_file
-                if GENERATE_EQDSK in [true, TRUE, True]:
+                if GENERATE_EQDSK in ['true', 'TRUE', 'True']:
+					nml_lines.append(' generate_eqdsk = ' + GENERATE_EQDSK + '\n')
+					nml_lines.append('/')
+					self.put_lines('generic_ps_init.nml', nml_lines)
+					
 					init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
 					print 'Executing ', init_bin
 					retcode = subprocess.call(init_bin)
