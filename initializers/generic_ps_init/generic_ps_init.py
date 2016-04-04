@@ -244,7 +244,7 @@ class generic_ps_init (Component):
              # Copy INPUT_EQDSK_FILE, if there is one, to cur_eqdsk_file.
              # Nota Bene: If there is an INPUT_EQDSK_FILE specified in config this copy
              # will overwrite any eqdsk generated in the block above.
-                if INPUT_EQDSK_FILE != '':
+                if INPUT_EQDSK_FILE != ' ':
                     try:
                         subprocess.call(['cp', INPUT_EQDSK_FILE, cur_eqdsk_file ])
                     except Exception, e:
