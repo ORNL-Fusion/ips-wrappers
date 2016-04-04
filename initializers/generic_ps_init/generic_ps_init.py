@@ -3,13 +3,14 @@
 """
 generic_init.py  Batchelor (2-15-2016)
 
-The Swiss army knife of Plasma State initializers.
+The Swiss army knife of Plasma State initializers.  It produces the intial CURRENT_STATE
+and optionally the initial CURRENT_EQDSK.
 
 This version combines several previous initializer routines and extends them.  There are
-X modes of initialization which must be specified by the config file variable INIT_MODE
+3 modes of initialization which must be specified by the config file variable INIT_MODE
 
 INIT_MODE = minimal
-This is exactly the same as the previous generic_ps_init.py. It produces a CURRENT_STATE 
+This is exactly the same as the previous minimal_state_init.py. It produces a CURRENT_STATE 
 that is empty except for some metadata:
 time variables - ps%t0, ps%t1, ps%tinit, and ps%tfinal 
 simulation identifiers - ps%tokamak_id, ps%shot_number, ps%run_id.  
@@ -18,18 +19,26 @@ This data is set for all initialization modes, but for 'minimal' this is all the
 included.
 
 INIT_MODE = existing_ps_file
-This copies an existing input plasma state file and optionally an existing eqdsk file.
-These must be specified as variables INPUT_STATE_FILE and INPUT_EQDSK_FILE in the config
-file.
+This copies an existing input plasma state file and optionally an existing eqdsk file to
+CURRENT_STATE and CURRENT_EQDSK.  If the config parameter GENERATE_EQDSK is set to 'True'
+the CURRENT_EQDSK file is generated from equilibrium data in the INPUT_STATE_FILE.
+The INPUT_STATE_FILE and INPUT_EQDSK_FILE must be specified in the config file.
 
 INIT_MODE = mdescr
 This initializes all machine description data from a plasma state machine description 
-file <tokamak>.mdescr
+file, e.g. <tokamak>.mdescr, as specified by config parameter MDESCR_FILE. In addition
+if a shot configuration file config parameter, SCONFIG_FILE, is specified, the shot config
+data is also loaded into CURRENT_STATE.  Machine description and shot configuration files
+are namelist files that can be read and loaded using Plasma State subroutines ps_mdescr_read()
+and ps_scongif_read().  Note:  machine description and shot configuration do not define
+the MHD equilibrium, so the equilibrium must be specified during further component 
+initializations
 
 INIT_MODE = mixed (yet to be implemented)
 
-Except for existing_ps_file mode, all modes call on the fortran helper code 
-generic_ps_file_init.f90 to interact with the Plasma State.
+Except for possibly mode = existing_ps_file, all modes call on the fortran helper code 
+generic_ps_file_init.f90 to interact with the Plasma State. The fortran code is also used
+in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true.
 
 """
 
@@ -205,6 +214,11 @@ class generic_ps_init (Component):
                 INPUT_EQDSK_FILE = self.try_get_component_param(services, 'INPUT_EQDSK_FILE', \
                 optional = True)
                 nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
+                GENERATE_EQDSK = self.try_get_component_param(services, 'GENERATE_EQDSK', \
+                optional = True)
+                nml_lines.append(' generate_eqdsk = ' + GENERATE_EQDSK + '\n')
+                nml_lines.append('/')
+                self.put_lines('generic_ps_init.nml', nml_lines)
                 
      
                 # Copy INPUT_STATE_FILE to current state file
@@ -216,8 +230,19 @@ class generic_ps_init (Component):
                     print message
                     services.exception(message)
                     raise
+                    
+                # Generate cur_eqdsk_file from cur_state_file
+                if GENERATE_EQDSK in [true, TRUE, True]:
+					init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
+					print 'Executing ', init_bin
+					retcode = subprocess.call(init_bin)
+					if (retcode != 0):
+					   print 'Error executing ', init_bin
+					   raise
 
-             # Copy INPUT_EQDSK_FILE to cur_eqdsk_file if there is one
+             # Copy INPUT_EQDSK_FILE, if there is one, to cur_eqdsk_file.
+             # Nota Bene: If there is an INPUT_EQDSK_FILE specified in config this copy
+             # will overwrite any eqdsk generated in the block above.
                 if INPUT_EQDSK_FILE != '':
                     try:
                         subprocess.call(['cp', INPUT_EQDSK_FILE, cur_eqdsk_file ])

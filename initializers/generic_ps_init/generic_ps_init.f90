@@ -1,30 +1,44 @@
 PROGRAM generic_ps_init
 
+! version 1.0  (4/4/2016) Batchelor
+
 !--------------------------------------------------------------------------
 !
 ! Fortran code called by generic_ps_init.py.  The  Swiss army knife of Plasma State initializers.
 ! 
 ! This version combines several previous initializer routines and extends them.  There are
-! X modes of initialization to be specified by the config file variable INIT_MODE
+! 3 modes of initialization which must be specified by the config file variable INIT_MODE
 ! 
 ! INIT_MODE = minimal
-! This fortran code only generates a completely empty current state file.
-! The metadata that was previously inserted into CURRENT_STATE by minimal_state_init.f90  i.e. 
+! This is exactly the same as the previous minimal_state_init.py. It produces a CURRENT_STATE 
+! that is empty except for some metadata:
 ! time variables - ps%t0, ps%t1, ps%tinit, and ps%tfinal 
 ! simulation identifiers - ps%tokamak_id, ps%shot_number, ps%run_id.  
-! ps%Global_label -> run_id_tokamak_id_shot_number.
-! is now done in the python, generic_ps_init.py.  
+! ps%Global_label is set to run_id_tokamak_id_shot_number.
+! This data is set for all initialization modes, but for 'minimal' this is all the data
+! included.
 ! 
 ! INIT_MODE = existing_ps_file
-! The copy of the input plasma state to CURRENT_PLASMA_STATE is done in the python.  However if the config variable
-! 'GENERATE_EQDSK_FROM_STATE' is 'True', the Plasma State subroutine ps_wr_eqdsk() is used to generate it.
-! 
+! This copies an existing input plasma state file and optionally an existing eqdsk file to
+! CURRENT_STATE and CURRENT_EQDSK.  If the config parameter GENERATE_EQDSK is set to 'True'
+! the CURRENT_EQDSK file is generated from equilibrium data in the INPUT_STATE_FILE.
+! The INPUT_STATE_FILE and INPUT_EQDSK_FILE must be specified in the config file.
 ! 
 ! INIT_MODE = mdescr
-! Machine description data is read from a plasma state machine description file <tokamak>.mdescr 
-! using the plasma state function ps_mdescr_read().  
-
+! This initializes all machine description data from a plasma state machine description 
+! file, e.g. <tokamak>.mdescr, as specified by config parameter MDESCR_FILE. In addition
+! if a shot configuration file config parameter, SCONFIG_FILE, is specified, the shot config
+! data is also loaded into CURRENT_STATE.  Machine description and shot configuration files
+! are namelist files that can be read and loaded using Plasma State subroutines ps_mdescr_read()
+! and ps_scongif_read().  Note:  machine description and shot configuration do not define
+! the MHD equilibrium, so the equilibrium must be specified during further component 
+! initializations
+! 
 ! INIT_MODE = mixed (yet to be implemented)
+! 
+! Except for possibly mode = existing_ps_file, all modes call on the fortran helper code 
+! generic_ps_file_init.f90 to interact with the Plasma State. The fortran code is also used
+! in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true.
 !
 !       Don Batchelor
 !       ORNL
@@ -89,22 +103,15 @@ PROGRAM generic_ps_init
 
     OPEN (unit=21, file = 'generic_ps_init.nml', status = 'old',   &
          form = 'formatted', iostat = ierr)
-    IF (ierr .ne. 0) STOP 'cannot open EPA_model.nml'
+    IF (ierr .ne. 0) THEN
+		CALL SWIM_error ('open', 'generic_ps_init.f90',ps_init_nml_file)
+		WRITE (*,*) 'generic_ps_init.f90: Cannot open ', TRIM(ps_init_nml_file)
+		call exit(1)
+	END IF
 
-
-!        OPEN (unit=21, file=TRIM(ps_init_nml_file), status='unknown', &
-!             action='read', iostat=istat, form='formatted')
-!             IF (istat /= 0 ) THEN
-!                 CALL SWIM_error ('open', 'generic_ps_init.f90',ps_init_nml_file)
-!                 ierr = istat
-!                 WRITE (*,*) 'generic_ps_init.f90: Cannot open ', TRIM(ps_init_nml_file)
-!                 stop 'generic_ps_init.f90: Cannot open ps_init_nml_file'
-!             END IF
-!         ierr = 0
-
-        read(21, nml=ps_init_nml)
-        CLOSE (21)
-        WRITE (*, nml = ps_init_nml)
+	read(21, nml=ps_init_nml)
+	CLOSE (21)
+	WRITE (*, nml = ps_init_nml)
 
 !------------------------------------------------------------------------------------
 !     
@@ -117,8 +124,7 @@ PROGRAM generic_ps_init
         if(.not.file_exists)then
             write(*,*)'generic_ps_init : ERROR - mdescr_file not found'  
             write(*,*) trim(mdescr_file)
-            status = 1
-            call exit(status)
+            call exit(1)
         endif
         write(*,*) 'generic_ps_init: mdescr_file = ', trim(mdescr_file)
         call ps_mdescr_read(trim(mdescr_file), ierr, state=ps)
@@ -172,8 +178,8 @@ PROGRAM generic_ps_init
             
         call ps_get_plasma_state(ierr, trim(cur_state_file))
         if(ierr .ne. 0) then
-           print*, 'model_EPA:failed to get_plasma_state'
-           stop 1
+           print*, 'generic_ps_init: failed to get_plasma_state'
+           call exit(1)
         end if
 
         CALL ps_wr_geqdsk(ierr, cur_eqdsk_file)
