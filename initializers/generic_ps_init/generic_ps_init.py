@@ -213,6 +213,7 @@ class generic_ps_init (Component):
                 INPUT_EQDSK_FILE = ' '
                 INPUT_EQDSK_FILE = self.try_get_component_param(services, 'INPUT_EQDSK_FILE', \
                 optional = True)
+                print 'INPUT_EQDSK_FILE = ', INPUT_EQDSK_FILE
                 nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
                 GENERATE_EQDSK = self.try_get_component_param(services, 'GENERATE_EQDSK', \
                 optional = True)
@@ -248,7 +249,7 @@ class generic_ps_init (Component):
                     try:
                         subprocess.call(['cp', INPUT_EQDSK_FILE, cur_eqdsk_file ])
                     except Exception, e:
-                        message =  'existing_ps_file_init: Error in copying input_eqdsk_file' 
+                        message =  'generic_ps_init: Error in copying input_eqdsk_file' 
                         print message
                         services.exception(message)
                         raise e
