@@ -210,11 +210,14 @@ class generic_ps_init (Component):
             # init from existing plasma state file
             if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE'] :    
                 INPUT_STATE_FILE = self.try_get_component_param(services, 'INPUT_STATE_FILE')
-                INPUT_EQDSK_FILE = ' '
                 INPUT_EQDSK_FILE = self.try_get_component_param(services, 'INPUT_EQDSK_FILE', \
                 optional = True)
-                print 'INPUT_EQDSK_FILE = ', INPUT_EQDSK_FILE
-                nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
+
+                if (INPUT_EQDSK_FILE is None) or (len(INPUT_EQDSK_FILE) == 0):
+	               INPUT_EQDSK_FILE = ' '
+                else:
+ 	               nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
+ 
                 GENERATE_EQDSK = self.try_get_component_param(services, 'GENERATE_EQDSK', \
                 optional = True)
                 
