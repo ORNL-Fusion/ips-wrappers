@@ -122,13 +122,6 @@ PROGRAM generic_ps_init
         endif
         write(*,*) 'generic_ps_init: mdescr_file = ', trim(mdescr_file)
         call ps_mdescr_read(trim(mdescr_file), ierr, state=ps)
-
-!       call ps_mdescr_namelist_read(.False., trim(mdescr_file), ' ',  &
-!               TRIM(input_eqdsk_file), ps, ierr)
-!       IF (ierr .ne. 0) THEN
-!           print*, 'Could not get namelist mdescr'
-!           call exit(1)
-!       END IF
     END IF
 
 !------------------------------------------------------------------------------------

@@ -236,6 +236,10 @@ class generic_ps_init (Component):
                 SCONFIG_FILE = self.try_get_component_param(services, 'SCONFIG_FILE', \
                 optional = 'TRUE')
                 nml_lines.append(' sconfig_file = ' + SCONFIG_FILE + '\n')
+                INPUT_EQDSK_FILE = ' '
+                INPUT_EQDSK_FILE = self.try_get_component_param(services, 'INPUT_EQDSK_FILE', \
+                optional = True)
+                nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
 
 # ------------------------------------------------------------------------------
             # For 'minimal' and 'mdescr' modes generate namelist for the fortran  
