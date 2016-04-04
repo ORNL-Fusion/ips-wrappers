@@ -216,9 +216,10 @@ class generic_ps_init (Component):
                 nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
                 GENERATE_EQDSK = self.try_get_component_param(services, 'GENERATE_EQDSK', \
                 optional = True)
-                nml_lines.append(' generate_eqdsk = ' + GENERATE_EQDSK + '\n')
-                nml_lines.append('/')
-                self.put_lines('generic_ps_init.nml', nml_lines)
+                if GENERATE_EQDSK == 'True':
+					nml_lines.append(' generate_eqdsk = ' + GENERATE_EQDSK + '\n')
+					nml_lines.append('/')
+					self.put_lines('generic_ps_init.nml', nml_lines)
                 
      
                 # Copy INPUT_STATE_FILE to current state file
