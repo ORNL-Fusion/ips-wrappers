@@ -234,7 +234,7 @@ class generic_ps_init (Component):
                     
                 # Generate cur_eqdsk_file from cur_state_file
                 if GENERATE_EQDSK in ['true', 'TRUE', 'True']:
-					nml_lines.append(' generate_eqdsk = ' + GENERATE_EQDSK + '\n')
+					nml_lines.append(' generate_eqdsk = True')
 					nml_lines.append('/')
 					self.put_lines('generic_ps_init.nml', nml_lines)
 					
