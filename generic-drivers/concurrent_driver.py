@@ -297,7 +297,7 @@ class generic_driver(Component):
                 call_list.append(call_id_rf)
 
             if 'RF_LH' in port_names:
-                self.component_call(services, 'RF_LH', rf_lhComp, 'step', t)
+                self.component_call_nonblocking(services, 'RF_LH', rf_lhComp, 'step', t)
 
             if 'NB' in port_names:
                 call_id_nb  = services.call_nonblocking(nbComp, 'step', t)
