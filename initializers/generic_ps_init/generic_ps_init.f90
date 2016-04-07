@@ -131,10 +131,10 @@ PROGRAM generic_ps_init
     END IF
 
 ! Temporary debuggery
-    WRITE (*,*) "generic_ps_init.f90: Temporary debuggery"
-    CALL PS_STORE_PLASMA_STATE(ierr, trim(cur_state_file))    
-    WRITE (*,*) "generic_ps_init.f90: Stored initial Plasma State"
-    call exit(1)          
+!     WRITE (*,*) "generic_ps_init.f90: Temporary debuggery"
+!     CALL PS_STORE_PLASMA_STATE(ierr, trim(cur_state_file))    
+!     WRITE (*,*) "generic_ps_init.f90: Stored initial Plasma State"
+!     call exit(1)          
 
 !------------------------------------------------------------------------------------
 !     
