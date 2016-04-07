@@ -131,9 +131,9 @@ PROGRAM generic_ps_init
     END IF
 
 ! Temporary debuggery
-!     WRITE (*,*) "generic_ps_init.f90: Temporary debuggery"
-!     CALL PS_STORE_PLASMA_STATE(ierr, trim(cur_state_file))    
-!     WRITE (*,*) "generic_ps_init.f90: Stored initial Plasma State"
+    WRITE (*,*) "generic_ps_init.f90: Temporary debuggery"
+    CALL PS_STORE_PLASMA_STATE(ierr, 'temp_state_file.nc')    
+    WRITE (*,*) "generic_ps_init.f90: Stored initial Plasma State"
 !     call exit(1)          
 
 !------------------------------------------------------------------------------------
@@ -153,6 +153,12 @@ PROGRAM generic_ps_init
         write(*,*) 'generic_ps_init: sconfig_file = ', trim(sconfig_file)
         call ps_sconfig_read(trim(sconfig_file), ierr, state=ps)
     END IF
+
+! Temporary debuggery
+    WRITE (*,*) "generic_ps_init.f90: Temporary debuggery"
+    CALL PS_STORE_PLASMA_STATE(ierr, trim(cur_state_file))    
+    WRITE (*,*) "generic_ps_init.f90: Stored initial Plasma State"
+    call exit(1)          
 
 !--------------------------------------------------------------------------
 ! 
