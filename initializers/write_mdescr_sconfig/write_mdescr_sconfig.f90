@@ -24,7 +24,7 @@ PROGRAM write_medescr_sconfig
     
     IMPLICIT none
 
-    INTEGER :: ierr = 0, iarg = 0
+    INTEGER :: ierr = 0, iarg = 0, iout = 21
  
     CHARACTER (len=256) :: state_file        
 
