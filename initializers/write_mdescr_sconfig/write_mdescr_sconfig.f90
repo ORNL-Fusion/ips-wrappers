@@ -100,6 +100,7 @@ PROGRAM write_medescr_sconfig
 
 	  write(iout,*) ' namelist I/O tests completed.'
 
+CONTAINS
     !------------------------------------
     SUBROUTINE ckerr(sbrtn)
       character*(*), intent(in) :: sbrtn
