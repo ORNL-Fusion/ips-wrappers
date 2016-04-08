@@ -1,0 +1,7 @@
+*.o
+*.pyc
+*.mod
+.depend
+write_mdescr_sconfig
+make-result
+
