@@ -74,11 +74,11 @@ PROGRAM write_medescr_sconfig
 !---------------------------------------------------------------------------------
           
 	  write(iout,*) '   mdescr namelist write test...'
-	  call ps_mdescr_write('mdescr_sample_namelist.dat',ierr)
+	  call ps_mdescr_write('mdescr_namelist.dat',ierr)
 	  call ckerr('ps_mdescr_write')
 
-	  write(iout,*) '   sconfig namelist read test...'
-	  call ps_sconfig_write('sconfig_sample_namelist.dat',ierr)
+	  write(iout,*) '   sconfig namelist write test...'
+	  call ps_sconfig_write('sconfig_namelist.dat',ierr)
 	  call ckerr('ps_sconfig_write')
 
 !---------------------------------------------------------------------------------
