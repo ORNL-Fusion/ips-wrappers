@@ -220,8 +220,7 @@ class generic_ps_init (Component):
  
                 GENERATE_EQDSK = self.try_get_component_param(services, 'GENERATE_EQDSK', \
                 optional = True)
-                
-     
+                     
                 # Copy INPUT_STATE_FILE to current state file
                 try:
                     subprocess.call(['cp', INPUT_STATE_FILE, cur_state_file ])
@@ -262,9 +261,11 @@ class generic_ps_init (Component):
             if init_mode in ['mdescr', 'MDESCR'] :
                 MDESCR_FILE = self.try_get_component_param(services, 'MDESCR_FILE')
                 nml_lines.append(' mdescr_file = ' + MDESCR_FILE + '\n')
-                SCONFIG_FILE = ' '
                 SCONFIG_FILE = self.try_get_component_param(services, 'SCONFIG_FILE', \
                 optional = 'TRUE')
+                if (SCONFIG_FILE is None) or (len(SCONFIG_FILE) == 0):
+	               SCONFIG_FILE = ' '
+                else:
                 nml_lines.append(' sconfig_file = ' + SCONFIG_FILE + '\n')
                 INPUT_EQDSK_FILE = ' '
                 INPUT_EQDSK_FILE = self.try_get_component_param(services, 'INPUT_EQDSK_FILE', \
