@@ -13,12 +13,10 @@ PROGRAM model_EPA_mdescr
 !   predecessor, model_EPA_mdescr_2.f90, in that it only provides models for the thermal plasma
 !   species density and temperature.  In particular it does nothing with the MHD equilibrium.
 !
-!       The code requires 5 command-line arguments
+!       The code requires 3 command-line arguments
 !       1) path to the current plasma state file
-!       2) path to the current plasma eqdsk file
-!       3) path to current jsdsk file - cur_jsdsk_file
-!       4) action mode, i.e. one of: "INIT", "STEP", or "FINALIZE"
-!       5) time stamp the time set by the driver component to which the simulation is 
+!       2) action mode, i.e. one of: "INIT", "STEP", or "FINALIZE"
+!       3) time stamp the time set by the driver component to which the simulation is 
 !          supposed to advance.
 !   
 !
@@ -96,9 +94,18 @@ PROGRAM model_EPA_mdescr
     INTEGER :: istat, iarg
     INTEGER :: i
 
+	!--------------------------------------------------------------------------
+	!   Command line args
+	!--------------------------------------------------------------------------
+
     CHARACTER (len=256) :: cur_state_file
     CHARACTER(len=32) :: mode
     CHARACTER(len=32) :: time_stamp
+
+	!--------------------------------------------------------------------------
+	!   State data
+	!--------------------------------------------------------------------------
+
     INTEGER :: nrho
 
 	!--------------------------------------------------------------------------
@@ -107,15 +114,19 @@ PROGRAM model_EPA_mdescr
     INTEGER :: nzone
     REAL(KIND=rspec), ALLOCATABLE :: zone_center(:)
 
+	!--------------------------------------------------------------------------
+	!   Evolving model data
+	!--------------------------------------------------------------------------
 
-    CHARACTER(len=32) :: EPA_profile_model_name
+    CHARACTER(len=32) :: T_profile_model_name, n_profile_model_name
+   ,CHARACTER(len=32) :: T_min_profile_model_name, n_min_profile_model_name
     
     ! namelist parameters for Lorentz_Linear model:
     !   rho_max = rho of peak of the Lorentzian (not exactly the peak of the profile)
     !   w = width of Lorentzian
     !   f0 = value of normalized profile on axis, rho = 0
     !   f1 = value of normalized profile at rho = 1
-    REAL(KIND=rspec) :: nbeam_peak, rho_max_nbeami, w_nbeami, f0_nbeami, f1_nbeami
+    REAL(KIND=rspec) :: Te_0, Te_ratio, ne_0, ne_ratio,
     REAL(KIND=rspec) :: FP_th_e_beam,rho_max_P_th_e, w_P_th_e, f0_P_th_e, f1_P_th_e
     REAL(KIND=rspec) :: FP_th_i_beam, rho_max_P_th_i, w_P_th_i, f0_P_th_i, f1_P_th_i
     REAL(KIND=rspec) :: I_beam_MA, rho_max_I_beam, w_I_beam, f0_I_beam, f1_I_beam
@@ -127,10 +138,10 @@ PROGRAM model_EPA_mdescr
 	!------------------------------------------------------------------------------------
 
     namelist /state_data/ &
-          mode, cur_state_file, cur_eqdsk_file, time_stamp, nrho
+          nrho, kdens_rf_min, fracmin
                        
     namelist /evolving_model_data/ &
-          EPA_profile_model_name, &
+          T_profile_model_name, &
           nbeam_peak, rho_max_nbeami, w_nbeami, f0_nbeami, f1_nbeami, &
           FP_th_e_beam, rho_max_P_th_e, w_P_th_e, f0_P_th_e, f1_P_th_e, &
           FP_th_i_beam, rho_max_P_th_i, w_P_th_i, f0_P_th_i, f1_P_th_i, &
@@ -145,13 +156,31 @@ PROGRAM model_EPA_mdescr
 !
 !------------------------------------------------------------------------------------
     WRITE (*,*)
-    WRITE (*,*) 'generic_ps_init'      
+    WRITE (*,*) 'model_EPA_mdescr init'
+         
+	!------------------------------------------------------------------------------------
+	!   Get command line arguments
+	!------------------------------------------------------------------------------------
 
-!---------------------------------------------------------------------------------
-!     
-!  Get init configuration data from ps_init_nml_file
-!
-!---------------------------------------------------------------------------------
+      call get_arg_count(iarg)
+      if(iarg .ne. 3) then
+        print*, 'model_EPA usage: '
+        print*, ' command line args = cur_state_file mode time_stamp'
+        stop 'incorrect command line arguments'
+      end if
+      
+      call getarg(1,cur_state_file)
+      call getarg(2,mode)
+      call getarg(3,time_stamp)
+      
+     WRITE (*,*)
+     print*, 'cur_state_file = ', trim(cur_state_file)
+     print*, 'mode = ', trim(mode)
+     print*, 'time_stamp = ', trim(time_stamp)
+     
+	!---------------------------------------------------------------------------------
+	!  Get state data from model_EPA_mdescr_input.nml
+	!---------------------------------------------------------------------------------
 
     OPEN (unit=21, file = 'model_EPA_mdescr_input.nml', status = 'old',   &
          form = 'formatted', iostat = ierr)
@@ -179,16 +208,7 @@ PROGRAM model_EPA_mdescr
        print*, 'model_EPA_mdescr:failed to get_plasma_state'
        stop 1
     end if
-
-
-	!--------------------------------------------------------------------------
-	!    Open input namelist file
-	!--------------------------------------------------------------------------
-
-	read(21, nml = evolving_model_data)
-	CLOSE (21)
-	IF TRIM(mode) == 'INIT' then
-		WRITE (*, nml = state_data)
+    
     
 !------------------------------------------------------------------------------------
 !     
@@ -200,7 +220,25 @@ IF (TRIM(mode) == 'INIT') THEN
               
     WRITE(*,*) 'model_EPA_mdescr: INIT'          
     
-Do the work
+    !--------------------------------------------------------------------------
+    !   Initialize and allocate species arrays and thermal profile grids
+    !--------------------------------------------------------------------------
+    
+        ps%nrho = nrho
+           
+        WRITE (*,*) 'model_EPA_mdescr: About to allocate thermal profile arrays'
+        CALL    ps_alloc_plasma_state(ierr)
+        WRITE (*,*) 'model_EPA_mdescr:  thermal profile arrays'
+        
+	!---------------------------------------------------------------------------------
+	!  Get init model data from model_EPA_mdescr_input.nml
+	!---------------------------------------------------------------------------------
+
+		read(21, nml = evolving_model_data)
+		CLOSE (21)
+		IF TRIM(mode) == 'INIT' then
+			WRITE (*, nml = evolving_model_data)
+
 
     !-------------------------------------------------------------------------- 
     ! Store initial plasma state
@@ -218,7 +256,7 @@ END IF  ! End INIT function
 
 !------------------------------------------------------------------------------------
 !     
-!  Section 2: STEP function - Change state data and store plasma state
+!  STEP function - Change state data and store plasma state
 !
 !------------------------------------------------------------------------------------
 
