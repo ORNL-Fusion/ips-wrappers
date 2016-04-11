@@ -212,7 +212,6 @@ class generic_ps_init (Component):
                 INPUT_STATE_FILE = self.try_get_component_param(services, 'INPUT_STATE_FILE')
                 INPUT_EQDSK_FILE = self.try_get_component_param(services, 'INPUT_EQDSK_FILE', \
                 optional = True)
-
                 if (INPUT_EQDSK_FILE is None) or (len(INPUT_EQDSK_FILE) == 0):
 	               INPUT_EQDSK_FILE = ' '
                 else:
@@ -266,11 +265,13 @@ class generic_ps_init (Component):
                 if (SCONFIG_FILE is None) or (len(SCONFIG_FILE) == 0):
 	               SCONFIG_FILE = ' '
                 else:
-                nml_lines.append(' sconfig_file = ' + SCONFIG_FILE + '\n')
-                INPUT_EQDSK_FILE = ' '
+                	nml_lines.append(' sconfig_file = ' + SCONFIG_FILE + '\n')
                 INPUT_EQDSK_FILE = self.try_get_component_param(services, 'INPUT_EQDSK_FILE', \
                 optional = True)
-                nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
+                if (INPUT_EQDSK_FILE is None) or (len(INPUT_EQDSK_FILE) == 0):
+	               INPUT_EQDSK_FILE = ' '
+                else:
+ 	               nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
 
 # ------------------------------------------------------------------------------
             # For 'minimal' and 'mdescr' modes generate namelist for the fortran  
