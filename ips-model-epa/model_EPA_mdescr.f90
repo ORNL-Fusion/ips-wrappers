@@ -13,6 +13,13 @@ PROGRAM model_EPA_mdescr
 !   predecessor, model_EPA_mdescr_2.f90, in that it only provides models for the thermal plasma
 !   species density and temperature.  In particular it does nothing with the MHD equilibrium.
 !
+!	These models could become arbitrarily complex but for right now (4/2016) things are
+!   very simple.  Ion density and temperature profiles are taken as fractions of the 
+!   electron profile.  If you want more call me (DBB).
+!
+!	NB: The only models implemented now (4/2016) for thermal ion and minority ion profiles
+!		are: "fraction_of_electron"
+!
 !       The code requires 3 command-line arguments
 !       1) path to the current plasma state file
 !       2) action mode, i.e. one of: "INIT", "STEP", or "FINALIZE"
@@ -37,17 +44,12 @@ PROGRAM model_EPA_mdescr
 !						   data used to initialize the EPA part of the plasma state (e.g. a 
 !						   plasma state file to copy)
 !
-!   /evolving_model_data/ -> Contains data that defines the ad hoc models used to give time 
-!                            varying numbers for the EPA data (e.g names of different models
-!							 and parameters to be used in the models, like profiles shapes or
-!							 parameters to define time variation
+!   /evolving_model_data/ -> Contains data that defines the ad hoc models used to give 
+!							 profiles and time variations for the EPA data (e.g names of
+!							 different models and parameters to be used in the models, like profiles shapes or
+!							 like profiles shapes or parameters to define time variation
 !
 !
-!    Note that there is a huge amount of EPA data which the model_EPA_mdescr models do not use.  
-!    Therefore only a subset of the EPA data is initialized and modeled. 
-!    Typically this is only what is used by other components or that is watched by the 
-!    monitor component.  More could be added at any time.
-
 ! Data owned by EPA that is initialized here:
 !	
 ! 	MACHINE_DESCRIPTION data:  none
@@ -67,15 +69,13 @@ PROGRAM model_EPA_mdescr
 !		
 !
 ! Data owned by IC that is initialized here:
-!	
+!
+!	SIMULATION_INIT: 
+!		kdens_rfmin	
 !	STATE_DATA:
 !		power_ic		! power on each icrf source
 !	STATE_PROFILES:
-!		nmini			! minority density profiles (maybe - note: IC sets nrho_icrf and rho_icrf)
-!		
-! Data owned by NBI that is initialized here:
-!	STATE_DATA:
-!		power_nbi		! power on each beam
+!		nmini			! minority density profiles (note: IC sets nrho_icrf and rho_icrf)
 !		
 !--------------------------------------------------------------------------
 
@@ -103,51 +103,63 @@ PROGRAM model_EPA_mdescr
     CHARACTER(len=32) :: time_stamp
 
 	!--------------------------------------------------------------------------
+	!   Internal data
+	!--------------------------------------------------------------------------
+    INTEGER, PARAMETER :: maxDim = 50 ! To avoid a lot of allocates
+    REAL(KIND=rspec), ALLOCATABLE :: zone_center(:)
+
+	!--------------------------------------------------------------------------
 	!   State data
 	!--------------------------------------------------------------------------
 
     INTEGER :: nrho
-
-	!--------------------------------------------------------------------------
-	!   Internal data
-	!--------------------------------------------------------------------------
-    INTEGER :: nzone
-    REAL(KIND=rspec), ALLOCATABLE :: zone_center(:)
+    INTEGER :: isThermal(maxDim)
+    REAL(KIND=rspec) :: fracmin(maxDim), power_ic(maxDim)
+    CHARACTER*32 kdens_rfmin
 
 	!--------------------------------------------------------------------------
 	!   Evolving model data
 	!--------------------------------------------------------------------------
 
-    CHARACTER(len=32) :: T_profile_model_name, n_profile_model_name
-   ,CHARACTER(len=32) :: T_min_profile_model_name, n_min_profile_model_name
+    CHARACTER(len=32) :: Te_profile_model_name = 'Power_Parabolic' 
+    CHARACTER(len=32) :: ne_profile_model_name = 'Power_Parabolic'
+    CHARACTER(len=32) :: Ti_profile_model_name = 'fraction_of_electron'
+    CHARACTER(len=32) :: ni_profile_model_name = 'fraction_of_electron'
+    CHARACTER(len=32) :: T_min_profile_model_name = 'fraction_of_electron'
+    CHARACTER(len=32) :: n_min_profile_model_name = 'fraction_of_electron'
     
-    ! namelist parameters for Lorentz_Linear model:
-    !   rho_max = rho of peak of the Lorentzian (not exactly the peak of the profile)
-    !   w = width of Lorentzian
-    !   f0 = value of normalized profile on axis, rho = 0
-    !   f1 = value of normalized profile at rho = 1
-    REAL(KIND=rspec) :: Te_0, Te_ratio, ne_0, ne_ratio,
-    REAL(KIND=rspec) :: FP_th_e_beam,rho_max_P_th_e, w_P_th_e, f0_P_th_e, f1_P_th_e
-    REAL(KIND=rspec) :: FP_th_i_beam, rho_max_P_th_i, w_P_th_i, f0_P_th_i, f1_P_th_i
-    REAL(KIND=rspec) :: I_beam_MA, rho_max_I_beam, w_I_beam, f0_I_beam, f1_I_beam
-    REAL(KIND=rspec) :: Epll_peak, rho_max_Epll, w_Epll, f0_Epll, f1_Epll
-    REAL(KIND=rspec) :: Eperp_peak, rho_max_Eperp, w_Eperp, f0_Eperp, f1_Eperp
+    ! namelist parameters for Power_Parabolic model:
+    REAL(KIND=rspec) :: Te_0, Te_edge, alpha_Te_1, alpha_Te_2
+    REAL(KIND=rspec) :: ne_0, ne_edge, alpha_ne_1, alpha_ne_2
+
+    ! Fractional ion parameters relative to electron profiles
+    ! Temperature fractions can be arbitrary but density fractions need to be consistent
+    ! with charge neutrality
+    REAL(KIND=rspec) :: frac_ni(maxDim), frac_Ti(maxDim)
+    REAL(KIND=rspec) :: fracmin_T, fracmin_n,
+
+    ! namelist parameters for Power_Parabolic_Offset model:
+    REAL(KIND=rspec) :: Te_ratio, alpha_Te
+    REAL(KIND=rspec) :: ne_ratio, alpha_ne
+    REAL(KIND=rspec) :: T_min_0, T_min_ratio, alpha_Tmin
 	
 	!------------------------------------------------------------------------------------
 	!   Model input namelists
 	!------------------------------------------------------------------------------------
 
     namelist /state_data/ &
-          nrho, kdens_rf_min, fracmin
+          nrho, kdens_rf_min, fracmin, power_ic
                        
     namelist /evolving_model_data/ &
-          T_profile_model_name, &
-          nbeam_peak, rho_max_nbeami, w_nbeami, f0_nbeami, f1_nbeami, &
-          FP_th_e_beam, rho_max_P_th_e, w_P_th_e, f0_P_th_e, f1_P_th_e, &
-          FP_th_i_beam, rho_max_P_th_i, w_P_th_i, f0_P_th_i, f1_P_th_i, &
-          I_beam_MA, rho_max_I_beam, w_I_beam, f0_I_beam, f1_I_beam, &
-          Epll_peak, rho_max_Epll, w_Epll, f0_Epll, f1_Epll, &
-          Eperp_peak, rho_max_Eperp, w_Eperp, f0_Eperp, f1_Eperp
+          Te_profile_model_name, ne_profile_model_name, &
+          Te_0, Te_edge, alpha_Te_1, alpha_Te_2, &
+          ne_0, ne_edge, alpha_ne_1, alpha_ne_2, &
+          Ti_profile_model_name, ni_profile_model_name. &
+          frac_ni(maxDim), frac_Ti(maxDim), &
+          fracmin_T, fracmin_n, &
+          Te_ratio, alpha_Te, ne_ratio, alpha_ne, &
+          T_min_0, T_min_ratio, alpha_Tmin
+          
     
     
 !------------------------------------------------------------------------------------
@@ -228,7 +240,7 @@ IF (TRIM(mode) == 'INIT') THEN
            
         WRITE (*,*) 'model_EPA_mdescr: About to allocate thermal profile arrays'
         CALL    ps_alloc_plasma_state(ierr)
-        WRITE (*,*) 'model_EPA_mdescr:  thermal profile arrays'
+        WRITE (*,*) 'model_EPA_mdescr:  Thermal profile arrays allocated'
         
 	!---------------------------------------------------------------------------------
 	!  Get init model data from model_EPA_mdescr_input.nml
@@ -239,6 +251,52 @@ IF (TRIM(mode) == 'INIT') THEN
 		IF TRIM(mode) == 'INIT' then
 			WRITE (*, nml = evolving_model_data)
 
+        
+	!---------------------------------------------------------------------------------
+	! Put initial data in the thermal profile state arrays
+	!---------------------------------------------------------------------------------
+                    
+        CALL rho_grid(ps%nrho,ps%rho)
+		nzone = ps%nrho -1       
+		ALLOCATE( zone_center(nzone), stat=istat )
+		IF (istat /= 0 ) THEN
+			CALL SWIM_error ('allocation', 'model_epa' , 'zone_center')
+			ierr = istat
+		END IF	
+		zone_center = ( ps%rho(1:nrho-1) + ps%rho(2:nrho) )/2.
+
+		! electron profiles
+		IF (TRIM(Te_profile_model_name) == 'Power_Parabolic') THEN
+			Power_Parabolic(Te_0, Te_edge, alpha_Te_1, alpha_Te_2 zone_center, ps%Ts(:, 0))
+		END IF
+
+		IF (TRIM(ne_profile_model_name) == 'Power_Parabolic') THEN
+			Power_Parabolic(ne_0, ne_edge, alpha_ne_1, alpha_ne_2 zone_center, ps%ns(:, 0))
+		END IF
+		
+		! Thermal ion profiles
+		IF (TRIM(Ti_profile_model_name) == 'fraction_of_electron') THEN
+			DO i = 1, ps%nspec_th
+				ps%Ts(:,i) = frac_Ti(i)*ps%Ts(:, 0)
+			END DO
+		END IF
+
+		IF (TRIM(ni_profile_model_name) == 'fraction_of_electron') THEN
+			DO i = 1, ps%nspec_th
+				ps%ns(:,i) = frac_ni(i)*ps%ns(:, 0)
+			END DO
+		END IF
+
+		! ICRF minority ion profiles
+		! If (kdens_rfmin .EQ. 'fraction') TORIC computes nmini = fracmin * ne
+		! If kdens_rfmin .EQ. 'data' (not implemented here as of 4/2016) then nmini must 
+		! be available in the PS, TORIC interpolates it from the rho-icrf grid onto the 
+		! Toric radial grid.  But the rho_icrf grid must be allocated and initialized here.		
+		ps%kdens_rf_min = "fraction"
+		ps%fracmin(:) = fracmin_n
+		ps%isThermal(:) = 1
+		ps%power_ic(:) = power_ic
+		
 
     !-------------------------------------------------------------------------- 
     ! Store initial plasma state
@@ -256,7 +314,8 @@ END IF  ! End INIT function
 
 !------------------------------------------------------------------------------------
 !     
-!  STEP function - Change state data and store plasma state
+!  STEP function - Change state data and store plasma state.  Time dependence is now
+!  					implemented in the python
 !
 !------------------------------------------------------------------------------------
 
@@ -267,80 +326,59 @@ IF (TRIM(mode) == 'STEP') THEN
 
 
     !-------------------------------------------------------------------------- 
-    !  2.2  model = const.  Don't touch the EPA data.  Pass plasma state through.
+    !  model = const.  Don't touch the EPA data.  Pass plasma state through.
     !--------------------------------------------------------------------------
 
 	IF (TRIM(EPA_profile_model_name) == 'const') THEN
 	
-		CONTINUE
-		
-    !-------------------------------------------------------------------------- 
-    !  2.3  model = zeros.  Set all outputs to zero
-    ! --------------------------------------------------------------------------
-
-	ELSE IF (TRIM(EPA_profile_model_name) == 'zeros') THEN
-
-		ps%nbeami = 0.
-		ps%pbe = 0.        
-		ps%pbi = 0.
-		ps%pbth = 0.        
-		ps%curbeam = 0.
-		ps%epll_beami = 0.
-		ps%eperp_beami = 0.
-	
+		CONTINUE	
 		
     !-------------------------------------------------------------------------- 
     !  2.4  model = profiles.  Actually generate the profiles from the models
     !--------------------------------------------------------------------------
 
-	ELSE IF (TRIM(EPA_profile_model_name) == 'profiles') THEN
+	ELSE IF (TRIM(EPA_profile_model_name) == 'Power_Parabolic') THEN
          
-        nzone = ps%nrho_nbi -1
-        ALLOCATE( zone_center(nzone), stat=istat )
-        IF (istat /= 0 ) THEN
-            CALL SWIM_error ('allocation', 'model_EPA_mdescr' , 'zone_nbi_center')
-            ierr = istat
-            STOP
-        END IF  
+        CALL rho_grid(ps%nrho,ps%rho)
+		nzone = ps%nrho - 1       
+		ALLOCATE( zone_center(nzone), stat=istat )
+		IF (istat /= 0 ) THEN
+			CALL SWIM_error ('allocation', 'model_epa' , 'zone_center')
+			WRITE (*,*) 'model_EPA_mdescr STEP: ALLOCATE zone_center failed'
+			CALL EXIT(1)
+		END IF	
+		zone_center = (ps%rho(1:nrho-1) + ps%rho(2:nrho))/2.
 
-        zone_center = ( ps%rho_nbi(1:nrho_nbi-1) + ps%rho_nbi(2:nrho_nbi) )/2.
-           write(*,*) 'zone_center = ', zone_center
- 
-		! direct nbi power to thermal electrons
-		CALL Lorentz_Linear(rho_max_P_th_e, w_P_th_e, f0_P_th_e, f1_P_th_e, &
-							zone_center, ps%pbe)
-		ps%pbe = SUM(ps%power_EPAI) * FP_th_e_beam * ps%pbe/SUM(ps%pbe)
-		
-		! direct nbi power to thermal ions
-		CALL Lorentz_Linear(rho_max_P_th_i, w_P_th_i, f0_P_th_i, f1_P_th_i, &
-							zone_center, ps%pbi)
-		ps%pbi = SUM(ps%power_EPAI) * FP_th_i_beam * ps%pbi/SUM(ps%pbi)
-		
-		! beam current profile
-		CALL Lorentz_Linear(rho_max_I_beam, w_I_beam, f0_I_beam, f1_I_beam, &
-							zone_center, ps%curbeam)
-		ps%curbeam = 1.0e6_rspec * I_beam_MA * ps%curbeam/SUM(ps%curbeam)
-		
-		DO i = 1, ps%nspec_beam
+		! electron profiles
+		IF (TRIM(Te_profile_model_name) == 'Power_Parabolic') THEN
+			Power_Parabolic(Te_0, Te_edge, alpha_Te_1, alpha_Te_2 zone_center, ps%Ts(:, 0))
+		END IF
 
-	 		! beam species densities
-			CALL Lorentz_Linear(rho_max_nbeami, w_nbeami, f0_nbeami, f1_nbeami, &
-							    zone_center, ps%nbeami(:,i))
-			ps%nbeami(:,i) =  nbeam_peak * ps%nbeami(:,i)/MAXVAL(ps%nbeami(:,i))
+		IF (TRIM(ne_profile_model_name) == 'Power_Parabolic') THEN
+			Power_Parabolic(ne_0, ne_edge, alpha_ne_1, alpha_ne_2 zone_center, ps%ns(:, 0))
+		END IF
 		
-            !  changed multipler to make EPA come out in keV	
-	 		! beam Epll profile
-			CALL Lorentz_Linear(rho_max_Epll, w_Epll, f0_Epll, f1_Epll, &
-							    zone_center, ps%epll_beami(:,i))
-			ps%epll_beami(:,i) = Epll_peak*ps%epll_beami(:,i)/MAXVAL(ps%epll_beami(:,i))
+		! Thermal ion profiles
+		IF (TRIM(Ti_profile_model_name) == 'fraction_of_electron') THEN
+			DO i = 1, ps%nspec_th
+				ps%Ts(:,i) = frac_Ti(i)*ps%Ts(:, 0)
+			END DO
+		END IF
 
-			! beam Eperp profile
-			CALL Lorentz_Linear(rho_max_Eperp, w_Eperp, f0_Eperp, f1_Eperp, &
-							    zone_center, ps%eperp_beami(:,i))
-			ps%eperp_beami(:,i) = Eperp_peak*ps%eperp_beami(:,i)/ &
-									MAXVAL(ps%eperp_beami(:,i))
-				
-		END DO
+		IF (TRIM(ni_profile_model_name) == 'fraction_of_electron') THEN
+			DO i = 1, ps%nspec_th
+				ps%ns(:,i) = frac_ni(i)*ps%ns(:, 0)
+			END DO
+		END IF
+
+		! ICRF minority ion profiles
+		! If (kdens_rfmin .EQ. 'fraction') TORIC computes nmini = fracmin * ne
+		! If kdens_rfmin .EQ. 'data' (not implemented here as of 4/2016) then nmini must 
+		! be available in the PS, TORIC interpolates it from the rho-icrf grid onto the 
+		! Toric radial grid.  But the rho_icrf grid must be allocated and initialized here.		
+		ps%fracmin(:) = fracmin_n
+		ps%power_ic(:) = power_ic
+		
 
     END IF ! End of cases of different profile models
     
@@ -351,8 +389,6 @@ IF (TRIM(mode) == 'STEP') THEN
 	CALL PS_STORE_PLASMA_STATE(ierr, cur_state_file)
 
 	WRITE (*,*) "model_EPA_mdescr: Stored Plasma State"    
-
-	CALL sleep(3)   ! Wait for elvis to pick up
 	
 END IF ! End of STEP function
 
@@ -415,12 +451,17 @@ CONTAINS
 !	Model 1: Power_Parabolic_Offset(alpha, h, rho, f) -> Parabolic to a power
 !	plus an offset. 
 !		f = A (1 - rho**2)**alpha + B where A and B are chosen so that
-!			Integral rho*f(rho) from 0 to 1 is unity, and f(1)/f(0) = h
 !
-!	Model 2: Lorentz_Linear(rho_max, w, f0, f1, rho, f)
+!	Model 2: Power_Parabolic_Offset(alpha, h, rho, f) -> Parabolic to a power
+!	plus an offset. 
+!		f = A (1 - rho**2)**alpha + B where A and B are chosen so that
+!			Integral rho*f(rho) from 0 to 1 is unity, and f(1)/f(0) = h.  This is
+!           useful for a source profile where the total power would be known.
+!
+!	Model 3: Lorentz_Linear(rho_max, w, f0, f1, rho, f)
 !		f = Lorentzian(centered at rho = rho_max, width = w) + f0 + (f1 - f0)*rho
 !
-!	Model 3: Lorentz_Linear_norm(rho_max, w, f0, f1, rho, f)
+!	Model 4: Lorentz_Linear_norm(rho_max, w, f0, f1, rho, f)
 !		f = A*Lorentzian(centered at rho = rho_max, width = w) + B +C*rho
 !			where A, B, C are chosen to give Integral(rho*f(rho) from 0 to 1) = 1
 !			f(0) = f0, and f(1) = f1
@@ -437,13 +478,27 @@ CONTAINS
 
 !--------------------------------------------------------------------------
 !
-!   Power_Parabolic_Offset
+!   Profile functions
 !
 !--------------------------------------------------------------------------
 	
+	SUBROUTINE  Power_Parabolic(f0, f_edge, exp1, exp2, rho, f)
+	
+	  !  Generalized parabolic profile generator, dimensional (i.e. un-normalized)
+	
+	  REAL(KIND=rspec), intent(in) :: f0, f_edge  ! Peak and edge values
+	  REAL(KIND=rspec), intent(in) :: exp1, exp2  ! rho exponent and parabolic exponent
+	  REAL(KIND=rspec), dimension(:), intent(in) :: rho  ! normalized sqrt tor. flux
+	  REAL(KIND=rspec), dimension(:), intent(out) :: f  ! output profile
+	
+	  f = (f0 - f_edge)*(1. - rho**exp1)**exp2 + f_edge
+	
+	END SUBROUTINE Power_Parabolic
+
+	
 	SUBROUTINE  Power_Parabolic_Offset(alpha, h, rho, f)
 	
-	  !  quadratic profile generator
+	  !  Generalized parabolic profile generator, normalized (i.e. integrates to 1.0)
 	
 	  REAL(KIND=rspec), intent(in) :: alpha, h  ! exponent and edge to peak ratio
 	  REAL(KIND=rspec), dimension(:), intent(in) :: rho  ! normalized sqrt tor. flux
@@ -452,11 +507,11 @@ CONTAINS
 	  f = (2*(1 + alpha)*(h + (1 - h)*(1 - rho**2)**alpha))/(1 + h*alpha)
 	
 	END SUBROUTINE Power_Parabolic_Offset
-	
+
 	
 	SUBROUTINE Lorentz_Linear(rho_max, w, f0, f1, rho, f)
 	
-	  !  quick & dirty profile generator
+	  !  Quick & dirty profile generator with off-axis peaking
 	
 	  REAL(KIND=rspec), intent(in) :: rho_max, w  ! Peak location and width of Lorentzian
 	  REAL(KIND=rspec), intent(in) :: f0,f1  ! axis and edge values
@@ -473,7 +528,7 @@ CONTAINS
 	
 	SUBROUTINE Lorentz_Linear_norm(rho_max, w, f0, f1, rho, f)
 	
-	  !  quick & dirty profile generator
+	  !  Quick & dirty profile generator with off-axis peaking, normalized (i.e. integrates to 1.0)
 	
 	  REAL(KIND=rspec), intent(in) :: rho_max, w  ! Peak location and width of Lorentzian
 	  REAL(KIND=rspec), intent(in) :: f0,f1  ! axis and edge values
