@@ -152,7 +152,7 @@ PROGRAM model_EPA_mdescr
     !------------------------------------------------------------------------------------
 
     namelist /state_data/ &
-          nrho, kdens_rfmin, fracmin, power_ic
+          nrho, kdens_rfmin, isThermal, fracmin, power_ic
                        
     namelist /evolving_model_data/ &
           Te_profile_model_name, ne_profile_model_name, &
