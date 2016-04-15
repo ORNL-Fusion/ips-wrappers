@@ -45,8 +45,6 @@ class model_EPA_mdescr(Component):
     def init(self, timeStamp):
         print 'model_EPA_mdescr.init() called'
         print 'adjustable model parameters = ', parameterList
-        print ' '
-        print 'evolution_models = ', evolution_models.keys
 
         services = self.services
 
@@ -102,6 +100,8 @@ class model_EPA_mdescr(Component):
 # Time evolution of parameters
 
         evolution_models = {'linear_DT': self.linear_DT}
+        print ' '
+        print 'evolution_models = ', evolution_models.keys
         
         # Look for parameters to evolve, get the evolution model and its arguments 
         # from config file
