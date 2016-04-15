@@ -29,9 +29,6 @@ parameterList = ['Te_0', 'Te_edge', 'alpha_Te_1', 'alpha_Te_2', 'ne_0', 'ne_edge
     'T_min_0', 'T_min_ratio', 'alpha_Tmin',\
     'fracmin', 'power_ic']
 
-evolution_models = {'linear_DT': linear_DT}
-
-
 class model_EPA_mdescr(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
@@ -92,7 +89,7 @@ class model_EPA_mdescr(Component):
 
     def step(self, timeStamp):
         print 'model_EPA_mdescr.step() called'
-        global parameterList, evolution_models
+        global parameterList
         services = self.services
 
 
@@ -103,6 +100,8 @@ class model_EPA_mdescr(Component):
         t1 = ps.variables['t0'].getValue()
 
 # Time evolution of parameters
+
+		evolution_models = {'linear_DT': self.linear_DT}
         
         # Look for parameters to evolve, get the evolution model and its arguments 
         # from config file
