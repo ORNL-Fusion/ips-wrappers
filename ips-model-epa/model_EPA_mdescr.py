@@ -156,7 +156,7 @@ class model_EPA_mdescr(Component):
 # ------------------------------------------------------------------------------
 
     # Linear time advance f(timestamp) = f(t0) + (timestamp - t0)*DT
-    def linear_DT(f, timestamp, t0, DT):
+    def linear_DT(self, f, timestamp, t0, DT):
         return f + (timestamp - t0)*DT
 
     # Try to get config parameter - wraps the exception handling for get_config_parameter()
