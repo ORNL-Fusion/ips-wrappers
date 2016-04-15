@@ -20,6 +20,9 @@ PROGRAM model_EPA_mdescr
 !   NB: The only models implemented now (4/2016) for thermal ion and minority ion profiles
 !       are: "fraction_of_electron"
 !
+!   NB: For now assume only one ICRF source and one minority species.  Easy to
+!       generalize. Also for now the minority is assumed to be thermalized.
+!
 !       The code requires 3 command-line arguments
 !       1) path to the current plasma state file
 !       2) action mode, i.e. one of: "INIT", "STEP", or "FINALIZE"
@@ -114,8 +117,8 @@ PROGRAM model_EPA_mdescr
     !--------------------------------------------------------------------------
 
     INTEGER :: nrho
-    INTEGER :: isThermal(maxDim)
-    REAL(KIND=rspec) :: fracmin(maxDim), power_ic(maxDim)
+    INTEGER :: isThermal
+    REAL(KIND=rspec) :: fracmin, power_ic
     CHARACTER*32 kdens_rfmin
 
     !--------------------------------------------------------------------------
@@ -361,9 +364,16 @@ IF (TRIM(mode) == 'STEP') THEN
         ! If (kdens_rfmin .EQ. 'fraction') TORIC computes nmini = fracmin * ne
         ! If kdens_rfmin .EQ. 'data' (not implemented here as of 4/2016) then nmini must 
         ! be available in the PS, TORIC interpolates it from the rho-icrf grid onto the 
-        ! Toric radial grid.  But the rho_icrf grid must be allocated and initialized here.     
-        ps%fracmin(:) = fracmin_n
-        ps%power_ic(:) = power_ic
+        ! Toric radial grid.  But the rho_icrf grid must be allocated and initialized here.
+        
+        ! NB: For now assume only one ICRF source and one minority species.  Easy to
+        !     generalize.    
+
+        IF (TRIM(kdens_rfmin) == 'fraction') THEN
+            ps%fracmin(1) = fracmin_n
+        END IF
+        
+        ps%power_ic(1) = power_ic
         
     END IF ! End of cases of different profile models
     
