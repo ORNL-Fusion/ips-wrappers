@@ -365,7 +365,6 @@ IF (TRIM(mode) == 'STEP') THEN
         ps%fracmin(:) = fracmin_n
         ps%power_ic(:) = power_ic
         
-
     END IF ! End of cases of different profile models
     
     !--------------------------------------------------------------------------    !
