@@ -55,15 +55,6 @@ class model_EPA_mdescr(Component):
         cur_state_file = self.services.get_config_param('CURRENT_STATE')
         bin = os.path.join(self.BIN_PATH, 'model_EPA_mdescr')
 
-        try:
-            subprocess.call(['cp', INPUT_STATE_FILE, cur_state_file ])
-        except Exception:
-            message = 'generic_ps_init: Error in copying INPUT_STATE_FILE \
-                to current state file'
-            print message
-            services.exception(message)
-            raise
-
         print 'Executing ', [bin, cur_state_file, 'INIT', timeStamp]
         retcode = subprocess.call([bin, cur_state_file, 'INIT', timeStamp])
         if (retcode != 0):
