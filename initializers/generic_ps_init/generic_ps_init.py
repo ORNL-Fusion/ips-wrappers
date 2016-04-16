@@ -205,21 +205,30 @@ class generic_ps_init (Component):
             cur_eqdsk_file = self.try_get_config_param(services, 'CURRENT_EQDSK')
             nml_lines.append(' cur_state_file = ' + cur_state_file + '\n')
             nml_lines.append(' cur_eqdsk_file = ' + cur_eqdsk_file + '\n')
+
+            INPUT_EQDSK_FILE = self.try_get_component_param(services, 'INPUT_EQDSK_FILE', \
+            optional = True)
+            if (INPUT_EQDSK_FILE is None) or (len(INPUT_EQDSK_FILE) == 0):
+                INPUT_EQDSK_FILE = ' '
+            else:
+                nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
+                
+                # If there is an INPUT_EQDSK_FILE copy it to CURRENT_EQDSK although
+                # CURRENT_EQDSK will be overwritten with plasma state data if 
+                # GENERATE_EQDSK is True
+                try:
+                    subprocess.call(['cp', input_eqdsk_file, cur_eqdsk_file ])
+                except Exception:
+                    message = 'generic_ps_init: Error copying input_eqdsk_file to cur_eqdsk_file'
+                    print message
+                    services.exception(message)
+                    raise              
             
 # ------------------------------------------------------------------------------
             # init from existing plasma state file
             if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE'] :    
                 INPUT_STATE_FILE = self.try_get_component_param(services, 'INPUT_STATE_FILE')
-                INPUT_EQDSK_FILE = self.try_get_component_param(services, 'INPUT_EQDSK_FILE', \
-                optional = True)
-                if (INPUT_EQDSK_FILE is None) or (len(INPUT_EQDSK_FILE) == 0):
-	               INPUT_EQDSK_FILE = ' '
-                else:
- 	               nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
- 
-                GENERATE_EQDSK = self.try_get_component_param(services, 'GENERATE_EQDSK', \
-                optional = True)
-                     
+
                 # Copy INPUT_STATE_FILE to current state file
                 try:
                     subprocess.call(['cp', INPUT_STATE_FILE, cur_state_file ])
@@ -230,18 +239,20 @@ class generic_ps_init (Component):
                     services.exception(message)
                     raise
                     
-                # Generate cur_eqdsk_file from cur_state_file
+                # Generate cur_eqdsk_file from cur_state_file if GENERATE_EQDSK is True
+                GENERATE_EQDSK = self.try_get_component_param(services, 'GENERATE_EQDSK', \
+                optional = True)
                 if GENERATE_EQDSK in ['true', 'TRUE', 'True']:
-					nml_lines.append(' generate_eqdsk = True')
-					nml_lines.append('/')
-					self.put_lines('generic_ps_init.nml', nml_lines)
-					
-					init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
-					print 'Executing ', init_bin
-					retcode = subprocess.call(init_bin)
-					if (retcode != 0):
-					   print 'Error executing ', init_bin
-					   raise
+                    nml_lines.append(' generate_eqdsk = True')
+                    nml_lines.append('/')
+                    self.put_lines('generic_ps_init.nml', nml_lines)
+                    
+                    init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
+                    print 'Executing ', init_bin
+                    retcode = subprocess.call(init_bin)
+                    if (retcode != 0):
+                       print 'Error executing ', init_bin
+                       raise
 
              # Copy INPUT_EQDSK_FILE, if there is one, to cur_eqdsk_file.
              # Nota Bene: If there is an INPUT_EQDSK_FILE specified in config this copy
@@ -262,16 +273,18 @@ class generic_ps_init (Component):
                 nml_lines.append(' mdescr_file = ' + MDESCR_FILE + '\n')
                 SCONFIG_FILE = self.try_get_component_param(services, 'SCONFIG_FILE', \
                 optional = 'TRUE')
+                
                 if (SCONFIG_FILE is None) or (len(SCONFIG_FILE) == 0):
-	               SCONFIG_FILE = ' '
+                   SCONFIG_FILE = ' '
                 else:
-                	nml_lines.append(' sconfig_file = ' + SCONFIG_FILE + '\n')
+                    nml_lines.append(' sconfig_file = ' + SCONFIG_FILE + '\n')
+                    
                 INPUT_EQDSK_FILE = self.try_get_component_param(services, 'INPUT_EQDSK_FILE', \
                 optional = True)
                 if (INPUT_EQDSK_FILE is None) or (len(INPUT_EQDSK_FILE) == 0):
-	               INPUT_EQDSK_FILE = ' '
+                   INPUT_EQDSK_FILE = ' '
                 else:
- 	               nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
+                   nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
 
 # ------------------------------------------------------------------------------
             # For 'minimal' and 'mdescr' modes generate namelist for the fortran  
