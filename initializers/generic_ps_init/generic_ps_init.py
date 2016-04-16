@@ -217,9 +217,9 @@ class generic_ps_init (Component):
                 # CURRENT_EQDSK will be overwritten with plasma state data if 
                 # GENERATE_EQDSK is True
                 try:
-                    subprocess.call(['cp', input_eqdsk_file, cur_eqdsk_file ])
+                    subprocess.call(['cp', INPUT_EQDSK_FILE, cur_eqdsk_file ])
                 except Exception:
-                    message = 'generic_ps_init: Error copying input_eqdsk_file to cur_eqdsk_file'
+                    message = 'generic_ps_init: Error copying INPUT_EQDSK_FILE to CURRENT_EQDSK'
                     print message
                     services.exception(message)
                     raise              
