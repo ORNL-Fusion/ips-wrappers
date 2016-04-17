@@ -312,6 +312,7 @@ IF (TRIM(mode) == 'INIT') THEN
 				IF (frac_ni(1) < 0.0) THEN 
 					WRITE (*,*) 'model_EPA_mdescr INIT: frac_ni(1) < 0'
 					CALL EXIT(1)
+				ENDIF
         	ENDIF
         	
             DO i = 1, ps%nspec_th
