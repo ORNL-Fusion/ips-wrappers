@@ -139,8 +139,8 @@ PROGRAM model_EPA_mdescr
     ! Fractional ion parameters relative to electron profiles
     ! Temperature fractions can be arbitrary but density fractions need to be consistent
     ! with charge neutrality
-    REAL(KIND=rspec) :: frac_ni(maxDim), frac_Ti(maxDim)
-    REAL(KIND=rspec) :: fracmin_T, fracmin_n
+    REAL(KIND=rspec) :: frac_ni(maxDim) = 0.0, frac_Ti(maxDim)
+    REAL(KIND=rspec) :: fracmin_T, fracmin_n = 0.0
 
     ! namelist parameters for Power_Parabolic_Offset model:
     REAL(KIND=rspec) :: Te_ratio, alpha_Te
@@ -255,9 +255,20 @@ IF (TRIM(mode) == 'INIT') THEN
         IF (TRIM(mode) == 'INIT') THEN
             WRITE (*, nml = evolving_model_data)
 
-        
     !---------------------------------------------------------------------------------
-    ! Put initial data in the thermal profile state arrays
+    ! ICRF minority ion profiles
+    !---------------------------------------------------------------------------------
+        ! If (kdens_rfmin .EQ. 'fraction') TORIC computes nmini = fracmin * ne
+        ! If kdens_rfmin .EQ. 'data' (not implemented here as of 4/2016) then nmini must 
+        ! be available in the PS, TORIC interpolates it from the rho-icrf grid onto the 
+        ! Toric radial grid.  But the rho_icrf grid must be allocated and initialized here.     
+        ps%kdens_rfmin = "fraction"
+        ps%fracmin(:) = fracmin_n
+        ps%isThermal(:) = 1
+        ps%power_ic(:) = power_ic
+
+    !---------------------------------------------------------------------------------
+    ! Thermal species profiles
     !---------------------------------------------------------------------------------
                     
         CALL rho_grid(ps%nrho,ps%rho)
@@ -285,21 +296,28 @@ IF (TRIM(mode) == 'INIT') THEN
             END DO
         END IF
 
+		! NB: if minority ion density model is fraction of electron density  and if the 
+		! thermal ion model is also fraction of electrons then adjust fraction of
+		! thermal species 1 to give quasineutrality
         IF (TRIM(ni_profile_model_name) == 'fraction_of_electron') THEN
+        
+			! NB: if minority ion density model is fraction of electron density  and if the 
+			! thermal ion model is also fraction of electrons then adjust fraction of
+			! thermal species 1 to give quasineutrality
+        	IF (ps%kdens_rfmin == "fraction") THEN
+        		frac_ni(1) = 1 - SUM(ps%fracmin(:))
+				IF (ps%nspec_th .GE. 2) THEN
+					frac_ni(1) = frac_ni(1) - SUM(frac_ni(2:0:ps%nspec_th))
+				ENDIF
+				IF (frac_ni(1) < 0.0) THEN 
+					WRITE (*,*) 'model_EPA_mdescr INIT: frac_ni(1) < 0'
+					CALL EXIT(1)
+        	ENDIF
+        	
             DO i = 1, ps%nspec_th
                 ps%ns(:,i) = frac_ni(i)*ps%ns(:, 0)
             END DO
         END IF
-
-        ! ICRF minority ion profiles
-        ! If (kdens_rfmin .EQ. 'fraction') TORIC computes nmini = fracmin * ne
-        ! If kdens_rfmin .EQ. 'data' (not implemented here as of 4/2016) then nmini must 
-        ! be available in the PS, TORIC interpolates it from the rho-icrf grid onto the 
-        ! Toric radial grid.  But the rho_icrf grid must be allocated and initialized here.     
-        ps%kdens_rfmin = "fraction"
-        ps%fracmin(:) = fracmin_n
-        ps%isThermal(:) = 1
-        ps%power_ic(:) = power_ic
         
 
     !-------------------------------------------------------------------------- 
