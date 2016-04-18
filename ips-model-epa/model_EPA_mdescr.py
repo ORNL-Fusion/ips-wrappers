@@ -107,10 +107,10 @@ class model_EPA_mdescr(Component):
             params_to_change = True
             if model_name != None:
                 if model_name == 'linear_DT':
-#                    print 'time evolution model = ', model_name
                     DT_param = self.try_get_component_param(services, param + '_DT_param')
-#                    print param + '_DT_param = ', DT_param
-                    paramValue = self.read_var_from_nml_lines(inputLines, param, separator = ',')
+# intentional error for Wael
+                    paramValue = read_var_from_nml_lines(inputLines, param, separator = ',')
+#                    paramValue = self.read_var_from_nml_lines(inputLines, param, separator = ',')
                     print 'value for ', param, ' = ', paramValue
                     newValue = self.linear_DT(float(paramValue), float(timeStamp), t0, float(DT_param))
                     print 'new value for ', param, ' = ', newValue
