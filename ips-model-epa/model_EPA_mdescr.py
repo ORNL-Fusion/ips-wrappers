@@ -101,7 +101,9 @@ class model_EPA_mdescr(Component):
         params_to_change = False
         for param in parameterList:
             model_name = self.try_get_component_param(services, param + '_DT_model', \
-                optional = True).strip()
+                optional = True)
+            if model_name != None:
+            	model_name = model_name.strip()
             print 'model_name = ', model_name
             print model_name == 'linear_DT'
             params_to_change = True
