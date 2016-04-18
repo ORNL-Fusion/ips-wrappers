@@ -103,7 +103,7 @@ class model_EPA_mdescr(Component):
             model_name = self.try_get_component_param(services, param + '_DT_model', \
                 optional = True)
             if model_name != None:
-            	model_name = model_name.strip()
+                model_name = model_name.strip()
             params_to_change = True
             if model_name != None:
                 if model_name == 'linear_DT':
@@ -112,7 +112,7 @@ class model_EPA_mdescr(Component):
 #                    print param + '_DT_param = ', DT_param
                     paramValue = self.read_var_from_nml_lines(inputLines, param, separator = ',')
                     print 'value for ', param, ' = ', paramValue
-                    newValue = self.linear_DT(float(paramValue), timestamp, t0, float(DT_param))
+                    newValue = self.linear_DT(float(paramValue), float(timeStamp), t0, float(DT_param))
                     print 'new value for ', param, ' = ', newValue
 
                     # modify that parameter in namelist file
