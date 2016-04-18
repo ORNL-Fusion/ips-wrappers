@@ -86,30 +86,36 @@ class model_EPA_mdescr(Component):
         services.stage_plasma_state()
         cur_state_file = services.get_config_param('CURRENT_STATE')
         ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
-        t1 = ps.variables['t0'].getValue()
+        t0 = ps.variables['t0'].getValue()
 
 # Time evolution of parameters
+        # get lines from namelist file
+        inputLines = self.get_lines('model_EPA_mdescr_input.nml')
 
         evolution_models = {'linear_DT': self.linear_DT}
         print ' '
-        print 'evolution_models = ', evolution_models.keys
+        print 'evolution_models = ', evolution_models.keys()
         
-        # Look for parameters to evolve, get the evolution model and its arguments 
-        # from config file
+        # Look in config file for parameters to evolve, get the evolution model and its  
+        # arguments
         for param in parameterList:
-            model_name = self.try_get_component_param(services, param + 'DT_model', \
+            model_name = self.try_get_component_param(services, param + '_DT_model', \
                 optional = True)
-            if model_name is not None:
-                print 'time evolution model = ', model_name
-                argList = self.try_get_component_param(services, param + 'DT_params')
-                print 'model arguments = ', argList
-                value = evolution_models[model_name](*argList)
-                print 'new value for ', param, ' = ', value
+            if model_name != None:
+                if model_name is 'linear_DT':
+                    print 'time evolution model = ', model_name
+                    DT_param = self.try_get_component_param(services, param + '_DT_param')
+                    print param + '_DT_param = ', DT_param
+                    paramValue = read_var_from_nml_lines(self, lines, param, separator = ',')
+                    print 'value for ', param, ' = ', paramValue
+                    newValue = linear_DT(self, float(paramValue), timestamp, t0, float(DT_param))
+                    print 'new value for ', param, ' = ', newValue
 
                 # modify that parameter in namelist file
-                inputLines = self.get_lines('model_EPA_mdescr_input.nml')
-                lines = self.edit_nml_file(inputLines, param, value, separator = ',')
-                self.put_lines('model_EPA_mdescr_input.nml', lines)
+                lines = self.edit_nml_file(inputLines, param, newValue, separator = ',')
+        
+        # write modified namelist file        
+        self.put_lines('model_EPA_mdescr_input.nml', lines)
 
 # Call model_EPA_mdescr
         bin = os.path.join(self.BIN_PATH, 'model_EPA_mdescr')
@@ -259,4 +265,33 @@ class model_EPA_mdescr(Component):
         print 'New ', lines[var_line_number]
         
         return lines[:var_line_number + 1] + lines[var_line_number + var_lines:]
+
+    def read_var_from_nml_lines(self, lines, var, separator = ','):
+    # This routine is very limited, for now it only reads scalar real numbers
+
+        # Find the line in the namelist containing 'var = ' 
+        var_line_number = -1
+        for i in range(len(lines)):
+            line = lines[i]
+            if '=' in line:
+                split_line = line.split('=')
+                #print 'split_line = ', split_line
+                if (split_line[0].strip()).lower() == var.lower():
+                    var_line_number = i
+
+        if var_line_number == -1:
+            message = 'read_var_from_nml_lines: Could not find variable ', var, ' in namelist lines'
+            print message
+            raise Exception(message)
     
+        RHS = lines[var_line_number].split('=')[1]
+        
+    #     Get rid of newline if there is one
+        if RHS[-1] == '\n':
+            lines[var_line_number] = lines[var_line_number][:-1]
+    
+        RHS_list = RHS.split(',')
+    #    print 'RHS = ', RHS_list[0].split()
+        value = float(RHS_list[0].split()[0])
+        print 'value = ', value
+        return value
