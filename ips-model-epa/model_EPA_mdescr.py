@@ -98,15 +98,17 @@ class model_EPA_mdescr(Component):
         
         # Look in config file for parameters to evolve, get the evolution model and its  
         # arguments
+        params_to_change = False
         for param in parameterList:
             model_name = self.try_get_component_param(services, param + '_DT_model', \
                 optional = True)
+            params_to_change = True
             if model_name != None:
                 if model_name is 'linear_DT':
                     print 'time evolution model = ', model_name
                     DT_param = self.try_get_component_param(services, param + '_DT_param')
                     print param + '_DT_param = ', DT_param
-                    paramValue = read_var_from_nml_lines(self, lines, param, separator = ',')
+                    paramValue = read_var_from_nml_lines(self, inputLines, param, separator = ',')
                     print 'value for ', param, ' = ', paramValue
                     newValue = linear_DT(self, float(paramValue), timestamp, t0, float(DT_param))
                     print 'new value for ', param, ' = ', newValue
@@ -115,7 +117,8 @@ class model_EPA_mdescr(Component):
                     lines = self.edit_nml_file(inputLines, param, newValue, separator = ',')
         
         # write modified namelist file        
-        self.put_lines('model_EPA_mdescr_input.nml', lines)
+        if params_to_change:
+            self.put_lines('model_EPA_mdescr_input.nml', lines)
 
 # Call model_EPA_mdescr
         bin = os.path.join(self.BIN_PATH, 'model_EPA_mdescr')
