@@ -111,8 +111,8 @@ class model_EPA_mdescr(Component):
                     newValue = linear_DT(self, float(paramValue), timestamp, t0, float(DT_param))
                     print 'new value for ', param, ' = ', newValue
 
-					# modify that parameter in namelist file
-					lines = self.edit_nml_file(inputLines, param, newValue, separator = ',')
+                    # modify that parameter in namelist file
+                    lines = self.edit_nml_file(inputLines, param, newValue, separator = ',')
         
         # write modified namelist file        
         self.put_lines('model_EPA_mdescr_input.nml', lines)
