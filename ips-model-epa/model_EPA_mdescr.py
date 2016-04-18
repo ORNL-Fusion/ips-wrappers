@@ -104,15 +104,13 @@ class model_EPA_mdescr(Component):
                 optional = True)
             if model_name != None:
             	model_name = model_name.strip()
-            print 'model_name = ', model_name
-            print model_name == 'linear_DT'
             params_to_change = True
             if model_name != None:
                 if model_name == 'linear_DT':
-                    print 'time evolution model = ', model_name
+#                    print 'time evolution model = ', model_name
                     DT_param = self.try_get_component_param(services, param + '_DT_param')
-                    print param + '_DT_param = ', DT_param
-                    paramValue = read_var_from_nml_lines(self, inputLines, param, separator = ',')
+#                    print param + '_DT_param = ', DT_param
+                    paramValue = self.read_var_from_nml_lines(inputLines, param, separator = ',')
                     print 'value for ', param, ' = ', paramValue
                     newValue = linear_DT(self, float(paramValue), timestamp, t0, float(DT_param))
                     print 'new value for ', param, ' = ', newValue
