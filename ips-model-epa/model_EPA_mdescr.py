@@ -112,7 +112,7 @@ class model_EPA_mdescr(Component):
 #                    print param + '_DT_param = ', DT_param
                     paramValue = self.read_var_from_nml_lines(inputLines, param, separator = ',')
                     print 'value for ', param, ' = ', paramValue
-                    newValue = linear_DT(self, float(paramValue), timestamp, t0, float(DT_param))
+                    newValue = self.linear_DT(float(paramValue), timestamp, t0, float(DT_param))
                     print 'new value for ', param, ' = ', newValue
 
                     # modify that parameter in namelist file
