@@ -305,9 +305,14 @@ IF (TRIM(mode) == 'INIT') THEN
 			! thermal ion model is also fraction of electrons then adjust fraction of
 			! thermal species 1 to give quasineutrality
         	IF (ps%kdens_rfmin == "fraction") THEN
-        		frac_ni(1) = 1 - SUM(ps%fracmin(:))
+        		frac_ni(1) = 1.0
+        		DO i = 1, ps%nspec_rfmin
+					frac_ni(1) = frac_ni(1) - ps%q_RFMIN(i)*ps%fracmin(i)
+        		END DO
 				IF (ps%nspec_th .GE. 2) THEN
-					frac_ni(1) = frac_ni(1) - SUM(frac_ni(2:0:ps%nspec_th))
+					DO i = 2, ps%nspec_rfmin
+						frac_ni(1) = frac_ni(1) - ps%q_S(i)*ps%fracmin(i)
+					END DO
 				ENDIF
 				IF (frac_ni(1) < 0.0) THEN 
 					WRITE (*,*) 'model_EPA_mdescr INIT: frac_ni(1) < 0'
