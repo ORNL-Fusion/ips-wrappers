@@ -104,7 +104,7 @@ class model_EPA_mdescr(Component):
                 optional = True)
             if model_name != None:
                 model_name = model_name.strip()
-				params_to_change = True
+                params_to_change = True
                 if model_name == 'linear_DT':
                     DT_param = self.try_get_component_param(services, param + '_DT_param')
                     paramValue = self.read_var_from_nml_lines(inputLines, param, separator = ',')
