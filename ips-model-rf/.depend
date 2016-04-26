@@ -1,8 +1,0 @@
-../obj/load_mdescr_sconfig.o : load_mdescr_sconfig.f90 
-../obj/model_RF_IC_2.o : model_RF_IC_2.f90 
-../obj/model_RF_IC_2_mcmd.o : model_RF_IC_2_mcmd.f90 
-../obj/model_RF_IC_3.o : model_RF_IC_3.f90 
-../obj/model_RF_IC.o : model_RF_IC.f90 
-../obj/py_model_RF_IC_2_mcmd.o : py_model_RF_IC_2_mcmd.f90 
-../obj/zero_RF_EC_power.o : zero_RF_EC_power.f90 
-../obj/zero_RF_IC_power.o : zero_RF_IC_power.f90 
