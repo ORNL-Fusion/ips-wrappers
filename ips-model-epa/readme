@@ -1,0 +1,14 @@
+Don Batchelor, 2-10-2009
+
+There are two versions of the model_EPA component, an EPA component that puts specified data into the plasma state for testing purposes and to provide a simple EPA data source for other components.
+
+Version model_epa.py/model_epa.f90 allows the user to initialize the EPA part of the plasma state with whatever data he/she chooses and then change it in time according to some model, to be provided in the model_epa.f90 code.
+
+Version model_epa_ps_init.py/model_epa_ps_file_init.f90 reads the initial EPA data from an existing plasma state file and copies it to the current plasma state.  
+
+Both versions get their input from a fortran namelist file model_epa_input.nml and model_epa_ps_init.nml respectively.  As of now the models of time variation in both versions are very simple, essentially just a rescaling of profiles on each call to give some time variation of the data.  You can do what ever you like.  But if you add your own I would request that you give it a name and test for it in the code so as not to break existing models.
+
+
+Both codes are (I claim) well documented with comments.  The see the sources for details.
+
+Nota Bene:  To use the model_epa_ps_init you of course need a plasma state file to copy.  The path to this file needs to appear in both the model_epa_input.nml (to tell the fortran where to find it) and as an EPA required input file in the simulation configuration file (to tell the framework how to copy it into the EPA work directory).  Up to now what I have done is to copy the input plasma state file to the 'ps/components/epa/model_epa' directory and list this path in both model_epa_input.nml and the config file.  One could imagine doing it other ways.

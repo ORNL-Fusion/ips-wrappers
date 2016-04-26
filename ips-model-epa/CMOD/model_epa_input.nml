@@ -1,0 +1,15 @@
+&static_state_data
+ model_eqdsk_file = 'CMOD_8021_ps_3.400.geq',
+ input_state_file = 'CMOD_8021_ps_3.400.cdf'
+ /
+    
+&evolving_model_data
+ profile_model = 'scale_profiles',
+ delta_ne = 0.1,
+ delta_Te = 0.1,
+ delta_Ti = .15,
+ icrf_model = 'turn_on_icrf'
+ P_icrf_0 = 0.0,
+ P_icrf_1 = 2.e6,
+ t_icrf_1 = 0.40
+ /

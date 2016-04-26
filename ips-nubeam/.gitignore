@@ -1,0 +1,4 @@
+*.o
+.depend
+set_ps_beam_power
+make-result

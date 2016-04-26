@@ -1,0 +1,3 @@
+*.o
+mdescr_state_init
+.depend

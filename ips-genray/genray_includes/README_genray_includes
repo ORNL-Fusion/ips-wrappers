@@ -1,0 +1,11 @@
+hopper09:/global/homes/u/u650/my_ips_trunk/components/rf/genray/src/genray_includes
+
+Oct. 21, 2013
+=============
+Need to update these files from the genray distribution 
+when using new genray distribution file 
+../read_write_genray_input_prep which invokes all genray
+namelist variables.   
+
+Command file ../update_prep-proc_genr_distn.sh, executing in ../,
+can be used for this limited genray src file update.

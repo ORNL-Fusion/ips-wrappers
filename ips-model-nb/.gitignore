@@ -1,0 +1,8 @@
+.depend
+make-result
+*.o
+*.mod
+*.pyc
+model_NB
+model_NB_2
+model_NB_2_mcmd
