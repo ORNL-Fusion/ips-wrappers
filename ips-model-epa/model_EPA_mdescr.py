@@ -86,7 +86,7 @@ class model_EPA_mdescr(Component):
         services.stage_plasma_state()
         cur_state_file = services.get_config_param('CURRENT_STATE')
         ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
-        t0 = ps.variables['t0'].getValue()
+        tinit = ps.variables['tinit'].getValue()
 
 # Time evolution of parameters
         # get lines from namelist file
@@ -106,10 +106,11 @@ class model_EPA_mdescr(Component):
                 model_name = model_name.strip()
                 params_to_change = True
                 if model_name == 'linear_DT':
-                    DT_param = self.try_get_component_param(services, param + '_DT_param')
-                    paramValue = self.read_var_from_nml_lines(inputLines, param, separator = ',')
-                    print 'value for ', param, ' = ', paramValue
-                    newValue = self.linear_DT(float(paramValue), float(timeStamp), t0, float(DT_param))
+                    DT_paramList = self.try_get_component_param(services, param + '_DT_param')
+                    finit = float(DT_paramList[0])
+                    DT = float(DT_paramList[1])
+                    print 'f0 = ', f0, ' DT =  ', DT
+                    newValue = self.linear_DT(finit, float(timeStamp), tinit, float(DT))
                     print 'new value for ', param, ' = ', newValue
 
                     # modify that parameter in namelist file
@@ -154,8 +155,8 @@ class model_EPA_mdescr(Component):
 # ------------------------------------------------------------------------------
 
     # Linear time advance f(timestamp) = f(t0) + (timestamp - t0)*DT
-    def linear_DT(self, f, timestamp, t0, DT):
-        return f + (timestamp - t0)*DT
+    def linear_DT(self, f0, t, t0, DT):
+        return f0 + (t - t0)*DT
 
     # Try to get config parameter - wraps the exception handling for get_config_parameter()
     def try_get_config_param(self, services, param_name, optional=False):
