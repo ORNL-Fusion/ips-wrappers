@@ -23,6 +23,8 @@ PROGRAM model_EPA_mdescr
 !   NB: For now assume only one ICRF source and one minority species.  Easy to
 !       generalize. Also for now the minority is assumed to be thermalized.
 !
+!   NB: For now assume only one LH source.  Easy to generalize.
+!
 !       The code requires 3 command-line arguments
 !       1) path to the current plasma state file
 !       2) action mode, i.e. one of: "INIT", "STEP", or "FINALIZE"
@@ -79,6 +81,13 @@ PROGRAM model_EPA_mdescr
 !       power_ic        ! power on each icrf source
 !   STATE_PROFILES:
 !       nmini           ! minority density profiles (note: IC sets nrho_icrf and rho_icrf)
+!
+! Data owned by LH that is initialized here:
+!
+!   SIMULATION_INIT: None
+!   STATE_DATA:
+!       power_lh        ! power on each icrf source
+!   STATE_PROFILES: None
 !       
 !--------------------------------------------------------------------------
 
@@ -118,7 +127,7 @@ PROGRAM model_EPA_mdescr
 
     INTEGER :: nrho
     INTEGER :: isThermal
-    REAL(KIND=rspec) :: fracmin, power_ic
+    REAL(KIND=rspec) :: fracmin, power_ic, power_lh
     CHARACTER*32 kdens_rfmin
 
     !--------------------------------------------------------------------------
@@ -152,7 +161,7 @@ PROGRAM model_EPA_mdescr
     !------------------------------------------------------------------------------------
 
     namelist /state_data/ &
-          nrho, kdens_rfmin, isThermal, fracmin, power_ic
+          nrho, kdens_rfmin, isThermal, fracmin, power_ic, power_lh
                        
     namelist /evolving_model_data/ &
           Te_profile_model_name, ne_profile_model_name, &
@@ -261,11 +270,13 @@ IF (TRIM(mode) == 'INIT') THEN
         ! If (kdens_rfmin .EQ. 'fraction') TORIC computes nmini = fracmin * ne
         ! If kdens_rfmin .EQ. 'data' (not implemented here as of 4/2016) then nmini must 
         ! be available in the PS, TORIC interpolates it from the rho-icrf grid onto the 
-        ! Toric radial grid.  But the rho_icrf grid must be allocated and initialized here.     
-        ps%kdens_rfmin = "fraction"
-        ps%fracmin(:) = fracmin_n
-        ps%isThermal(:) = 1
-        ps%power_ic(:) = power_ic
+        ! Toric radial grid.  But the rho_icrf grid must be allocated and initialized here.  
+        IF (ALLOCATED(ps%m_RFMIN)) THEN   
+			ps%kdens_rfmin = "fraction"
+			ps%fracmin(:) = fracmin_n
+			ps%isThermal(:) = 1
+			ps%power_ic(:) = power_ic
+		END IF
 
     !---------------------------------------------------------------------------------
     ! Thermal species profiles
@@ -390,16 +401,27 @@ IF (TRIM(mode) == 'STEP') THEN
         ! be available in the PS, TORIC interpolates it from the rho-icrf grid onto the 
         ! Toric radial grid.  But the rho_icrf grid must be allocated and initialized here.
         
-        ! NB: For now assume only one ICRF source and one minority species.  Easy to
+        ! NB: For now assume only one minority species.  Easy to
         !     generalize.    
+        IF (ALLOCATED(ps%m_RFMIN)) THEN   
+			IF (TRIM(kdens_rfmin) == 'fraction') THEN
+				ps%fracmin(1) = fracmin_n
+			END IF
+		END IF
 
-        IF (TRIM(kdens_rfmin) == 'fraction') THEN
-            ps%fracmin(1) = fracmin_n
+		! Source powers 
+		
+		! NB: For now assume power is the same on all ICRF sources
+        IF (ALLOCATED(ps%power_ic)) THEN   		       
+			ps%power_ic = power_ic
+        END IF
+		
+		! NB: For now assume power is the same on all LH sources
+        IF (ALLOCATED(ps%power_lh)) THEN   		       
+			ps%power_lh = power_lh
         END IF
         
-        ps%power_ic(1) = power_ic
-        
-    END IF ! End of cases of different profile models
+!    END IF ! End of cases of different profile models
     
     !--------------------------------------------------------------------------    !
     ! Store the data in plasma_state file
