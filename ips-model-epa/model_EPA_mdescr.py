@@ -66,6 +66,15 @@ class model_EPA_mdescr(Component):
 # Update (original) plasma state
         services.update_plasma_state()
 
+# Copy initial namelist file so original parameters will be available for time evolution
+		try:
+			shutil.copyfile('model_EPA_mdescr_input.nml', 'initial_input.nml')
+		except IOError, (errno, strerror):
+			print 'Error copying file %s to %s' % ('machine.inp' + suffix, 'machine.inp', strerror)
+			logMsg = 'Error copying machine.inp_<suffix> -> machine.inp'
+			services.exception(logMsg)
+			raise
+
         return
 
 # ------------------------------------------------------------------------------
@@ -91,6 +100,7 @@ class model_EPA_mdescr(Component):
 # Time evolution of parameters
         # get lines from namelist file
         inputLines = self.get_lines('model_EPA_mdescr_input.nml')
+        initial_nml_Lines = self.get_lines('initial_input.nml')
 
         evolution_models = {'linear_DT': self.linear_DT}
         print ' '
@@ -107,10 +117,11 @@ class model_EPA_mdescr(Component):
                 params_to_change = True
                 if model_name == 'linear_DT':
                     DT_paramList = self.try_get_component_param(services, param + '_DT_param').split()
-                    finit = float(DT_paramList[0])
+                    tinit = float(DT_paramList[0])
                     DT = float(DT_paramList[1])
-                    print 'f0 = ', f0, ' DT =  ', DT
-                    newValue = self.linear_DT(finit, float(timeStamp), tinit, float(DT))
+                    initValue = self.read_var_from_nml_lines(self, initial_nml_Lines, param, separator = ',')
+                    print 'intial '+param, ' = ',initValue, '  tinit = ', tinit, '  DT =  ', DT
+                    newValue = self.linear_DT(initValue, float(timeStamp), tinit, DT)
                     print 'new value for ', param, ' = ', newValue
 
                     # modify that parameter in namelist file
