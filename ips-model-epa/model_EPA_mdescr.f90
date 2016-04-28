@@ -144,6 +144,8 @@ PROGRAM model_EPA_mdescr
     ! namelist parameters for Power_Parabolic model:
     REAL(KIND=rspec) :: Te_0, Te_edge, alpha_Te_1, alpha_Te_2
     REAL(KIND=rspec) :: ne_0, ne_edge, alpha_ne_1, alpha_ne_2
+    REAL(KIND=rspec) :: Ti_0, Ti_edge, alpha_Ti_1, alpha_Ti_2
+    REAL(KIND=rspec) :: ni_0, ni_edge, alpha_ni_1, alpha_ni_2
 
     ! Fractional ion parameters relative to electron profiles
     ! Temperature fractions can be arbitrary but density fractions need to be consistent
@@ -168,6 +170,8 @@ PROGRAM model_EPA_mdescr
           Te_0, Te_edge, alpha_Te_1, alpha_Te_2, &
           ne_0, ne_edge, alpha_ne_1, alpha_ne_2, &
           Ti_profile_model_name, ni_profile_model_name, &
+          Ti_0, Ti_edge, alpha_Ti_1, alpha_Ti_2, &
+          ni_0, ni_edge, alpha_ni_1, alpha_ni_2, &
           frac_ni, frac_Ti, &
           fracmin_T, fracmin_n, &
           Te_ratio, alpha_Te, ne_ratio, alpha_ne, &
