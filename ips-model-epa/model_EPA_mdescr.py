@@ -119,7 +119,7 @@ class model_EPA_mdescr(Component):
                     DT_paramList = self.try_get_component_param(services, param + '_DT_param').split()
                     tinit = float(DT_paramList[0])
                     DT = float(DT_paramList[1])
-                    initValue = self.read_var_from_nml_lines(self, initial_nml_Lines, param, separator = ',')
+                    initValue = self.read_var_from_nml_lines(initial_nml_Lines, param, separator = ',')
                     print 'intial '+param, ' = ',initValue, '  tinit = ', tinit, '  DT =  ', DT
                     newValue = self.linear_DT(initValue, float(timeStamp), tinit, DT)
                     print 'new value for ', param, ' = ', newValue
