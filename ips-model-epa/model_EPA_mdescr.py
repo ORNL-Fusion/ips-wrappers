@@ -67,13 +67,13 @@ class model_EPA_mdescr(Component):
         services.update_plasma_state()
 
 # Copy initial namelist file so original parameters will be available for time evolution
-		try:
-			shutil.copyfile('model_EPA_mdescr_input.nml', 'initial_input.nml')
-		except IOError, (errno, strerror):
-			print 'Error copying file %s to %s' % ('machine.inp' + suffix, 'machine.inp', strerror)
-			logMsg = 'Error copying machine.inp_<suffix> -> machine.inp'
-			services.exception(logMsg)
-			raise
+        try:
+            shutil.copyfile('model_EPA_mdescr_input.nml', 'initial_input.nml')
+        except IOError, (errno, strerror):
+            print 'Error copying file %s to %s' % ('machine.inp' + suffix, 'machine.inp', strerror)
+            logMsg = 'Error copying machine.inp_<suffix> -> machine.inp'
+            services.exception(logMsg)
+            raise
 
         return
 
