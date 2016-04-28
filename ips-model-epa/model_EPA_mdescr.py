@@ -106,7 +106,7 @@ class model_EPA_mdescr(Component):
                 model_name = model_name.strip()
                 params_to_change = True
                 if model_name == 'linear_DT':
-                    DT_paramList = self.try_get_component_param(services, param + '_DT_param')
+                    DT_paramList = self.try_get_component_param(services, param + '_DT_param').split()
                     finit = float(DT_paramList[0])
                     DT = float(DT_paramList[1])
                     print 'f0 = ', f0, ' DT =  ', DT
