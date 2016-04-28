@@ -163,15 +163,14 @@ class model_RF_IC_3 (Component):
         services = self.services
 
     # Get global configuration parameters
-        INPUT_STATE_FILE = self.try_get_config_param(services,'INPUT_STATE_FILE')
         cur_state_file = self.try_get_config_param(services,'CURRENT_STATE')
         cur_eqdsk_file = self.try_get_config_param(services,'CURRENT_EQDSK')
         cur_cql_file = self.try_get_config_param(services,'CURRENT_CQL')
         cur_dql_file = self.try_get_config_param(services,'CURRENT_DQL')
 
     # Get component-specific configuration parameters.
-        BIN_PATH = self.try_get_config_param(services,'BIN_PATH')
-        NPROC = self.try_get_config_param(services,'NPROC ')      
+        BIN_PATH = self.BIN_PATH 
+        NPROC = self.NPROC     
 
     # Copy plasma state files over to working directory
         try:

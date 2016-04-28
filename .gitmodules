@@ -4,5 +4,5 @@
 	branch = master
 [submodule "ips-fastran"]
 	path = ips-fastran
-	url = https://github.com/ORNL-Fusion/ips-fastran.git
-	branch = master
+	url = git@github.com:ORNL-Fusion/ips-fastran.git
+	branch = devel

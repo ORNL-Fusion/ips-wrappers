@@ -1,6 +1,7 @@
 *.o
 *.swp
 *.mod
+.depend
 load_mdescr_sconfig
 make-result
 model_RF_IC
