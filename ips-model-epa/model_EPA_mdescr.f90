@@ -263,6 +263,7 @@ IF (TRIM(mode) == 'INIT') THEN
         CLOSE (21)
         IF (TRIM(mode) == 'INIT') THEN
             WRITE (*, nml = evolving_model_data)
+        END IF
 
     !---------------------------------------------------------------------------------
     ! ICRF minority ion profiles
