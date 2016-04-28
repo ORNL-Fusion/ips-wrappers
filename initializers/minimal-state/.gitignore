@@ -1,0 +1,7 @@
+*.o
+*.pyc
+*.mod
+.depend
+minimal_state_init
+model_epa_ps_file_init_no_RF
+make-result

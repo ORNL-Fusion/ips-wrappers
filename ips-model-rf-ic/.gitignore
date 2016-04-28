@@ -1,8 +1,12 @@
 *.o
 *.pyc
 *.mod
+.depend
 make-result
 model_RF_IC
 model_RF_IC_2
 model_RF_IC_3
+model_RF_IC_2_mcmd
+py_model_RF_IC_2_mcmd
 load_mdescr_sconfig
+
