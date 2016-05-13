@@ -314,11 +314,18 @@ IF (TRIM(mode) == 'INIT') THEN
         END IF
         
         ! Thermal ion profiles
+        IF (TRIM(Ti_profile_model_name) == 'Power_Parabolic') THEN
+            DO i = 1, ps%nspec_th
+            CALL Power_Parabolic(Ti_0, Ti_edge, alpha_Ti_1, alpha_Ti_2, zone_center, ps%Ts(:, i))
+        END IF
+
         IF (TRIM(Ti_profile_model_name) == 'fraction_of_electron') THEN
             DO i = 1, ps%nspec_th
                 ps%Ts(:,i) = frac_Ti(i)*ps%Ts(:, 0)
             END DO
         END IF
+		WRITE (*,*) 'model_EPA_mdescr:  initial Ti profile = ', ps%Ts(:, i)
+		WRITE (*,*)
 
 		! NB: if minority ion density model is fraction of electron density  and if the 
 		! thermal ion model is also fraction of electrons then adjust fraction of
