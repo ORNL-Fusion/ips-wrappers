@@ -375,6 +375,10 @@ END IF  ! End INIT function
 				WRITE (*,*)
             END DO
         END IF  ! fraction_of_electron
+        
+        ! Load single Ti profile from multi-species Ts
+        ps%Ti = ps%Ts(:, 1)
+        
 
     !--------------------------------------------------------------------------    !
     ! Source powers
