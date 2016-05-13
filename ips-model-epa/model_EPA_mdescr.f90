@@ -316,17 +316,19 @@ IF (TRIM(mode) == 'INIT') THEN
         ! Thermal ion profiles  N.B.  All thermal ion species at same temperature
         IF (TRIM(Ti_profile_model_name) == 'Power_Parabolic') THEN
             DO i = 1, ps%nspec_th
-            CALL Power_Parabolic(Ti_0, Ti_edge, alpha_Ti_1, alpha_Ti_2, zone_center, ps%Ts(:, i))
+				CALL Power_Parabolic(Ti_0, Ti_edge, alpha_Ti_1, alpha_Ti_2, zone_center, ps%Ts(:, i))
+				WRITE (*,*) 'model_EPA_mdescr:  initial Ti profile = ', ps%Ts(:, i)
+				WRITE (*,*)
             END DO
         END IF
 
         IF (TRIM(Ti_profile_model_name) == 'fraction_of_electron') THEN
             DO i = 1, ps%nspec_th
                 ps%Ts(:,i) = frac_Ti(i)*ps%Ts(:, 0)
+				WRITE (*,*) 'model_EPA_mdescr:  initial Ti profile = ', ps%Ts(:, i)
+				WRITE (*,*)
             END DO
         END IF
-		WRITE (*,*) 'model_EPA_mdescr:  initial Ti profile = ', ps%Ts(:, i)
-		WRITE (*,*)
 
 		! NB: if minority ion density model is fraction of electron density  and if the 
 		! thermal ion model is also fraction of electrons then adjust fraction of
@@ -354,10 +356,10 @@ IF (TRIM(mode) == 'INIT') THEN
         	
             DO i = 1, ps%nspec_th
                 ps%ns(:,i) = frac_ni(i)*ps%ns(:, 0)
-				WRITE (*,*) 'model_EPA_mdescr:  initial profile for thermal ion #',i ,' = ', ps%ns(:, i)
+				WRITE (*,*) 'model_EPA_mdescr:  initial density profile for thermal ion #',i ,' = ', ps%ns(:, i)
 				WRITE (*,*)
             END DO
-        END IF
+        END IF  ! fraction_of_electron
         
 
     !-------------------------------------------------------------------------- 
