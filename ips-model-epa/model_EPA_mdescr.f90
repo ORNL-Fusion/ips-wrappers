@@ -117,7 +117,7 @@ PROGRAM model_EPA_mdescr
     !--------------------------------------------------------------------------
     !   Internal data
     !--------------------------------------------------------------------------
-    INTEGER, PARAMETER :: maxDim = 50 ! To avoid a lot of allocates
+    INTEGER, PARAMETER :: maxDim = 10 ! To avoid a lot of allocates
     INTEGER :: nzone
     REAL(KIND=rspec), ALLOCATABLE :: zone_center(:)
 
@@ -185,7 +185,7 @@ PROGRAM model_EPA_mdescr
 !
 !------------------------------------------------------------------------------------
     WRITE (*,*)
-    WRITE (*,*) 'model_EPA_mdescr init'
+    WRITE (*,*) 'model_EPA_mdescr'
          
     !------------------------------------------------------------------------------------
     !   Get command line arguments
@@ -203,8 +203,8 @@ PROGRAM model_EPA_mdescr
       call getarg(3,time_stamp)
       
      WRITE (*,*)
-     print*, 'cur_state_file = ', trim(cur_state_file)
      print*, 'mode = ', trim(mode)
+     print*, 'cur_state_file = ', trim(cur_state_file)
      print*, 'time_stamp = ', trim(time_stamp)
      
     !---------------------------------------------------------------------------------
@@ -260,8 +260,6 @@ PROGRAM model_EPA_mdescr
 !------------------------------------------------------------------------------------
 
 IF (TRIM(mode) == 'INIT') THEN
-              
-    WRITE(*,*) 'model_EPA_mdescr: INIT'          
     
     !--------------------------------------------------------------------------
     !   Initialize and allocate species arrays and thermal profile grids
@@ -289,7 +287,19 @@ IF (TRIM(mode) == 'INIT') THEN
 			WRITE (*,*) 'model_EPA_mdescr:  ICRF power and minority data loaded'
 			WRITE (*,*)
 		END IF
+                    
+END IF  ! End INIT function
 
+!------------------------------------------------------------------------------------
+!     
+!  STEP function - Change state data and store plasma state.  Time dependence is now
+!                   implemented in the python
+!
+! N.B. This section is also executed for the init function
+!------------------------------------------------------------------------------------
+
+    WRITE(*,*)
+         
     !---------------------------------------------------------------------------------
     ! Thermal species profiles
     !---------------------------------------------------------------------------------
@@ -303,7 +313,8 @@ IF (TRIM(mode) == 'INIT') THEN
         END IF  
         zone_center = ( ps%rho(1:nrho-1) + ps%rho(2:nrho) )/2.
 
-        ! electron profiles
+        ! PowerParabolic models
+        
         IF (TRIM(Te_profile_model_name) == 'Power_Parabolic') THEN
             CALL Power_Parabolic(Te_0, Te_edge, alpha_Te_1, alpha_Te_2, zone_center, ps%Ts(:, 0))
             WRITE (*,*) 'model_EPA_mdescr:  initial Te profile = ', ps%Ts(:, 0)
@@ -325,6 +336,8 @@ IF (TRIM(mode) == 'INIT') THEN
             END DO
         END IF
 
+        ! Fraction of electron models
+        
         IF (TRIM(Ti_profile_model_name) == 'fraction_of_electron') THEN
             DO i = 1, ps%nspec_th
                 ps%Ts(:,i) = frac_Ti(i)*ps%Ts(:, 0)
@@ -333,9 +346,6 @@ IF (TRIM(mode) == 'INIT') THEN
             END DO
         END IF
 
-		! NB: if minority ion density model is fraction of electron density  and if the 
-		! thermal ion model is also fraction of electrons then adjust fraction of
-		! thermal species 1 to give quasineutrality
         IF (TRIM(ni_profile_model_name) == 'fraction_of_electron') THEN
         
 			! NB: if minority ion density model is fraction of electron density  and if the 
@@ -357,87 +367,18 @@ IF (TRIM(mode) == 'INIT') THEN
 				ENDIF
         	ENDIF
         	
+            ! If minorities are not fraction_of_electron use the ion fractions in 
+            ! evolving_model_data namelist
             DO i = 1, ps%nspec_th
                 ps%ns(:,i) = frac_ni(i)*ps%ns(:, 0)
 				WRITE (*,*) 'model_EPA_mdescr:  initial density profile for thermal ion #',i ,' = ', ps%ns(:, i)
 				WRITE (*,*)
             END DO
         END IF  ! fraction_of_electron
-        
 
-    !-------------------------------------------------------------------------- 
-    ! Store initial plasma state
+    !--------------------------------------------------------------------------    !
+    ! Source powers
     !--------------------------------------------------------------------------
-
-        CALL PS_STORE_PLASMA_STATE(ierr, cur_state_file)
-        IF (ierr .ne. 0) THEN
-            WRITE (*,*) 'model_EPA_mdescr INIT: PS_STORE_PLASMA_STATE failed'
-            CALL EXIT(1)
-        ELSE
-            WRITE (*,*) "model_EPA_mdescr: Stored initial Plasma State"    
-        END IF
-                    
-END IF  ! End INIT function
-
-!------------------------------------------------------------------------------------
-!     
-!  STEP function - Change state data and store plasma state.  Time dependence is now
-!                   implemented in the python
-!
-!------------------------------------------------------------------------------------
-
-IF (TRIM(mode) == 'STEP') THEN
-
-    WRITE(*,*)
-    WRITE(*,*) 'model_EPA_mdescr: STEP'
-         
-        CALL rho_grid(ps%nrho,ps%rho)
-        nzone = ps%nrho - 1       
-        ALLOCATE( zone_center(nzone), stat=istat )
-        IF (istat /= 0 ) THEN
-            CALL SWIM_error ('allocation', 'model_epa' , 'zone_center')
-            WRITE (*,*) 'model_EPA_mdescr STEP: ALLOCATE zone_center failed'
-            CALL EXIT(1)
-        END IF  
-        zone_center = (ps%rho(1:nrho-1) + ps%rho(2:nrho))/2.
-
-        ! electron profiles
-        IF (TRIM(Te_profile_model_name) == 'Power_Parabolic') THEN
-            CALL Power_Parabolic(Te_0, Te_edge, alpha_Te_1, alpha_Te_2, zone_center, ps%Ts(:, 0))
-        END IF
-
-        IF (TRIM(ne_profile_model_name) == 'Power_Parabolic') THEN
-            CALL Power_Parabolic(ne_0, ne_edge, alpha_ne_1, alpha_ne_2, zone_center, ps%ns(:, 0))
-        END IF
-        
-        ! Thermal ion profiles
-        IF (TRIM(Ti_profile_model_name) == 'fraction_of_electron') THEN
-            DO i = 1, ps%nspec_th
-                ps%Ts(:,i) = frac_Ti(i)*ps%Ts(:, 0)
-            END DO
-        END IF
-
-        IF (TRIM(ni_profile_model_name) == 'fraction_of_electron') THEN
-            DO i = 1, ps%nspec_th
-                ps%ns(:,i) = frac_ni(i)*ps%ns(:, 0)
-            END DO
-        END IF
-
-        ! ICRF minority ion profiles
-        ! If (kdens_rfmin .EQ. 'fraction') TORIC computes nmini = fracmin * ne
-        ! If kdens_rfmin .EQ. 'data' (not implemented here as of 4/2016) then nmini must 
-        ! be available in the PS, TORIC interpolates it from the rho-icrf grid onto the 
-        ! Toric radial grid.  But the rho_icrf grid must be allocated and initialized here.
-        
-        ! NB: For now assume only one minority species.  Easy to
-        !     generalize.    
-        IF (ALLOCATED(ps%m_RFMIN)) THEN   
-			IF (TRIM(kdens_rfmin) == 'fraction') THEN
-				ps%fracmin(1) = fracmin_n
-			END IF
-		END IF
-
-		! Source powers 
 		
 		! NB: For now assume power is the same on all ICRF sources
         IF (ALLOCATED(ps%power_ic)) THEN   		       
@@ -448,16 +389,19 @@ IF (TRIM(mode) == 'STEP') THEN
         IF (ALLOCATED(ps%power_lh)) THEN   		       
 			ps%power_lh = power_lh
         END IF
-        
-!    END IF ! End of cases of different profile models
-    
-    !--------------------------------------------------------------------------    !
-    ! Store the data in plasma_state file
+            
+
+    !-------------------------------------------------------------------------- 
+    ! Store plasma state
     !--------------------------------------------------------------------------
 
-    CALL PS_STORE_PLASMA_STATE(ierr, cur_state_file)
-
-    WRITE (*,*) "model_EPA_mdescr: Stored Plasma State"    
+        CALL PS_STORE_PLASMA_STATE(ierr, cur_state_file)
+        IF (ierr .ne. 0) THEN
+            WRITE (*,*) 'model_EPA_mdescr: PS_STORE_PLASMA_STATE failed'
+            CALL EXIT(1)
+        ELSE
+            WRITE (*,*) "model_EPA_mdescr: Stored Plasma State"    
+        END IF
     
 END IF ! End of STEP function
 
