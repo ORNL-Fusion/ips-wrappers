@@ -313,10 +313,11 @@ IF (TRIM(mode) == 'INIT') THEN
             WRITE (*,*)
         END IF
         
-        ! Thermal ion profiles
+        ! Thermal ion profiles  N.B.  All thermal ion species at same temperature
         IF (TRIM(Ti_profile_model_name) == 'Power_Parabolic') THEN
             DO i = 1, ps%nspec_th
             CALL Power_Parabolic(Ti_0, Ti_edge, alpha_Ti_1, alpha_Ti_2, zone_center, ps%Ts(:, i))
+            END DO
         END IF
 
         IF (TRIM(Ti_profile_model_name) == 'fraction_of_electron') THEN
