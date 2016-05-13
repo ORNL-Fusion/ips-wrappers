@@ -220,7 +220,21 @@ PROGRAM model_EPA_mdescr
     END IF
 
     read(21, nml = state_data)
-    WRITE (*, nml = state_data)
+	IF (TRIM(mode) == 'INIT') THEN
+		WRITE (*, nml = state_data)
+		WRITE (*,*)
+	END IF
+
+    !---------------------------------------------------------------------------------
+    !  Get model data from model_EPA_mdescr_input.nml
+    !---------------------------------------------------------------------------------
+
+	read(21, nml = evolving_model_data)
+	CLOSE (21)
+	IF (TRIM(mode) == 'INIT') THEN
+		WRITE (*, nml = evolving_model_data)
+		WRITE (*,*)
+	END IF
       
     WRITE (*,*)
     WRITE (*,*) 'model_EPA_mdescr'      
@@ -260,17 +274,6 @@ IF (TRIM(mode) == 'INIT') THEN
         WRITE (*,*) 'model_EPA_mdescr:  Thermal profile arrays allocated'
 		WRITE (*,*)
         
-    !---------------------------------------------------------------------------------
-    !  Get init model data from model_EPA_mdescr_input.nml
-    !---------------------------------------------------------------------------------
-
-        read(21, nml = evolving_model_data)
-        CLOSE (21)
-        IF (TRIM(mode) == 'INIT') THEN
-            WRITE (*, nml = evolving_model_data)
-            WRITE (*,*)
-        END IF
-
     !---------------------------------------------------------------------------------
     ! ICRF minority ion profiles
     !---------------------------------------------------------------------------------
