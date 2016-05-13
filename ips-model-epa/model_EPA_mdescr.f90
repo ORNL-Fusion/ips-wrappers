@@ -402,8 +402,6 @@ END IF  ! End INIT function
         ELSE
             WRITE (*,*) "model_EPA_mdescr: Stored Plasma State"    
         END IF
-    
-END IF ! End of STEP function
 
 !--------------------------------------------------------------------------
 !
