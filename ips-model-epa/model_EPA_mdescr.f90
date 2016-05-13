@@ -258,6 +258,7 @@ IF (TRIM(mode) == 'INIT') THEN
         WRITE (*,*) 'model_EPA_mdescr: About to allocate thermal profile arrays'
         CALL    ps_alloc_plasma_state(ierr)
         WRITE (*,*) 'model_EPA_mdescr:  Thermal profile arrays allocated'
+		WRITE (*,*)
         
     !---------------------------------------------------------------------------------
     !  Get init model data from model_EPA_mdescr_input.nml
@@ -267,6 +268,7 @@ IF (TRIM(mode) == 'INIT') THEN
         CLOSE (21)
         IF (TRIM(mode) == 'INIT') THEN
             WRITE (*, nml = evolving_model_data)
+            WRITE (*,*)
         END IF
 
     !---------------------------------------------------------------------------------
@@ -281,6 +283,8 @@ IF (TRIM(mode) == 'INIT') THEN
 			ps%fracmin(:) = fracmin_n
 			ps%isThermal(:) = 1
 			ps%power_ic(:) = power_ic
+			WRITE (*,*) 'model_EPA_mdescr:  ICRF power and minority data loaded'
+			WRITE (*,*)
 		END IF
 
     !---------------------------------------------------------------------------------
@@ -299,10 +303,14 @@ IF (TRIM(mode) == 'INIT') THEN
         ! electron profiles
         IF (TRIM(Te_profile_model_name) == 'Power_Parabolic') THEN
             CALL Power_Parabolic(Te_0, Te_edge, alpha_Te_1, alpha_Te_2, zone_center, ps%Ts(:, 0))
+            WRITE (*,*) 'model_EPA_mdescr:  initial Te profile = ', ps%Ts(:, 0)
+            WRITE (*,*)
         END IF
 
         IF (TRIM(ne_profile_model_name) == 'Power_Parabolic') THEN
             CALL Power_Parabolic(ne_0, ne_edge, alpha_ne_1, alpha_ne_2, zone_center, ps%ns(:, 0))
+            WRITE (*,*) 'model_EPA_mdescr:  initial ne profile = ', ps%ns(:, 0)
+            WRITE (*,*)
         END IF
         
         ! Thermal ion profiles
@@ -338,6 +346,8 @@ IF (TRIM(mode) == 'INIT') THEN
         	
             DO i = 1, ps%nspec_th
                 ps%ns(:,i) = frac_ni(i)*ps%ns(:, 0)
+				WRITE (*,*) 'model_EPA_mdescr:  initial profile for thermal ion #',i ,' = ', ps%ns(:, i)
+				WRITE (*,*)
             END DO
         END IF
         
