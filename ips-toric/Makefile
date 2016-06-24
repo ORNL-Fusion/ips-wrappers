@@ -8,13 +8,13 @@ F90_SRC = $(shell ls *.f90)
 OBJS = $(F90_SRC:%.f90=$(OBJDIR)/%.o) $(F95_SRC:%.f95=$(OBJDIR)/%.o)
 F90_MOD_INCLUDE =  $(F90_MOD_INCLUDE_PREFIX). $(F90_MOD_INCLUDE_PREFIX)$(IPS_ROOT)/include $(F90_MOD_INCLUDE_PREFIX)$(NETCDFHOME)/include
 
-EXECUTABLES = do_toric_init_abr prepare_toric_input_abr process_toric_output_mcmd 
+EXECUTABLES = do_toric_init_abr prepare_toric_input_abr process_toric_output_mcmd do_torlh_init_abr prepare_torlh_input_abr
 
-SCRIPTS = rf_ic_toric_abr_mcmd.py
+SCRIPTS = rf_ic_toric_abr_mcmd.py rf_lh_torlh.py
 
-TARGETS = $(EXECUTABLES) 
+TARGETS = $(EXECUTABLES)
 
-all: .depend 
+all: .depend
 	- $(MAKE) $(TARGETS)
 	@ for i in `echo $(EXECUTABLES)`; do \
 	   if [ -f $$i ]; then \
@@ -49,17 +49,23 @@ prepare_toric_input: prepare_toric_input.o
 prepare_toric_input_abr: prepare_toric_input_abr.o
 	$(F90) -o $@ $@.o $(LIBS)
 
+prepare_toric_input: prepare_toric_input.o
+	$(F90) -o $@ $@.o $(LIBS)
+
+prepare_toric_input_abr: prepare_toric_input_abr.o
+	$(F90) -o $@ $@.o $(LIBS)
+
 process_toric_output: process_toric_output.o
 	$(F90) -g -o $@ $@.o $(LIBS)
 
 process_toric_output_mcmd: process_toric_output_mcmd.o
 	$(F90) -g -o $@ $@.o $(LIBS)
 
-process_toric_output_mcmd_mm: process_toric_output_mcmd_mm.o toric_utils_mod.o
-	$(F90) -g -o $@ $@.o  toric_utils_mod.o $(LIBS)
-
-do_toric_init_mm: do_toric_init_mm.o toric_utils_mod.o toric_namelists.h
+do_torlh_init_abr: do_torlh_init_abr.o toric_utils_mod.o toric_namelists.h
 	$(F90) -g -o $@ $@.o toric_utils_mod.o $(LIBS)
+
+prepare_torlh_input_abr: prepare_torlh_input_abr.o
+	$(F90) -o $@ $@.o $(LIBS)
 
 install:
 	$(INSTALL) $(EXECUTABLES) $(SCRIPTS) $(IPS_ROOT)/bin
@@ -67,7 +73,7 @@ install:
 clean:
 	$(RM) $(OBJS) *.a *.mod $(TARGETS) make-result
 
-distclean: 
+distclean:
 	$(MAKE) clean
 	$(RM) .depend
 
