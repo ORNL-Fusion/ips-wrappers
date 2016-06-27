@@ -61,7 +61,7 @@ process_toric_output: process_toric_output.o
 process_toric_output_mcmd: process_toric_output_mcmd.o
 	$(F90) -g -o $@ $@.o $(LIBS)
 
-do_torlh_init_abr: do_torlh_init_abr.o toric_utils_mod.o torlh_namelist.h
+do_torlh_init_abr: do_torlh_init_abr.o toric_utils_mod.o torlh_namelists.h
 	$(F90) -g -o $@ $@.o toric_utils_mod.o $(LIBS)
 
 prepare_torlh_input_abr: prepare_torlh_input_abr.o

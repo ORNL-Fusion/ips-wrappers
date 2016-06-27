@@ -723,7 +723,7 @@
 ! Next update ps%nmini in the Plasma State with th new minority ion density profile, by mapping
 ! fracmin * ps%ns(:,0) from the PS grid to the ICRF rho grid:
 !
-         call ps_user_1dintrp_vec(ps%rho_lh,x_orig, fracmin*ps%ns(:,0), &
+         call ps_user_1dintrp_vec(ps%rho_lhrf,x_orig, fracmin*ps%ns(:,0), &
                ps%nmini(:,1),ierr )
          if(ierr .ne. 0) stop 'error interpolating new minority desnity profile onto PS grid'     
         endif
@@ -732,7 +732,7 @@
 ! it from the rho-icrf grid onto the Toric radial grid
 !
         if (trim(kdens_rfmin) .EQ. 'data') then
-         call ps_user_1dintrp_vec(x_torlh, ps%rho_lh, ps%nmini(:,1), &
+         call ps_user_1dintrp_vec(x_torlh, ps%rho_lhrf, ps%nmini(:,1), &
                tmp_prof(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS minority density profile onto Toric grid'
          write(out_unit,'(A4,I2.2)')  'n_rfmin_',isp
@@ -754,14 +754,15 @@
 !
 ! If isThermal=2 then assume the RF minority tail temperature data is available in the PS. In this 
 ! case just interpolate the ICRF minority energies [eperp_mini(:,1) and epll_mini(:,1)] from the ICRF 
-! grid (rho_lh) onto the Torlh input data grid. Then compute the equivalent temperature profile for 
+! grid (rho_lhrf) onto the Torlh input data grid. Then compute the equivalent temperature profile for 
 ! the RF minority profile. Finally write this array to the equidt.data file.
 !
          if (ps%isThermal(1) .eq. 2) then
-          call ps_user_1dintrp_vec(x_torlh, ps%rho_lh, ps%eperp_mini(:,1), &
+          call ps_user_1dintrp_vec(x_torlh, ps%rho_lhrf, ps%eperp_mini(:,1), &
+
                aa_prof(:),ierr )
           if(ierr .ne. 0) stop 'error interpolating PS RF minority perp. energy profile onto Torlh grid'
-          call ps_user_1dintrp_vec(x_torlh, ps%rho_lh, ps%epll_mini(:,1),  &
+          call ps_user_1dintrp_vec(x_torlh, ps%rho_lhrf, ps%epll_mini(:,1),  &
                bb_prof(:),ierr )
           if(ierr .ne. 0) stop 'error interpolating PS RF minority parallel energy profile onto Torlh grid'
           tmp_prof = 0.667 * (aa_prof + bb_prof)
