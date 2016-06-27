@@ -82,7 +82,7 @@ PROGRAM do_torlh_init
 
     if(.not. allocated(ps%freq_lh)) then
        write(*,*)'RF SRC NOT ALLOCATED'
-       ps%nlh_src = 1
+       ps%nlhrf_src = 1
     
        write(*,*)'Allocating RF in prepare_input'
        CALL ps_alloc_plasma_state(ierr)
@@ -166,17 +166,17 @@ PROGRAM do_torlh_init
 
 !create plasma state rf fields
   ps%freq_lh(1)=freqcy  !who sets #lh_srcs, ps%lh_src_name?
-  print *,"freq_lh, picrf  alloc?",allocated(ps%freq_lh),allocated(ps%plh_srcs)
-  if (allocated(ps%plh_srcs) .eqv. .TRUE.) then
-      print *,"RF alloc?",allocated(ps%plh_srcs),size(ps%plh_srcs)
-      print*,   '   number of lower hybrid wave sources = ', ps%nlh_src
+  print *,"freq_lh, picrf  alloc?",allocated(ps%freq_lh),allocated(ps%pelh_src)
+  if (allocated(ps%pelh_src) .eqv. .TRUE.) then
+      print *,"RF alloc?",allocated(ps%pelh_src),size(ps%pelh_src)
+      print*,   '   number of lower hybrid wave sources = ', ps%nlhrf_src
   endif
 
   print *,  '   number of species = ', ps%nspec_alla, ps%nspec_th
 
-  if (allocated(ps%rho_lh) .eqv. .TRUE.) then
-      print*,   '   radial grid points for LH waves = ', ps%nrho_lh
-      print*,   '   ps%rho_lh = ', allocated(ps%rho_lh), size(ps%rho_lh), ps%rho_lh
+  if (allocated(ps%rho_lhrf) .eqv. .TRUE.) then
+      print*,   '   radial grid points for LH waves = ', ps%nrho_lhrf
+      print*,   '   ps%rho_lh = ', allocated(ps%rho_lhrf), size(ps%rho_lhrf), ps%rho_lhrf
   endif
 
 !  if (ps%nspec==0) then
@@ -188,16 +188,16 @@ PROGRAM do_torlh_init
 !
   if (allocated(ps%epll_mini) .eqv. .FALSE.) then
      print *,'allcoating plasma state rf arrays'
-     ps%nrho_lh = nelm
+     ps%nrho_lhrf = nelm
      CALL ps_alloc_plasma_state(ierr) 
      CALL assert( ierr == 0, trim(cur_state_file)//' ps_alloc_plasma_state: ierr=',ierr )
   endif
 
-  do i=1,ps%nrho_lh
-     ps%rho_lh(i) = real(i-1,rspec)
+  do i=1,ps%nrho_lhrf
+     ps%rho_lhrf(i) = real(i-1,rspec)
   end do
-  ps%rho_lh=ps%rho_lh/real(ps%nrho_lh-1,rspec)
-  ps%plh_srcs = 0.0_rspec
+  ps%rho_lhrf=ps%rho_lhrf/real(ps%nrho_lhrf-1,rspec)
+  ps%pelh_src = 0.0_rspec
 
 !write the state file to optional filename, can also take optional state
   CALL ps_store_plasma_state(ierr , trim(cur_state_file))
