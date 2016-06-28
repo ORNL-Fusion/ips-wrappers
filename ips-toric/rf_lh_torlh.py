@@ -132,12 +132,6 @@ class torlh (Component):
                 services.exception(logMsg)
                 raise
 
-      # run torlh init
-        logMsg =  'do_torlh_init_abr and torlh not implemented yet'
-        print logMsg
-        self.services.error(logMsg)
-        raise
-        
         do_input = os.path.join(self.BIN_PATH, 'do_torlh_init_abr')
         retcode = subprocess.call([do_input,cur_state_file])
         if (retcode != 0):
