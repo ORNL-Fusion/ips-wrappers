@@ -3,6 +3,49 @@ PROGRAM do_torlh_init
   !This is the initialization program called by rf_ic_torlh.py init step
   !It sets up the rf component parts of the plasma state.  These have been
   !moved from process_torlh_output
+  
+  ! Notes DBB 8/12/2016
+  ! Typically one would use this in an IPS simulation in which the EPA component would have
+  ! allocated all the arrays for thermal species and also any RF minorities in the plasma
+  ! state.  The TORIC version of the component included the ability to allocate these 
+  ! profiles here. However there were some problems due to conflicting use of the variable
+  ! 'nspec' pulled out of the torica.inp file, and possible confusions due to this code 
+  ! overwriting profile data in the plasma state with minority data pulled out of the 
+  ! machine.inp file.  The modification eliminates the reading of torica.inp altogether
+  ! but retains the ablility to allocate and initialize the minority data from the 
+  ! machine.inp file.  Specifically:
+  
+  ! 1) A new variable 'nspec_rf_min' is added to the '/nonthermals/' namelist.
+  ! 2) If 
+  
+! Plasma state data for LH component
+! 	MACHINE_DESCRIPTION
+! 		LHRF_SRC_NAME:  number & name of LHRF sources 
+! 		NLHRF_SRC: item list dimension of lhrf_src_name (lhrf_source)
+!  
+! 	SHOT_CONFIGURATION 
+! 		FREQ_LH: frequency on each LHRF source
+!  
+! 	SIMULATION_INIT 
+! 		LH_CODE_INFO: Information: code implementing LH component 
+! 		LH_DATA_INFO: Information on source of LHRF power data 
+! 		NRHO_LHRF: grid dimension of rho_lhrf (RHO coordinate) 
+! 		RHO_LHRF: rho grid -- LHRF
+!  
+! 	STATE_DATA
+! 		 POWER_LH: power on each LHRF source
+!  
+! 	STATE_PROFILES 
+! 		CURLH: LH current drive 
+! 		CURLH_SRC: LH current drive (by antenna) 
+! 		PELH: electron heating by LH 
+! 		PELH_SRC: LH electron heating by antenna 
+! 		PILH: ion heating by LH
+! 		PILH_SRC: LH ion heating by antenna
+
+! This code is required to set NRHO_LHRF and initialize RHO_LHRF.  The machine description
+! and shot configuration data should have already been initialized either by the 
+! generic_ps_init component or by the EPA component.
 
   USE plasma_state_mod
 
@@ -40,19 +83,6 @@ PROGRAM do_torlh_init
   END IF
   CLOSE(inp_unit)
 
-    ! This is just to read in 'nspec'
-    call getlun(lun,ierr)
-    call assert(ierr == 0, 'cannot find free i/o unit', ierr )
-    open(unit=lun, file='torica.inp', status='old', form='formatted')
-    inquire(lun, exist=lex)
-    if(lex)then
-        write(*,*) 'TORLH INIT : reading torica.inp'
-        read(lun, nml=equidata)
-    else
-        write(*,*)'torica.inp does not exist or could not be read'
-    endif
-    close(lun)
-
   write(*,*) ' -- get (restore) plasma state from file -- '
   ! this call retrieves the plasma state at the present ps%, and
   ! previous time steps psp%
@@ -81,10 +111,11 @@ PROGRAM do_torlh_init
   CALL assert( ierr==0,' initialize torlh: ps_get_plasma_state: ierr=',ierr )
 
     if(.not. allocated(ps%freq_lh)) then
-       write(*,*)'RF SRC NOT ALLOCATED'
+       write(*,*)'LRF_SRC not allocated in initial plasma state'
        ps%nlhrf_src = 1
+       ps%lhrf_src_name = 'LH_1'
     
-       write(*,*)'Allocating RF in prepare_input'
+       write(*,*)'Allocating LH source in do_torlh_init - default one source'
        CALL ps_alloc_plasma_state(ierr)
     
        if(ierr.ne.0) then
@@ -95,67 +126,6 @@ PROGRAM do_torlh_init
     
     endif
 
-    ! vars of size ps%nspec_rfmin
-    if(.not.allocated(ps%fracmin))then
-        if(nspec.le.0)then
-            write(*,*)'TORIC INIT : ERROR - nspec read from torica.inp not valid'
-            stop
-        endif
-        ps%nspec_rfmin = nspec
-        write(*,*)'Setting nspec_rfmin = ',nspec
-        CALL ps_alloc_plasma_state(ierr)
-        CALL assert( ierr==0,' initialize torlh A: ps_get_plasma_state: ierr=',ierr )
-    endif
-
-    write(*,*)'TORIC INIT : Setting nspec_rfmin sized vars'
-
-    ps%fracmin = fracmin 
-    ps%isThermal = isThermal
-    ps%m_RFMIN = m_rfmin * ps_mp
-    ps%qatom_RFMIN = qatom_rfmin * ps_xe
-    ps%q_RFMIN = q_rfmin * ps_xe
-    ps%RFMIN_name = trim(rfmin_name)
-
-    write(*,*)'TORIC INIT : Setting kdens_rfmin scalar'
-
-    ps%kdens_rfmin = kdens_rfmin
-
-    ! vars of size ps%nspec_alla
-    write(*,*)'TORIC INIT : Setting nspec_alla sized vars'
-    if(.not.allocated(ps%m_ALLA))then
-        if(nspec.le.0)then
-            write(*,*)'TORIC INIT : ERROR - nspec read from torica.inp not valid'
-            stop
-        endif
- 
-        ps%nspec_alla = nspec
-        write(*,*)'Setting nspec_alla = ',nspec
-        CALL ps_alloc_plasma_state(ierr)
-        CALL assert( ierr==0,' initialize torlh B: ps_get_plasma_state: ierr=',ierr )
-    endif
-    ps%m_ALLA(ps%rfmin_to_alla) = m_rfmin * ps_mp
-    ps%qatom_ALLA(ps%rfmin_to_alla) = qatom_rfmin * ps_xe
-    ps%q_ALLA(ps%rfmin_to_alla) = q_rfmin * ps_xe
-    ps%ALLA_name(ps%rfmin_to_alla) = trim(rfmin_name)
-
-    ! vars of size ps%nspec_all
-    write(*,*)'TORLH INIT : Setting nspec_all sized vars'
-    if(.not.allocated(ps%m_ALL))then
-        if(nspec.le.0)then
-            write(*,*)'TORIC INIT : ERROR - nspec read from torica.inp not valid'
-            stop
-        endif
- 
-        ps%nspec_all = nspec
-        write(*,*)'Setting nspec_all = ',nspec
-        CALL ps_alloc_plasma_state(ierr)
-        CALL assert( ierr==0,' initialize torlh C: ps_get_plasma_state: ierr=',ierr )
-    endif
-    ps%m_ALL(ps%rfmin_to_all) = m_rfmin * ps_mp
-    ps%qatom_ALL(ps%rfmin_to_all) = qatom_rfmin * ps_xe
-    ps%q_ALL(ps%rfmin_to_all) = q_rfmin * ps_xe
-    ps%ALL_name(ps%rfmin_to_all)= trim(rfmin_name)
-
    do i=0,ps%nspec_alla
      write(*,*) 'Spec Index : ', i
      if(allocated(ps%alla_type)) write(*,*) 'Spec Type : ', ps%alla_type(i)
@@ -165,8 +135,8 @@ PROGRAM do_torlh_init
   enddo
 
 !create plasma state rf fields
-  ps%freq_lh(1)=freqcy  !who sets #lh_srcs, ps%lh_src_name?
-  print *,"freq_lh, picrf  alloc?",allocated(ps%freq_lh),allocated(ps%pelh_src)
+!   ps%freq_lh(1)=freqcy  !who sets #lh_srcs, ps%lh_src_name?
+!   print *,"freq_lh, picrf  alloc?",allocated(ps%freq_lh),allocated(ps%pelh_src)
   if (allocated(ps%pelh_src) .eqv. .TRUE.) then
       print *,"RF alloc?",allocated(ps%pelh_src),size(ps%pelh_src)
       print*,   '   number of lower hybrid wave sources = ', ps%nlhrf_src
@@ -178,11 +148,6 @@ PROGRAM do_torlh_init
       print*,   '   radial grid points for LH waves = ', ps%nrho_lhrf
       print*,   '   ps%rho_lh = ', allocated(ps%rho_lhrf), size(ps%rho_lhrf), ps%rho_lhrf
   endif
-
-!  if (ps%nspec==0) then
-!     print*,'Error, nspec not set.  Setting it to value of nspec_th'
-!     ps%nspec=ps%nspec_th
-!  end if
 
 ! Check to see if the RF arrays are already allocated
 !
