@@ -65,6 +65,9 @@ class model_EPA_mdescr(Component):
 
 # Update (original) plasma state
         services.update_plasma_state()
+        
+# "Archive" output files in history directory
+        services.stage_output_files(timeStamp, self.OUTPUT_FILES)
 
 # Copy initial namelist file so original parameters will be available for time evolution
         try:
