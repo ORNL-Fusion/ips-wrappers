@@ -264,7 +264,7 @@ class torlh (Component):
         process_output  = os.path.join(self.BIN_PATH, 'process_torlh_output_mcmd')
 
         zero_RF_LH_power = self.ZERO_LH_POWER_BIN
-        torlh_bin = self.torlh_BIN
+        torlh_bin = self.TORLH_BIN
         prepare_eqdsk  = self.GEQXPL_BIN
 
         cur_state_file = self.plasma_state_file
