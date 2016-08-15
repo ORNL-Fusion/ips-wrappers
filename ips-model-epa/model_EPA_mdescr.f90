@@ -367,17 +367,16 @@ END IF  ! End INIT function
 					CALL EXIT(1)
 				ENDIF
 				
-        	ELSE  ! kdens_rfmin not "fraction"
-			
-				! NB: If minorities are not fraction_of_electron, the ion fractions are just those
-				! in the evolving_model_data namelist.  Some other mechanism must enforce charge
-				! neutrality.
-				DO i = 1, ps%nspec_th
-					ps%ns(:,i) = frac_ni(i)*ps%ns(:, 0)
-					WRITE (*,*) 'model_EPA_mdescr:  initial density profile for thermal ion #',i ,' = ', ps%ns(:, i)
-					WRITE (*,*)
-				END DO
         	END IF ! kdens_rfmin "fraction"
+			
+			! NB: If minorities are not fraction_of_electron, the ion fractions are just those
+			! in the evolving_model_data namelist.  Some other mechanism must enforce charge
+			! neutrality.
+			DO i = 1, ps%nspec_th
+				ps%ns(:,i) = frac_ni(i)*ps%ns(:, 0)
+				WRITE (*,*) 'model_EPA_mdescr:  initial density profile for thermal ion #',i ,' = ', ps%ns(:, i)
+				WRITE (*,*)
+			END DO
 				
         END IF  ! fraction_of_electron
         
