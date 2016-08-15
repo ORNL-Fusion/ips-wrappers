@@ -359,7 +359,7 @@ END IF  ! End INIT function
         		END DO
 				IF (ps%nspec_th .GE. 2) THEN
 					DO i = 2, ps%nspec_rfmin
-						frac_ni(1) = frac_ni(1) - ps%q_S(i)*ps%frac_ni(i)
+						frac_ni(1) = frac_ni(1) - ps%q_S(i)*frac_ni(i)
 					END DO
 				ENDIF
 				IF (frac_ni(1) < 0.0) THEN 
@@ -367,16 +367,17 @@ END IF  ! End INIT function
 					CALL EXIT(1)
 				ENDIF
 				
-        	END IF ! kdens_rfmin "fraction"
+        	ELSE  ! kdens_rfmin not "fraction"
 			
-			! NB: If minorities are not fraction_of_electron, the ion fractions are just those
-			! in the evolving_model_data namelist.  Some other mechanism must enforce charge
-			! neutrality.
-			DO i = 1, ps%nspec_th
-				ps%ns(:,i) = frac_ni(i)*ps%ns(:, 0)
-				WRITE (*,*) 'model_EPA_mdescr:  initial density profile for thermal ion #',i ,' = ', ps%ns(:, i)
-				WRITE (*,*)
-			END DO
+				! NB: If minorities are not fraction_of_electron, the ion fractions are just those
+				! in the evolving_model_data namelist.  Some other mechanism must enforce charge
+				! neutrality.
+				DO i = 1, ps%nspec_th
+					ps%ns(:,i) = frac_ni(i)*ps%ns(:, 0)
+					WRITE (*,*) 'model_EPA_mdescr:  initial density profile for thermal ion #',i ,' = ', ps%ns(:, i)
+					WRITE (*,*)
+				END DO
+        	END IF ! kdens_rfmin "fraction"
 				
         END IF  ! fraction_of_electron
         
