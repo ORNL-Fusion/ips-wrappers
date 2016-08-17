@@ -180,13 +180,20 @@
 !originally in t0_torica.F
 !specifies general wave parameters, some numerical parameters
       namelist /toricainp/ &
-     &   nvrb,   nmod,   ntt,    nelm,   nptvac, mxmvac, &
+!      &   nvrb,   nmod,   ntt,    nelm,   nptvac, mxmvac, &
+!      &   freqcy, anzedg, ibcant,  antlen, antlc,  theant, &
+!      &   iflr,   ibpol,  iqtor,  icoll,  enhcol, &
+!      &   imdedg, iezvac, ibweld, icosig, iregax, &
+!      &   isol,   mastch,         iout,   idlout, io_ncdf, &
+!      &   iwdisk, ipltht, zeff,   iclres, dnures, tnures, &
+!      &   timing_on, scratchpath, bscale, use_incore, pcblock
+     &  nmod,   ntt,    nelm,   nptvac, mxmvac, &
      &   freqcy, anzedg, ibcant,  antlen, antlc,  theant, &
-     &   iflr,   ibpol,  iqtor,  icoll,  enhcol, &
-     &   imdedg, iezvac, ibweld, icosig, iregax, &
+     &   iflr,   ibpol,  icoll,  enhcol, &
+     &   imdedg, iregax, &
      &   isol,   mastch,         iout,   idlout, io_ncdf, &
-     &   iwdisk, ipltht, zeff,   iclres, dnures, tnures, &
-     &   timing_on, scratchpath, bscale, use_incore, pcblock
+     &   iwdisk, zeff, &
+     &   timing_on, scratchpath, use_incore, pcblock, inputpath
 
 !originally in t0_mod_toi2mex.F
 !specifies numerical equilibrium (EFIT usually) settings
@@ -198,9 +205,12 @@
 !originally in t0_mod_equil.F
 !specifies plasma equilibrium settings and profiles
       namelist/equidata/ igsmhd, intchb, idprof, &
+!      &   nspec, iudsym, mainsp, atm,  azi, so_thickness,  &
+!      &   dist_plafars,   dist_plaant,    dist_plawall,  &
+!      &   inputpath,      equil_file,     profnt_file
      &   nspec, iudsym, mainsp, atm,  azi, so_thickness,  &
      &   dist_plafars,   dist_plaant,    dist_plawall,  &
-     &   inputpath,      equil_file,     profnt_file
+     &   equil_file,     profnt_file
 
 ! This namelist group was added to specify parameters controlling nonthermal 
 ! ion populations such as the ICRF minority in the machine.inp file.
