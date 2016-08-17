@@ -281,10 +281,9 @@ IF (TRIM(mode) == 'INIT') THEN
         ! Toric radial grid.  But the rho_icrf grid must be allocated and initialized here.  
         IF (ALLOCATED(ps%m_RFMIN)) THEN   
 			ps%kdens_rfmin = "fraction"
-			ps%fracmin(:) = fracmin_n
+			ps%fracmin(:) = fracmin
 			ps%isThermal(:) = 1
-			ps%power_ic(:) = power_ic
-			WRITE (*,*) 'model_EPA_mdescr:  ICRF power and minority data loaded'
+			WRITE (*,*) 'model_EPA_mdescr: minority specification loaded'
 			WRITE (*,*)
 		END IF
                     
@@ -351,32 +350,37 @@ END IF  ! End INIT function
 			! NB: if minority ion density model is fraction of electron density  and if the 
 			! thermal ion model is also fraction of electrons then adjust fraction of
 			! thermal species 1 to give quasineutrality
+			! Define fraction of species #1 = 1.0 then subtract off minorities and other
+			! thermals.  (Also must subtract beams and fusion when they get put in)
         	IF (ps%kdens_rfmin == "fraction") THEN
-        		frac_ni(1) = 1.0
+        		frac_ni(1) = 1.0 
         		DO i = 1, ps%nspec_rfmin
 					frac_ni(1) = frac_ni(1) - ps%q_RFMIN(i)*ps%fracmin(i)
         		END DO
 				IF (ps%nspec_th .GE. 2) THEN
 					DO i = 2, ps%nspec_rfmin
-						frac_ni(1) = frac_ni(1) - ps%q_S(i)*ps%fracmin(i)
+						frac_ni(1) = frac_ni(1) - ps%q_S(i)*frac_ni(i)
 					END DO
 				ENDIF
 				IF (frac_ni(1) < 0.0) THEN 
 					WRITE (*,*) 'model_EPA_mdescr INIT: frac_ni(1) < 0'
 					CALL EXIT(1)
 				ENDIF
-        	ENDIF
-        	
-            ! If minorities are not fraction_of_electron use the ion fractions in 
-            ! evolving_model_data namelist
-            DO i = 1, ps%nspec_th
-                ps%ns(:,i) = frac_ni(i)*ps%ns(:, 0)
+				
+        	END IF ! kdens_rfmin "fraction"
+			
+			! NB: If minorities are not fraction_of_electron, the ion fractions are just those
+			! in the evolving_model_data namelist.  Some other mechanism must enforce charge
+			! neutrality.
+			DO i = 1, ps%nspec_th
+				ps%ns(:,i) = frac_ni(i)*ps%ns(:, 0)
 				WRITE (*,*) 'model_EPA_mdescr:  initial density profile for thermal ion #',i ,' = ', ps%ns(:, i)
 				WRITE (*,*)
-            END DO
+			END DO
+				
         END IF  ! fraction_of_electron
         
-        ! Load single Ti profile from multi-species Ts
+        ! Load single Ti profile from multi-species Ts()
         ps%Ti = ps%Ts(:, 1)
         
 
