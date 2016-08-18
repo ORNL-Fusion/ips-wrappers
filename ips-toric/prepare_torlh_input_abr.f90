@@ -190,7 +190,7 @@
      &  nmod,   ntt,    nelm,   nptvac, mxmvac, &
      &   freqcy, anzedg, ibcant,  antlen, antlc,  theant, &
      &   iflr,   ibpol,  icoll,  enhcol, &
-     &   imdedg, iregax, &
+     &   iregax, &
      &   isol,   mastch,         iout,   idlout, io_ncdf, &
      &   iwdisk, zeff, &
      &   timing_on, scratchpath, use_incore, pcblock, inputpath
