@@ -191,7 +191,7 @@
      &   freqcy, anzedg, ibcant,  antlen, antlc,  theant, &
      &   iflr,   ibpol,  icoll,  enhcol, &
      &   iregax, &
-     &   isol,   mastch,         iout,   idlout, io_ncdf, &
+     &   isol,   mastch,         iout,   idlout, &
      &   iwdisk, zeff, &
      &   timing_on, scratchpath, use_incore, pcblock, inputpath
 
