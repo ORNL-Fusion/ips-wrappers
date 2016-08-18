@@ -208,7 +208,7 @@
 !      &   nspec, iudsym, mainsp, atm,  azi, so_thickness,  &
 !      &   dist_plafars,   dist_plaant,    dist_plawall,  &
 !      &   inputpath,      equil_file,     profnt_file
-     &   nspec, iudsym, mainsp, atm,  azi, so_thickness,  &
+     &   nspec, mainsp, atm,  azi, so_thickness,  &
      &   dist_plafars,   dist_plaant,    dist_plawall,  &
      &   equil_file,     profnt_file
 
