@@ -55,12 +55,17 @@
 ! many of the parameters
       integer ::   io_ncdf = 1
 
+! Namelist /TORICAINP/ inputs specifically for TORLH (added by DBB 8/22/16 re J. Lee)
+      integer :: IJRF = 2   !option for current drive estimation
+      integer :: IPWDIM = 2 ! output printing option of TORLH
+      integer :: ICLPLO = 1 ! output printing option of TORLH
+
 ! Wave and antenna parameters (default values for now, later
 !   use ps%ant_model file for machine state)
 !      integer     :: nphi=10    ! anzedg is used for TORLH
       real     :: anzedg = -1.6 ! toroidal refractive index at the edge
       real(rspec) :: freqcy=4.6e9_rspec
-      integer  :: ibcant =1     !boundary condition for antenna. When ibcant<0, the grill antenna is used
+      integer  :: ibcant = -1     !boundary condition for antenna. When ibcant<0, the grill antenna is used
 
 !units are in cm for lengths
       real(rspec) :: antlen=6.0_rspec, antlc=1.0_rspec, &
@@ -95,7 +100,7 @@
 ! Namelist inputs for profile specification
 !  Density and temperature profiles - namelist and file inputs
 !
-      integer, parameter :: nspmx =30
+      integer, parameter :: nspmx = 8
 ! NOTE: A maximum of 15 ion species allowed
 ! The place,nspec+1, is reserved for the electrons in mod_direl.
 ! mainsp is used to impose charge neutrality
@@ -152,7 +157,8 @@
      &   iregax, &
      &   isol,   mastch,         iout,   idlout, &
      &   iwdisk, zeff, &
-     &   timing_on, scratchpath, use_incore, pcblock, inputpath
+     &   timing_on, scratchpath, use_incore, pcblock, inputpath, &
+     &   IJRF, IPWDIM, ICLPLO
 
       namelist /nonthermals/ &
      &   fracmin, q_rfmin, qatom_rfmin, m_rfmin, rfmin_name, &
