@@ -139,9 +139,9 @@
       real(rspec) ::  so_thickness=0.5_rspec
 
 ! Namelist /TORICAINP/ inputs specifically for TORLH (added by DBB 8/22/16 re J. Lee)
-      integer :: IJRF   !option for current drive estimation
-      integer :: IPWDIM ! output printing option of TORLH
-      integer :: ICLPLO ! output printing option of TORLH
+      integer :: IJRF = 2   !option for current drive estimation
+      integer :: IPWDIM = 2 ! output printing option of TORLH
+      integer :: ICLPLO = 1 ! output printing option of TORLH
       
       
 ! Namelist inputs for profile specification
