@@ -102,7 +102,7 @@
 !      integer     :: nphi=10  ! anzedg is used for TORLH
       real     :: anzedg = -1.6 ! toroidal refractive index at the edge
       real(rspec) :: freqcy=4.6e9_rspec
-      integer  :: ibcant =1     !boundary condition for antenna. When ibcant<0, the grill antenna is used
+      integer  :: ibcant = -1     !boundary condition for antenna. When ibcant<0, the grill antenna is used
 
 !units are in cm for lengths
       real(rspec) :: antlen=6.0_rspec, antlc=1.0_rspec, &
@@ -112,6 +112,7 @@
       real(rspec) ::  zeff=1._rspec, enhcol=1
       real(rspec) ::  dnures=1.0_rspec !width of layer for iclres (cm)
       real(rspec) ::  tnures=1.0_rspec !strength of layer for iclres (A.U.)
+
 ! profiling
       logical :: timing_on=.true.
 !
@@ -137,6 +138,12 @@
       real(rspec) ::  dist_plafars=0._rspec, dist_plaant=0.5_rspec
       real(rspec) ::  so_thickness=0.5_rspec
 
+! Namelist /TORICAINP/ inputs specifically for TORLH (added by DBB 8/22/16 re J. Lee)
+      integer :: IJRF   !option for current drive estimation
+      integer :: IPWDIM ! output printing option of TORLH
+      integer :: ICLPLO ! output printing option of TORLH
+      
+      
 ! Namelist inputs for profile specification
 !  Density and temperature profiles - namelist and file inputs
 !
@@ -193,7 +200,9 @@
      &   iregax, &
      &   isol,   mastch,         iout,   idlout, &
      &   iwdisk, zeff, &
-     &   timing_on, scratchpath, use_incore, pcblock, inputpath
+     &   timing_on, scratchpath, use_incore, pcblock, inputpath, &
+     &   IJRF, IPWDIM, ICLPLO
+
 
 !originally in t0_mod_toi2mex.F
 !specifies numerical equilibrium (EFIT usually) settings
