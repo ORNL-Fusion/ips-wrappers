@@ -4,6 +4,11 @@
 TORLH component.  Adapted from RF_LH_toric_abr_mcmd.py. (5-14-2016)
 
 """
+# Working notes: DBB 2-28-2016
+# Have not yet developed a process_torlh_output code.  For the torlh/CQL3D coupling
+# no lower hybrid data needs to go back into plasma state.  So for now have just commented
+# out the calls to process_torlh_output and the merge_current_plasma_state.
+
 # Working notes: DBB 5-14-2016
 # Changed all IC references to LH.  Assuming torlh works just the same as TORIC.  
 # Can modify later.
@@ -344,7 +349,8 @@ class torlh (Component):
             # First rename default fort.* to expected names by component method as of torlh5 r918 from ipp
             os.rename('fort.9','torlh_cfg.nc')
             os.rename('fort.21','torlh.nc')
-            retcode = subprocess.call([process_output, cur_state_file])
+            # No process_output code yet
+            # retcode = subprocess.call([process_output, cur_state_file])
             if (retcode != 0):
                 logMsg = 'Error executing' + process_output
                 self.services.error(logMsg)
@@ -354,8 +360,10 @@ class torlh (Component):
 # Merge partial plasma state containing updated IC data
         try:
             partial_file = cwd + '/RF_LH_' + cur_state_file
-            services.merge_current_plasma_state(partial_file, logfile='log.update_state')
-            print 'merged torlh plasma state data ', partial_file
+            # No process_output code yet
+            #services.merge_current_plasma_state(partial_file, logfile='log.update_state')
+            #print 'merged torlh plasma state data ', partial_file
+            print 'No process_output code yet, so no plasma state merge'
         except:
             logMsg = 'Error in call to merge_current_plasma_state(' + partial_file + ')'
             self.services.exception(logMsg)
