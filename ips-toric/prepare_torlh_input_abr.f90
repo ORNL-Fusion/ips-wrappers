@@ -518,7 +518,11 @@
 ! read ion species charge states and masses from the plasma State 
 ! PTB atm(1:nspec) = NINT(ps%m_s(1:nspec)/ps_mp)
 ! PTB azi(1:nspec) = NINT(ps%q_s(1:nspec)/ps_xe)
-      zeff = ps%zeff(1)
+! DBB 9-28-2016 in plasma state Zeff is profile.  If ps%Zeff = 0 use default or value from
+! toricainp namelist.  If ps%zeff(1) is not zero use that
+      if (ps%zeff(1) .ne. 0.) then
+          zeff = ps%zeff(1)
+      endif
       atm(1:ps%nspec_tha) = NINT(ps%m_ALLA(1:ps%nspec_tha)/ps_mp)
       azi(1:ps%nspec_tha) = NINT(ps%q_ALLA(1:ps%nspec_tha)/ps_xe)
 ! JCW create torlh to alla mapping in file:toric_alla_map.txt
