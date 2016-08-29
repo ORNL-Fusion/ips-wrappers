@@ -6,7 +6,8 @@ TORLH component.  Adapted from RF_LH_toric_abr_mcmd.py. (5-14-2016)
 """
 # Working notes: DBB 8-29-2016
 # Adapting to replicate more of the functionality of the TORLH/CQL3D iteration script
-# Adding config parameters DO_IDL_PLOTS and RUN_CQL3D_MAPIN
+# Adding code to do IDL plots and to run cql3d_mapin
+# Adding optional config parameters DO_IDL_PLOTS and RUN_CQL3D_MAPIN to config file
 
 # Working notes: DBB 8-28-2016
 # Have not yet developed a process_torlh_output code.  For the torlh/CQL3D coupling
@@ -460,7 +461,7 @@ class torlh (Component):
     def run_IDL_toricplot(self):
 
          cmd_toricplot_pro=".r pltoriclhg.pro\n"
-         P=Popen(["idl"],stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+         P=subprocess.Popen(["idl"],stdin=PIPE, stdout=PIPE, stderr=STDOUT)
          P.stdin.write(cmd_toricplot_pro)
          P.stdin.write("1\n")
          P.stdin.write("0\n")
