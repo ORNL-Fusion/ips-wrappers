@@ -4,7 +4,11 @@
 TORLH component.  Adapted from RF_LH_toric_abr_mcmd.py. (5-14-2016)
 
 """
-# Working notes: DBB 2-28-2016
+# Working notes: DBB 8-29-2016
+# Adapting to replicate more of the functionality of the TORLH/CQL3D iteration script
+# Adding config parameters DO_IDL_PLOTS and RUN_CQL3D_MAPIN
+
+# Working notes: DBB 8-28-2016
 # Have not yet developed a process_torlh_output code.  For the torlh/CQL3D coupling
 # no lower hybrid data needs to go back into plasma state.  So for now have just commented
 # out the calls to process_torlh_output and the merge_current_plasma_state.
@@ -369,6 +373,13 @@ class torlh (Component):
             self.services.exception(logMsg)
             raise 
 
+# Run IDL script if requested
+        do_idl_plots = self.try_get_component_param(services, DO_IDL_PLOTS, optional = True)
+        if do_idl_plots != None:
+            if do_idl_plots == True:
+                run_IDL_toricplot()
+
+
       # Archive output files
         try:
             services.stage_output_files(timeStamp, self.OUTPUT_FILES)
@@ -401,3 +412,57 @@ class torlh (Component):
 
     def finalize(self, timestamp=0.0):
         print 'torlh.finalize() called'
+
+
+# ------------------------------------------------------------------------------
+#
+# "Private"  methods
+#
+# ------------------------------------------------------------------------------
+
+    def try_get_config_param(self, services, param_name, optional=False):
+
+        try:
+            value = services.get_config_param(param_name)
+            print param_name, ' = ', value
+        except Exception:
+            if optional:
+                print 'config parameter ', param_name, ' not found'
+                value = None
+            else:
+                message = 'required config parameter ', param_name, ' not found'
+                print message
+                services.exception(message)
+                raise
+
+        return value
+
+    # Try to get component specific config parameter - wraps the exception handling
+    def try_get_component_param(self, services, param_name, optional=False):
+
+        if hasattr(self, param_name):
+            value = getattr(self, param_name)
+            print param_name, ' = ', value
+        elif optional:
+            print 'optional config parameter ', param_name, ' not found'
+            value = None
+        else:
+            message = 'required component config parameter ', param_name, ' not found'
+            print message
+            services.exception(message)
+            raise
+
+        return value
+
+    # IDL plots
+    def run_IDL_toricplot(self):
+
+         cmd_toricplot_pro=".r pltoriclhg.pro\n"
+         P=Popen(["idl"],stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+         P.stdin.write(cmd_toricplot_pro)
+         P.stdin.write("1\n")
+         P.stdin.write("0\n")
+         P.stdin.write("1\n")
+         print "Make a file(torica.ps)"
+         
+         return
