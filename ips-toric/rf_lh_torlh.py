@@ -347,9 +347,9 @@ class torlh (Component):
 
             # Call process_output
             # First rename default fort.* to expected names by component method as of torlh5 r918 from ipp
-            os.rename('fort.9','torlh_cfg.nc')
-            os.rename('fort.21','torlh.nc')
-            # No process_output code yet
+            #os.rename('fort.9','torlh_cfg.nc')
+            #os.rename('fort.21','torlh.nc')
+            # No process_output code yet.  And don't find fort.9 or fort.21 in work directory.
             # retcode = subprocess.call([process_output, cur_state_file])
             if (retcode != 0):
                 logMsg = 'Error executing' + process_output
