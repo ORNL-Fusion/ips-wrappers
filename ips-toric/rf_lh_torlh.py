@@ -379,7 +379,7 @@ class torlh (Component):
             print 'do_idl_plots = ', do_idl_plots
             if do_idl_plots:
                 print 'running run_IDL_toricplot()'
-                run_IDL_toricplot()
+                self.run_IDL_toricplot()
 
 
       # Archive output files
