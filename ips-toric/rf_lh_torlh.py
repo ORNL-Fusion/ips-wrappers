@@ -58,7 +58,7 @@ TORLH component.  Adapted from RF_LH_toric_abr_mcmd.py. (5-14-2016)
 
 import sys
 import os
-import subprocess
+from subprocess import Popen,PIPE,STDOUT
 import getopt
 import shutil
 import string
@@ -461,7 +461,7 @@ class torlh (Component):
     def run_IDL_toricplot(self):
 
          cmd_toricplot_pro=".r pltoriclhg.pro\n"
-         P=subprocess.Popen(["idl"],stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+         P=Popen(["idl"],stdin=PIPE, stdout=PIPE, stderr=STDOUT)
          P.stdin.write(cmd_toricplot_pro)
          P.stdin.write("1\n")
          P.stdin.write("0\n")
