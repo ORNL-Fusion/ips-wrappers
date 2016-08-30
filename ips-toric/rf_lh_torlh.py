@@ -377,7 +377,6 @@ class torlh (Component):
 # Run IDL script if requested
         do_idl_plots = self.try_get_component_param(services, 'DO_IDL_PLOTS', optional = True)
         if do_idl_plots != None:
-            print 'do_idl_plots = ', do_idl_plots
             if do_idl_plots:
                 print 'running run_IDL_toricplot()'
                 self.run_IDL_toricplot()
