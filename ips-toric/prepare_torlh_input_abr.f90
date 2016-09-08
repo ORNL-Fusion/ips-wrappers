@@ -119,7 +119,7 @@
       character(80) :: path, file_felice
       integer :: num_runs, nfel_nphi, iread_felice
       integer :: ntres=64
-      real(rspec) :: d_u, d_psi, enorm=0._rspec, unorm
+      real(rspec) :: d_u, d_psi, enorm=0._rspec, unorm, uasp
       real(rspec) :: psi_min, psi_max
       real(rspec) :: u_extr = 10._rspec
       real(rspec):: uperp0
@@ -197,9 +197,8 @@
       integer, dimension(:) :: inumin(0:nspmx) = 0
 
 !  Namelist inputs for settings switching between "toric" and "qldce" modes
-      integer, dimension(:) :: &
-     $ INUMIN_toric(0:nspmx) = 0, INUMIN_qldce(0:nspmx) = (/3, (0,I=1,nspmx) /)
-
+      integer, dimension(:) :: INUMIN_toric(0:nspmx) = 0
+      integer, dimension(:) :: INUMIN_qldce(0:nspmx) = (/3, (0,I=1,nspmx) /)
 ! Namelist controls for the RF minority population
 
       real(rspec) :: q_rfmin = 1.0_rspec, qatom_rfmin = 1.0_rspec, &
