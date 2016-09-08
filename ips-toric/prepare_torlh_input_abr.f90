@@ -66,9 +66,6 @@
 !  What about qldce?
       character(10):: toricmode='toric'
 
-!  Namelist inputs for settings switching between "toric" and "qldce" modes
-      integer, dimension(4) :: INUMIN_toric = (/0,0,0,0/), INUMIN_qldce = (/3,0,0,0/)
-
 ! Dimensions of the problem
       integer :: nvrb=3       ! Generally three vector components
 ! Poloidal resolution
@@ -199,6 +196,10 @@
 
       integer, dimension(:) :: inumin(0:nspmx) = 0
 
+!  Namelist inputs for settings switching between "toric" and "qldce" modes
+      integer, dimension(:) :: &
+     $ INUMIN_toric(0:nspmx) = 0, INUMIN_qldce(0:nspmx) = (/3, (0,I=1,nspmx) /)
+
 ! Namelist controls for the RF minority population
 
       real(rspec) :: q_rfmin = 1.0_rspec, qatom_rfmin = 1.0_rspec, &
@@ -219,6 +220,8 @@
 !initalized in t0_mod_public.F
 
 !originally in t0_aamain.F
+
+      namelist /toric_mode/ toricmode
 
 ! specifies parameter settings for toricmode = toric and qldce
       namelist /TORIC_MODE_PARAMETERS/ INUMIN_toric, INUMIN_qldce
