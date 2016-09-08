@@ -9,7 +9,7 @@
 ! default torlh only runs in TORIC mode.  But if optional parameter QLDCE_MODE = True in 
 ! the config file, then first torlh runs in toric mode then these other code for coupling 
 ! to CQL3D are run. This is communicated into here with and additional optional commmandline
-! argument 'toricmode'.  Thus the 'toricmode' namelist is eliminated from machine.inp.
+! argument 'toricmode'. 
 ! To change between TORIC modes two parameters must be changed in the torica.inp file.
 !
 ! For TORIC mode:
@@ -67,7 +67,7 @@
       character(10):: toricmode='toric'
 
 !  Namelist inputs for settings switching between "toric" and "qldce" modes
-      integer :: INUMIN_toric = /0,0,0,0/, INUMIN_qldce = /3,0,0,0/
+      integer :: INUMIN_toric = (/0,0,0,0/), INUMIN_qldce = (/3,0,0,0/)
 
 ! Dimensions of the problem
       integer :: nvrb=3       ! Generally three vector components
@@ -114,6 +114,18 @@
       logical ::   use_incore=.false. 
                               ! default is to use out-of-core memory
                               ! Core-memory is not enough for LH waves resolution
+
+!  qldce namelist variables
+!  ~~~~~~~~~~~~~~~~~
+      integer, parameter :: max_runs = 50    !max number of nphi
+      character(80), dimension(:) :: files_toric(max_runs)
+      character(80) :: path, file_felice
+      integer :: num_runs, nfel_nphi, iread_felice
+      integer :: ntres=64
+      real(r8) :: d_u, d_psi, enorm=0._r8, unorm
+      real(r8) :: psi_min, psi_max
+      real(r8) :: u_extr = 10._r8
+      real(r8):: uperp0
 
 ! Namelist inputs for control of the output, most are off to avoid too much data dumped
       integer ::   iout=0, ipltht=0, idlout=1
@@ -207,7 +219,7 @@
 !originally in t0_aamain.F
 
 ! specifies parameter settings for toricmode = toric and qldce
-      namelist /toric_mode_parameters/ INUMIN_toric, INUMIN_qldce
+      namelist /TORIC_MODE_PARAMETERS/ INUMIN_toric, INUMIN_qldce
 
 !originally in t0_torica.F
 !specifies general wave parameters, some numerical parameters
@@ -228,10 +240,13 @@
      &   timing_on, scratchpath, use_incore, pcblock, inputpath, &
      &   IJRF, IPWDIM, ICLPLO
 
-      namelist /qldceinp/ &
-     &   num_runs, path, iread_felice, files_toric,file_felice, &
-     &   d_u, enorm, u_extr, d_psi, psi_min, psi_max
-
+! originally in t0_mod_qldce.F
+      namelist/qldceinp/
+     &     num_runs, path, iread_felice, files_toric, file_felice,
+     &     d_u, u_extr, d_psi, psi_min, psi_max, enorm,ntres,uasp
+!uasp yet to be validated, do not use this option in production JCW 22 JUNE 2011
+!enorm if non zero puts qldce on a momentum space mesh as used by CQL3D
+!otherwise qldce is on a v/vte mesh.
 
 !originally in t0_mod_toi2mex.F
 !specifies numerical equilibrium (EFIT usually) settings
@@ -531,7 +546,7 @@
          read(inp_unit, nml = equidata)
          read(inp_unit, nml = nonthermals)
          IF (trim(toricmode) == 'qldce') THEN
-			 read(inp_unit, nml = qldce)
+			 read(inp_unit, nml = qldceinp)
 			 read(inp_unit, nml = TORIC_MODE_PARAMETERS)
          END IF         
       ELSE
