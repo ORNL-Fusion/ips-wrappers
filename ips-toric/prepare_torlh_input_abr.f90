@@ -197,6 +197,8 @@
      &             tisepr(nspmx)=0._rspec,    glti(nspmx)=0._rspec,  &
      &             pptii(nspmx)=0._rspec,     pptie(nspmx)=0._rspec
 
+      integer, dimension(:) :: inumin(0:nspmx) = 0
+
 ! Namelist controls for the RF minority population
 
       real(rspec) :: q_rfmin = 1.0_rspec, qatom_rfmin = 1.0_rspec, &
@@ -243,7 +245,7 @@
 ! originally in t0_mod_qldce.F
       namelist /qldceinp/ &
      &     num_runs, path, iread_felice, files_toric, file_felice, &
-     &     d_u, u_extr, d_psi, psi_min, psi_max, enorm,ntres,uasp
+     &     d_u, u_extr, d_psi, psi_min, psi_max, enorm, ntres, uasp
 !uasp yet to be validated, do not use this option in production JCW 22 JUNE 2011
 !enorm if non zero puts qldce on a momentum space mesh as used by CQL3D
 !otherwise qldce is on a v/vte mesh.
@@ -627,10 +629,8 @@
       gfile = trim(ps%eqdsk_file)
 
       if (toricmode == 'toric') then
-      	isol = ISOL_toric
       	inumin = INUMIN_toric
       else if (toricmode == 'qldce') then
-      	isol = ISOL_qldce
       	inumin = INUMIN_qldce
       else
       	write (*,*) 'prepare_torlh_input_abr: unknown toricmode = ', toricmode
