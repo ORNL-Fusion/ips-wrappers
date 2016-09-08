@@ -67,7 +67,7 @@
       character(10):: toricmode='toric'
 
 !  Namelist inputs for settings switching between "toric" and "qldce" modes
-      integer :: INUMIN_toric = (/0,0,0,0/), INUMIN_qldce = (/3,0,0,0/)
+      integer, dimension(4) :: INUMIN_toric = (/0,0,0,0/), INUMIN_qldce = (/3,0,0,0/)
 
 ! Dimensions of the problem
       integer :: nvrb=3       ! Generally three vector components
@@ -122,10 +122,10 @@
       character(80) :: path, file_felice
       integer :: num_runs, nfel_nphi, iread_felice
       integer :: ntres=64
-      real(r8) :: d_u, d_psi, enorm=0._r8, unorm
-      real(r8) :: psi_min, psi_max
-      real(r8) :: u_extr = 10._r8
-      real(r8):: uperp0
+      real(rspec) :: d_u, d_psi, enorm=0._rspec, unorm
+      real(rspec) :: psi_min, psi_max
+      real(rspec) :: u_extr = 10._rspec
+      real(rspec):: uperp0
 
 ! Namelist inputs for control of the output, most are off to avoid too much data dumped
       integer ::   iout=0, ipltht=0, idlout=1
