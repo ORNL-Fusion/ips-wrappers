@@ -4,6 +4,26 @@
 !25 Jan 2008 - added optional command line arg for state file
 !JCW 2007, 2008
 
+! Working notes: DBB 9-8-2016
+! Modifying to optionally run torlh in qldce mode and to run ImChizz and cql3d_mapin.  By
+! default torlh only runs in TORIC mode.  But if optional parameter QLDCE_MODE = True in 
+! the config file, then first torlh runs in toric mode then these other code for coupling 
+! to CQL3D are run. This is communicated into here with and additional optional commmandline
+! argument 'toricmode'.  Thus the 'toricmode' namelist is eliminated from machine.inp.
+! To change between TORIC modes two parameters must be changed in the torica.inp file.
+!
+! For TORIC mode:
+!    toricmode = "toric" (default)
+!    INUMIN = 0,0,0,0
+! For QLDCE mode:
+!    toricmode = "qldce"
+!    INUMIN = 3,0,0,0
+!
+! The way this is implemented is to add a new namelist to the machine.inp file,
+! toric_mode_parameters. This will have values INUMIN_toric = 0,0,0,0 and
+! INUMIN_qldce = 3,0,0,0. Then prepare_torlh_input_abr.f90 will set INUMIN 
+! appropriately in the toric.inp file based on the toricmode parameter.
+
       program prepare_input
       USE plasma_state_mod
 !--------------------------------------------------------------------------
@@ -43,7 +63,11 @@
 ! the inputs
 
 !  Mode of TORIC utilization "equil" to preprocess equilibrium, "toric" to run solver
+!  What about qldce?
       character(10):: toricmode='toric'
+
+!  Namelist inputs for settings switching between "toric" and "qldce" modes
+      integer :: INUMIN_toric = /0,0,0,0/, INUMIN_qldce = /3,0,0,0/
 
 ! Dimensions of the problem
       integer :: nvrb=3       ! Generally three vector components
@@ -181,8 +205,9 @@
 !initalized in t0_mod_public.F
 
 !originally in t0_aamain.F
-!specifies task for torlh
-      namelist /toric_mode/ toricmode
+
+! specifies parameter settings for toricmode = toric and qldce
+      namelist /toric_mode_parameters/ INUMIN_toric, INUMIN_qldce
 
 !originally in t0_torica.F
 !specifies general wave parameters, some numerical parameters
@@ -202,6 +227,10 @@
      &   iwdisk, zeff, &
      &   timing_on, scratchpath, use_incore, pcblock, inputpath, &
      &   IJRF, IPWDIM, ICLPLO
+
+      namelist /qldceinp/ &
+     &   num_runs, path, iread_felice, files_toric,file_felice, &
+     &   d_u, enorm, u_extr, d_psi, psi_min, psi_max
 
 
 !originally in t0_mod_toi2mex.F
@@ -452,7 +481,12 @@
       case(1)
          call get_arg(1,cur_state_file)
 
-      case(2:)
+      case(2)
+         call get_arg(1,cur_state_file)
+         call get_arg(2,toricmode)
+         write(*,*) 'toricmode = ', toricmode
+
+      case(3:)
          write(0,*) 'Error. Illegal number of arguments.'
          write(0,*) 'prepare torlh usage: '
 	 write(0,*) 'prepare_torlh_input cur_state_file'
@@ -492,9 +526,14 @@
               form='formatted')
       INQUIRE(inp_unit, exist=lex)
       IF (lex) THEN
+         read(inp_unit, nml = toric_mode_parameters)
          read(inp_unit, nml = toricainp)
          read(inp_unit, nml = equidata)
          read(inp_unit, nml = nonthermals)
+         IF (trim(toricmode) == 'qldce') THEN
+			 read(inp_unit, nml = qldce)
+			 read(inp_unit, nml = TORIC_MODE_PARAMETERS)
+         END IF         
       ELSE
          write(*,*) &
             'machine.inp does not exist or there was a read error'
@@ -504,7 +543,13 @@
          write(*,*) "Error, nspec > nspmx in torlh, reducing to nspmx"
          nspec=nspmx
       END IF
-
+      
+      IF (trim(toricmode) == 'toric') THEN
+         INUMIN = INUMIN_toric
+      ELSE IF (trim(toricmode) == 'qldce') THEN
+         INUMIN = INUMIN_qldce
+	  END IF
+	  
 !radial profiles generation, these are output to equilequ_file
       s_nrho_n = ps%nrho
       s_nrho_t = ps%nrho
@@ -566,7 +611,17 @@
       idprof = 1  !use numerical profiles
       gfile = trim(ps%eqdsk_file)
 
-      toricmode='toric'
+      if (toricmode == 'toric') then
+      	isol = ISOL_toric
+      	inumin = INUMIN_toric
+      else if (toricmode == 'qldce') then
+      	isol = ISOL_qldce
+      	inumin = INUMIN_qldce
+      else
+      	write (*,*) 'prepare_torlh_input_abr: unknown toricmode = ', toricmode
+      	stop
+      end if
+      	
       open(unit=out_unit, file='torica.inp',                &
         status = 'unknown', form = 'formatted',delim='quote')
       

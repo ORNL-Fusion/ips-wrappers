@@ -4,6 +4,27 @@
 TORLH component.  Adapted from RF_LH_toric_abr_mcmd.py. (5-14-2016)
 
 """
+# Working notes: DBB 9-5-2016
+# Modifying to optionally run torlh in qldce mode and to run ImChizz and cql3d_mapin.  By
+# default torlh only runs in TORIC mode.  But if optional parameter QLDCE_MODE = True in 
+# the config file, then first torlh runs in toric mode then these other code for coupling 
+# to CQL3D are run. 
+# To change between TORIC modes three parameters must be changed in the torica.inp file.
+#
+# For TORIC mode:
+#    toricmode = "toric"
+#    ISOL = 0
+#    INUMIN = 0,0,0,0
+# For QLDCE mode:
+#    toricmode = "qldce"
+#    ISOL = 1
+#    INUMIN = 3,0,0,0
+#
+# The way this is implemented is to a new namelist to the machine.inp file, &MODE_PARAMETERS
+# This will have values ISOL_toric = 0, ISOL_qldce = 1, INUMIN_toric = 0,0,0,0 and
+# INUMIN_qldce = 3,0,0,0. Then prepare_torlh_input_abe.f90 will set ISOL and INUMIN 
+# appropriately in the toric.inp file based on the toricmode parameter.
+
 # Working notes: DBB 8-29-2016
 # Adapting to replicate more of the functionality of the TORLH/CQL3D iteration script
 # Adding code to do IDL plots and to run cql3d_mapin
