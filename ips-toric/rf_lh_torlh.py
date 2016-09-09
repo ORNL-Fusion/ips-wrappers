@@ -124,10 +124,10 @@ class torlh (Component):
     # Get component-specific configuration parameters. Note: Not all of these are
     # used in 'init' but if any are missing we get an exception now instead of
     # later
-        BIN_PATH = self.try_get_component_param('BIN_PATH')
-        RESTART_FILES = self.try_get_component_param('RESTART_FILES')
-        NPROC = self.try_get_component_param('NPROC')
-        QLDCE_MODE = self.try_get_component_param('QLDCE_MODE', optional = True)
+        BIN_PATH = self.try_get_component_param(services,'BIN_PATH')
+        RESTART_FILES = self.try_get_component_param(services,'RESTART_FILES')
+        NPROC = self.try_get_component_param(services,'NPROC')
+        QLDCE_MODE = self.try_get_component_param(services,'QLDCE_MODE', optional = True)
 
 #        cur_state_file = self.plasma_state_file
         torlh_log = self.torlh_log
