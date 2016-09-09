@@ -570,7 +570,7 @@
       ELSE IF (trim(toricmode) == 'qldce') THEN
          INUMIN = INUMIN_qldce
 	  END IF
-	  WRITE (*,*) 'INUMIN = ' INUMIN
+	  WRITE (*,*) 'INUMIN = ', INUMIN
 	  
 !radial profiles generation, these are output to equilequ_file
       s_nrho_n = ps%nrho
