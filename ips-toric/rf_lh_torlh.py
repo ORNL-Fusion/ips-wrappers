@@ -127,7 +127,7 @@ class torlh (Component):
         BIN_PATH = self.get_component_param('BIN_PATH')
         RESTART_FILES = self.get_component_param('RESTART_FILES')
         NPROC = self.get_component_param('NPROC')
-        QLDCE_MODE = self.get_component_param('QLDCE_MODE')
+        QLDCE_MODE = self.get_component_param('QLDCE_MODE' optional = True)
 
 #        cur_state_file = self.plasma_state_file
         torlh_log = self.torlh_log
@@ -182,14 +182,14 @@ class torlh (Component):
             self.services.error(logMsg)
             raise Exception(logMsg)
 
-		if QLDCE_MODE:
-			toricmode = 'qldce'
-			retcode = subprocess.call([do_input, cur_state_file, toricmode])
-			if (retcode != 0):
-				logMsg = 'Error in call to torlh_init'
-				self.services.error(logMsg)
-				raise Exception(logMsg)
-			
+        if QLDCE_MODE:
+            toricmode = 'qldce'
+            retcode = subprocess.call([do_input, cur_state_file, toricmode])
+            if (retcode != 0):
+                logMsg = 'Error in call to torlh_init'
+                self.services.error(logMsg)
+                raise Exception(logMsg)
+            
       # Update plasma state files in plasma_state work directory
         try:
             services.update_plasma_state()
@@ -363,9 +363,9 @@ class torlh (Component):
                 self.services.error(logMsg)
                 raise Exception(logMsg)
                 
-		# Run in toricmode = 'toric'
+        # Run in toricmode = 'toric'
             # Call torlh prepare_input to generate torlha.inp
-       	    toricmode = 'toric'
+            toricmode = 'toric'
             retcode = subprocess.call([prepare_input, cur_state_file, toricmode])
             if (retcode != 0):
                 logMsg = 'Error executing ' + prepare_input
@@ -393,9 +393,9 @@ class torlh (Component):
                 self.services.error(logMsg)
                 raise Exception(logMsg)
                 
-		# Run in toricmode = 'qldce'
+        # Run in toricmode = 'qldce'
             # Call torlh prepare_input to generate torlha.inp
-       	    toricmode = 'qldce'
+            toricmode = 'qldce'
             retcode = subprocess.call([prepare_input, cur_state_file, toricmode])
             if (retcode != 0):
                 logMsg = 'Error executing ' + prepare_input
