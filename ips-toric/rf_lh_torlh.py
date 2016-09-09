@@ -118,8 +118,8 @@ class torlh (Component):
     # Get global configuration parameters
         cur_state_file = self.try_get_config_param(services,'CURRENT_STATE')
         cur_eqdsk_file = self.try_get_config_param(services,'CURRENT_EQDSK')
-!        cur_cql_file = self.try_get_config_param(services,'CURRENT_CQL')
-!        cur_dql_file = self.try_get_config_param(services,'CURRENT_DQL')
+#        cur_cql_file = self.try_get_config_param(services,'CURRENT_CQL')
+#        cur_dql_file = self.try_get_config_param(services,'CURRENT_DQL')
 
     # Get component-specific configuration parameters. Note: Not all of these are
     # used in 'init' but if any are missing we get an exception now instead of
