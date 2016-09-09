@@ -116,18 +116,18 @@ class torlh (Component):
             raise 
 
     # Get global configuration parameters
-        cur_state_file = self.get_config_param(services,'CURRENT_STATE')
-        cur_eqdsk_file = self.get_config_param(services,'CURRENT_EQDSK')
-        cur_cql_file = self.get_config_param(services,'CURRENT_CQL')
-        cur_dql_file = self.get_config_param(services,'CURRENT_DQL')
+        cur_state_file = self.try_get_config_param(services,'CURRENT_STATE')
+        cur_eqdsk_file = self.try_get_config_param(services,'CURRENT_EQDSK')
+        cur_cql_file = self.try_get_config_param(services,'CURRENT_CQL')
+        cur_dql_file = self.try_get_config_param(services,'CURRENT_DQL')
 
     # Get component-specific configuration parameters. Note: Not all of these are
     # used in 'init' but if any are missing we get an exception now instead of
     # later
-        BIN_PATH = self.get_component_param('BIN_PATH')
-        RESTART_FILES = self.get_component_param('RESTART_FILES')
-        NPROC = self.get_component_param('NPROC')
-        QLDCE_MODE = self.get_component_param('QLDCE_MODE', optional = True)
+        BIN_PATH = self.try_get_component_param('BIN_PATH')
+        RESTART_FILES = self.try_get_component_param('RESTART_FILES')
+        NPROC = self.try_get_component_param('NPROC')
+        QLDCE_MODE = self.try_get_component_param('QLDCE_MODE', optional = True)
 
 #        cur_state_file = self.plasma_state_file
         torlh_log = self.torlh_log
