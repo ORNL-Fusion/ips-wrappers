@@ -127,7 +127,7 @@ class torlh (Component):
         BIN_PATH = self.get_component_param('BIN_PATH')
         RESTART_FILES = self.get_component_param('RESTART_FILES')
         NPROC = self.get_component_param('NPROC')
-        QLDCE_MODE = self.get_component_param('QLDCE_MODE' optional = True)
+        QLDCE_MODE = self.get_component_param('QLDCE_MODE', optional = True)
 
 #        cur_state_file = self.plasma_state_file
         torlh_log = self.torlh_log
