@@ -127,8 +127,6 @@ class torlh (Component):
         BIN_PATH = self.try_get_component_param(services,'BIN_PATH')
         RESTART_FILES = self.try_get_component_param(services,'RESTART_FILES')
         NPROC = self.try_get_component_param(services,'NPROC')
-        QLDCE_MODE = self.try_get_component_param(services,'QLDCE_MODE', optional = True)
-        print 'QLDCE_MODE = ', QLDCE_MODE
 
 #        cur_state_file = self.plasma_state_file
         torlh_log = self.torlh_log
@@ -388,6 +386,8 @@ class torlh (Component):
                 
         # Run in toricmode = 'qldce'
             # Call torlh prepare_input to generate torlha.inp
+            QLDCE_MODE = self.try_get_component_param(services,'QLDCE_MODE', optional = True)
+            print 'QLDCE_MODE = ', QLDCE_MODE
             if (QLDCE_MODE):
                 toricmode = 'qldce'
                 print 'Running torlh in qldce mode'
