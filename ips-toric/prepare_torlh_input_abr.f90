@@ -550,7 +550,9 @@
          read(inp_unit, nml = equidata)
          read(inp_unit, nml = nonthermals)
          IF (trim(toricmode) == 'qldce') THEN
+             write (*,*) 'reading namelist qldceinp'
 			 read(inp_unit, nml = qldceinp)
+             write (*,*) 'reading namelist TORIC_MODE_PARAMETERS'
 			 read(inp_unit, nml = TORIC_MODE_PARAMETERS)
          END IF         
       ELSE
@@ -568,6 +570,7 @@
       ELSE IF (trim(toricmode) == 'qldce') THEN
          INUMIN = INUMIN_qldce
 	  END IF
+	  WRITE (*,*) 'INUMIN = ' INUMIN
 	  
 !radial profiles generation, these are output to equilequ_file
       s_nrho_n = ps%nrho
