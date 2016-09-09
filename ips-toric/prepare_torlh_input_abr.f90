@@ -646,6 +646,7 @@
       write(out_unit, nml = toricainp)
       write(out_unit, nml = equidata)
       write(out_unit, nml = ips)
+      write(out_unit, nml = qldceinp)
 
       close(out_unit)
 
