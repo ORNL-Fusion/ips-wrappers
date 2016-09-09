@@ -128,6 +128,7 @@ class torlh (Component):
         RESTART_FILES = self.try_get_component_param(services,'RESTART_FILES')
         NPROC = self.try_get_component_param(services,'NPROC')
         QLDCE_MODE = self.try_get_component_param(services,'QLDCE_MODE', optional = True)
+        print 'QLDCE_MODE = ', QLDCE_MODE
 
 #        cur_state_file = self.plasma_state_file
         torlh_log = self.torlh_log
@@ -175,20 +176,12 @@ class torlh (Component):
                 services.exception(logMsg)
                 raise
 
-        do_input = os.path.join(self.BIN_PATH, 'do_torlh_init_abr')
-        retcode = subprocess.call([do_input, cur_state_file])
+        do_init = os.path.join(self.BIN_PATH, 'do_torlh_init_abr')
+        retcode = subprocess.call([do_init, cur_state_file])
         if (retcode != 0):
             logMsg = 'Error in call to torlh_init'
             self.services.error(logMsg)
             raise Exception(logMsg)
-
-        if QLDCE_MODE:
-            toricmode = 'qldce'
-            retcode = subprocess.call([do_input, cur_state_file, toricmode])
-            if (retcode != 0):
-                logMsg = 'Error in call to torlh_init'
-                self.services.error(logMsg)
-                raise Exception(logMsg)
             
       # Update plasma state files in plasma_state work directory
         try:
@@ -395,33 +388,35 @@ class torlh (Component):
                 
         # Run in toricmode = 'qldce'
             # Call torlh prepare_input to generate torlha.inp
-            toricmode = 'qldce'
-            retcode = subprocess.call([prepare_input, cur_state_file, toricmode])
-            if (retcode != 0):
-                logMsg = 'Error executing ' + prepare_input
-                self.services.error(logMsg)
-                raise Exception(logMsg)
+			if QLDCE_MODE:
+				toricmode = 'qldce'
+				print 'Running torlh in qldce mode'
+				retcode = subprocess.call([prepare_input, cur_state_file, toricmode])
+				if (retcode != 0):
+					logMsg = 'Error executing ' + prepare_input
+					self.services.error(logMsg)
+					raise Exception(logMsg)
 
-            # Call xeqdsk_setup to generate eqdsk.out file
-            print 'prepare_eqdsk', prepare_eqdsk, cur_eqdsk_file
+				# Call xeqdsk_setup to generate eqdsk.out file
+				print 'prepare_eqdsk', prepare_eqdsk, cur_eqdsk_file
 
-            retcode = subprocess.call([prepare_eqdsk, \
-                                       '@equigs_gen', '/g_filename='+cur_eqdsk_file,\
-                                       '/equigs_filename=equigs.data'])
-            if (retcode != 0):
-                logMsg = 'Error in call to prepare_eqdsk'
-                self.services.error(logMsg)
-                raise Exception(logMsg)
+				retcode = subprocess.call([prepare_eqdsk, \
+										   '@equigs_gen', '/g_filename='+cur_eqdsk_file,\
+										   '/equigs_filename=equigs.data'])
+				if (retcode != 0):
+					logMsg = 'Error in call to prepare_eqdsk'
+					self.services.error(logMsg)
+					raise Exception(logMsg)
 
-            # Launch torlh executable
-            print 'torlh processors = ', self.NPROC
-            cwd = services.get_working_dir()
-            task_id = services.launch_task(self.NPROC, cwd, torlh_bin, logfile=torlh_log)
-            retcode = services.wait_task(task_id)
-            if (retcode != 0):
-                logMsg = 'Error executing command: ' + torlh_bin
-                self.services.error(logMsg)
-                raise Exception(logMsg)
+				# Launch torlh executable
+				print 'torlh processors = ', self.NPROC
+				cwd = services.get_working_dir()
+				task_id = services.launch_task(self.NPROC, cwd, torlh_bin, logfile=torlh_log)
+				retcode = services.wait_task(task_id)
+				if (retcode != 0):
+					logMsg = 'Error executing command: ' + torlh_bin
+					self.services.error(logMsg)
+					raise Exception(logMsg)
 
             # Call process_output
             # First rename default fort.* to expected names by component method as of torlh5 r918 from ipp
