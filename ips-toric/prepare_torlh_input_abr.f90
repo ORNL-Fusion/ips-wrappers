@@ -552,6 +552,9 @@
          IF (trim(toricmode) == 'qldce') THEN
              write (*,*) 'reading namelist qldceinp'
 			 read(inp_unit, nml = qldceinp)
+			WRITE (*, nml = qldceinp)
+			WRITE (*,*)
+			 
              write (*,*) 'reading namelist TORIC_MODE_PARAMETERS'
 			 read(inp_unit, nml = TORIC_MODE_PARAMETERS)
          END IF         
