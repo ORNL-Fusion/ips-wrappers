@@ -545,7 +545,7 @@
               form='formatted')
       INQUIRE(inp_unit, exist=lex)
       IF (lex) THEN
-         read(inp_unit, nml = toric_mode_parameters)
+!         read(inp_unit, nml = toric_mode_parameters)
          read(inp_unit, nml = toricainp)
          read(inp_unit, nml = equidata)
          read(inp_unit, nml = nonthermals)
