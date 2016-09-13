@@ -398,15 +398,15 @@ class torlh (Component):
                     raise Exception(logMsg)
 
                 # Call xeqdsk_setup to generate eqdsk.out file
-                print 'prepare_eqdsk', prepare_eqdsk, cur_eqdsk_file
-
-                retcode = subprocess.call([prepare_eqdsk, \
-                                           '@equigs_gen', '/g_filename='+cur_eqdsk_file,\
-                                           '/equigs_filename=equigs.data'])
-                if (retcode != 0):
-                    logMsg = 'Error in call to prepare_eqdsk'
-                    self.services.error(logMsg)
-                    raise Exception(logMsg)
+#                 print 'prepare_eqdsk', prepare_eqdsk, cur_eqdsk_file
+# 
+#                 retcode = subprocess.call([prepare_eqdsk, \
+#                                            '@equigs_gen', '/g_filename='+cur_eqdsk_file,\
+#                                            '/equigs_filename=equigs.data'])
+#                 if (retcode != 0):
+#                     logMsg = 'Error in call to prepare_eqdsk'
+#                     self.services.error(logMsg)
+#                     raise Exception(logMsg)
 
                 # Launch torlh executable
                 print 'torlh processors = ', self.NPROC
