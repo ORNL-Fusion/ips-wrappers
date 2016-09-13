@@ -241,7 +241,7 @@
      &   iregax, &
      &   isol,   mastch,         iout,   idlout, &
      &   iwdisk, zeff, &
-     &   timing_on, scratchpath, use_incore, pcblock, inputpath, &
+     &   timing_on, inumin, scratchpath, use_incore, pcblock, inputpath, &
      &   IJRF, IPWDIM, ICLPLO
 
 ! originally in t0_mod_qldce.F
@@ -545,19 +545,19 @@
               form='formatted')
       INQUIRE(inp_unit, exist=lex)
       IF (lex) THEN
-!         read(inp_unit, nml = toric_mode_parameters)
-         read(inp_unit, nml = toricainp)
-         read(inp_unit, nml = equidata)
-         read(inp_unit, nml = nonthermals)
          IF (trim(toricmode) == 'qldce') THEN
              write (*,*) 'reading namelist qldceinp'
 			 read(inp_unit, nml = qldceinp)
-			WRITE (*, nml = qldceinp)
-			WRITE (*,*)
-			 
+			 WRITE (*, nml = qldceinp)
+			 WRITE (*,*)			 
              write (*,*) 'reading namelist TORIC_MODE_PARAMETERS'
 			 read(inp_unit, nml = TORIC_MODE_PARAMETERS)
          END IF         
+
+         read(inp_unit, nml = toric_mode_parameters)
+         read(inp_unit, nml = toricainp)
+         read(inp_unit, nml = equidata)
+         read(inp_unit, nml = nonthermals)
       ELSE
          write(*,*) &
             'machine.inp does not exist or there was a read error'
@@ -649,10 +649,10 @@
         status = 'unknown', form = 'formatted',delim='quote')
       
       write(out_unit, nml = toric_mode)
+      write(out_unit, nml = qldceinp)
       write(out_unit, nml = toricainp)
       write(out_unit, nml = equidata)
       write(out_unit, nml = ips)
-      write(out_unit, nml = qldceinp)
 
       close(out_unit)
 
