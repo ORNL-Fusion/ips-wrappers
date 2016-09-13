@@ -554,7 +554,6 @@
 			 read(inp_unit, nml = TORIC_MODE_PARAMETERS)
          END IF         
 
-         read(inp_unit, nml = toric_mode_parameters)
          read(inp_unit, nml = toricainp)
          read(inp_unit, nml = equidata)
          read(inp_unit, nml = nonthermals)
