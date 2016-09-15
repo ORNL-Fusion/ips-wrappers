@@ -119,7 +119,7 @@
       character(80) :: path, file_felice
       integer :: num_runs, nfel_nphi, iread_felice
       integer :: ntres=64
-      real(rspec) :: d_u, d_psi, enorm=0._rspec, unorm, uasp
+      real(rspec) :: d_u, d_psi, enorm=0._rspec, unorm, uasp=1.0
       real(rspec) :: psi_min, psi_max
       real(rspec) :: u_extr = 10._rspec
       real(rspec):: uperp0
