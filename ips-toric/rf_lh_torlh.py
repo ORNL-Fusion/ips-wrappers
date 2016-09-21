@@ -430,16 +430,16 @@ class torlh (Component):
             self.services.exception(logMsg)
             raise 
 
-		RUN_MAPIN = self.try_get_component_param(services,'RUN_MAPIN', optional = True)
-		print 'RUN_QQL3D_MAPIN = ', RUN_MAPIN
-		if (RUN_MAPIN):
-			mapin_bin = self.try_get_component_param(services,'MAPIN_BIN')
-			print 'Running cql3d_mapin'
-			retcode = subprocess.call([mapin_bin])
-			if (retcode != 0):
-				logMsg = 'Error executing ' + prepare_input
-				self.services.error(logMsg)
-				raise Exception(logMsg)
+        RUN_MAPIN = self.try_get_component_param(services,'RUN_MAPIN', optional = True)
+        print 'RUN_QQL3D_MAPIN = ', RUN_MAPIN
+        if (RUN_MAPIN):
+            mapin_bin = self.try_get_component_param(services,'MAPIN_BIN')
+            print 'Running cql3d_mapin'
+            retcode = subprocess.call([mapin_bin])
+            if (retcode != 0):
+                logMsg = 'Error executing ' + RUN_MAPIN
+                self.services.error(logMsg)
+                raise Exception(logMsg)
 
 # Run IDL script if requested
 #         do_idl_plots = self.try_get_component_param(services, 'DO_IDL_PLOTS', optional = True)
