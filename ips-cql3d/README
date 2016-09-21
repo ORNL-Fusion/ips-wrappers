@@ -1,0 +1,77 @@
+/home/bobh/cql3d/ips/my_ips_trunk/components/fp/cql3d
+
+120716
+======
+cp prepare_genray_input.f90 prepare_cql3d_input.f90
+Adjust for cql3d.
+
+
+
+120821
+======
+New, more general prep/proc cql3d coding.  Provides framework
+for most IPS cql3d uses, and is specifcally aimed at 
+LH, RW, LH+RW, EC, in these instantiations.
+IC addition should be straight-forward.
+
+Committing prepare_cql3d_input.f90 process_cql3d_output.f90 
+fp_cql3d_general.py, and updated *.f *.h files from the
+cql3d cswim distribution, to cswim svn.
+
+The cql3d distribution is at version="cql3d_cswim_120816_mpi".
+prep/proc cql3d will (presumably) need additional debugging.
+
+
+Oct 4, 2013
+===========
+Have (statically linked) cql3d:  
+xcql3d_pgi.hopper and xcql3d_mpi.pgi.hopper
+at
+hopper07:/global/homes/u/u650/cql3d_cswim_svn/trunk
+after having added delim='apostrophe' whereever might
+affect namelist writes.
+
+Added 
+delim='apostrophe'
+in prepare_cql3d_input.f90 open() statements.
+
+Check my_ips_root/swim.bashrc.hopper is svn up to date.
+swim  (==> PrgEnv-intel/4.1.40)
+
+make succeeded.
+cp process_cql3d_output prepare_cql3d_input /global/homes/u/u650/my_ips_trunk/bin
+
+
+131017
+======
+
+PTB has added many fixes to BH's previous draft
+prepare_cql3d_input.f90/process_cql3d_output.f90
+Similarly, PTB has created a working (with IPS)
+fp_cql3d_general.py.
+PTB files are copied here.  BH adds delim='apostrophe'
+stanza at 3 locations in prepare_cql3d_input.f90, plus
+a few comments here and in process_cql3d_output.f90.
+Do make, using up-to-date cql3d *.h files.
+
+svn commit prepare_cql3d_input.f90 process_cql3d_output.f90 \
+fp_cql3d_general.py README
+
+NOTE: This cql3d driver, fp_cql3d_general.py, is designed to be
+sufficient for all uses of
+cql3d: For LH,EC,IC,RW,NBI, etc.
+NOTE: Work remains to be done to upgrade the non-LH sections 
+(EC,IC,NBI) to fixes PTB added for LH section.  
+process_cql3d_output.f90 also needs checking as to whether
+ptb fixes work for sections other than LH.
+
+
+
+131031
+======
+Updated name_decl.h for character*256 filename paths, and 
+param.h to present cql3d version.
+Modified prepare_cql3d_input.f90 to use delim='apostrophe'
+in open() for namelist read/write, but delim='none' in the
+open() for formatted read/write in subroutine transcribe.
+

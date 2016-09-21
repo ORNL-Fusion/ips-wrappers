@@ -1,0 +1,7 @@
+*.o
+*.mod
+make-result
+prepare_cql3d_input
+process_cql3d_output
+ *.swp
+

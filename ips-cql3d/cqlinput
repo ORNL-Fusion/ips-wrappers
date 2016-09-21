@@ -1,0 +1,259 @@
+ &setup0
+ ibox='ITER',
+ iuser='harvey',
+ ioutput=6,
+! lrz=23
+ lrz=9
+ noplots='enabled'
+ mnemonic='iter_runaway.1r.1'
+ nlwritf='enabled'
+ &end
+**
+ &setup
+ acoefne=-1.80,-7.83,+051.57,-353.68
+ acoefte=8.01,-13.60,+08.69,-114.59
+ bnumb(1)=-1.,
+ bnumb(2)=1.0,
+ bnumb(3)=-1.,
+ bootst='disabled',
+ bth=1.00e+3,
+ btor=1.032e+4,
+ chang='noneg',
+ colmodl=3,
+ contrmin=1.e-12,
+ dtr=0.001
+ eegy(1,1,1,1)=0.,
+ eegy(1,2,1,1)=2.,
+ eegy(2,1,1,1)=0.,
+ eegy(2,2,1,1)=6.,
+ elecfld(0)=+1.e-4,
+ elecfld(1)=+1.e-4,
+ enloss(1)=200.,
+ enmax=100.,
+ enmin=05.,
+ enorm=1000.
+ eoved=.00,
+ ephicc=1.,
+ fds=.2,
+ fmass(1)=9.1095e-28,
+ fmass(2)=3.3433e-24,
+ fmass(3)=9.1095e-28,
+ gamaset=0.,
+ gsla=270.,gslb=35.,
+ iactst='enabled',
+ idskf='disabled',
+ idskrf='disabled',
+ implct='enabled',
+ ineg='disabled',
+ iproelec='spline',
+ iprone='spline',
+ iprote='spline',
+ iproti='spline',
+ iprozeff='spline',
+ irzplt(1)=8,
+ irzplt(2)=12,
+ irzplt(3)=14,
+ irzplt(4)=16,
+ irzplt(5)=18,
+ irzplt(6)=20,
+ irzplt(7)=22,
+ iy=80,
+ izeff='backgrnd',
+ jx=100,
+ kfrsou=0,
+ kpress(2)='enabled',
+ kspeci(1,1)='e',kspeci(2,1)='general',
+ kspeci(1,2)='d',kspeci(2,2)='maxwell',
+ kspeci(1,3)='e',kspeci(2,3)='maxwell',
+ lbdry(1)='scale',
+ locquas='disabled',
+ lossmode(1)='disabled',
+ lz=80,
+ machine='toroidal',
+ manymat='disabled'
+ meshy='fixed_y',
+ mpwr=0.1, 1.00, 1.00, 1.00
+ mx=3,
+ nchec=1,
+ ncoef=1,
+ ncont=20,
+ nen=30,
+ netcdfnm='ncdf_op.nc',
+ netcdfvecal='disabled',
+ netcdfvecrf='disabled',
+ netcdfvecc='disabled',
+ netcdfvecs='all',
+ ngen=1,
+ njene=11,
+ nmax=2,
+ noffel=10000,
+ nonel=0,
+ nplot=1,
+ nplt3d=1
+ npwr=2.,2.,2.,2.,
+ nrskip=2,
+ nrstrt=1,
+ nstop=1,
+ numby=30,
+ nv=7,
+ partner='bramb',
+ plt3d='enabled',
+ pltd='enabled',
+ pltdn='disabled',
+ pltend='enabled',
+ pltfvs='enabled',
+ pltinput='enabled',
+ pltmag=1.,
+ pltpowe='last',
+ pltprpp='enabled',
+ pltra='enabled'
+ pltrst='disabled',
+ pltstrm='disabled',
+ pltvecal='disabled',
+ pltvecc='disabled',
+ pltvece='disabled',
+ pltvecrf='disabled',
+ pltvflu='enabled',
+ pltvs='rho',
+ profpsi='disabled',
+ psimodel='axitorus',
+ qsineut='disabled',
+ radmaj=700.,
+ radmin=250.,
+ rd=300.,
+ reden(1,0)=3.0e13
+ reden(1,1)=0.3e13
+ reden(2,0)=3.0e13
+ reden(2,1)=0.3e13
+ reden(3,0)=3.0e13
+ reden(3,1)=0.3e13
+ relativ='enabled',
+ rfacz=1.,
+ rmirror=7.5,
+ rovera=1.e-6,
+ roveram=.00,
+ rya(1) =  .1 .2 .3 .4 .5 .6 .7 .8 .9
+ ryain =  0.0 .1 .2 .3 .4 .5 .6 .7 .8 .9 1.0
+ rzset='enabled',
+ softxry='disabled',
+ syncrad='disabled',
+ tauloss(1,1)=.3,
+ tauloss(2,1)=0.,
+ tauloss(3,1)=0.,
+ tbnd=.002,
+ temp(1,0)=4.0
+ temp(1,1)=0.1
+ temp(2,0)=4.0
+ temp(2,1)=0.1
+ temp(3,0)=4.0
+ temp(3,1)=0.1
+ tfac=0.75,
+ tfacz=1.,
+ thet1=0.,0.1253,0.2527,0.3844,0.,0.,0.,
+ thet2=0.,0.,0.,0.,0.9099,1.1012,-0.9099,
+ thetd=0.0
+ torloss(1)='disabled',
+ veclnth=1.5,
+ xfac=+.5,
+ xlwr=.085,
+ xmdl=.25,
+ xpctlwr=.1,
+ xpctmdl=.4,
+ ylower=1.22,
+ yreset='disabled',
+ yupper=1.275,
+ zmax=408.
+ iproelec='spline',
+ iprone='spline',
+ iprote='spline',
+ iproti='spline',
+ iprozeff='spline',
+ njene= 11
+ enescal=1.0
+ elecscal=1.
+ ryain= 0.0  0.1  0.2  0.3  0.4  0.5  0.6  0.7  0.8  0.9  1.0
+ enein=   0.7E+14
+          0.7e14     0.7e14    0.7e14    0.7e14    0.7e14
+          0.7e14     0.696e14  0.684e14  0.611e14  0.30e14
+ tein=     30.00
+           29.99, 29.93, 29.52, 28.01, 23.29,
+           14.31, 6.93, 3.72, 2.33, 0.72
+ zeffin(1)=     2.0
+                2.0   2.0   2.0   2.0   2.0
+                2.0   2.0   2.0   2.0   2.0
+ elecin(1)=    6.73541E-05
+               8.54283E-05  1.21479E-04  1.53100E-04  1.77204E-04  1.94683E-04
+               2.04665E-04  2.08341E-04  2.09240E-04  2.11061E-04  2.13196E-04
+ tiin= 32., 31.99, 31.92, 31.49, 29.88, 24.84, 15.26, 7.39, 3.97, 2.49, 0.77
+! rya(1)=    0.1 0.2 0.3 0.4 0.5 0.55 0.6 0.625 0.65 0.675 0.7 0.725 0.75 0.775 0.8 0.825 0.85 0.875 0.9 0.925 0.95 0.975 0.99
+ &end
+**
+ &trsetup
+ &end
+**
+ &sousetup
+ &end
+**
+ &eqsetup
+ atol=1.e-8,
+ bsign=-1.,
+ ellptcty=0.,
+ eqdskin='eqdskin'
+ eqmod='enabled',
+ eqpower=2,
+ eqsource='eqdsk',
+ eqsym='avg_zmag',
+ fpsimodl='constant',
+ methflag=10,
+ nconteq='psigrid',
+ rbox=92.,
+ rboxdst=120.,
+ rmag=166.,
+ rtol=1.e-8,
+ zbox=92.
+ &end
+**
+ &rfsetup
+ call_lh='disabled',
+ call_ech='disabled',
+ call_fw='disabled',
+ lh='enabled',
+ ech='disabled',
+ fw='disabled',
+ iurfl='disabled',
+ iurfcoll='disabled',
+ nbssltbl=2000,
+ nharms=1,
+ nharm1=0,
+ nrfitr1=1000,
+ nrfitr2=0,
+ nrfitr3=1,
+ nrfpwr=0,
+ nrfstep1(1)=1000,
+ nrfstep1(2)=1000,
+ nrfstep2=000,
+ noffrf(1)=100000,
+ nonrf(1)=0,
+ nrf=0,
+ pwrscale(1)=1.0
+ pwrscale(2)=1.0
+ rfread='netcdf'
+ rffile(1)='/home/bobh/cql3d/bonoli/iter_lh/genray/iter5_060828/iter5_060828.nc'
+ scaleurf='enabled',
+ urfdmp='secondd',
+ urfmod='disabled',
+ vlfmod='disabled',
+ vlhmod='disabled',
+ vparmax=.7956,
+ vparmin=.1768,
+ vprprop='disabled'
+ &end
+**
+ &frsetup
+ &end
+end
+end
+LEAVE
+THESE
+HERE!
+

@@ -1,0 +1,5 @@
+export IPS_ROOT=/p/swim/welwasif/cswim/ips/trunk
+export SIM_ROOT=/p/swim/welwasif/cswim/ips/trunk/CQL3D-TEST-NEW
+./init_fp_cql3d.py --ipsroot=$IPS_ROOT --simroot=$SIM_ROOT
+CURRENT_TIME_IN_MSEC='9999'
+./step_fp_cql3d.py --ipsroot=$IPS_ROOT --simroot=$SIM_ROOT --curtime=$CURRENT_TIME_IN_MSEC --nproc=1 |tee $SIM_ROOT/work/fp/cql3d/log
