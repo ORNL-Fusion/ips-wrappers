@@ -397,17 +397,6 @@ class torlh (Component):
                     self.services.error(logMsg)
                     raise Exception(logMsg)
 
-                # Call xeqdsk_setup to generate eqdsk.out file
-#                 print 'prepare_eqdsk', prepare_eqdsk, cur_eqdsk_file
-# 
-#                 retcode = subprocess.call([prepare_eqdsk, \
-#                                            '@equigs_gen', '/g_filename='+cur_eqdsk_file,\
-#                                            '/equigs_filename=equigs.data'])
-#                 if (retcode != 0):
-#                     logMsg = 'Error in call to prepare_eqdsk'
-#                     self.services.error(logMsg)
-#                     raise Exception(logMsg)
-
                 # Launch torlh executable
                 print 'torlh processors = ', self.NPROC
                 cwd = services.get_working_dir()
@@ -429,7 +418,6 @@ class torlh (Component):
                 self.services.error(logMsg)
                 raise Exception(logMsg)
 
-
 # Merge partial plasma state containing updated IC data
         try:
             partial_file = cwd + '/RF_LH_' + cur_state_file
@@ -441,6 +429,17 @@ class torlh (Component):
             logMsg = 'Error in call to merge_current_plasma_state(' + partial_file + ')'
             self.services.exception(logMsg)
             raise 
+
+		RUN_MAPIN = self.try_get_component_param(services,'RUN_MAPIN', optional = True)
+		print 'RUN_QQL3D_MAPIN = ', RUN_MAPIN
+		if (RUN_MAPIN):
+			mapin_bin = self.try_get_component_param(services,'MAPIN_BIN')
+			print 'Running cql3d_mapin'
+			retcode = subprocess.call([mapin_bin])
+			if (retcode != 0):
+				logMsg = 'Error executing ' + prepare_input
+				self.services.error(logMsg)
+				raise Exception(logMsg)
 
 # Run IDL script if requested
 #         do_idl_plots = self.try_get_component_param(services, 'DO_IDL_PLOTS', optional = True)
