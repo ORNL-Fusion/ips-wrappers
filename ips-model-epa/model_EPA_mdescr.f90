@@ -185,6 +185,7 @@ PROGRAM model_EPA_mdescr
           fracmin_T, fracmin_n, &
           Te_ratio, alpha_Te, ne_ratio, alpha_ne, &
           T_min_0, T_min_ratio, alpha_Tmin, &
+          Zeff_profile_model_name, V_loop_profile_model_name, &
           Zeff_0, Zeff_edge, alpha_Zeff_1, alpha_Zeff_2, &
           V_loop_0, V_loop_edge, alpha_V_loop_1, alpha_V_loop_2
     
