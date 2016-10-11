@@ -71,6 +71,7 @@ PROGRAM model_EPA_mdescr
 !       ns              ! thermal species density ns(nrho-1, 0:nspc_th)
 !       Ts              ! thermal species temperature ns(nrho-1, 0:nspc_th)
 !       Zeff            ! Total Z effective
+!		V_loop			! Loop voltage : Volts
 !       
 !
 ! Data owned by IC that is initialized here:
@@ -90,6 +91,10 @@ PROGRAM model_EPA_mdescr
 !   STATE_PROFILES: None
 !       
 !--------------------------------------------------------------------------
+
+! Working notes
+! 10-10-2016 DBB
+! Added coding for Zeff and V_loop
 
 
     USE plasma_state_mod
@@ -136,6 +141,8 @@ PROGRAM model_EPA_mdescr
 
     CHARACTER(len=32) :: Te_profile_model_name = 'Power_Parabolic' 
     CHARACTER(len=32) :: ne_profile_model_name = 'Power_Parabolic'
+    CHARACTER(len=32) :: Zeff_profile_model_name = 'Power_Parabolic'
+    CHARACTER(len=32) :: V_loop_profile_model_name = 'Power_Parabolic'
     CHARACTER(len=32) :: Ti_profile_model_name = 'fraction_of_electron'
     CHARACTER(len=32) :: ni_profile_model_name = 'fraction_of_electron'
     CHARACTER(len=32) :: T_min_profile_model_name = 'fraction_of_electron'
@@ -146,6 +153,8 @@ PROGRAM model_EPA_mdescr
     REAL(KIND=rspec) :: ne_0, ne_edge, alpha_ne_1, alpha_ne_2
     REAL(KIND=rspec) :: Ti_0, Ti_edge, alpha_Ti_1, alpha_Ti_2
     REAL(KIND=rspec) :: ni_0, ni_edge, alpha_ni_1, alpha_ni_2
+    REAL(KIND=rspec) :: Zeff_0, Zeff_edge, alpha_Zeff_1, alpha_Zeff_2
+    REAL(KIND=rspec) :: V_loop_0, V_loop_edge, alpha_V_loop_1, alpha_V_loop_2
 
     ! Fractional ion parameters relative to electron profiles
     ! Temperature fractions can be arbitrary but density fractions need to be consistent
@@ -175,8 +184,9 @@ PROGRAM model_EPA_mdescr
           frac_ni, frac_Ti, &
           fracmin_T, fracmin_n, &
           Te_ratio, alpha_Te, ne_ratio, alpha_ne, &
-          T_min_0, T_min_ratio, alpha_Tmin
-          
+          T_min_0, T_min_ratio, alpha_Tmin, &
+          Zeff_0, Zeff_edge, alpha_Zeff_1, alpha_Zeff_2, &
+          V_loop_0, V_loop_edge, alpha_V_loop_1, alpha_V_loop_2
     
     
 !------------------------------------------------------------------------------------
@@ -331,6 +341,22 @@ END IF  ! End INIT function
             DO i = 1, ps%nspec_th
 				CALL Power_Parabolic(Ti_0, Ti_edge, alpha_Ti_1, alpha_Ti_2, zone_center, ps%Ts(:, i))
 				WRITE (*,*) 'model_EPA_mdescr:  initial Ti profile = ', ps%Ts(:, i)
+				WRITE (*,*)
+            END DO
+        END IF
+
+        ! Zeff profile
+        IF (TRIM(Zeff_profile_model_name) == 'Power_Parabolic') THEN
+				CALL Power_Parabolic(Zeff_0, Zeff_edge, alpha_Zeff_1, alpha_Zeff_2, zone_center, ps%Zeff(:)
+				WRITE (*,*) 'model_EPA_mdescr:  Zeff profile = ', ps%Zeff(:)
+				WRITE (*,*)
+            END DO
+        END IF
+        
+        ! V_loop profile
+        IF (TRIM(V_loop_profile_model_name) == 'Power_Parabolic') THEN
+				CALL Power_Parabolic(V_loop_0, V_loop_edge, alpha_V_loop_1, alpha_V_loop_2, zone_center, ps%V_loop(:)
+				WRITE (*,*) 'model_EPA_mdescr:  V_loop profile = ', ps%V_loop(:)
 				WRITE (*,*)
             END DO
         END IF
