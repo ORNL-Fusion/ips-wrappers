@@ -396,7 +396,7 @@ if __name__ == '__main__':
     
     print 'adding index'
     index = [ [1,'fig 1'], [2,'fig 2'], [3,'fig 3'], [4,'fig 4'] ]
-    summary ={'global_attributes': global_attributes, 'index': index}
+    summary ={'global_attributes': global_attributes, 'index': index, 'file_name': 'no file'}
     
     plot_summary(summary)
     
