@@ -1,8 +1,8 @@
 # Building the Convergence and Corrector binaries
 ```
 cd ips-solps5-parareal
-cd PR_Corr
 source env.edison.sh
+cd PR_Corr
 ./buildAndTestCorr.sh
 ```
 Which should give output as ...
