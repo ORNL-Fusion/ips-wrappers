@@ -1,5 +1,8 @@
 # Building the Convergence and Corrector binaries
 First the corrector ...
+Default: corrects all species in SOLPS including neutrals.
+To avoid correcting neutrals (such as in a case where coarse solver uses fluid neutrals while fine solver uses Eirene):
+set CORRECT_NEUTRALS=0 in buildAndTestCorr.sh
 ```
 cd ips-solps5-parareal
 source env.edison.sh
