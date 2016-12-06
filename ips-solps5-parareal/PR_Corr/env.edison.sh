@@ -1,1 +1,0 @@
-module load PrgEnv-intel
