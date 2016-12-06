@@ -268,12 +268,12 @@ program main
      do is=0,ns-1
         do inx=-1,nx
                do iny=-1,ny
-                   !No correction to neutrals
-                   if (zamin(is).le.0) then
-                           write(6,*) "as zamin is 0 at is=",is,"no corr"
-                           na(inx,iny,is) = na_F(inx,iny,is)
-                           ua(inx,iny,is) = ua_F(inx,iny,is)
-                   end if
+                   !No correction to neutrals if following if loop is NOT commented out
+                   !if (zamin(is).le.0) then
+                           !write(6,*) "as zamin is 0 at is=",is,"no corr"
+                           !na(inx,iny,is) = na_F(inx,iny,is)
+                           !ua(inx,iny,is) = ua_F(inx,iny,is)
+                   !end if
                    if (na(inx,iny,is) .lt. 0) then
                           write(6,*) "na left at na_F at ix,iy,is:",inx,iny,is,na(inx,iny,is), na_F(inx,iny,is),na_Gnew(inx,iny,is),na_Gold(inx,iny,is)
                           na(inx,iny,is) = na_F(inx,iny,is)
