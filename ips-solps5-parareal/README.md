@@ -31,5 +31,4 @@ Which should give output as ...
  species & time_index lengths:nc                 :           2
  time               :           2
  Error =   2.045924170498220E-003 tolerance  0.000000000000000E+000
-greendl1@edison05:/project/projectdirs/atom/users/greendl1/code/ips-w
 ```
