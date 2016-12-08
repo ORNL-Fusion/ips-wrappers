@@ -208,6 +208,12 @@ class generic_ps_init (Component):
                 except Exception:
                     print 'No file ', file
             if init_mode in ['touch_only', 'TOUCH_ONLY'] :
+        # Update plasma state
+                try:
+                    services.update_plasma_state()
+                except Exception, e:
+                    print 'Error in call to updatePlasmaState()', e
+                    raise
                 return
 
             try:       
