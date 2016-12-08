@@ -7,7 +7,11 @@ The Swiss army knife of Plasma State initializers.  It produces the intial CURRE
 and optionally the initial CURRENT_EQDSK.
 
 This version combines several previous initializer routines and extends them.  There are
-3 modes of initialization which must be specified by the config file variable INIT_MODE
+4 modes of initialization which must be specified by the config file variable INIT_MODE
+
+INIT_MODE = touch_only
+This mode only does a touch on all of the files listed as plasma state files so the 
+framework will have a complete set.  It does not 
 
 INIT_MODE = minimal
 This is exactly the same as the previous minimal_state_init.py. It produces a CURRENT_STATE 
@@ -185,6 +189,9 @@ class generic_ps_init (Component):
 # ------------------------------------------------------------------------------
         
         else:
+
+
+
             print 'generic_ps_init: simulation mode NORMAL'
             nml_lines = ['&ps_init_nml\n']
             ps_file_list = self.try_get_config_param(services, 'PLASMA_STATE_FILES').split(' ')
@@ -192,6 +199,16 @@ class generic_ps_init (Component):
 
             init_mode = self.try_get_component_param(services, 'INIT_MODE')
             nml_lines.append(' init_mode = ' + init_mode + '\n')
+
+        # Generate state files as dummies so framework will have a complete set
+            for file in ps_file_list:
+                print 'touching plasma state file = ', file
+                try:
+                    subprocess.call(['touch', file])
+                except Exception:
+                    print 'No file ', file
+            if init_mode in ['touch_only', 'TOUCH_ONLY'] :
+                return
 
             try:       
                 services.stage_input_files(self.INPUT_FILES)
@@ -324,14 +341,6 @@ class generic_ps_init (Component):
             plasma_state.variables['tfinal'] = tfinal
             plasma_state.close()
                
-        # Generate other state files as dummies so framework will have a complete set
-            for file in ps_file_list:
-                print 'touching plasma state file = ', file
-                try:
-                    subprocess.call(['touch', file])
-                except Exception:
-                    print 'No file ', file
-
         # For benefit of framework file handling generate dummy dakota.out file
         subprocess.call(['touch', 'dakota.out'])
 
