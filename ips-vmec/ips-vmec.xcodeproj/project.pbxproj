@@ -1,0 +1,90 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXFileReference section */
+		C79D2B981DF8C5EB0018C465 /* vmec_driver.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = vmec_driver.py; sourceTree = "<group>"; };
+		C79D2B991DF8C5EB0018C465 /* vmec_init.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = vmec_init.py; sourceTree = "<group>"; };
+		C79D2B9A1DF8C5EB0018C465 /* vmec.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = vmec.py; sourceTree = "<group>"; };
+		C79D2B9E1DF8CD470018C465 /* ips.vmec.config */ = {isa = PBXFileReference; lastKnownFileType = text; path = ips.vmec.config; sourceTree = "<group>"; };
+		C79D2B9F1DF8CD470018C465 /* platform.conf */ = {isa = PBXFileReference; lastKnownFileType = text; path = platform.conf; sourceTree = "<group>"; };
+		C79D2BA21DF8CF160018C465 /* input.test.vmec */ = {isa = PBXFileReference; lastKnownFileType = text; path = input.test.vmec; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		C79D2B911DF8C5CB0018C465 = {
+			isa = PBXGroup;
+			children = (
+				C79D2B981DF8C5EB0018C465 /* vmec_driver.py */,
+				C79D2B991DF8C5EB0018C465 /* vmec_init.py */,
+				C79D2B9A1DF8C5EB0018C465 /* vmec.py */,
+				C79D2B9D1DF8CD470018C465 /* Test */,
+			);
+			sourceTree = "<group>";
+		};
+		C79D2B9D1DF8CD470018C465 /* Test */ = {
+			isa = PBXGroup;
+			children = (
+				C79D2B9E1DF8CD470018C465 /* ips.vmec.config */,
+				C79D2B9F1DF8CD470018C465 /* platform.conf */,
+				C79D2BA21DF8CF160018C465 /* input.test.vmec */,
+			);
+			path = Test;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXProject section */
+		C79D2B921DF8C5CB0018C465 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0810;
+			};
+			buildConfigurationList = C79D2B951DF8C5CB0018C465 /* Build configuration list for PBXProject "ips-vmec" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = C79D2B911DF8C5CB0018C465;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+			);
+		};
+/* End PBXProject section */
+
+/* Begin XCBuildConfiguration section */
+		C79D2B961DF8C5CB0018C465 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		C79D2B971DF8C5CB0018C465 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C79D2B951DF8C5CB0018C465 /* Build configuration list for PBXProject "ips-vmec" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C79D2B961DF8C5CB0018C465 /* Debug */,
+				C79D2B971DF8C5CB0018C465 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C79D2B921DF8C5CB0018C465 /* Project object */;
+}
