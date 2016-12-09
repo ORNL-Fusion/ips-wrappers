@@ -27,7 +27,7 @@ make test
 ```
 Which should give output as ...
 ```
-./PR_GS2_conv src_code_PR_conv/b2time.nc src_code_PR_conv/b2time2.nc test_output
+./conv_solps src_code_PR_conv/b2time.nc src_code_PR_conv/b2time2.nc test_output
  pwmxip id found
  var_namepwmxip             xtype           6 ndims           2
  IDs of dimensions of flux variable           9 &          11
