@@ -8,7 +8,7 @@
 #-------------------------------------------------------------------------------
 
 from component import Component
-import os
+import shutil
 
 #-------------------------------------------------------------------------------
 #
@@ -31,15 +31,7 @@ class vmec_init(Component):
         self.services.stage_input_files(self.INPUT_FILES)
         
         current_vmec_namelist = self.services.get_config_param('CURRENT_VMEC_NAMELIST')
-        
-        task_id = self.services.launch_task(self.NPROC,
-                                            self.services.get_working_dir(),
-                                            'mv',
-                                            self.INPUT_FILES,
-                                            current_vmec_namelist,
-                                            logfile = 'vmec_init.log')
-        if (self.services.wait_task(task_id)):
-            self.services.error('vmec_init: init failed.')
+        shutil.copyfile(self.INPUT_FILES, current_vmec_namelist)
 
 #  Create a dummy wout file so the plasma state has something to update to.
         open(self.services.get_config_param('CURRENT_VMEC_WOUT_FILE'), 'a').close()
