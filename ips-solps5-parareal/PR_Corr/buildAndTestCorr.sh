@@ -3,7 +3,6 @@
 CORRECT_NEUTRALS=1
 
 SRC=src_code_PR_corr
-
 rm *.o *.mod
 ftn -c $SRC/*.F
 

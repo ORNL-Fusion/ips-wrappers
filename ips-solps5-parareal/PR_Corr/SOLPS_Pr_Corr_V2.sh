@@ -32,7 +32,7 @@ cp $fine_file fine$SIMPATH
 cp $newG_file newg$SIMPATH
 cp $oldG_file oldg$SIMPATH
 
-/pfs/work/dsam/SOLPS_bin/PR_Corr/corr_solps fine$SIMPATH newg$SIMPATH oldg$SIMPATH out$SIMPATH 
+$IPS_SOLPS_PARAREAL_SUBMITDIR/_inputs/corr_solps fine$SIMPATH newg$SIMPATH oldg$SIMPATH out$SIMPATH 
 
 mv out$SIMPATH $output_file1
 cp $fine_file2 $output_file2
