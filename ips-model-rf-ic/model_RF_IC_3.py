@@ -292,7 +292,7 @@ class model_RF_IC_3 (Component):
         return value
 
     # Try to get component specific config parameter - wraps the exception handling
-    def get_component_param(self, param_name, optional=False):
+    def get_component_param(self, services, param_name, optional=False):
 
         if hasattr(self, param_name):
             value = getattr(self, param_name)
