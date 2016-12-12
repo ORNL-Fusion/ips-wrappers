@@ -63,9 +63,9 @@ class model_RF_IC_3 (Component):
     # Get component-specific configuration parameters. Note: Not all of these are
     # used in 'init' but if any are missing we get an exception now instead of
     # later
-        BIN_PATH = self.get_component_param('BIN_PATH')
-        RESTART_FILES = self.get_component_param('RESTART_FILES')
-        NPROC = self.get_component_param('NPROC')
+        BIN_PATH = self.get_component_param(services, 'BIN_PATH')
+        RESTART_FILES = self.get_component_param(services, 'RESTART_FILES')
+        NPROC = self.get_component_param(services, 'NPROC')
 
     # Copy plasma state files over to working directory
         try:
