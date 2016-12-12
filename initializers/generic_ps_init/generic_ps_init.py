@@ -105,7 +105,7 @@ import string
 from  component import Component
 from netCDF4 import *
 
-class generic_ps_init (Component):
+class init (Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
         print 'Created %s' % (self.__class__)
