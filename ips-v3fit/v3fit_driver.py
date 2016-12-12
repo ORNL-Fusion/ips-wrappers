@@ -2,54 +2,55 @@
 
 #-------------------------------------------------------------------------------
 #
-#  IPS wrapper for VMEC init component. This wapper only takes a VMEC input file
-#  and runs VMEC.
+#  IPS driver for V3FIT component. This driver only uses the VMEC component to
+#  stage in plasma state files. The v3fit components generate the actual wout
+#  file.
 #
 #-------------------------------------------------------------------------------
 
 from component import Component
-import shutil
 
 #-------------------------------------------------------------------------------
 #
-#  VMEC init Component Constructor
+#  V3FIT Driver Constructor
 #
 #-------------------------------------------------------------------------------
-class vmec_init(Component):
+class v3fit_driver(Component):
     def __init__(self, services, config):
-        print('vmec_init: Construct')
+        print('v3fit_driver: Construct')
         Component.__init__(self, services, config)
-
+            
 #-------------------------------------------------------------------------------
 #
-#  VMEC init Component init method. This method prepairs the namelist input file.
+#  V3FIT Driver init method. This method prepairs the namelist input file.
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
-        print('vmec_init: init')
-    
-        self.services.stage_input_files(self.INPUT_FILES)
+        print('v3fit_driver: init')
         
-        current_vmec_namelist = self.services.get_config_param('CURRENT_VMEC_NAMELIST')
-        shutil.copyfile(self.INPUT_FILES, current_vmec_namelist)
+        vmec_init = self.services.get_port('VMEC_INIT')
+        self.services.call(vmec_init, 'init', timeStamp)
 
-#  Create a dummy wout file so the plasma state has something to update to.
-        open(self.services.get_config_param('CURRENT_VMEC_WOUT_FILE'), 'a').close()
+        v3fit_init = self.services.get_port('V3FIT_INIT')
+        self.services.call(v3fit_init, 'init', timeStamp)
 
-        self.services.update_plasma_state()
-
+        self.v3fit_comp = self.services.get_port('V3FIT')
+        self.services.call(self.v3fit_comp, 'init', timeStamp)
+    
 #-------------------------------------------------------------------------------
 #
-#  VMEC init Component step method. This runs vmec.
+#  V3FIT Driver step method. This runs the vmec component.
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        print('vmec_init: step')
+        print('v3fit_driver: step')
+        self.services.call(self.v3fit_comp, 'step', timeStamp)
 
 #-------------------------------------------------------------------------------
 #
-#  VMEC init Component finalize method. This cleans up afterwards. Not used.
+#  V3FIT Driver finalize method. This cleans up afterwards. Not used.
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('vmec_init: finalize')
+        print('v3fit_driver: finalize')
+        self.services.call(self.v3fit_comp, 'finalize', timeStamp)
