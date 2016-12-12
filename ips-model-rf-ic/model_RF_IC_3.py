@@ -179,8 +179,8 @@ class model_RF_IC_3 (Component):
         cur_dql_file = self.get_config_param(services,'CURRENT_DQL')
 
     # Get component-specific configuration parameters.
-        BIN_PATH = self.get_component_param('BIN_PATH')
-        NPROC = self.get_component_param('NPROC', optional = True)      
+        BIN_PATH = self.get_component_param(services, 'BIN_PATH')
+        NPROC = self.get_component_param(services, 'NPROC', optional = True)      
 
     # Copy plasma state files over to working directory
         try:
