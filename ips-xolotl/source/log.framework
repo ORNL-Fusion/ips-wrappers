@@ -1,0 +1,27 @@
+2017-02-17 10:49:26,250 FRAMEWORK       ERROR    Error opening config file: /global/project/projectdirs/atom/users/tyounkin/ips-examples/xolotl/source/conf.ips.edison
+Traceback (most recent call last):
+  File "/global/project/projectdirs/atom/atom-install-edison/ips-gnu-sf/bin/configurationManager.py", line 164, in initialize
+    file_error=True)
+  File "/global/project/projectdirs/atom/atom-install-edison/ips-gnu-sf/bin/configobj.py", line 1242, in __init__
+    self._load(infile, configspec)
+  File "/global/project/projectdirs/atom/atom-install-edison/ips-gnu-sf/bin/configobj.py", line 1254, in _load
+    raise IOError('Config file not found: "%s".' % self.filename)
+IOError: Config file not found: "/global/project/projectdirs/atom/users/tyounkin/ips-examples/xolotl/source/conf.ips.edison".
+2017-02-17 10:49:26,252 FRAMEWORK       ERROR    Problem initializing managers
+Traceback (most recent call last):
+  File "/project/projectdirs/atom/atom-install-edison/ips-gnu-sf/bin/ips.py", line 272, in __init__
+    self.ftb)
+  File "/global/project/projectdirs/atom/atom-install-edison/ips-gnu-sf/bin/configurationManager.py", line 164, in initialize
+    file_error=True)
+  File "/global/project/projectdirs/atom/atom-install-edison/ips-gnu-sf/bin/configobj.py", line 1242, in __init__
+    self._load(infile, configspec)
+  File "/global/project/projectdirs/atom/atom-install-edison/ips-gnu-sf/bin/configobj.py", line 1254, in _load
+    raise IOError('Config file not found: "%s".' % self.filename)
+IOError: Config file not found: "/global/project/projectdirs/atom/users/tyounkin/ips-examples/xolotl/source/conf.ips.edison".
+2017-02-17 10:49:27,254 FRAMEWORK       ERROR    exception encountered while cleaning up config_manager
+Traceback (most recent call last):
+  File "/project/projectdirs/atom/atom-install-edison/ips-gnu-sf/bin/ips.py", line 918, in terminate_all_sims
+    self.config_manager.terminate(status)
+  File "/global/project/projectdirs/atom/atom-install-edison/ips-gnu-sf/bin/configurationManager.py", line 1013, in terminate
+    self.log_process.terminate()
+AttributeError: 'NoneType' object has no attribute 'terminate'
