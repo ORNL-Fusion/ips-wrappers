@@ -3,6 +3,8 @@
 from  component import Component
 import os
 import shutil
+import sys
+import translate_xolotl_to_lay
 
 class ftridynWorker(Component):
     def __init__(self, services, config):
