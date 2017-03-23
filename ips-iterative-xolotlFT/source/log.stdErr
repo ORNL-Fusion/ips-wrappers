@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/project/projectdirs/atom/atom-install-edison/ips-gnu-sf/bin/ips.py", line 1239, in <module>
+    sys.exit(main())
+  File "/project/projectdirs/atom/atom-install-edison/ips-gnu-sf/bin/ips.py", line 1220, in main
+    options.cmd_nodes, options.cmd_ppn)
+  File "/project/projectdirs/atom/atom-install-edison/ips-gnu-sf/bin/ips.py", line 272, in __init__
+    self.ftb)
+  File "/global/project/projectdirs/atom/atom-install-edison/ips-gnu-sf/bin/configurationManager.py", line 164, in initialize
+    file_error=True)
+  File "/global/project/projectdirs/atom/atom-install-edison/ips-gnu-sf/bin/configobj.py", line 1242, in __init__
+    self._load(infile, configspec)
+  File "/global/project/projectdirs/atom/atom-install-edison/ips-gnu-sf/bin/configobj.py", line 1254, in _load
+    raise IOError('Config file not found: "%s".' % self.filename)
+IOError: Config file not found: "/global/project/projectdirs/atom/users/tyounkin/ips-examples/xolotl/source/conf.ips.edison".
