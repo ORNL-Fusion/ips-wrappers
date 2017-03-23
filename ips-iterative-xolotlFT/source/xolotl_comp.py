@@ -30,7 +30,7 @@ class xolotlWorker(Component):
         if (parameterConfig.mode == 'INIT'):
             print('run xolotl preprocessor')
             #run prepocessor and copy params.txt input file to plasma state
-            os.system('java -Djava.library.path=/project/projectdirs/atom/users/tyounkin/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps -cp .:/project/projectdirs/atom/users/tyounkin/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps/*:/project/projectdirs/atom/users/tyounkin/xolotl-trunk-build/gov.ornl.xolotl.preprocessor/preprocessor/CMakeFiles/xolotlPreprocessor.dir/ gov.ornl.xolotl.preprocessor.Main --nxGrid 160 --maxVSize 50 --phaseCut')
+            os.system('java -Djava.library.path=/project/projectdirs/atom/atom-install-edison/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps -cp .:/project/projectdirs/atom/atom-install-edison/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps/*:/project/projectdirs/atom/atom-install-edison/xolotl-trunk-build/gov.ornl.xolotl.preprocessor/preprocessor/CMakeFiles/xolotlPreprocessor.dir/ gov.ornl.xolotl.preprocessor.Main --nxGrid 160 --maxVSize 50 --phaseCut')
         
             self.services.stage_input_files(self.INPUT_FILES)
             #shutil.copyfile('params0.txt','params.txt')
