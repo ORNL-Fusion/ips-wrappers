@@ -2,7 +2,7 @@
 #SBATCH --account=atom
 #SBATCH --partition debug
 #SBATCH --nodes=1 
-#SBATCH --time=00:06:00
+#SBATCH --time=00:20:00
 #SBATCH --output=log.slurm.stdOut
 
 cd $SLURM_SUBMIT_DIR   # optional, since this is the default behavior

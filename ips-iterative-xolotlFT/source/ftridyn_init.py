@@ -12,6 +12,7 @@ import shutil
 import os
 import sys
 import generateInputIPS
+import translate_xolotl_to_lay
 #-------------------------------------------------------------------------------
 #
 #  FTridyn init Component Constructor
@@ -64,6 +65,13 @@ class ftridynInit(Component):
         for index in range(len(transfer_list)):
             open(transfer_list[index], 'a').close()
 
+        #Get output file names from config file
+        other_files = self.services.get_config_param('OTHER_FILES')
+        #split filenames into a list of strings
+        other_list = other_files.split()
+        #loop over file names and create dummy files in ftridynInit work area
+        for index in range(len(other_list)):
+            open(other_list[index], 'a').close()
         #update plasma state from relevant files in ftridynInit work area
         self.services.update_plasma_state()
         #self.services.stage_input_files(self.INPUT_FILES)
@@ -89,7 +97,8 @@ class ftridynInit(Component):
             os.system(' '.join(['python', self.INPUT_SCRIPT, '-R 1 -s 0']))
         else:
             print('init mode no')
-            generateInputIPS.main(IQ0=-1)
+            nDataPts = translate_xolotl_to_lay.xolotlToLay()
+            generateInputIPS.main(IQ0=-1,NQX=nDataPts)
         #get name of FTridyn input file from config file to copy newly generated files to
         current_ftridyn_namelist = self.services.get_config_param('FTRIDYN_INPUT_FILE')
         #this may be more than one file, not sure yet - need to learn more about FTridyn I/O

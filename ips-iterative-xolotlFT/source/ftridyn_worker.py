@@ -23,10 +23,11 @@ class ftridynWorker(Component):
         reload(parameterConfig)
 
         if (parameterConfig.mode == 'RESTART'):
-            translate_xolotl_to_lay.xolotlToLay()
+            nDataPts = translate_xolotl_to_lay.xolotlToLay()
             self.services.update_plasma_state()
     def step(self, timeStamp=0.0):
         print('ftridyn_worker: step')
+        self.services.stage_plasma_state()
         #call shell script that runs FTridyn and pipes input file
         task_id = self.services.launch_task(self.NPROC,
                                             self.services.get_working_dir(),
@@ -35,7 +36,12 @@ class ftridynWorker(Component):
         if (self.services.wait_task(task_id)):
             self.services.error('ftridyn_worker: step failed.')
 
-        os.system(' '.join(['python', self.POSTPROCESSING_SCRIPT]))        
+        os.system(' '.join(['python', self.POSTPROCESSING_SCRIPT]))
+        tempfile = open("tridyn.dat","r")        
+        f = open("allTridyn.dat", "a")
+        f.write(tempfile.read())
+        f.close()
+        tempfile.close()
         #updates plasma state FTridyn output files
         self.services.update_plasma_state()
   
