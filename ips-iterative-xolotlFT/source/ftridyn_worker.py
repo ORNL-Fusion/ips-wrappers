@@ -37,11 +37,14 @@ class ftridynWorker(Component):
             self.services.error('ftridyn_worker: step failed.')
 
         os.system(' '.join(['python', self.POSTPROCESSING_SCRIPT]))
-        tempfile = open("tridyn.dat","r")        
-        f = open("allTridyn.dat", "a")
+
+        #append output
+        tempfile = open(self.OUTPUT_FTRIDYN_TEMP,"r")
+        f = open(self.OUTPUT_FTRIDYN_FINAL, "a")
         f.write(tempfile.read())
         f.close()
         tempfile.close()
+
         #updates plasma state FTridyn output files
         self.services.update_plasma_state()
   

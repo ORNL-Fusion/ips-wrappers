@@ -41,7 +41,7 @@ class xolotlWorker(Component):
         self.services.update_plasma_state()
 
     def step(self, timeStamp=0.0):
-        print('ftridyn_worker: step')
+        print('xolotl_worker: step')
         self.services.stage_plasma_state()
         #call shell script that runs FTridyn and pipes input file
         task_id = self.services.launch_task(self.NPROC,
@@ -57,6 +57,14 @@ class xolotlWorker(Component):
         newest = max(glob.iglob('TRIDYN_*.dat'), key=os.path.getctime)
         print('newest file ' , newest)
         shutil.copyfile(newest, 'TRIDYN_last.dat')
+
+        #append output
+        tempfile = open(self.OUTPUT_XOLOTL_TEMP,"r")
+        f = open(self.OUTPUT_XOLOTL_FINAL, "a")
+        f.write(tempfile.read())
+        f.close()
+        tempfile.close()
+
 
         #translate_xolotl_to_lay.xolotlToLay()
 
