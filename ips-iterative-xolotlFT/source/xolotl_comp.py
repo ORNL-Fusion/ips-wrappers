@@ -35,8 +35,10 @@ class xolotlWorker(Component):
             #self.services.stage_input_files(self.INPUT_FILES)
             #shutil.copyfile('params0.txt','params.txt')
             write_xolotl_paramfile.writeXolotlParameterFile_fromPreprocessor()
+            shutil.copyfile('params.txt','paramsInit.txt')  #store file to look into network issue; line to be removed
         else:
             write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=0.2,ts_final_time=0.2,networkFile="xolotlStop.h5",sputtering=0.1)
+            shutil.copyfile('params.txt','paramsRestart.txt') #store file to look into network issue; line to be removed
         #self.services.stage_plasma_state()
         self.services.update_plasma_state()
 

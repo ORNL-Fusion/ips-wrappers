@@ -94,7 +94,8 @@ class ftridynInit(Component):
         if (parameterConfig.mode == 'INIT'):
             print('init mode yes')
             #call generateInput.py
-            os.system(' '.join(['python', self.INPUT_SCRIPT, '-R 1 -s 0']))
+            #os.system(' '.join(['python', self.INPUT_SCRIPT, '-R 1 -s 0']))
+            generateInputIPS.main()
         else:
             print('init mode no')
             nDataPts = translate_xolotl_to_lay.xolotlToLay()
@@ -109,7 +110,6 @@ class ftridynInit(Component):
         for index in range(0,1): #range(len(file_list)): this may need to be changed
             print('copying ', from_file_list[index], ' to ', file_list[index])
             shutil.copyfile(from_file_list[index], file_list[index])
-
         #update plasma state files with relevant files from ftridynInit work directory
         self.services.update_plasma_state()
 #-------------------------------------------------------------------------------
