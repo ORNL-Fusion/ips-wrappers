@@ -5,7 +5,7 @@ import os
 import shutil
 import subprocess
 import glob
-import translate_xolotl_to_lay
+import translate_xolotl_to_ftridyn
 import write_xolotl_paramfile
 import sys
 
@@ -13,33 +13,27 @@ class xolotlWorker(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
         print 'Created %s' % (self.__class__)
-        #get name of FTridyn executable from config file
-        #This is actually a shell script that calls FTridyn and pipes
-        #the input to the executable
-        #self.ftridyn_exe = self.FTRIDYN_EXE
+        
 
     def init(self, timeStamp=0.0):
+        print('xolotl_worker: init')
         self.services.stage_plasma_state()
 
         sys.path.append(os.getcwd())
         import parameterConfig
         reload(parameterConfig)
-        #parameter_config_file = self.services.get_config_param('PARAMETER_CONFIG_FILE')
+
         print('from parameterConfig file ', parameterConfig.mode)
 
         if (parameterConfig.mode == 'INIT'):
             print('run xolotl preprocessor')
             #run prepocessor and copy params.txt input file to plasma state
-            os.system('java -Djava.library.path=/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps -cp .:/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps/*:/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-build/gov.ornl.xolotl.preprocessor/preprocessor/CMakeFiles/xolotlPreprocessor.dir/ gov.ornl.xolotl.preprocessor.Main --nxGrid 160 --maxVSize 250 --phaseCut')
-        
-            #self.services.stage_input_files(self.INPUT_FILES)
-            #shutil.copyfile('params0.txt','params.txt')
-            write_xolotl_paramfile.writeXolotlParameterFile_fromPreprocessor()
+            os.system('java -Djava.library.path=/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps -cp .:/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps/*:/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-build/gov.ornl.xolotl.preprocessor/preprocessor/CMakeFiles/xolotlPreprocessor.dir/ gov.ornl.xolotl.preprocessor.Main --nxGrid 160 --maxVSize 250 --phaseCut')        
+            write_xolotl_paramfile.writeXolotlParameterFile_fromPreprocessor(start_stop=0.001,ts_final_time=0.001)
             shutil.copyfile('params.txt','paramsInit.txt')  #store file to look into network issue; line to be removed
         else:
-            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=0.2,ts_final_time=0.2,networkFile="xolotlStop.h5",sputtering=0.1)
+            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=0.002,ts_final_time=0.002,networkFile="xolotlStop.h5",sputtering=0.001)
             shutil.copyfile('params.txt','paramsRestart.txt') #store file to look into network issue; line to be removed
-        #self.services.stage_plasma_state()
         self.services.update_plasma_state()
 
     def step(self, timeStamp=0.0):
@@ -52,9 +46,6 @@ class xolotlWorker(Component):
         #monitor task until complete
         if (self.services.wait_task(task_id)):
             self.services.error('ftridyn_worker: step failed.')
-        #get number of output files from xolotl
-        #nTS = subprocess.Popen(["ls TRIDYN_*.dat | awk 'END(print NR-1)'"], stdout=subprocess.PIPE) 
-        #print('nTS printed after subprocess call', nTS.communicate())
 
         newest = max(glob.iglob('TRIDYN_*.dat'), key=os.path.getctime)
         print('newest file ' , newest)
@@ -66,9 +57,6 @@ class xolotlWorker(Component):
         f.write(tempfile.read())
         f.close()
         tempfile.close()
-
-
-        #translate_xolotl_to_lay.xolotlToLay()
 
         #updates plasma state FTridyn output files
         self.services.update_plasma_state()

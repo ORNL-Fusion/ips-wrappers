@@ -30,9 +30,8 @@ import subprocess
 
 def writeXolotlParameterFile_fromTemplate(infile="params.txt", outfile="params.txt",
 
-                                          start_stop=0.01,
-                                          
-                                          ts_final_time=0.01,
+                                          start_stop=0.2,
+                                          ts_final_time=0.2,
                                           ts_max_snes_failures=-1,
                                           ts_max_steps=1000000,
                                           ts_exact_final_time="matchstep",
@@ -68,26 +67,14 @@ def writeXolotlParameterFile_fromTemplate(infile="params.txt", outfile="params.t
 
    #include (or not) parameters without values that exist in template file
 
-#   if (ts_monitor==True):
-#      petscArgString=petscArgString+"   -e 's/-ts_monitor/-ts_monitor/'"
-#   else:
-#      petscArgString=petscArgString+"   -e 's/-ts_monitor/ /'"
-
-#   if (pc_fieldsplit_detect_coupling==True):
-#      petscArgString=petscArgString+"   -e 's/-pc_fieldsplit_detect_coupling/ -pc_fieldsplit_detect_coupling/'"
-#   else:
-#      petscArgString=petscArgString+"   -e 's/-pc_fieldsplit_detect_coupling/ /'"
-
    #prepare sed line                                                                                                                                                                          
    petscArgSedString="sed "+ petscArgString + "< %s > %s" %(infile , outfile)
 
    #run sed line for Petsc                                                                                                                                                                    
-
    subprocess.call([petscArgSedString], shell=True)
 
 
    #other input parameters
-
    os.rename(outfile, tmp)
    paramSedString="sed    -e 's/vizHandler=[^ ]*/vizHandler=%s/'    -e 's/flux=[^ ]*/flux=%e/'    -e 's/networkFile=.*$/networkFile=%s/'    -e 's/material=[^ ]*/material=%s/'    -e 's/dimensions=[^ ]*/dimensions=%d/'    -e 's/perfHandler=[^ ]*/perfHandler=%s/'    -e 's/startTemp=[^ ]*/startTemp=%f/'   -e 's/sputtering=[^ ]*/sputtering=%f/'    -e 's/process=.*$/process=%s/' < %s > %s"   % (vizHandler, flux, networkFile, material, dimensions, perfHandler, startTemp, sputtering, process, tmp, outfile)
 
@@ -97,17 +84,6 @@ def writeXolotlParameterFile_fromTemplate(infile="params.txt", outfile="params.t
    os.remove(tmp)
 
    return
-
-
-
-
-
-
-#   sedstring="sed -e 's/-start_stop tmax/-start_stop %f/' -e 's/-ts_final_time tmax/-ts_final_time %f/' -e 's/networkFile=xolotlnetworkfile/networkFile=%s/' -e 's/sputtering=\sputteringyield/sputtering=%f/ '< %s > %s " % (tmax, tmax, networkFile, sputtering, infile , outfile)
-
-#   print "\n running the following sed command: %s " %(sedstring)                                                                                                                            
-#   subprocess.call([sedstring], shell=True)
-
 
 ##################### END ORIGINAL PYTHON SCRIPT (v2)  ####################
 
@@ -121,9 +97,8 @@ def writeXolotlParameterFile_fromPreprocessor(infile="params.txt", outfile="para
                          tridyn=True,
                          helium_retention=True,
 
-                         start_stop=0.01,
-
-                         ts_final_time=0.01,
+                         start_stop=0.1,
+                         ts_final_time=0.1,
                          ts_max_snes_failures=-1,
                          ts_max_steps=1000000,
                          ts_exact_final_time="matchstep",
@@ -157,7 +132,6 @@ def writeXolotlParameterFile_fromPreprocessor(infile="params.txt", outfile="para
    "for tests, run: python write_xolotl_paramfile.py"
 
    tmp="temp.txt"
-#   ftmp=open("temp.txt", "w")
 
    if (infile==outfile):
       os.rename(infile, tmp)
@@ -184,7 +158,6 @@ def writeXolotlParameterFile_fromPreprocessor(infile="params.txt", outfile="para
    petscArgSedString="sed "+ petscArgString + "< %s > %s" %(infile , outfile)
 
    #run sed line for Petsc
-   
    subprocess.call([petscArgSedString], shell=True)
 
    #append parameters not present in template file to Petsc line 
@@ -233,19 +206,12 @@ def writeXolotlParameterFile_fromPreprocessor(infile="params.txt", outfile="para
 
 if __name__ == '__main__':
 
-#   infile="params.txt" 
-#   outfile="params.txt"
-#   networkFile="networkInit.testing.txt"
-#   sputtering=0.129
-   
-#   writexolotlparamfile(infile=infile, outfile=outfile, networkFile=networkFile, sputtering=sputtering)
-
    import shutil
 
    writeXolotlParameterFile_fromPreprocessor()
 
    shutil.copyfile("params.txt", "params1.txt")
 
-   writeXolotlParameterFile_fromTemplate(start_stop=0.2,ts_final_time=0.2,networkFile="xolotlStop.h5",sputtering=0.1)
+   writeXolotlParameterFile_fromTemplate(start_stop=0.02,ts_final_time=0.02,networkFile="xolotlStop.h5",sputtering=0.1)
 
    shutil.copyfile("params.txt", "params2.txt")
