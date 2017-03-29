@@ -30,13 +30,13 @@ import subprocess
 
 def writeXolotlParameterFile_fromTemplate(infile="params.txt", outfile="params.txt",
 
-                                          start_stop=0.1,
+                                          start_stop=0.01,
                                           
-                                          ts_final_time=0.1,
+                                          ts_final_time=0.01,
                                           ts_max_snes_failures=-1,
                                           ts_max_steps=1000000,
                                           ts_exact_final_time="matchstep",
-                                          ts_adapt_dt_max=1.0e-3,
+                                          ts_adapt_dt_max=1.0e-5,
                                           ts_monitor=True,
                                           
                                           fieldsplit_0_pc_type="sor",
@@ -121,13 +121,13 @@ def writeXolotlParameterFile_fromPreprocessor(infile="params.txt", outfile="para
                          tridyn=True,
                          helium_retention=True,
 
-                         start_stop=0.1,
+                         start_stop=0.01,
 
-                         ts_final_time=0.1,
+                         ts_final_time=0.01,
                          ts_max_snes_failures=-1,
                          ts_max_steps=1000000,
                          ts_exact_final_time="matchstep",
-                         ts_adapt_dt_max=1.0e-3,
+                         ts_adapt_dt_max=1.0e-5,
                          ts_monitor=True,
 
                          fieldsplit_0_pc_type="sor",
