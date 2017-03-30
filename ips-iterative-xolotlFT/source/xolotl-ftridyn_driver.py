@@ -3,7 +3,9 @@
 from  component import Component
 import sys
 import os
-
+import subprocess
+import numpy
+import shutil
 
 class xolotlFtridynDriver(Component):
     def __init__(self, services, config):
@@ -28,17 +30,40 @@ class xolotlFtridynDriver(Component):
 
         self.services.stage_plasma_state() 
 
+        driverInitTime=0.0
+        driverEndTime=0.0002
+        driverTimeStep=0.0001
+
+        driverTimeString='driverTime = %f' %driverInitTime
+        driverTimeStepString='driverTimeStep = %f' %driverTimeStep
+
+        print 'running IPS from t = %f to t=%f, in steps of dt=%f' % (driverInitTime, driverEndTime, driverTimeStep)
+
         #get config file and write initial state
+        modeLine="mode='INIT'"
         xolotl_ftridyn_config_file = self.services.get_config_param('PARAMETER_CONFIG_FILE')
         fid = open(xolotl_ftridyn_config_file, 'w')
-        fid.write("mode='INIT'")
+        fid.write("%s \n%s \n%s \n" % (modeLine, driverTimeString, driverTimeStepString))
         fid.close()       
-
+        
         self.services.update_plasma_state()
         sys.path.append(os.getcwd())
+        import parameterConfig
 
-        for i in range(1,3):
-            print 'loop %d' %(i)
+        for time in numpy.arange(driverInitTime,driverEndTime,driverTimeStep):
+
+            self.services.stage_plasma_state()
+
+            print 'driver time (in loop)  %f' %(time)
+            reload(parameterConfig)
+            xolotl_ftridyn_tmp_file='configFileRestart.tmp'
+            shutil.copyfile(xolotl_ftridyn_config_file,xolotl_ftridyn_tmp_file)
+            timeSedString="sed    -e 's/driverTime = [^ ]*/driverTime = %f/' <%s >%s "   % (time, xolotl_ftridyn_tmp_file, xolotl_ftridyn_config_file)
+            subprocess.call([timeSedString], shell=True)
+            os.remove(xolotl_ftridyn_tmp_file)
+
+            self.services.update_plasma_state()
+
             self.services.call(ftridyn, 'init', timeStamp)
             self.services.call(ftridyn, 'step', timeStamp)
             
@@ -47,13 +72,27 @@ class xolotlFtridynDriver(Component):
             
             self.services.stage_plasma_state() 
             
-            import parameterConfig
+#            import parameterConfig
             reload(parameterConfig)
-            if (parameterConfig.mode == 'INIT'):
-                fid = open(xolotl_ftridyn_config_file, 'w')
-                fid.write("mode='RESTART'")
-                fid.close()      
+            print 'reading parameter config mode %s' %(parameterConfig.mode)
 
+            if (parameterConfig.mode == 'INIT'):
+                #test print
+                #parameterConfig.mode = 'RESTART'
+                #print 'changing parameter config mode to %s ' %(parameterConfig.mode)
+                
+                xolotl_ftridyn_tmp_file='configFileRestart.tmp'
+                shutil.copyfile(xolotl_ftridyn_config_file,xolotl_ftridyn_tmp_file)
+                modeSedString="sed    -e 's/mode=[^ ]*/mode="'"RESTART"'"/' <%s >%s "   % (xolotl_ftridyn_tmp_file, xolotl_ftridyn_config_file)
+                subprocess.call([modeSedString], shell=True)
+                os.remove(xolotl_ftridyn_tmp_file)
+
+                #test 
+                #self.services.update_plasma_state()
+                #self.services.stage_plasma_state()
+                #reload(parameterConfig)
+                #print 'parameter config mode changed to: %s' %(parameterConfig.mode)
+ 
             self.services.update_plasma_state()
 
     def finalize(self, timeStamp=0.0):

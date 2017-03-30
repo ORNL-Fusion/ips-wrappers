@@ -23,29 +23,33 @@ class xolotlWorker(Component):
         import parameterConfig
         reload(parameterConfig)
 
-        print('from parameterConfig file ', parameterConfig.mode)
+        print('from parameterConfig file, mode is %s', parameterConfig.mode)
+        print('from parameterConfig file, driverTime is %s', parameterConfig.driverTime)
+        print('from parameterConfig file, driverTimeStep is %s', parameterConfig.driverTimeStep)
+        runEndTime=parameterConfig.driverTime+parameterConfig.driverTimeStep
+        print('from parameterConfig file, this runs end time is  %f', runEndTime)
 
         if (parameterConfig.mode == 'INIT'):
             print('run xolotl preprocessor')
             #run prepocessor and copy params.txt input file to plasma state
             os.system('java -Djava.library.path=/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps -cp .:/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps/*:/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-build/gov.ornl.xolotl.preprocessor/preprocessor/CMakeFiles/xolotlPreprocessor.dir/ gov.ornl.xolotl.preprocessor.Main --nxGrid 160 --maxVSize 250 --phaseCut')        
-            write_xolotl_paramfile.writeXolotlParameterFile_fromPreprocessor(start_stop=0.001,ts_final_time=0.001)
+            write_xolotl_paramfile.writeXolotlParameterFile_fromPreprocessor(start_stop=runEndTime,ts_final_time=runEndTime)
             shutil.copyfile('params.txt','paramsInit.txt')  #store file to look into network issue; line to be removed
         else:
-            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=0.002,ts_final_time=0.002,networkFile="xolotlStop.h5",sputtering=0.001)
+            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=runEndTime,ts_final_time=runEndTime,networkFile="xolotlStop.h5")
             shutil.copyfile('params.txt','paramsRestart.txt') #store file to look into network issue; line to be removed
         self.services.update_plasma_state()
 
     def step(self, timeStamp=0.0):
         print('xolotl_worker: step')
         self.services.stage_plasma_state()
-        #call shell script that runs FTridyn and pipes input file
+        #call shell script that runs Xolotl and pipes input file
         task_id = self.services.launch_task(self.NPROC,
                                             self.services.get_working_dir(),
                                             self.XOLOTL_EXE, 'params.txt')
         #monitor task until complete
         if (self.services.wait_task(task_id)):
-            self.services.error('ftridyn_worker: step failed.')
+            self.services.error('xolotl_worker: step failed.')
 
         newest = max(glob.iglob('TRIDYN_*.dat'), key=os.path.getctime)
         print('newest file ' , newest)
@@ -58,7 +62,7 @@ class xolotlWorker(Component):
         f.close()
         tempfile.close()
 
-        #updates plasma state FTridyn output files
+        #updates plasma state Xolotl output files
         self.services.update_plasma_state()
   
     def finalize(self, timeStamp=0.0):
