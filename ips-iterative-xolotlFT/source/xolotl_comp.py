@@ -20,28 +20,55 @@ class xolotlWorker(Component):
         self.services.stage_plasma_state()
 
         sys.path.append(os.getcwd())
-        import parameterConfig
-        reload(parameterConfig)
+        import driverParameterConfig
+        reload(driverParameterConfig)
 
-        print('from parameterConfig file, mode is %s', parameterConfig.mode)
-        print('from parameterConfig file, driverTime is %s', parameterConfig.driverTime)
-        print('from parameterConfig file, driverTimeStep is %s', parameterConfig.driverTimeStep)
-        runEndTime=parameterConfig.driverTime+parameterConfig.driverTimeStep
-        print('from parameterConfig file, this runs end time is  %f', runEndTime)
+        print 'from drivers parameterConfig file: mode is ', driverParameterConfig.mode
+        print '\t \t \t \t this run starts at time ', driverParameterConfig.driverTime
+        print '\t \t \t \t driverTimeStep is ', driverParameterConfig.driverTimeStep
+        runEndTime=driverParameterConfig.driverTime+driverParameterConfig.driverTimeStep
+        print '\t \t \t \t this runs ends at time: ', runEndTime
 
-        if (parameterConfig.mode == 'INIT'):
+        import xolotlParameterConfig
+        reload(xolotlParameterConfig)
+
+        #print here what's been loaded from xolotlParameterConfig File
+        xolotl_config_file = self.services.get_config_param('XOLOTL_PARAMETER_CONFIG_FILE')
+        xid = open(xolotl_config_file, 'r')
+        #currently only start_stop might be passed to writing the parameter file.
+        #if more parameters, it'd require writing them all as a string. something similar to:
+        xolotlParamString=""
+        for line in xid: 
+            print line  
+            xolotlParamString=xolotlParamString+line.replace("\n", " , ")
+
+        print 'from xolotls parameterConfig file:', xolotlParamString
+
+        if (driverParameterConfig.mode == 'INIT'):
             print('run xolotl preprocessor')
             #run prepocessor and copy params.txt input file to plasma state
             os.system('java -Djava.library.path=/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps -cp .:/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps/*:/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-build/gov.ornl.xolotl.preprocessor/preprocessor/CMakeFiles/xolotlPreprocessor.dir/ gov.ornl.xolotl.preprocessor.Main --nxGrid 160 --maxVSize 250 --phaseCut')        
-            write_xolotl_paramfile.writeXolotlParameterFile_fromPreprocessor(start_stop=runEndTime,ts_final_time=runEndTime)
-            shutil.copyfile('params.txt','paramsInit.txt')  #store file to look into network issue; line to be removed
+            write_xolotl_paramfile.writeXolotlParameterFile_fromPreprocessor(start_stop=xolotlParameterConfig.start_stop,ts_final_time=runEndTime,networkFile=xolotlParameterConfig.networkFile)
+                
         else:
-            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=runEndTime,ts_final_time=runEndTime,networkFile="xolotlStop.h5")
-            shutil.copyfile('params.txt','paramsRestart.txt') #store file to look into network issue; line to be removed
+            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=xolotlParameterConfig.start_stop,ts_final_time=runEndTime,networkFile=xolotlParameterConfig.networkFile)
+        
+        #store xolotls parameter and network files for each loop 
+        currentXolotlParamFile='params_%f.txt' %driverParameterConfig.driverTime
+        shutil.copyfile('params.txt',currentXolotlParamFile) 
+        
+        #currentXolotlNetworkFile='xolotlStop_%f.h5' %driverParameterConfig.driverTime
+        #shutil.copyfile('xolotlStop.h5',currentXolotlNetworkFile)
+
         self.services.update_plasma_state()
 
     def step(self, timeStamp=0.0):
         print('xolotl_worker: step')
+
+        sys.path.append(os.getcwd())
+        import driverParameterConfig
+        reload(driverParameterConfig)
+
         self.services.stage_plasma_state()
         #call shell script that runs Xolotl and pipes input file
         task_id = self.services.launch_task(self.NPROC,
@@ -61,6 +88,10 @@ class xolotlWorker(Component):
         f.write(tempfile.read())
         f.close()
         tempfile.close()
+
+        #save network file with a different name to use in the next time step
+        currentXolotlNetworkFile='xolotlStop_%f.h5' %driverParameterConfig.driverTime
+        shutil.copyfile('xolotlStop.h5',currentXolotlNetworkFile)
 
         #updates plasma state Xolotl output files
         self.services.update_plasma_state()

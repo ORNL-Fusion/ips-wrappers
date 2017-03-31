@@ -30,7 +30,7 @@ import subprocess
 
 def writeXolotlParameterFile_fromTemplate(infile="params.txt", outfile="params.txt",
 
-                                          start_stop=0.2,
+                                          start_stop=True,
                                           ts_final_time=0.2,
                                           ts_max_snes_failures=-1,
                                           ts_max_steps=1000000,
@@ -63,9 +63,30 @@ def writeXolotlParameterFile_fromTemplate(infile="params.txt", outfile="params.t
 # prepare petscline:                                                                                                                                                                          
 
    #change of value in parameters                                                                                                                                                             
-   petscArgString=" -e 's/-start_stop [^ ]*/-start_stop %f/'   -e 's/-ts_final_time [^ ]*/-ts_final_time %f/'   -e 's/-ts_max_snes_failures [^ ]*/-ts_max_snes_failures %d/'   -e 's/-ts_max_steps [^ ]*/-ts_max_steps %d/'   -e 's/-ts_exact_final_time [^ ]*/-ts_exact_final_time %s/'   -e 's/-ts_adapt_dt_max [^ ]*/-ts_adapt_dt_max %e/'   -e 's/-fieldsplit_0_pc_type [^ ]*/-fieldsplit_0_pc_type %s/'   -e 's/-fieldsplit_1_pc_type [^ ]*/-fieldsplit_1_pc_type %s/'   -e 's/-pc_type [^ ]*/-pc_type %s/' "  % (start_stop, ts_final_time, ts_max_snes_failures, ts_max_steps, ts_exact_final_time, ts_adapt_dt_max, fieldsplit_0_pc_type, fieldsplit_1_pc_type, pc_type)
+   petscArgString=" -e 's/-ts_final_time [^ ]*/-ts_final_time %f/'   -e 's/-ts_max_snes_failures [^ ]*/-ts_max_snes_failures %d/'   -e 's/-ts_max_steps [^ ]*/-ts_max_steps %d/'   -e 's/-ts_exact_final_time [^ ]*/-ts_exact_final_time %s/'   -e 's/-ts_adapt_dt_max [^ ]*/-ts_adapt_dt_max %e/'   -e 's/-fieldsplit_0_pc_type [^ ]*/-fieldsplit_0_pc_type %s/'   -e 's/-fieldsplit_1_pc_type [^ ]*/-fieldsplit_1_pc_type %s/'   -e 's/-pc_type [^ ]*/-pc_type %s/' "  % (ts_final_time, ts_max_snes_failures, ts_max_steps, ts_exact_final_time, ts_adapt_dt_max, fieldsplit_0_pc_type, fieldsplit_1_pc_type, pc_type)
 
    #include (or not) parameters without values that exist in template file
+   if (start_stop==False):
+      petscArgString=petscArgString+"   -e 's/-start_stop [^ ]*/ /'"
+   else:
+      petscArgString=petscArgString+"   -e 's/-start_stop [^ ]*/-start_stop %f/'" %(ts_final_time)
+      
+   if (start_stop==False):
+      petscArgString=petscArgString+"   -e 's/-ts_dt [^ ]*/ /'"
+   else:
+      petscArgString=petscArgString+"   -e 's/-ts_dt [^ ]*/-start_stop %f/'" %(ts_final_time)
+
+#TO BE FIXED WHEN 'True' CAN BE READ PROPERLY
+#   if (start_stop==True):
+#      petscArgString=petscArgString+"   -e 's/-start_stop [^ ]*/-start_stop %f/'" %(ts_final_time)
+#   else:
+#      petscArgString=petscArgString+"   -e 's/-start_stop [^ ]*/ /'"
+
+#   if (start_stop==True):
+#      petscArgString=petscArgString+"   -e 's/-ts_dt [^ ]*/-start_stop %f/'" %(ts_final_time)
+#   else:
+#      petscArgString=petscArgString+"   -e 's/-ts_dt [^ ]*/ /'"
+      
 
    #prepare sed line                                                                                                                                                                          
    petscArgSedString="sed "+ petscArgString + "< %s > %s" %(infile , outfile)
@@ -97,7 +118,7 @@ def writeXolotlParameterFile_fromPreprocessor(infile="params.txt", outfile="para
                          tridyn=True,
                          helium_retention=True,
 
-                         start_stop=0.1,
+                         start_stop=True,
                          ts_final_time=0.1,
                          ts_max_snes_failures=-1,
                          ts_max_steps=1000000,
@@ -141,9 +162,31 @@ def writeXolotlParameterFile_fromPreprocessor(infile="params.txt", outfile="para
 # prepare petscline:
 
    #change of value in parameters
-   petscArgString=" -e 's/-ts_dt 1.0e-12/-start_stop %f/'   -e 's/-ts_final_time 1.0/-ts_final_time %f/'   -e 's/-ts_max_snes_failures 200/-ts_max_snes_failures %d/'   -e 's/-ts_max_steps 100/-ts_max_steps %d/'   -e 's/-ts_exact_final_time stepover/-ts_exact_final_time %s/'   -e 's/-ts_adapt_dt_max 1.0e-6/-ts_adapt_dt_max %e/'   -e 's/-fieldsplit_0_pc_type sor/-fieldsplit_0_pc_type %s/'   -e 's/-fieldsplit_1_pc_type redundant/-fieldsplit_1_pc_type %s/'   -e 's/-pc_type fieldsplit/-pc_type %s/' "  % (start_stop, ts_final_time, ts_max_snes_failures, ts_max_steps, ts_exact_final_time, ts_adapt_dt_max, fieldsplit_0_pc_type, fieldsplit_1_pc_type, pc_type)
+   petscArgString=" -e 's/-ts_final_time 1.0/-ts_final_time %f/'   -e 's/-ts_max_snes_failures 200/-ts_max_snes_failures %d/'   -e 's/-ts_max_steps 100/-ts_max_steps %d/'   -e 's/-ts_exact_final_time stepover/-ts_exact_final_time %s/'   -e 's/-ts_adapt_dt_max 1.0e-6/-ts_adapt_dt_max %e/'   -e 's/-fieldsplit_0_pc_type sor/-fieldsplit_0_pc_type %s/'   -e 's/-fieldsplit_1_pc_type redundant/-fieldsplit_1_pc_type %s/'   -e 's/-pc_type fieldsplit/-pc_type %s/' "  % (ts_final_time, ts_max_snes_failures, ts_max_steps, ts_exact_final_time, ts_adapt_dt_max, fieldsplit_0_pc_type, fieldsplit_1_pc_type, pc_type)
 
    #include (or not) parameters without values that exist in template file
+   if (start_stop==False):
+      petscArgString=petscArgString+"   -e 's/-start_stop [^ ]*/ /'"
+   else:
+      petscArgString=petscArgString+"   -e 's/-start_stop [^ ]*/-start_stop %f/'" %(ts_final_time)
+
+   if (start_stop==False):
+      petscArgString=petscArgString+"   -e 's/-ts_dt [^ ]*/ /'"
+   else:
+      petscArgString=petscArgString+"   -e 's/-ts_dt [^ ]*/-start_stop %f/'" %(ts_final_time)
+
+#TO BE FIXED WHEN 'True' CAN BE READ PROPERLY 
+#   if (start_stop==True):
+#      petscArgString=petscArgString+"   -e 's/-start_stop [^ ]*/-start_stop %f/'" %(ts_final_time)
+#   else:
+#      petscArgString=petscArgString+"   -e 's/-start_stop [^ ]*/ /'"
+
+#   if (start_stop==True):
+#      petscArgString=petscArgString+"   -e 's/-ts_dt [^ ]*/-start_stop %f/'" %(ts_final_time)
+#   else:
+#      petscArgString=petscArgString+"   -e 's/-ts_dt [^ ]*/ /'"
+
+
    if (ts_monitor==True):
       petscArgString=petscArgString+"   -e 's/-ts_monitor/-ts_monitor/'"
    else:

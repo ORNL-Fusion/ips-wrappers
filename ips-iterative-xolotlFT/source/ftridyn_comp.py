@@ -20,10 +20,10 @@ class ftridynWorker(Component):
         #stage plasma state files for use on execution of FTridyn
         self.services.stage_plasma_state()
         sys.path.append(os.getcwd())
-        import parameterConfig
-        reload(parameterConfig)
+        import driverParameterConfig
+        reload(driverParameterConfig)
 
-        if (parameterConfig.mode == 'INIT'):
+        if (driverParameterConfig.mode == 'INIT'):
             print('init mode yes')
             generateInputIPS.main()
         else:
