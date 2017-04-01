@@ -1,17 +1,29 @@
 #! /usr/bin/env python
 
-# version 0.4 4/27/08 (Batchelor)
+"""
+model_EPA_mdescr.py version 1.1 3/31/2017 (Batchelor)
+
+EPA component script to drive model_EPA_mdescr_mdescr.f90 executable.  See comment header
+in model_EPA_mdescr_mdescr.f90 for details
+
+The executable requires 3 commandline arguments:
+1) current state file!
+2) mode = one of "INIT", "STEP", "FINALIZE"
+3) timeStamp = initial time for "INIT", or = time at end of time stamp for "STEP"
+
+For applications that only require an initial plasma state with no time evolution (e.g.
+iteration of TORIC and CQL3D with fixed thermal profiles and equilibrium) I have added
+an optional config parameter to the EPA section of the simulation config file, INIT_ONLY.
+If INIT_ONLY == true, then when the STEP function is called it just returns.
+
+"""
 
 # ------------------------------------------------------------------------------
-#
-# EPA component script to drive model_EPA_mdescr_mdescr.f90 executable.
-#
-# !      The executable requires3 commandline arguments:
-# !      1) current state file!
-# !      2) mode = one of "INIT", "STEP", "FINALIZE"
-# !      3) timeStamp = initial time for "INIT", or = time at end of time stamp for "STEP"
-#
+# Working Notes
+# 3-31-2017
+# Added INIT_ONLY
 # ------------------------------------------------------------------------------
+
 
 import sys
 import os
@@ -89,6 +101,10 @@ class model_EPA_mdescr(Component):
 # ------------------------------------------------------------------------------
 
     def step(self, timeStamp):
+        init_only = self.try_get_component_param(services, 'INIT_ONLY')
+        	if INIT_ONLY :
+        		return
+
         print 'model_EPA_mdescr.step() called'
         global parameterList
         services = self.services
