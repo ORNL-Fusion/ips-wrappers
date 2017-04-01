@@ -14,7 +14,9 @@ The executable requires 3 commandline arguments:
 For applications that only require an initial plasma state with no time evolution (e.g.
 iteration of TORIC and CQL3D with fixed thermal profiles and equilibrium) I have added
 an optional config parameter to the EPA section of the simulation config file, INIT_ONLY.
-If INIT_ONLY == true, then when the STEP function is called it just returns.
+If INIT_ONLY == true, then when the STEP function is called it just returns.  I did this
+so that it can be used this way with the generic drivers which automatically run the
+EPA component in the time loop if one is present in the config PORTS.
 
 """
 
