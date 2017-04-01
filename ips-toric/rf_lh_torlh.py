@@ -7,7 +7,11 @@ TORLH component.  Adapted from RF_LH_toric_abr_mcmd.py. (5-14-2016)
 # Working notes: DBB 9-5-2016 (updated 3-31-2017)
 # Modifying to optionally run torlh in qldce mode and to run ImChizz and cql3d_mapin.  By
 # default torlh only runs in TORIC mode.  But if optional parameter QLDCE_MODE = True in 
-# the config file, then during the INIT torlh runs in toric mode, but in STEP it runs in
+# the config file then the action is as follows: 
+# 1) During the INIT torlh runs in toric mode, then runs in qldce mode, then runs mapin
+# 2) During STEP it runs ImChizz then runs torlh in toric mode, then runs torlh  in qldce 
+#    mode, then runs mapin.
+
 # qldce mode. In qldce mode it also runs the mapin code for coupling to CQL3D.  Before
 # running in qldce mode first TORLH has to run in toric mode.  So we do this as part of
 # the component INIT.  It's a bit convoluted but near the end of the INIT function
@@ -90,6 +94,8 @@ from  component import Component
 #Numeric should be replace by numpy, if needed -JCW
 from Numeric import *
 from Scientific.IO.NetCDF import *
+
+run_ImChizz = False
 
 class torlh (Component):
 
@@ -214,9 +220,9 @@ class torlh (Component):
             raise 
 
         if self.QLDCE_MODE in [True, 'true', 'True', 'TRUE']:
-            self.QLDCE_MODE = False
             self.step(timeStamp)
-            self.QLDCE_MODE = True
+            self.run_ImChizz = True
+
         return 0
 
 # ------------------------------------------------------------------------------
@@ -372,40 +378,48 @@ class torlh (Component):
         # Run in toricmode = 'toric'
             # Call torlh prepare_input to generate torlha.inp
 
-            if QLDCE_MODE in [None, False, 'false', 'False', 'FALSE']:
-                toricmode = 'toric'
-                print 'Running torlh in toric mode'
-                retcode = subprocess.call([prepare_input, cur_state_file, toricmode])
-                if (retcode != 0):
-                    logMsg = 'Error executing ' + prepare_input
-                    self.services.error(logMsg)
-                    raise Exception(logMsg)
+            toricmode = 'toric'
+            print 'Running torlh in toric mode'
+            retcode = subprocess.call([prepare_input, cur_state_file, toricmode])
+            if (retcode != 0):
+                logMsg = 'Error executing ' + prepare_input
+                self.services.error(logMsg)
+                raise Exception(logMsg)
 
-                # Call xeqdsk_setup to generate eqdsk.out file
-                print 'prepare_eqdsk', prepare_eqdsk, cur_eqdsk_file
+            # Call xeqdsk_setup to generate eqdsk.out file
+            print 'prepare_eqdsk', prepare_eqdsk, cur_eqdsk_file
 
-                retcode = subprocess.call([prepare_eqdsk, \
-                                           '@equigs_gen', '/g_filename='+cur_eqdsk_file,\
-                                           '/equigs_filename=equigs.data'])
-                if (retcode != 0):
-                    logMsg = 'Error in call to prepare_eqdsk'
-                    self.services.error(logMsg)
-                    raise Exception(logMsg)
+            retcode = subprocess.call([prepare_eqdsk, \
+                                       '@equigs_gen', '/g_filename='+cur_eqdsk_file,\
+                                       '/equigs_filename=equigs.data'])
+            if (retcode != 0):
+                logMsg = 'Error in call to prepare_eqdsk'
+                self.services.error(logMsg)
+                raise Exception(logMsg)
 
-                # Launch torlh executable
-                print 'torlh processors = ', self.NPROC
-                cwd = services.get_working_dir()
-                task_id = services.launch_task(self.NPROC, cwd, torlh_bin, logfile=torlh_log)
-                retcode = services.wait_task(task_id)
-                if (retcode != 0):
-                    logMsg = 'Error executing command: ' + torlh_bin
-                    self.services.error(logMsg)
-                    raise Exception(logMsg)
+            # Launch torlh executable
+            print 'torlh processors = ', self.NPROC
+            cwd = services.get_working_dir()
+            task_id = services.launch_task(self.NPROC, cwd, torlh_bin, logfile=torlh_log)
+            retcode = services.wait_task(task_id)
+            if (retcode != 0):
+                logMsg = 'Error executing command: ' + torlh_bin
+                self.services.error(logMsg)
+                raise Exception(logMsg)
                 
 # ------------------------------------------------------------------------------                
         # Run in toricmode = 'qldce'
             # Call torlh prepare_input to generate torlha.inp
             if QLDCE_MODE in [True, 'true', 'True', 'TRUE']:
+
+                if self.run_ImChizz == True: # Will be False during INIT
+                    print 'Running ImChizz'
+                    retcode = subprocess.call([imchzz])
+                    if (retcode != 0):
+                        logMsg = 'Error executing ' + imchzz
+                        self.services.error(logMsg)
+                        raise Exception(logMsg)
+
                 toricmode = 'qldce'
                 print 'Running torlh in qldce mode'
                 retcode = subprocess.call([prepare_input, cur_state_file, toricmode])
