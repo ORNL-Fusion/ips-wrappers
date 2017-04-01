@@ -4,11 +4,12 @@
 TORLH component.  Adapted from RF_LH_toric_abr_mcmd.py. (5-14-2016)
 
 """
-# Working notes: DBB 9-5-2016
+# Working notes: DBB 9-5-2016 (updated 3-31-2017)
 # Modifying to optionally run torlh in qldce mode and to run ImChizz and cql3d_mapin.  By
 # default torlh only runs in TORIC mode.  But if optional parameter QLDCE_MODE = True in 
-# the config file, then first torlh runs in toric mode then these other code for coupling 
-# to CQL3D are run. 
+# the config file, then during the INIT torlh runs in toric mode, but in STEP it runs in
+# qldce mode. In qldce mode it also runs the mapin code for coupling to CQL3D.
+# 
 # To change between TORIC modes two parameters must be changed in the torica.inp file.
 #
 # For TORIC mode:
@@ -354,41 +355,45 @@ class torlh (Component):
                 self.services.error(logMsg)
                 raise Exception(logMsg)
                 
+# ------------------------------------------------------------------------------                
         # Run in toricmode = 'toric'
-            # Call torlh prepare_input to generate torlha.inp
-            toricmode = 'toric'
-            retcode = subprocess.call([prepare_input, cur_state_file, toricmode])
-            if (retcode != 0):
-                logMsg = 'Error executing ' + prepare_input
-                self.services.error(logMsg)
-                raise Exception(logMsg)
-
-            # Call xeqdsk_setup to generate eqdsk.out file
-            print 'prepare_eqdsk', prepare_eqdsk, cur_eqdsk_file
-
-            retcode = subprocess.call([prepare_eqdsk, \
-                                       '@equigs_gen', '/g_filename='+cur_eqdsk_file,\
-                                       '/equigs_filename=equigs.data'])
-            if (retcode != 0):
-                logMsg = 'Error in call to prepare_eqdsk'
-                self.services.error(logMsg)
-                raise Exception(logMsg)
-
-            # Launch torlh executable
-            print 'torlh processors = ', self.NPROC
-            cwd = services.get_working_dir()
-            task_id = services.launch_task(self.NPROC, cwd, torlh_bin, logfile=torlh_log)
-            retcode = services.wait_task(task_id)
-            if (retcode != 0):
-                logMsg = 'Error executing command: ' + torlh_bin
-                self.services.error(logMsg)
-                raise Exception(logMsg)
-                
-        # Run in toricmode = 'qldce'
             # Call torlh prepare_input to generate torlha.inp
             QLDCE_MODE = self.try_get_component_param(services,'QLDCE_MODE', optional = True)
             print 'QLDCE_MODE = ', QLDCE_MODE
-            if (QLDCE_MODE):
+            if QLDCE_MODE in [None, False, 'false', 'False', 'FALSE']:
+                toricmode = 'toric'
+                print 'Running torlh in toric mode'
+                retcode = subprocess.call([prepare_input, cur_state_file, toricmode])
+                if (retcode != 0):
+                    logMsg = 'Error executing ' + prepare_input
+                    self.services.error(logMsg)
+                    raise Exception(logMsg)
+
+                # Call xeqdsk_setup to generate eqdsk.out file
+                print 'prepare_eqdsk', prepare_eqdsk, cur_eqdsk_file
+
+                retcode = subprocess.call([prepare_eqdsk, \
+                                           '@equigs_gen', '/g_filename='+cur_eqdsk_file,\
+                                           '/equigs_filename=equigs.data'])
+                if (retcode != 0):
+                    logMsg = 'Error in call to prepare_eqdsk'
+                    self.services.error(logMsg)
+                    raise Exception(logMsg)
+
+                # Launch torlh executable
+                print 'torlh processors = ', self.NPROC
+                cwd = services.get_working_dir()
+                task_id = services.launch_task(self.NPROC, cwd, torlh_bin, logfile=torlh_log)
+                retcode = services.wait_task(task_id)
+                if (retcode != 0):
+                    logMsg = 'Error executing command: ' + torlh_bin
+                    self.services.error(logMsg)
+                    raise Exception(logMsg)
+                
+# ------------------------------------------------------------------------------                
+        # Run in toricmode = 'qldce'
+            # Call torlh prepare_input to generate torlha.inp
+            if QLDCE_MODE in [True, 'true', 'True', 'TRUE']:
                 toricmode = 'qldce'
                 print 'Running torlh in qldce mode'
                 retcode = subprocess.call([prepare_input, cur_state_file, toricmode])
