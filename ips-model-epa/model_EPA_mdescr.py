@@ -103,7 +103,7 @@ class model_EPA_mdescr(Component):
     def step(self, timeStamp):
         services = self.services
         init_only = self.try_get_component_param(services, 'INIT_ONLY')
-        if INIT_ONLY:
+        if init_only:
             return
 
         print 'model_EPA_mdescr.step() called'
