@@ -214,9 +214,9 @@ class torlh (Component):
             raise 
 
         if self.QLDCE_MODE in [True, 'true', 'True', 'TRUE']:
-        	self.QLDCE_MODE = False
-        	self.step(timeStamp)
-        	self.QLDCE_MODE = True
+            self.QLDCE_MODE = False
+            self.step(timeStamp)
+            self.QLDCE_MODE = True
         return 0
 
 # ------------------------------------------------------------------------------
@@ -424,6 +424,16 @@ class torlh (Component):
                     self.services.error(logMsg)
                     raise Exception(logMsg)
 
+                RUN_MAPIN = self.try_get_component_param(services,'RUN_MAPIN', optional = True)
+                print 'RUN_QQL3D_MAPIN = ', RUN_MAPIN
+                if (RUN_MAPIN):
+                    mapin_bin = self.try_get_component_param(services,'MAPIN_BIN')
+                    print 'Running cql3d_mapin'
+                    retcode = subprocess.call([mapin_bin])
+                    if (retcode != 0):
+                        logMsg = 'Error executing ' + RUN_MAPIN
+                        self.services.error(logMsg)
+                        raise Exception(logMsg)
             # Call process_output
             # First rename default fort.* to expected names by component method as of torlh5 r918 from ipp
             #os.rename('fort.9','torlh_cfg.nc')
@@ -446,17 +456,6 @@ class torlh (Component):
             logMsg = 'Error in call to merge_current_plasma_state(' + partial_file + ')'
             self.services.exception(logMsg)
             raise 
-
-        RUN_MAPIN = self.try_get_component_param(services,'RUN_MAPIN', optional = True)
-        print 'RUN_QQL3D_MAPIN = ', RUN_MAPIN
-        if (RUN_MAPIN):
-            mapin_bin = self.try_get_component_param(services,'MAPIN_BIN')
-            print 'Running cql3d_mapin'
-            retcode = subprocess.call([mapin_bin])
-            if (retcode != 0):
-                logMsg = 'Error executing ' + RUN_MAPIN
-                self.services.error(logMsg)
-                raise Exception(logMsg)
 
 # Run IDL script if requested
 #         do_idl_plots = self.try_get_component_param(services, 'DO_IDL_PLOTS', optional = True)
