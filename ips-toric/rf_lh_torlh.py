@@ -8,7 +8,11 @@ TORLH component.  Adapted from RF_LH_toric_abr_mcmd.py. (5-14-2016)
 # Modifying to optionally run torlh in qldce mode and to run ImChizz and cql3d_mapin.  By
 # default torlh only runs in TORIC mode.  But if optional parameter QLDCE_MODE = True in 
 # the config file, then during the INIT torlh runs in toric mode, but in STEP it runs in
-# qldce mode. In qldce mode it also runs the mapin code for coupling to CQL3D.
+# qldce mode. In qldce mode it also runs the mapin code for coupling to CQL3D.  Before
+# running in qldce mode first TORLH has to run in toric mode.  So we do this as part of
+# the component INIT.  It's a bit convoluted but near the end of the INIT function
+# QLDCE_MODE is set to false and STEP is run.  This way torlh runs in toric mode.  After
+# STEP returns QLDCE_MODE is restored to True, so in the time loop torlh runs in qldce mode.
 # 
 # To change between TORIC modes two parameters must be changed in the torica.inp file.
 #
@@ -129,6 +133,9 @@ class torlh (Component):
         RESTART_FILES = self.try_get_component_param(services,'RESTART_FILES')
         NPROC = self.try_get_component_param(services,'NPROC')
 
+        self.QLDCE_MODE = self.try_get_component_param(services,'QLDCE_MODE', optional = True)
+        print 'QLDCE_MODE = ', self.QLDCE_MODE                
+
 #        cur_state_file = self.plasma_state_file
         torlh_log = self.torlh_log
 
@@ -206,6 +213,10 @@ class torlh (Component):
             self.services.exception(logMsg)
             raise 
 
+        if self.QLDCE_MODE in [True, 'true', 'True', 'TRUE']:
+        	self.QLDCE_MODE = False
+        	self.step(timeStamp)
+        	self.QLDCE_MODE = True
         return 0
 
 # ------------------------------------------------------------------------------
@@ -361,8 +372,7 @@ class torlh (Component):
         # Run in toricmode = 'toric'
             # Call torlh prepare_input to generate torlha.inp
 
-            if True:
-#            if QLDCE_MODE in [None, False, 'false', 'False', 'FALSE']:
+            if QLDCE_MODE in [None, False, 'false', 'False', 'FALSE']:
                 toricmode = 'toric'
                 print 'Running torlh in toric mode'
                 retcode = subprocess.call([prepare_input, cur_state_file, toricmode])
