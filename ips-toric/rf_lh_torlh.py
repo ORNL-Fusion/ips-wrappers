@@ -354,13 +354,15 @@ class torlh (Component):
                 logMsg = 'Cannot find torlh prepare_input binary: ' + prepare_input
                 self.services.error(logMsg)
                 raise Exception(logMsg)
-                
+
+            QLDCE_MODE = self.try_get_component_param(services,'QLDCE_MODE', optional = True)
+            print 'QLDCE_MODE = ', QLDCE_MODE                
 # ------------------------------------------------------------------------------                
         # Run in toricmode = 'toric'
             # Call torlh prepare_input to generate torlha.inp
-            QLDCE_MODE = self.try_get_component_param(services,'QLDCE_MODE', optional = True)
-            print 'QLDCE_MODE = ', QLDCE_MODE
-            if QLDCE_MODE in [None, False, 'false', 'False', 'FALSE']:
+
+            if True:
+#            if QLDCE_MODE in [None, False, 'false', 'False', 'FALSE']:
                 toricmode = 'toric'
                 print 'Running torlh in toric mode'
                 retcode = subprocess.call([prepare_input, cur_state_file, toricmode])
