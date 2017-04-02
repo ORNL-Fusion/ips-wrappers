@@ -416,6 +416,7 @@ class torlh (Component):
                 global run_ImChizz
                 if run_ImChizz == True: # Will be False during INIT
                     print 'Running ImChizz'
+                    imchzz  = os.path.join(self.BIN_PATH, 'imchzz')
                     retcode = subprocess.call([imchzz])
                     if (retcode != 0):
                         logMsg = 'Error executing ' + imchzz
