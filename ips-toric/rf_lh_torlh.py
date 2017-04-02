@@ -316,9 +316,13 @@ class torlh (Component):
         torlh_bin = self.TORLH_BIN
         prepare_eqdsk  = self.GEQXPL_BIN
 
-        cur_state_file = self.plasma_state_file
-        cur_eqdsk_file = self.eqdsk_file
-        torlh_log = self.torlh_log
+    # Get global configuration parameters
+        cur_state_file = self.try_get_config_param(services,'CURRENT_STATE')
+        cur_eqdsk_file = self.try_get_config_param(services,'CURRENT_EQDSK')
+        cur_cql_file = self.try_get_config_param(services,'CURRENT_CQL')
+        cur_dql_file = self.try_get_config_param(services,'CURRENT_DQL')
+
+        torlh_log = os.path.join(workdir, 'log.torlh')
         cwd = os.getcwd()
 
 # Check if LH power is zero (or effectively zero).  If true don't run torlh just
