@@ -116,21 +116,11 @@ class torlh (Component):
         services = self.services
         workdir = services.get_working_dir()
 
-      # Get global configuration parameters
-        try:
-            self.plasma_state_file = services.get_config_param('CURRENT_STATE')
-            self.eqdsk_file = services.get_config_param('CURRENT_EQDSK')
-            self.torlh_log = os.path.join(workdir, 'log.torlh')
-        except:
-            logMsg = 'RF_LH_torlh_mcmd: error in getting config parameters'
-            self.services.exception(logMsg)
-            raise 
-
     # Get global configuration parameters
         cur_state_file = self.try_get_config_param(services,'CURRENT_STATE')
         cur_eqdsk_file = self.try_get_config_param(services,'CURRENT_EQDSK')
-#        cur_cql_file = self.try_get_config_param(services,'CURRENT_CQL')
-#        cur_dql_file = self.try_get_config_param(services,'CURRENT_DQL')
+        cur_cql_file = self.try_get_config_param(services,'CURRENT_CQL')
+        cur_dql_file = self.try_get_config_param(services,'CURRENT_DQL')
 
     # Get component-specific configuration parameters. Note: Not all of these are
     # used in 'init' but if any are missing we get an exception now instead of
@@ -415,6 +405,13 @@ class torlh (Component):
 
                 global run_ImChizz
                 if run_ImChizz == True: # Will be False during INIT
+                    try:
+                        subprocess.call(['cp', cur_cql_file, 'cql3d.cdf' ])
+                    except Exception:
+                        message = 'generic_ps_init: Error copying CURRENT_CQL_FILE to cql3d.cdf'
+                        print message
+                        services.exception(message)
+                        raise              
                     print 'Running ImChizz'
                     imchzz  = os.path.join(self.BIN_PATH, 'imchzz')
                     retcode = subprocess.call([imchzz])
