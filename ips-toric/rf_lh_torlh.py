@@ -265,6 +265,7 @@ class torlh (Component):
             self.services.error(logMsg)
             raise Exception(logMsg)
         services = self.services
+        workdir = services.get_working_dir()
 
       # Copy plasma state files over to working directory
         try:
