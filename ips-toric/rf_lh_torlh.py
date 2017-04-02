@@ -132,9 +132,7 @@ class torlh (Component):
         self.QLDCE_MODE = self.try_get_component_param(services,'QLDCE_MODE', optional = True)
         print 'QLDCE_MODE = ', self.QLDCE_MODE                
 
-#        cur_state_file = self.plasma_state_file
-        torlh_log = self.torlh_log
-
+        torlh_log = os.path.join(workdir, 'log.torlh')
 
       # Copy plasma state files over to working directory
         try:
