@@ -221,7 +221,8 @@ class torlh (Component):
 
         if self.QLDCE_MODE in [True, 'true', 'True', 'TRUE']:
             self.step(timeStamp)
-            self.run_ImChizz = True
+            global run_ImChizz
+            run_ImChizz = True
 
         return 0
 
@@ -412,7 +413,8 @@ class torlh (Component):
             # Call torlh prepare_input to generate torlha.inp
             if QLDCE_MODE in [True, 'true', 'True', 'TRUE']:
 
-                if self.run_ImChizz == True: # Will be False during INIT
+                global run_ImChizz
+                if run_ImChizz == True: # Will be False during INIT
                     print 'Running ImChizz'
                     retcode = subprocess.call([imchzz])
                     if (retcode != 0):
