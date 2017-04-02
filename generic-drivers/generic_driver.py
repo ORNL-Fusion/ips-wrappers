@@ -1,9 +1,5 @@
 #! /usr/bin/env python
 
-# Version 11 (Batchelor 4-2-2017)
-# Changed the order of INIT and execution so that Fokker-Planck runs after all RF 
-# components. If this breaks anything for you please call me.
-
 # Version 10.1 (Batchelor 11/18/2015)
 # Updated exception handling to new protocol.  Updated old Scientific.IO.NetCDF to
 # netCDF4
@@ -142,6 +138,15 @@ class generic_driver(Component):
             port_dict['EPA'] = epaComp
             port_id_list.append(epaComp)
             print (' ')
+ 
+        if 'FP' in port_names:
+            fpComp = services.get_port('FP')
+            if(fpComp == None):
+                print 'Error accessing FP component'
+                raise
+            port_dict['FP'] = fpComp
+            port_id_list.append(fpComp)
+            print (' ')
        
         if 'RF_EC' in port_names:
             rf_ecComp = services.get_port('RF_EC')
@@ -168,15 +173,6 @@ class generic_driver(Component):
                 raise
             port_dict['RF_LH'] = rf_lhComp
             port_id_list.append(rf_lhComp)
-            print (' ')
- 
-        if 'FP' in port_names:
-            fpComp = services.get_port('FP')
-            if(fpComp == None):
-                print 'Error accessing FP component'
-                raise
-            port_dict['FP'] = fpComp
-            port_id_list.append(fpComp)
             print (' ')
 
         if 'NB' in port_names:
@@ -223,6 +219,9 @@ class generic_driver(Component):
 
         if 'EPA' in port_names:
             self.component_call(services, 'EPA', epaComp, init_mode, t)
+
+        if 'FP' in port_names:
+            self.component_call(services, 'FP', fpComp, init_mode, t)
         
         if 'RF_EC' in port_names:
             self.component_call(services, 'RF_EC', rf_ecComp, init_mode, t)
@@ -232,9 +231,6 @@ class generic_driver(Component):
         
         if 'RF_LH' in port_names:
             self.component_call(services, 'RF_LH', rf_lhComp, init_mode, t)
-
-        if 'FP' in port_names:
-            self.component_call(services, 'FP', fpComp, init_mode, t)
 
         if 'NB' in port_names:
             self.component_call(services, 'NB', nbComp, init_mode, t)
@@ -290,6 +286,9 @@ class generic_driver(Component):
        # Call step for each component
 
             print (' ')
+            if 'FP' in port_names:
+                self.component_call(services, 'FP', fpComp, 'step', t)
+
             if 'RF_EC' in port_names:
                 self.component_call(services, 'RF_EC', rf_ecComp, 'step', t)
 
@@ -298,9 +297,6 @@ class generic_driver(Component):
 
             if 'RF_LH' in port_names:
                 self.component_call(services, 'RF_LH', rf_lhComp, 'step', t)
-
-            if 'FP' in port_names:
-                self.component_call(services, 'FP', fpComp, 'step', t)
 
             if 'NB' in port_names:
                 self.component_call(services, 'NB', nbComp, 'step', t)
@@ -334,6 +330,9 @@ class generic_driver(Component):
       
       # Post simulation: call finalize on each component
         print (' ')
+        if 'FP' in port_names:
+            self.component_call(services, 'FP', fpComp, 'finalize', t)
+
         if 'RF_EC' in port_names:
             self.component_call(services, 'RF_EC', rf_ecComp, 'finalize', t)
 
@@ -342,9 +341,6 @@ class generic_driver(Component):
 
         if 'RF_LH' in port_names:
             self.component_call(services, 'RF_LH', rf_lhComp, 'finalize', t)
-
-        if 'FP' in port_names:
-            self.component_call(services, 'FP', fpComp, 'finalize', t)
 
         if 'NB' in port_names:
             self.component_call(services, 'NB', nbComp, 'finalize', t)
