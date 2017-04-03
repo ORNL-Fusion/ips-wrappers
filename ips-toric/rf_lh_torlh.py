@@ -384,11 +384,15 @@ class torlh (Component):
                     raise              
                 print 'Running ImChizz'
                 imchzz_bin = self.ImChizz_BIN
-                retcode = subprocess.call([imchzz_bin])
-                if (retcode != 0):
-                    logMsg = 'Error executing ' + imchzz
-                    self.services.error(logMsg)
-                    raise Exception(logMsg)
+                cmd_imchizz=self.ImChizz_BIN
+                P=Popen(cmd_imchizz,stdin=PIPE,stdout=PIPE, stderr=STDOUT)
+                P.stdin.write("b\n")
+
+#                 retcode = subprocess.call([imchzz_bin])
+#                 if (retcode != 0):
+#                     logMsg = 'Error executing ' + imchzz
+#                     self.services.error(logMsg)
+#                     raise Exception(logMsg)
 
 # ------------------------------------------------------------------------------                
         # Run in toricmode = 'toric'
