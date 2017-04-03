@@ -385,7 +385,7 @@ class torlh (Component):
                 print 'Running ImChizz'
                 imchzz_bin = self.ImChizz_BIN
                 cmd_imchizz=self.ImChizz_BIN
-                P=Popen(cmd_imchizz,stdin=PIPE,stdout=PIPE, stderr=STDOUT)
+                P=subprocess.Popen(cmd_imchizz,stdin=PIPE,stdout=PIPE, stderr=STDOUT)
                 P.stdin.write("b\n")
 
 #                 retcode = subprocess.call([imchzz_bin])
