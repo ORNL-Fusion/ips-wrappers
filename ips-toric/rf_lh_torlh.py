@@ -370,22 +370,22 @@ class torlh (Component):
             print 'QLDCE_MODE = ', QLDCE_MODE                
 
 # ------------------------------------------------------------------------------                
-			global run_ImChizz
-			if QLDCE_MODE in [True, 'true', 'True', 'TRUE'] and run_ImChizz == True: # Will be False during INIT
-				try:
-					subprocess.call(['cp', cur_cql_file, 'cql3d.cdf' ])
-				except Exception:
-					message = 'generic_ps_init: Error copying CURRENT_CQL_FILE to cql3d.cdf'
-					print message
-					services.exception(message)
-					raise              
-				print 'Running ImChizz'
-				imchzz  = os.path.join(self.BIN_PATH, 'imchzz')
-				retcode = subprocess.call([imchzz])
-				if (retcode != 0):
-					logMsg = 'Error executing ' + imchzz
-					self.services.error(logMsg)
-					raise Exception(logMsg)
+            global run_ImChizz
+            if QLDCE_MODE in [True, 'true', 'True', 'TRUE'] and run_ImChizz == True: # Will be False during INIT
+                try:
+                    subprocess.call(['cp', cur_cql_file, 'cql3d.cdf' ])
+                except Exception:
+                    message = 'generic_ps_init: Error copying CURRENT_CQL_FILE to cql3d.cdf'
+                    print message
+                    services.exception(message)
+                    raise              
+                print 'Running ImChizz'
+                imchzz  = os.path.join(self.BIN_PATH, 'imchzz')
+                retcode = subprocess.call([imchzz])
+                if (retcode != 0):
+                    logMsg = 'Error executing ' + imchzz
+                    self.services.error(logMsg)
+                    raise Exception(logMsg)
 
 # ------------------------------------------------------------------------------                
         # Run in toricmode = 'toric'
