@@ -383,8 +383,8 @@ class torlh (Component):
                     services.exception(message)
                     raise              
                 print 'Running ImChizz'
-                imchzz  = os.path.join(self.BIN_PATH, 'imchzz')
-                retcode = subprocess.call([imchzz])
+                imchzz_bin = self.ImChizz_BIN
+#                retcode = subprocess.call([imchzz_bin])
                 if (retcode != 0):
                     logMsg = 'Error executing ' + imchzz
                     self.services.error(logMsg)
