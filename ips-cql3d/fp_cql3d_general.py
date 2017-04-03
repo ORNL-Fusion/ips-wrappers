@@ -344,7 +344,7 @@ class cql3d(Component):
         cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
         cur_dql_file = services.get_config_param('CURRENT_DQL')
         cur_cql_file = services.get_config_param('CURRENT_CQL')
-        
+        print 'CURRENT_CQL = ', cur_cql_file
     # Copy current plasma state file to generic name -> cur_state.cdf
         try:
             shutil.copyfile(cur_state_file, 'cur_state.cdf')
@@ -461,8 +461,10 @@ class cql3d(Component):
 
       # Update plasma state files in plasma_state work directory, but only cur_cql_file
       # This way it can be used concurrently without overwriting other plasma state files.
+          print 'CURRENT_CQL = ', cur_cql_file
           try:
-            services.update_plasma_state(cur_cql_file)
+#            services.update_plasma_state(plasma_state_files = cur_cql_file)
+            services.update_plasma_state()
           except Exception:
             logMsg = 'Error in call to update_plasma_state()'
             self.services.exception(logMsg)
