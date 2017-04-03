@@ -12,7 +12,7 @@ TORLH component.  Adapted from RF_LH_toric_abr_mcmd.py. (5-14-2016)
 # 2) During STEP it runs ImChizz then runs torlh in toric mode, then runs torlh  in qldce 
 #    mode, then runs mapin.
 
-# qldce mode. In qldce mode it also runs the mapin code for coupling to CQL3D.  Before
+# In qldce mode it also runs the mapin code for coupling to CQL3D.  Before
 # running in qldce mode first TORLH has to run in toric mode.  So we do this as part of
 # the component INIT.  It's a bit convoluted but near the end of the INIT function
 # QLDCE_MODE is set to false and STEP is run.  This way torlh runs in toric mode.  After
@@ -31,6 +31,9 @@ TORLH component.  Adapted from RF_LH_toric_abr_mcmd.py. (5-14-2016)
 # This will have values ISOL_toric = 0, ISOL_qldce = 1, INUMIN_toric = 0,0,0,0 and
 # INUMIN_qldce = 3,0,0,0. Then prepare_torlh_input_abe.f90 will set ISOL and INUMIN 
 # appropriately in the toric.inp file based on the toricmode parameter.
+#
+# Also note this component uses services.update_plasma_state() which overwrites all state
+# files. To use this in a concurrent simulation should use merge_plasma_state instead.
 
 # Working notes: DBB 8-29-2016
 # Adapting to replicate more of the functionality of the TORLH/CQL3D iteration script
@@ -483,6 +486,14 @@ class torlh (Component):
 #                 print 'running run_IDL_toricplot()'
 #                 self.run_IDL_toricplot()
 
+
+      # Update plasma state files in plasma_state work directory
+        try:
+            services.update_plasma_state()
+        except Exception:
+            logMsg = 'Error in call to update_plasma_state()'
+            self.services.exception(logMsg)
+            raise 
 
       # Archive output files
         try:
