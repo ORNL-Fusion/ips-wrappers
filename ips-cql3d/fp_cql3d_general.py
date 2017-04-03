@@ -1,5 +1,10 @@
 #! /usr/bin/env python
 
+# fp_cql3d_general.py, Version 0.1 Batchelor 3-2-2017
+# Added cur_cql_file only to update_plasma_state for iteration (not full update).
+# Plasma state variables are already updated with merge_current_plasma_state.  So this 
+# component can be used concurrently.
+
 # Version 0.0, fp_cql3d_general.py, BH 08/15/2012
 # General (LH,EC,IC,RW,NBI, etc) cql3d component .py file.
 # Output is controlled by the input namelist file, cqlinput.
@@ -101,7 +106,7 @@ class cql3d(Component):
             cur_state_file = services.get_config_param('CURRENT_STATE')
             cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
             cur_dql_file = services.get_config_param('CURRENT_DQL')
-            #cql_file = services.get_config_param('CURRENT_CQL')
+            cur_cql_file = services.get_config_param('CURRENT_CQL')
         except:
             print 'fp_cql3d_general: error getting config parameters CURRENT_STATE CURRENT_EQDSK'
             services.error('fp_cql3d_general: error getting config parameters CURRENT_STATE CURRENT_EQDSK')
@@ -452,6 +457,15 @@ class cql3d(Component):
              print 'Error in call to merge_current_plasma_state(' , partial_file, ')'
              self.services.error('Error in call to merge_current_plasma_state')
              raise Exception, 'Error in call to merge_current_plasma_state'
+
+      # Update plasma state files in plasma_state work directory, but only cur_cql_file
+      # This way it can be used concurrently without overwriting other plasma state files.
+          try:
+            services.update_plasma_state(cur_cql_file)
+          except Exception:
+            logMsg = 'Error in call to update_plasma_state()'
+            self.services.exception(logMsg)
+            raise 
             
     # Archive output files
           try:
