@@ -469,6 +469,16 @@ class torlh (Component):
                     self.services.error(logMsg)
                     raise Exception(logMsg)
 
+            # Preserve torica.out from run in qldce mode
+                try:
+                    shutil.copyfile('torica.out', 'torica_qldceMode.out')
+                except IOError, (errno, strerror):
+                    logMsg =  'Error copying file %s to %s' % ('torica.out', 'torica_qldceMode.out'\
+                            , strerror)
+                    print logMsg
+                    services.exception(logMsg)
+                    raise 
+
                 RUN_MAPIN = self.try_get_component_param(services,'RUN_MAPIN', optional = True)
                 print 'RUN_QQL3D_MAPIN = ', RUN_MAPIN
                 if (RUN_MAPIN):
