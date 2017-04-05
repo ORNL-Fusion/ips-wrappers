@@ -435,6 +435,17 @@ class torlh (Component):
                 self.services.error(logMsg)
                 raise Exception(logMsg)
                 
+            # Preserve torica.out from run in toric mode
+            try:
+                shutil.copyfile('torica.out', 'torica_toricMode.out')
+            except IOError, (errno, strerror):
+                logMsg =  'Error copying file %s to %s' % ('torica.out', 'torica_toricMode.out'\
+                        , strerror)
+                print logMsg
+                services.exception(logMsg)
+                raise 
+            
+                
 # ------------------------------------------------------------------------------                
         # Run in toricmode = 'qldce'
             # Call torlh prepare_input to generate torlha.inp
