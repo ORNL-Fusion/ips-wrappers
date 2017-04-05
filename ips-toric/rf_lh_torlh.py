@@ -385,9 +385,16 @@ class torlh (Component):
                 print 'Running ImChizz'
                 imchzz_bin = self.ImChizz_BIN
                 cmd_imchizz=self.ImChizz_BIN
-                P=subprocess.Popen(cmd_imchizz,stdin=subprocess.PIPE,stdout=subprocess.PIPE,\
+                try:
+                   P=subprocess.Popen(cmd_imchizz,stdin=subprocess.PIPE,stdout=subprocess.PIPE,\
                  stderr=subprocess.STDOUT)
+                except :
+                   logMsg = "Error executing" + cmd_imchizz
+                   self.services.error(logMsg)
+                   raise
                 P.stdin.write("b\n")
+                print 'Finished ImChizz'
+
 
 #                 retcode = subprocess.call([imchzz_bin])
 #                 if (retcode != 0):

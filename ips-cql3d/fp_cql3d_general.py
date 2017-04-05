@@ -464,7 +464,7 @@ class cql3d(Component):
           print 'CURRENT_CQL = ', cur_cql_file
           try:
 #            services.update_plasma_state(plasma_state_files = cur_cql_file)
-            services.update_plasma_state()
+            services.update_plasma_state([cur_cql_file])
           except Exception:
             logMsg = 'Error in call to update_plasma_state()'
             self.services.exception(logMsg)
