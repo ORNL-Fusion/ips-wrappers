@@ -410,12 +410,12 @@ class torlh (Component):
                 raise Exception(logMsg)
 
             # Call xeqdsk_setup to generate eqdsk.out file
-            print 'prepare_eqdsk', prepare_eqdsk, cur_eqdsk_file
+            cmd_eqdsk = [prepare_eqdsk, '@equigs_gen', '/g_filename='+cur_eqdsk_file,\
+                                       '/equigs_filename=equigs.data']
+            print 'running', cmd_eqdsk
             services.send_portal_event(event_type = 'COMPONENT_EVENT',\
-              event_comment =  'running ' + prepare_eqdsk)
-            retcode = subprocess.call([prepare_eqdsk, \
-                                       '@equigs_gen', '/g_filename='+cur_eqdsk_file,\
-                                       '/equigs_filename=equigs.data'])
+              event_comment =  cmd_eqdsk)
+            retcode = subprocess.call(cmd_eqdsk)
             if (retcode != 0):
                 logMsg = 'Error in call to prepare_eqdsk'
                 self.services.error(logMsg)
