@@ -476,7 +476,7 @@ class torlh (Component):
                 RUN_MAPIN = self.try_get_component_param(services,'RUN_MAPIN', optional = True)
                 if (RUN_MAPIN):
                     mapin_bin = self.try_get_component_param(services,'MAPIN_BIN')
-                    print '\nRunning ' + cql3d_mapin
+                    print '\nRunning ' + mapin_bin
                     services.send_portal_event(comment = 'running ' + mapin_bin)
                     retcode = subprocess.call([mapin_bin])
                     if (retcode != 0):
