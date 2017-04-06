@@ -382,10 +382,11 @@ class torlh (Component):
                     print message
                     services.exception(message)
                     raise              
-                print 'Running ImChizz'
+                print '\nRunning ImChizz'
                 imchzz_bin = self.ImChizz_BIN
                 cmd_imchizz=self.ImChizz_BIN
                 try:
+                   services.send_portal_event(comment = 'running ' + cmd_imchizz)
                    P=subprocess.Popen(cmd_imchizz,stdin=subprocess.PIPE,stdout=subprocess.PIPE,\
                  stderr=subprocess.STDOUT)
                 except :
@@ -395,19 +396,12 @@ class torlh (Component):
                 P.stdin.write("b\n")
                 print 'Finished ImChizz'
 
-
-#                 retcode = subprocess.call([imchzz_bin])
-#                 if (retcode != 0):
-#                     logMsg = 'Error executing ' + imchzz
-#                     self.services.error(logMsg)
-#                     raise Exception(logMsg)
-
 # ------------------------------------------------------------------------------                
         # Run in toricmode = 'toric'
             # Call torlh prepare_input to generate torlha.inp
 
             toricmode = 'toric'
-            print 'Running torlh in toric mode'
+            print '\nRunning torlh in toric mode'
             retcode = subprocess.call([prepare_input, cur_state_file, toricmode])
             if (retcode != 0):
                 logMsg = 'Error executing ' + prepare_input
@@ -452,7 +446,7 @@ class torlh (Component):
             if QLDCE_MODE in [True, 'true', 'True', 'TRUE']:
 
                 toricmode = 'qldce'
-                print 'Running torlh in qldce mode'
+                print '\nRunning torlh in qldce mode'
                 retcode = subprocess.call([prepare_input, cur_state_file, toricmode])
                 if (retcode != 0):
                     logMsg = 'Error executing ' + prepare_input
@@ -480,10 +474,10 @@ class torlh (Component):
                     raise 
 
                 RUN_MAPIN = self.try_get_component_param(services,'RUN_MAPIN', optional = True)
-                print 'RUN_QQL3D_MAPIN = ', RUN_MAPIN
                 if (RUN_MAPIN):
                     mapin_bin = self.try_get_component_param(services,'MAPIN_BIN')
-                    print 'Running cql3d_mapin'
+                    print '\nRunning ' + cql3d_mapin
+                    services.send_portal_event(comment = 'running ' + mapin_bin)
                     retcode = subprocess.call([mapin_bin])
                     if (retcode != 0):
                         logMsg = 'Error executing ' + RUN_MAPIN
