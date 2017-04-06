@@ -386,9 +386,10 @@ class torlh (Component):
                 imchzz_bin = self.ImChizz_BIN
                 cmd_imchizz=self.ImChizz_BIN
                 try:
-                   services.send_portal_event(comment = 'running ' + cmd_imchizz)
+                   services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+                      event_comment =  'running ' + cmd_imchizz)
                    P=subprocess.Popen(cmd_imchizz,stdin=subprocess.PIPE,stdout=subprocess.PIPE,\
-                 stderr=subprocess.STDOUT)
+                      stderr=subprocess.STDOUT)
                 except :
                    logMsg = "Error executing" + cmd_imchizz
                    self.services.error(logMsg)
@@ -477,7 +478,8 @@ class torlh (Component):
                 if (RUN_MAPIN):
                     mapin_bin = self.try_get_component_param(services,'MAPIN_BIN')
                     print '\nRunning ' + mapin_bin
-                    services.send_portal_event(comment = 'running ' + mapin_bin)
+                    services.send_portal_event(event_type = 'COMPONENT_EVENT', \
+                         event_comment = 'running ' + mapin_bin)
                     retcode = subprocess.call([mapin_bin])
                     if (retcode != 0):
                         logMsg = 'Error executing ' + RUN_MAPIN
