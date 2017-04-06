@@ -133,7 +133,6 @@ class torlh (Component):
         NPROC = self.try_get_component_param(services,'NPROC')
 
         self.QLDCE_MODE = self.try_get_component_param(services,'QLDCE_MODE', optional = True)
-        print 'QLDCE_MODE = ', self.QLDCE_MODE                
 
         torlh_log = os.path.join(workdir, 'log.torlh')
 
@@ -338,6 +337,8 @@ class torlh (Component):
         print 'power = ', power_lh
         if(-0.02 < power_lh < 0.02):
             print zero_RF_LH_power
+            services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+              event_comment =  'running ' + zero_RF_LH_power)
             retcode = subprocess.call([zero_RF_LH_power, cur_state_file])
             if (retcode != 0):
                 logMsg = 'Error executing ' + prepare_input
@@ -370,7 +371,6 @@ class torlh (Component):
                 raise Exception(logMsg)
 
             QLDCE_MODE = self.try_get_component_param(services,'QLDCE_MODE', optional = True)
-            print 'QLDCE_MODE = ', QLDCE_MODE                
 
 # ------------------------------------------------------------------------------                
             global run_ImChizz
@@ -411,7 +411,8 @@ class torlh (Component):
 
             # Call xeqdsk_setup to generate eqdsk.out file
             print 'prepare_eqdsk', prepare_eqdsk, cur_eqdsk_file
-
+            services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+              event_comment =  'running ' + prepare_eqdsk)
             retcode = subprocess.call([prepare_eqdsk, \
                                        '@equigs_gen', '/g_filename='+cur_eqdsk_file,\
                                        '/equigs_filename=equigs.data'])
