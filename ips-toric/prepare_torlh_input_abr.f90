@@ -63,10 +63,6 @@
       character(10):: arg_inumin_Mode = 'Maxwell'
       character(1):: arg_isol_Mode = '1'
 
-!   inumin vectors for arg_inumin_Mode == Maxwell or nonMaxwell modes
-      integer, dimension(:) :: INUMIN_Maxwell(0:nspmx) = 0
-      integer, dimension(:) :: INUMIN_nonMaxwell(0:nspmx) = (/3, (0,I=1,nspmx) /)
-
 
 !------Namelist inputs-------------
 ! see the rf component write-up in the svn repository for more description of
@@ -206,9 +202,10 @@
 
       integer, dimension(:) :: inumin(0:nspmx) = 0
 
-!  Namelist inputs for settings switching between "toric" and "qldce" modes
-      integer, dimension(:) :: INUMIN_toric(0:nspmx) = 0
-      integer, dimension(:) :: INUMIN_qldce(0:nspmx) = (/3, (0,I=1,nspmx) /)
+!   inumin vectors for arg_inumin_Mode == Maxwell or nonMaxwell modes
+      integer, dimension(:) :: INUMIN_Maxwell(0:nspmx) = 0
+      integer, dimension(:) :: INUMIN_nonMaxwell(0:nspmx) = (/3, (0,I=1,nspmx) /)
+
 ! Namelist controls for the RF minority population
 
       real(rspec) :: q_rfmin = 1.0_rspec, qatom_rfmin = 1.0_rspec, &
@@ -521,18 +518,18 @@
 
          toricmode = trim(arg_toric_Mode)
       
-		 if (trim(arg_inumin_Mode) == 'Maxwell'
+		 if (trim(arg_inumin_Mode)) == 'Maxwell'
 			inumin = INUMIN_Maxwell
-		 else if (trim(arg_inumin_Mode) == 'nonMaxwell' then
+		 else if (trim(arg_inumin_Mode)) == 'nonMaxwell' then
 			inumin = INUMIN_nonMaxwell
 		 else
 			write (*,*) 'prepare_torlh_input_abr: unknown arg_inumin_Mode = ', arg_inumin_Mode
 			stop
 		 end if
       
-		 if (trim(arg_isol_Mode) == '0'
+		 if (trim(arg_isol_Mode)) == '0'
 			isol = 0
-		 else if (trim(arg_isol_Mode) == '1' then
+		 else if (trim(arg_isol_Mode)) == '1' then
 			isol = 1
 		 else
 			write (*,*) 'prepare_torlh_input_abr: unknown arg_isol_Mode = ', arg_isol_Mode
