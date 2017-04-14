@@ -410,14 +410,14 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
 !     powrft(lr,nt) power per volume (watts/cm**3) summed over modes
 !     or harmonics, due to urf, collisional and add. linear abs.,
 !     at last time step in cql3d simulation.
-      istatus = nf_inq_varid(ncid, 'powrf', vid)
-      istatus = nf_get_var_double(ncid, vid, powrf)
-      istatus = nf_inq_varid(ncid, 'powrfc', vid)
-      istatus = nf_get_var_double(ncid, vid, powrfc)
-      istatus = nf_inq_varid(ncid, 'powrfl', vid)
-      istatus = nf_get_var_double(ncid, vid, powrfl)
-      istatus = nf_inq_varid(ncid, 'powrft', vid)
-      istatus = nf_get_var_double(ncid, vid, powrft)
+      !istatus = nf_inq_varid(ncid, 'powrf', vid)   ! no longer exist in cql3d netcdf output
+      !istatus = nf_get_var_double(ncid, vid, powrf)
+      !istatus = nf_inq_varid(ncid, 'powrfc', vid)
+      !istatus = nf_get_var_double(ncid, vid, powrfc)
+      !istatus = nf_inq_varid(ncid, 'powrfl', vid)
+      !istatus = nf_get_var_double(ncid, vid, powrfl)
+      !istatus = nf_inq_varid(ncid, 'powrft', vid)
+      !istatus = nf_get_var_double(ncid, vid, powrft)
 
       if (cql3d_output.eq.'EC') then
       !Here we assume simple cql3d calc of ec current, with no
@@ -464,7 +464,9 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
          enddo
          rho_cql(1) = 0.0
          rho_cql(lrz+1) = 1.0
-         tmp_prof(1:lrz) = powrft(:,nt) * dvol(:)
+         !tmp_prof(1:lrz) = powrft(:,nt) * dvol(:)
+         tmp_prof(1:lrz) = powers(:,5,1,nt) * dvol(:)
+
          write(*,*) 'ps%rho_lhrf = ', ps%rho_lhrf
          write(*,*) 'rho_cql = ', rho_cql
          write(*,*) 'tmp_prof = ', tmp_prof
@@ -474,7 +476,7 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
          call ps_user_rezone1(rho_cql, ps%rho_lhrf, tmp_prof, 
      &        ps%pelh, ierr, nonorm = .TRUE., zonesmoo = .TRUE.)
 !ptb&SS     &                        ps%pelh, ierr, nonorm = .TRUE.)
-         if(ierr .ne. 0) stop 'error interpolating CQL3D powrft onto PS Grid ps%rho_lhrf and ps%pelh'
+         if(ierr .ne. 0) stop 'error interpolating CQL3D powers onto PS Grid ps%rho_lhrf and ps%pelh'
          ps%pelh_src(:,1) = ps%pelh(:)
          write(*,*) 'elecfld(l,nt) = ', elecfld(1:lrz+1,nt)
 
