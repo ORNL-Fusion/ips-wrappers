@@ -518,18 +518,18 @@
 
          toricmode = trim(arg_toric_Mode)
       
-		 if (trim(arg_inumin_Mode)) == 'Maxwell'
+		 if (trim(arg_inumin_Mode) == 'Maxwell')
 			inumin = INUMIN_Maxwell
-		 else if (trim(arg_inumin_Mode)) == 'nonMaxwell' then
+		 else if (trim(arg_inumin_Mode) == 'nonMaxwell') then
 			inumin = INUMIN_nonMaxwell
 		 else
 			write (*,*) 'prepare_torlh_input_abr: unknown arg_inumin_Mode = ', arg_inumin_Mode
 			stop
 		 end if
       
-		 if (trim(arg_isol_Mode)) == '0'
+		 if (trim(arg_isol_Mode) == '0')
 			isol = 0
-		 else if (trim(arg_isol_Mode)) == '1' then
+		 else if (trim(arg_isol_Mode) == '1') then
 			isol = 1
 		 else
 			write (*,*) 'prepare_torlh_input_abr: unknown arg_isol_Mode = ', arg_isol_Mode
@@ -594,8 +594,6 @@
        			 read(inp_unit, nml = qldceinp)
        			 WRITE (*, nml = qldceinp)
        			 WRITE (*,*)
-             write (*,*) 'reading namelist TORIC_MODE_PARAMETERS'
-       			 read(inp_unit, nml = TORIC_MODE_PARAMETERS)
          END IF
 
          read(inp_unit, nml = toricainp)
