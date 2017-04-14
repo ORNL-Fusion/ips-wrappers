@@ -518,7 +518,7 @@
 
          toricmode = trim(arg_toric_Mode)
       
-		 if (trim(arg_inumin_Mode) == 'Maxwell')
+		 if (trim(arg_inumin_Mode) == 'Maxwell') then
 			inumin = INUMIN_Maxwell
 		 else if (trim(arg_inumin_Mode) == 'nonMaxwell') then
 			inumin = INUMIN_nonMaxwell
@@ -527,7 +527,7 @@
 			stop
 		 end if
       
-		 if (trim(arg_isol_Mode) == '0')
+		 if (trim(arg_isol_Mode) == '0') then
 			isol = 0
 		 else if (trim(arg_isol_Mode) == '1') then
 			isol = 1
@@ -669,15 +669,6 @@
 
       idprof = 1  !use numerical profiles
       gfile = trim(ps%eqdsk_file)
-
-      if (toricmode == 'toric') then
-       	inumin = INUMIN_toric
-      else if (toricmode == 'qldce') then
-       	inumin = INUMIN_qldce
-      else
-       	write (*,*) 'prepare_torlh_input_abr: unknown toricmode = ', toricmode
-       	stop
-      end if
 
       open(unit=out_unit, file='torica.inp',                &
         status = 'unknown', form = 'formatted',delim='quote')
