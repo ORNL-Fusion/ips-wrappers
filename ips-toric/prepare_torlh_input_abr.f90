@@ -4,25 +4,26 @@
 !25 Jan 2008 - added optional command line arg for state file
 !JCW 2007, 2008
 
-! Working notes: DBB 9-8-2016
-! Modifying to optionally run torlh in qldce mode and to run ImChizz and cql3d_mapin.  By
-! default torlh only runs in TORIC mode.  But if optional parameter QLDCE_MODE = True in
-! the config file, then first torlh runs in toric mode then these other code for coupling
-! to CQL3D are run. This is communicated into here with and additional optional commmandline
-! argument 'toricmode'.
-! To change between TORIC modes two parameters must be changed in the torica.inp file.
+! Working notes: DBB 4-13-2017
+! Previous versions had wrong logic for controlling the INUMIN variable.  In particular the
+! explanation in Working notes: DBB 9-8-2016 was wrong so I'm eliminating that and fixing.
+
+! Modified to be able select different values for toricmode, inumin and isol in the output 
+! torica.inp file using optional command line arguments to this code. 
+! By default (i.e. no optional command line arguments) toricmode = 'toric', 
+! inumin = INUMIN_Maxwell => (0, 0, 0, 0), and isol = 1.  
+! Optional command line arguments are arg_toric_Mode, arg_inumin_Mode, and arg_isol_Mode.
+! arg_toric_Mode = "toric' or 'qldce'
+! arg_inumin_Mode = "Maxwell" or "nonMaxwell"
+! arg_isol_Mode = "0" or "1" (N.B. these are character strings, not integers. Normally = "1")
 !
-! For TORIC mode:
-!    toricmode = "toric" (default)
-!    INUMIN = 0,0,0,0
-! For QLDCE mode:
-!    toricmode = "qldce"
-!    INUMIN = 3,0,0,0
+! If optional command line arg_inumin_Mode == 'nonMaxwell'  inumin = INUMIN_nonMaxwell
+! where INUMIN_nonMaxwell is declared (3, 0, 0, 0) below.
 !
-! The way this is implemented is to add a new namelist to the machine.inp file,
-! toric_mode_parameters. This will have values INUMIN_toric = 0,0,0,0 and
-! INUMIN_qldce = 3,0,0,0. Then prepare_torlh_input_abr.f90 will set INUMIN
-! appropriately in the toric.inp file based on the toricmode parameter.
+! Note for future:  For generality it might be good to specify the INUMIN_nonMaxwell vector
+! in the machine.inp file so the non Maxwellian species can be controlled from the file
+! rather than hard coded.  This might be useful if similar coding were used with toric.
+
 
       program prepare_input
       USE plasma_state_mod
@@ -56,6 +57,15 @@
 
 ! PTB ends
 
+
+!  Defaults for optional command line args 
+      character(10):: arg_toric_Mode = 'toric'
+      character(10):: arg_inumin_Mode = 'Maxwell'
+      character(1):: arg_isol_Mode = '1'
+
+!   inumin vectors for arg_inumin_Mode == Maxwell or nonMaxwell modes
+      integer, dimension(:) :: INUMIN_Maxwell(0:nspmx) = 0
+      integer, dimension(:) :: INUMIN_nonMaxwell(0:nspmx) = (/3, (0,I=1,nspmx) /)
 
 
 !------Namelist inputs-------------
@@ -221,9 +231,6 @@
 !originally in t0_aamain.F
 
       namelist /toric_mode/ toricmode
-
-! specifies parameter settings for toricmode = toric and qldce
-      namelist /TORIC_MODE_PARAMETERS/ INUMIN_toric, INUMIN_qldce
 
 !originally in t0_torica.F
 !specifies general wave parameters, some numerical parameters
@@ -496,25 +503,65 @@
       SELECT CASE (iarg)
       case(0)
          cur_state_file="cur_state.cdf"
+         arg_toric_Mode = "toric"
+         arg_inumin_Mode = "Maxwell"
+         arg_isol_Mode = "1"
 
       case(1)
          call get_arg(1,cur_state_file)
+         arg_toric_Mode = "toric"
+         arg_inumin_Mode = "Maxwell"
+         arg_isol_Mode = "1"
 
-      case(2)
+      case(4)
          call get_arg(1,cur_state_file)
-         call get_arg(2,toricmode)
-         write(*,*) 'toricmode = ', toricmode
+         call get_arg(2,arg_toric_Mode)
+         call get_arg(3,arg_inumin_Mode)
+         call get_arg(4,arg_isol_Mode)
 
-      case(3:)
+         toricmode = trim(arg_toric_Mode)
+      
+		 if (trim(arg_inumin_Mode) == 'Maxwell'
+			inumin = INUMIN_Maxwell
+		 else if (trim(arg_inumin_Mode) == 'nonMaxwell' then
+			inumin = INUMIN_nonMaxwell
+		 else
+			write (*,*) 'prepare_torlh_input_abr: unknown arg_inumin_Mode = ', arg_inumin_Mode
+			stop
+		 end if
+      
+		 if (trim(arg_isol_Mode) == '0'
+			isol = 0
+		 else if (trim(arg_isol_Mode) == '1' then
+			isol = 1
+		 else
+			write (*,*) 'prepare_torlh_input_abr: unknown arg_isol_Mode = ', arg_isol_Mode
+			stop
+		 end if
+
+      case(2:3)
          write(0,*) 'Error. Illegal number of arguments.'
          write(0,*) 'prepare torlh usage: '
-       	 write(0,*) 'prepare_torlh_input cur_state_file'
+       	 write(0,*) 'zero args: uses default state file name'
+       	 write(0,*) 'one arg: current state file name'
+       	 write(0,*) 'four args: current state file, arg_toric_Mode, arg_inumin_Mode, arg_isol_Mode'
+       	 stop 'incorrect command line arguments'
+
+      case(5:)
+         write(0,*) 'Error. Illegal number of arguments.'
+         write(0,*) 'prepare torlh usage: '
+       	 write(0,*) 'zero args: uses default state file name'
+       	 write(0,*) 'one arg: current state file name'
+       	 write(0,*) 'four args: current state file, arg_toric_Mode, arg_inumin_Mode, arg_isol_Mode'
        	 stop 'incorrect command line arguments'
 
       end select
 
-      print*, 'using ', trim(cur_state_file), ' as default state.'
-
+      WRITE (*,*) 'using ', trim(cur_state_file), ' as default state.'
+      WRITE (*,*) 'toricmode = ', toricmode
+      WRITE (*,*) 'inumin = ', inumin
+      WRITE (*,*) 'isol = ', isol
+      
       call getlun(inp_unit,ierr)  ;  call getlun(out_unit,ierr)
 
 
@@ -566,13 +613,6 @@
          write(*,*) "Error, nspec > nspmx in torlh, reducing to nspmx"
          nspec=nspmx
       END IF
-
-      IF (trim(toricmode) == 'toric') THEN
-         INUMIN = INUMIN_toric
-      ELSE IF (trim(toricmode) == 'qldce') THEN
-         INUMIN = INUMIN_qldce
-       	  END IF
-       	  WRITE (*,*) 'INUMIN = ', INUMIN
 
 !radial profiles generation, these are output to equilequ_file
       s_nrho_n = ps%nrho
@@ -646,6 +686,10 @@
 
       open(unit=out_unit, file='torica.inp',                &
         status = 'unknown', form = 'formatted',delim='quote')
+
+      WRITE (*,*) 'toricmode = ', toricmode
+      WRITE (*,*) 'inumin = ', inumin
+      WRITE (*,*) 'isol = ', isol
 
       write(out_unit, nml = toric_mode)
       write(out_unit, nml = qldceinp)
