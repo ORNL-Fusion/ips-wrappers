@@ -104,7 +104,7 @@ class torlh (Component):
 
 
     def init(self, timeStamp=0):
-        print 'torlh.init() called'
+        print '/ntorlh.init() called'
 
         services = self.services
         workdir = services.get_working_dir()
@@ -121,6 +121,7 @@ class torlh (Component):
         BIN_PATH = self.try_get_component_param(services,'BIN_PATH')
         RESTART_FILES = self.try_get_component_param(services,'RESTART_FILES')
         NPROC = self.try_get_component_param(services,'NPROC')
+        global CQL_COUPLE_MODE
         CQL_COUPLE_MODE = self.try_get_component_param(services,'CQL_COUPLE_MODE', \
                                 optional = True)
 
@@ -216,7 +217,7 @@ class torlh (Component):
 # ------------------------------------------------------------------------------
 
     def restart(self, timeStamp):
-        print 'torlh.restart() called'
+        print '/ntorlh.restart() called'
 
         services = self.services
         workdir = services.get_working_dir()
@@ -251,9 +252,9 @@ class torlh (Component):
 
     def step(self, timeStamp):
         """Take a step for the torlh component.  Really a complete run."""
-        print 'torlh.step() called'
+        print '/ntorlh.step() called'
 
-        if (self.services == None) :
+        if (self.services == None):
             logMsg = 'Error in torlh: step (): No self.services'
             self.services.error(logMsg)
             raise Exception(logMsg)
