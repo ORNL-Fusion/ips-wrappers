@@ -4,33 +4,22 @@
 TORLH component.  Adapted from RF_LH_toric_abr_mcmd.py. (5-14-2016)
 
 """
-# Working notes: DBB 9-5-2016 (updated 3-31-2017)
-# Modifying to optionally run torlh in qldce mode and to run ImChizz and cql3d_mapin.  By
-# default torlh only runs in TORIC mode.  But if optional parameter QLDCE_MODE = True in 
+# Working notes: DBB 9-5-2016 (updated 4-17-2017)
+# Modified to run in two modes.  A normal torlh mode in which it acts as a normal IPS
+# component.  But if optional parameter CQL_COUPLE_MODE = True in 
 # the config file then the action is as follows: 
-# 1) During the INIT torlh runs in toric mode, then runs in qldce mode, then runs mapin
-# 2) During STEP it runs ImChizz then runs torlh in toric mode, then runs torlh  in qldce 
-#    mode, then runs mapin.
-
-# In qldce mode it also runs the mapin code for coupling to CQL3D.  Before
-# running in qldce mode first TORLH has to run in toric mode.  So we do this as part of
-# the component INIT.  It's a bit convoluted but near the end of the INIT function
-# QLDCE_MODE is set to false and STEP is run.  This way torlh runs in toric mode.  After
-# STEP returns QLDCE_MODE is restored to True, so in the time loop torlh runs in qldce mode.
-# 
-# To change between TORIC modes two parameters must be changed in the torica.inp file.
+# 1) During the INIT torlh runs in toric mode with inumin set for
+#    Maxwellian, inumin = (0,0,0,0), then runs in qldce mode, then it runs mapin.
+# 2) During STEP it runs ImChizz, then runs torlh in toric mode with inumin set for
+#    Maxwellian, inumin = (3,0,0,0), then runs torlh in qldce mode, then runs mapin.
 #
-# For TORIC mode:
-#    toricmode = "toric"
-#    INUMIN = 0,0,0,0
-# For QLDCE mode:
-#    toricmode = "qldce"
-#    INUMIN = 3,0,0,0
-#
-# The way this is implemented is to a new namelist to the machine.inp file, &MODE_PARAMETERS
-# This will have values ISOL_toric = 0, ISOL_qldce = 1, INUMIN_toric = 0,0,0,0 and
-# INUMIN_qldce = 3,0,0,0. Then prepare_torlh_input_abe.f90 will set ISOL and INUMIN 
-# appropriately in the toric.inp file based on the toricmode parameter.
+# This requires that some parameters must be adjusted in the torica.inp file as it runs:
+# toricmode, inumin, and isol.  This is implemented by using command line arguments
+# to the prepare_torlh_input_abr.f90 which writes the torica.inp file.
+# The optional command line arguments are arg_toric_Mode, arg_inumin_Mode, and arg_isol_Mode.
+# arg_toric_Mode = toric or qldce
+# arg_inumin_Mode = Maxwell or nonMaxwell
+# arg_isol_Mode = 0 or 1 (Normally = 1)
 #
 # Also note this component uses services.update_plasma_state() which overwrites all state
 # files. To use this in a concurrent simulation should use merge_plasma_state instead.
@@ -98,7 +87,8 @@ from  component import Component
 from Numeric import *
 from Scientific.IO.NetCDF import *
 
-run_ImChizz = False
+init_Complete = False
+CQL_COUPLE_MODE = False
 
 class torlh (Component):
 
@@ -131,8 +121,8 @@ class torlh (Component):
         BIN_PATH = self.try_get_component_param(services,'BIN_PATH')
         RESTART_FILES = self.try_get_component_param(services,'RESTART_FILES')
         NPROC = self.try_get_component_param(services,'NPROC')
-
-        self.QLDCE_MODE = self.try_get_component_param(services,'QLDCE_MODE', optional = True)
+        CQL_COUPLE_MODE = self.try_get_component_param(services,'CQL_COUPLE_MODE', \
+                                optional = True)
 
         torlh_log = os.path.join(workdir, 'log.torlh')
 
@@ -209,10 +199,11 @@ class torlh (Component):
             self.services.exception(logMsg)
             raise 
 
-        if self.QLDCE_MODE in [True, 'true', 'True', 'TRUE']:
+        if CQL_COUPLE_MODE in [True, 'true', 'True', 'TRUE']:
             self.step(timeStamp)
-            global run_ImChizz
-            run_ImChizz = True
+            
+        global init_Complete
+        init_Complete = True
 
         return 0
 
@@ -254,7 +245,7 @@ class torlh (Component):
 
 # ------------------------------------------------------------------------------
 #
-# STEP function
+# Run TORLH with toricmode, inumin, and isol as defined in argument list
 #
 # ------------------------------------------------------------------------------
 
@@ -370,11 +361,9 @@ class torlh (Component):
                 self.services.error(logMsg)
                 raise Exception(logMsg)
 
-            QLDCE_MODE = self.try_get_component_param(services,'QLDCE_MODE', optional = True)
-
 # ------------------------------------------------------------------------------                
             global run_ImChizz
-            if QLDCE_MODE in [True, 'true', 'True', 'TRUE'] and run_ImChizz == True: # Will be False during INIT
+            if CQL_COUPLE_MODE in [True, 'true', 'True', 'TRUE'] and init_Complete == True: # Will be False during INIT
                 try:
                     subprocess.call(['cp', cur_cql_file, 'cql3d.cdf' ])
                 except Exception:
@@ -401,9 +390,16 @@ class torlh (Component):
         # Run in toricmode = 'toric'
             # Call torlh prepare_input to generate torlha.inp
 
-            toricmode = 'toric'
+            arg_toric_Mode = 'toric'
+            arg_isol_Mode = '1'           
+            arg_inumin_Mode = 'Maxwell'
+            if init_Complete and CQL_COUPLE_MODE:
+                arg_inumin_Mode = 'nonMaxwell'
+
+            
             print '\nRunning torlh in toric mode'
-            retcode = subprocess.call([prepare_input, cur_state_file, toricmode])
+            retcode = subprocess.call([prepare_input, cur_state_file, arg_toric_Mode,\
+                      arg_inumin_Mode,arg_isol_Mode])
             if (retcode != 0):
                 logMsg = 'Error executing ' + prepare_input
                 self.services.error(logMsg)
@@ -443,13 +439,17 @@ class torlh (Component):
             
                 
 # ------------------------------------------------------------------------------                
-        # Run in toricmode = 'qldce'
-            # Call torlh prepare_input to generate torlha.inp
-            if QLDCE_MODE in [True, 'true', 'True', 'TRUE']:
+        # Run in toricmode = 'qldce' if needed
+            if CQL_COUPLE_MODE in [True, 'true', 'True', 'TRUE']:
 
-                toricmode = 'qldce'
-                print '\nRunning torlh in qldce mode'
-                retcode = subprocess.call([prepare_input, cur_state_file, toricmode])
+                arg_toric_Mode = 'qldce'
+                arg_isol_Mode = '1'            
+                arg_inumin_Mode = 'Maxwell'
+                if init_Complete:
+                    arg_inumin_Mode = 'nonMaxwell'
+                print '\nRunning torlh in qldce mode, inumin_Mode = ', arg_inumin_Mode
+                retcode = subprocess.call([prepare_input, cur_state_file, arg_toric_Mode,\
+                      arg_inumin_Mode,arg_isol_Mode])
                 if (retcode != 0):
                     logMsg = 'Error executing ' + prepare_input
                     self.services.error(logMsg)
@@ -473,29 +473,29 @@ class torlh (Component):
                             , strerror)
                     print logMsg
                     services.exception(logMsg)
-                    raise 
-
-                RUN_MAPIN = self.try_get_component_param(services,'RUN_MAPIN', optional = True)
-                if (RUN_MAPIN):
-                    mapin_bin = self.try_get_component_param(services,'MAPIN_BIN')
-                    print '\nRunning ' + mapin_bin
-                    services.send_portal_event(event_type = 'COMPONENT_EVENT', \
-                         event_comment = 'running ' + mapin_bin)
-                    retcode = subprocess.call([mapin_bin])
-                    if (retcode != 0):
-                        logMsg = 'Error executing ' + RUN_MAPIN
-                        self.services.error(logMsg)
-                        raise Exception(logMsg)
+                    raise
+                     
+            # Run mapin
+                mapin_bin = self.try_get_component_param(services,'MAPIN_BIN')
+                print '\nRunning ' + mapin_bin
+                services.send_portal_event(event_type = 'COMPONENT_EVENT', \
+                     event_comment = 'running ' + mapin_bin)
+                retcode = subprocess.call([mapin_bin])
+                if (retcode != 0):
+                    logMsg = 'Error executing ' + RUN_MAPIN
+                    self.services.error(logMsg)
+                    raise Exception(logMsg)
+                    
             # Call process_output
             # First rename default fort.* to expected names by component method as of torlh5 r918 from ipp
             #os.rename('fort.9','torlh_cfg.nc')
             #os.rename('fort.21','torlh.nc')
             # No process_output code yet.  And don't find fort.9 or fort.21 in work directory.
             # retcode = subprocess.call([process_output, cur_state_file])
-            if (retcode != 0):
-                logMsg = 'Error executing' + process_output
-                self.services.error(logMsg)
-                raise Exception(logMsg)
+#             if (retcode != 0):
+#                 logMsg = 'Error executing' + process_output
+#                 self.services.error(logMsg)
+#                 raise Exception(logMsg)
 
 # Merge partial plasma state containing updated IC data
         try:
