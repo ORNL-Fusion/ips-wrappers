@@ -104,7 +104,7 @@ class torlh (Component):
 
 
     def init(self, timeStamp=0):
-        print '/ntorlh.init() called'
+        print '\ntorlh.init() called'
 
         services = self.services
         workdir = services.get_working_dir()
@@ -217,7 +217,7 @@ class torlh (Component):
 # ------------------------------------------------------------------------------
 
     def restart(self, timeStamp):
-        print '/ntorlh.restart() called'
+        print '\ntorlh.restart() called'
 
         services = self.services
         workdir = services.get_working_dir()
@@ -252,7 +252,7 @@ class torlh (Component):
 
     def step(self, timeStamp):
         """Take a step for the torlh component.  Really a complete run."""
-        print '/ntorlh.step() called'
+        print '\ntorlh.step() called'
 
         if (self.services == None):
             logMsg = 'Error in torlh: step (): No self.services'
@@ -366,13 +366,13 @@ class torlh (Component):
             global run_ImChizz
             if CQL_COUPLE_MODE in [True, 'true', 'True', 'TRUE'] and init_Complete == True: # Will be False during INIT
                 try:
+                    print '\nRunning ImChizz'
                     subprocess.call(['cp', cur_cql_file, 'cql3d.cdf' ])
                 except Exception:
                     message = 'generic_ps_init: Error copying CURRENT_CQL_FILE to cql3d.cdf'
                     print message
                     services.exception(message)
                     raise              
-                print '\nRunning ImChizz'
                 imchzz_bin = self.ImChizz_BIN
                 cmd_imchizz=self.ImChizz_BIN
                 try:
@@ -396,11 +396,11 @@ class torlh (Component):
             arg_inumin_Mode = 'Maxwell'
             if init_Complete and CQL_COUPLE_MODE:
                 arg_inumin_Mode = 'nonMaxwell'
-
             
-            print '\nRunning torlh in toric mode'
-            retcode = subprocess.call([prepare_input, cur_state_file, arg_toric_Mode,\
-                      arg_inumin_Mode,arg_isol_Mode])
+            cmd_prepare_input = [prepare_input, cur_state_file, arg_toric_Mode,\
+                      arg_inumin_Mode,arg_isol_Mode]
+            print 'running = ', cmd_prepare_input
+            retcode = subprocess.call(cmd_prepare_input)
             if (retcode != 0):
                 logMsg = 'Error executing ' + prepare_input
                 self.services.error(logMsg)
@@ -448,13 +448,23 @@ class torlh (Component):
                 arg_inumin_Mode = 'Maxwell'
                 if init_Complete:
                     arg_inumin_Mode = 'nonMaxwell'
-                print '\nRunning torlh in qldce mode, inumin_Mode = ', arg_inumin_Mode
-                retcode = subprocess.call([prepare_input, cur_state_file, arg_toric_Mode,\
-                      arg_inumin_Mode,arg_isol_Mode])
+
+                cmd_prepare_input = [prepare_input, cur_state_file, arg_toric_Mode,\
+                          arg_inumin_Mode,arg_isol_Mode]
+                print 'running = ', cmd_prepare_input
+                retcode = subprocess.call(cmd_prepare_input)
                 if (retcode != 0):
                     logMsg = 'Error executing ' + prepare_input
                     self.services.error(logMsg)
                     raise Exception(logMsg)
+# 
+#                 print '\nRunning torlh in qldce mode, inumin_Mode = ', arg_inumin_Mode
+#                 retcode = subprocess.call([prepare_input, cur_state_file, arg_toric_Mode,\
+#                       arg_inumin_Mode,arg_isol_Mode])
+#                 if (retcode != 0):
+#                     logMsg = 'Error executing ' + prepare_input
+#                     self.services.error(logMsg)
+#                     raise Exception(logMsg)
 
                 # Launch torlh executable
                 print 'torlh processors = ', self.NPROC
