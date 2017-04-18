@@ -6,22 +6,26 @@ TORLH component.  Adapted from RF_LH_toric_abr_mcmd.py. (5-14-2016)
 """
 # Working notes: DBB 9-5-2016 (updated 4-17-2017)
 # Modified to run in two modes.  A normal torlh mode in which it acts as a normal IPS
-# component.  But if optional parameter CQL_COUPLE_MODE = True in 
-# the config file then the action is as follows: 
-# 1) During the INIT torlh runs in toric mode with inumin set for
-#    Maxwellian, inumin = (0,0,0,0), then runs in qldce mode, then it runs mapin.
-# 2) During STEP it runs ImChizz, then runs torlh in toric mode with inumin set for
-#    Maxwellian, inumin = (3,0,0,0), then runs torlh in qldce mode, then runs mapin.
+# component.  There is a new optional config parameter, CQL_COUPLE_MODE.  If this parameter
+# is either absent or == False then in component STEP torlh runs in toricmode with inumin
+# set for Maxwellian inumin = (0,0,0,0).
 #
-# This requires that some parameters must be adjusted in the torica.inp file as it runs:
+# But if optional parameter CQL_COUPLE_MODE = True in the config file then the action is 
+# as follows: 
+# 1) During the INIT do_torlh_init_abr.f90 runs, then torlh runs in toric mode with inumin
+#    set for Maxwellian, inumin = (0,0,0,0), then toric runs in qldce mode, then mapin runs.
+# 2) During STEP ImChizz runs, then torlh runs in toric mode with inumin set for
+#    nonMaxwellian, inumin = (3,0,0,0), then torlh runs in qldce mode, then mapin runs.
+#
+# This requires that some parameters must be adjusted in the torica.inp file:
 # toricmode, inumin, and isol.  This is implemented by using command line arguments
-# to the prepare_torlh_input_abr.f90 which writes the torica.inp file.
+# to the prepare_torlh_input_abr.f90, which writes the torica.inp file.
 # The optional command line arguments are arg_toric_Mode, arg_inumin_Mode, and arg_isol_Mode.
 # arg_toric_Mode = toric or qldce
 # arg_inumin_Mode = Maxwell or nonMaxwell
 # arg_isol_Mode = 0 or 1 (Normally = 1)
 #
-# Also note this component uses services.update_plasma_state() which overwrites all state
+# Nota Bene: This component uses services.update_plasma_state() which overwrites all state
 # files. To use this in a concurrent simulation should use merge_plasma_state instead.
 
 # Working notes: DBB 8-29-2016
@@ -87,7 +91,7 @@ from  component import Component
 from Numeric import *
 from Scientific.IO.NetCDF import *
 
-init_Complete = False
+INIT_Complete = False
 CQL_COUPLE_MODE = False
 
 class torlh (Component):
@@ -203,8 +207,8 @@ class torlh (Component):
         if CQL_COUPLE_MODE in [True, 'true', 'True', 'TRUE']:
             self.step(timeStamp)
             
-        global init_Complete
-        init_Complete = True
+        global INIT_Complete
+        INIT_Complete = True
 
         return 0
 
@@ -364,7 +368,7 @@ class torlh (Component):
 
 # ------------------------------------------------------------------------------                
             global run_ImChizz
-            if CQL_COUPLE_MODE in [True, 'true', 'True', 'TRUE'] and init_Complete == True: # Will be False during INIT
+            if CQL_COUPLE_MODE in [True, 'true', 'True', 'TRUE'] and INIT_Complete == True: # Will be False during INIT
                 try:
                     print '\nRunning ImChizz'
                     subprocess.call(['cp', cur_cql_file, 'cql3d.cdf' ])
@@ -394,7 +398,7 @@ class torlh (Component):
             arg_toric_Mode = 'toric'
             arg_isol_Mode = '1'           
             arg_inumin_Mode = 'Maxwell'
-            if init_Complete and CQL_COUPLE_MODE:
+            if INIT_Complete and CQL_COUPLE_MODE:
                 arg_inumin_Mode = 'nonMaxwell'
             
             cmd_prepare_input = [prepare_input, cur_state_file, arg_toric_Mode,\
@@ -448,7 +452,7 @@ class torlh (Component):
                 arg_toric_Mode = 'qldce'
                 arg_isol_Mode = '1'            
                 arg_inumin_Mode = 'Maxwell'
-                if init_Complete:
+                if INIT_Complete:
                     arg_inumin_Mode = 'nonMaxwell'
 
                 cmd_prepare_input = [prepare_input, cur_state_file, arg_toric_Mode,\
