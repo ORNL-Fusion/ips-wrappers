@@ -204,7 +204,7 @@
 
 !   inumin vectors for arg_inumin_Mode == Maxwell or nonMaxwell modes
       integer, dimension(:) :: INUMIN_Maxwell(0:nspmx) = 0
-      integer, dimension(:) :: INUMIN_nonMaxwell(0:nspmx) = (/3, (0,I=1,nspmx) /)
+      integer, dimension(:) :: INUMIN_nonMaxwell(0:nspmx) = (/2, (0,I=1,nspmx) /)
 
 ! Namelist controls for the RF minority population
 
