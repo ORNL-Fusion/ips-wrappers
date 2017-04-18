@@ -246,6 +246,8 @@ class torlh (Component):
             self.services.exception(logMsg)
             raise 
 
+# Temporary stop for diagnostic
+        raise Exception('Intentional stop after INIT')
         return 0
 
 # ------------------------------------------------------------------------------
