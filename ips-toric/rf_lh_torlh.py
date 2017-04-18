@@ -210,6 +210,9 @@ class torlh (Component):
         global INIT_Complete
         INIT_Complete = True
 
+# Temporary stop for diagnostic
+        raise Exception('Intentional stop after INIT')
+
         return 0
 
 # ------------------------------------------------------------------------------
@@ -245,9 +248,7 @@ class torlh (Component):
             logMsg = 'torlh restart: error in getting config parameters'
             self.services.exception(logMsg)
             raise 
-
-# Temporary stop for diagnostic
-        raise Exception('Intentional stop after INIT')
+            
         return 0
 
 # ------------------------------------------------------------------------------
