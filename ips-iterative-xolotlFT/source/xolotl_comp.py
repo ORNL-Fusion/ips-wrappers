@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import glob
 import translate_xolotl_to_ftridyn
+import binTRIDYN
 import write_xolotl_paramfile
 import sys
 
@@ -44,7 +45,12 @@ class xolotlWorker(Component):
 
         print 'from xolotls parameterConfig file:', xolotlParamString
 
-        if (driverParameterConfig.mode == 'INIT'):
+        if driverParameterConfig.driverStartMode=='RESTART':
+            restartNetworkFile = xolotlParameterConfig.networkFile
+            filepath='../../restart_files/'+restartNetworkFile
+            shutil.copyfile(filepath,restartNetworkFile)
+
+        if driverParameterConfig.mode == 'INIT':
             print('run xolotl preprocessor')
             #run prepocessor and copy params.txt input file to plasma state
             os.system('java -Djava.library.path=/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps -cp .:/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps/*:/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-build/gov.ornl.xolotl.preprocessor/preprocessor/CMakeFiles/xolotlPreprocessor.dir/ gov.ornl.xolotl.preprocessor.Main --nxGrid 160 --maxVSize 250 --phaseCut')        
@@ -57,9 +63,6 @@ class xolotlWorker(Component):
         currentXolotlParamFile='params_%f.txt' %driverParameterConfig.driverTime
         shutil.copyfile('params.txt',currentXolotlParamFile) 
         
-        #currentXolotlNetworkFile='xolotlStop_%f.h5' %driverParameterConfig.driverTime
-        #shutil.copyfile('xolotlStop.h5',currentXolotlNetworkFile)
-
         self.services.update_plasma_state()
 
     def step(self, timeStamp=0.0):
@@ -80,7 +83,17 @@ class xolotlWorker(Component):
 
         newest = max(glob.iglob('TRIDYN_*.dat'), key=os.path.getctime)
         print('newest file ' , newest)
-        shutil.copyfile(newest, 'TRIDYN_last.dat')
+        shutil.copyfile(newest, 'last_TRIDYN_toBin.dat')
+        
+        #re-bin last_TRIDYN file
+        binTRIDYN.binTridyn()
+
+        #store xolotls profile output for each loop (not plasma state)
+        currentXolotlOutputFileToBin='last_TRIDYN_toBin_%f.dat' %driverParameterConfig.driverTime
+        shutil.copyfile('last_TRIDYN_toBin.dat', currentXolotlOutputFileToBin)
+        currentXolotlOutputFile='last_TRIDYN_%f.dat' %driverParameterConfig.driverTime
+        shutil.copyfile('last_TRIDYN.dat', currentXolotlOutputFile)
+
 
         #append output
         tempfile = open(self.OUTPUT_XOLOTL_TEMP,"r")

@@ -3,9 +3,11 @@
 from  component import Component
 import os
 import shutil
+import glob
 import sys
 import translate_xolotl_to_ftridyn
 import generateInputIPS
+import numpy as np
 
 class ftridynWorker(Component):
     def __init__(self, services, config):
@@ -22,14 +24,37 @@ class ftridynWorker(Component):
         sys.path.append(os.getcwd())
         import driverParameterConfig
         reload(driverParameterConfig)
+        import ftridynParameterConfig
+        reload(ftridynParameterConfig)
 
+
+        #prepare and save (for each loop) ftridyn input
         if (driverParameterConfig.mode == 'INIT'):
             print('init mode yes')
-            generateInputIPS.main()
+            generateInputIPS.main(NH=ftridynParameterConfig.nImpacts)
+
+            newestIn = max(glob.iglob('*.IN'), key=os.path.getctime)
+            currentFtridynInFile='%s_%f' %(newestIn,driverParameterConfig.driverTime)
+            shutil.copyfile(newestIn,  currentFtridynInFile)
+
         else:
             print('init mode no')
-            nDataPts = translate_xolotl_to_ftridyn.xolotlToLay()
-            generateInputIPS.main(IQ0=-1,NQX=nDataPts)
+            nDataPts = translate_xolotl_to_ftridyn.xolotlToLay(totalDepth=ftridynParameterConfig.totalDepth)
+            newestLay = max(glob.iglob('*.LAY'), key=os.path.getctime)
+            currentFtridynLayFile='%s_%f' %(newestLay,driverParameterConfig.driverTime)
+            shutil.copyfile(newestLay, currentFtridynLayFile)
+            
+            if (ftridynParameterConfig.totalDepth==0.0):
+                nTT=10*np.max(np.loadtxt('last_TRIDYN.dat')[:,0]) 
+            else:
+                nTT=ftridynParameterConfig.totalDepth
+
+            print 'calling generateInput with NQX=%d , TT=%d and NH=%d' % (nDataPts, nTT, ftridynParameterConfig.nImpacts)
+            generateInputIPS.main(IQ0=-1,NQX=nDataPts,TT=nTT,NH=ftridynParameterConfig.nImpacts)
+            newestIn = max(glob.iglob('*.IN'), key=os.path.getctime)
+            currentFtridynInFile='%s_%f' %(newestIn,driverParameterConfig.driverTime)
+            shutil.copyfile(newestIn,  currentFtridynInFile)
+
 
         #get name of FTridyn input file from config file to copy newly generated files to           
         current_ftridyn_namelist = self.services.get_config_param('FTRIDYN_INPUT_FILE')
@@ -63,6 +88,11 @@ class ftridynWorker(Component):
         f.write(tempfile.read())
         f.close()
         tempfile.close()
+
+        #store ftridyns output for each loop (not plasma state)
+        import driverParameterConfig
+        currentFtridynOutputFile='He_WDUMPPRJ_%f.dat' %driverParameterConfig.driverTime
+        shutil.copyfile('He_WDUMPPRJ.dat',currentFtridynOutputFile)
 
         #updates plasma state FTridyn output files
         self.services.update_plasma_state()

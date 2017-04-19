@@ -23,37 +23,76 @@ class xolotlFtridynDriver(Component):
         self.services.update_plasma_state()
         self.services.stage_plasma_state()
 
+        #start first loop from scratch (INIT) or from a previous run (RESTART)
+        #RESTART mode requires providing a list of input files, and placing them in a 'restart_files' folder
+        #for FTridyn: last_TRIDYN.dat; for Xolotl: params.txt (of the last run), networkfile (networkRestart.h5)
+        #the mode is changed to NEUTRAL after the 1st loop
+
+        driverStartMode = 'INIT'
 
         driverInitTime=0.0
-        driverEndTime=0.0002
-        driverTimeStep=0.0001
+        driverEndTime=0.2
+        driverTimeStep=0.1
 
         driverInitTimeString='driverInitTime = %f' %driverInitTime
         driverEndTimeString='driverEndTime = %f' %driverEndTime
         driverTimeString='driverTime = %f' %driverInitTime
         driverTimeStepString='driverTimeStep = %f' %driverTimeStep
 
-        print 'running IPS from t = %f to t=%f, in steps of dt=%f' % (driverInitTime, driverEndTime, driverTimeStep)
+        if driverStartMode=='INIT':
+            driverStartModeLine="driverStartMode='INIT'"
+        elif driverStartMode=='RESTART':
+            driverStartModeLine="driverStartMode='RESTART'"
+        elif driverStartMode=='NEUTRAL':
+            driverStartModeLine="driverStartMode='NEUTRAL'"
 
-        #get config file and write drivers initial state 
+        print 'running IPS from t = %f to t=%f, in steps of dt=%f' % (driverInitTime, driverEndTime, driverTimeStep)
         
-        modeLine="mode='INIT'"
+        #get config file and write drivers initial state 
+        if driverStartMode=='INIT':
+            modeLine="mode='INIT'"
+        elif driverStartMode=='RESTART':
+            modeLine="mode='RESTART'"
+
         driver_config_file = self.services.get_config_param('PARAMETER_CONFIG_FILE')
         xftid = open(driver_config_file, 'w')
-        xftid.write("%s \n%s \n%s \n%s \n%s \n" % (modeLine, driverInitTimeString, driverEndTimeString, driverTimeString, driverTimeStepString))
+        xftid.write("%s \n%s \n%s \n%s \n%s \n%s \n" % (modeLine, driverStartModeLine, driverInitTimeString, driverEndTimeString, driverTimeString, driverTimeStepString))
         xftid.close()
-
 
         #get config file and write Xolotl's parameter file options
         #write every parameter that will be passed in write_xolotl_paramfile functions 
         #i.e., different from default values (set to reproduce email-coupling of FTridyn-Xolotl)
         startStopLine="start_stop='True'"
-        networkFileLine="networkFile='networkInit.h5'"
+        if driverStartMode=='INIT':
+            networkFileLine="networkFile='networkInit.h5'"
+        elif driverStartMode=='RESTART':
+            networkFileLine="networkFile='networkRestart.h5'"
 
         xolotl_config_file = self.services.get_config_param('XOLOTL_PARAMETER_CONFIG_FILE')
         xid = open(xolotl_config_file, 'w')
         xid.write("%s \n%s \n" % (startStopLine, networkFileLine))
         xid.close()
+
+        #ftridyn config file
+        #total substrate depth in [A]; set to 0.0 to use what Xolotl passes to ftridyn (as deep as He exists)
+        #and number of impacts (NH in generateInput)
+        ftridynTotalDepth=0.0;
+        ftridynNImpacts=1e6; 
+        driverFtridynTotalDepthString='totalDepth = %f' %ftridynTotalDepth
+        driverFtridynNImpactsString='nImpacts = %f' %ftridynNImpacts
+
+        ftridyn_config_file = self.services.get_config_param('FTRIDYN_PARAMETER_CONFIG_FILE')
+        ftid = open(ftridyn_config_file, 'w')
+        ftid.write("%s \n%s \n" % (driverFtridynTotalDepthString,driverFtridynNImpactsString))
+        ftid.close()
+
+        #if driver start mode is in Restart, copy files to plasma_state
+        if (driverStartMode=='RESTART'):
+            restart_files = self.services.get_config_param('RESTART_FILES')
+            restart_list = restart_files.split()
+            for index in range(len(restart_list)):
+                filepath='../../restart_files/'+restart_list[index]
+                shutil.copyfile(filepath,restart_list[index])
 
         self.services.update_plasma_state()
 
@@ -74,6 +113,10 @@ class xolotlFtridynDriver(Component):
         xolotl_config_file = self.services.get_config_param('XOLOTL_PARAMETER_CONFIG_FILE')
         import xolotlParameterConfig
         reload(xolotlParameterConfig)
+
+        ftridyn_config_file = self.services.get_config_param('FTRIDYN_PARAMETER_CONFIG_FILE')
+        import ftridynParameterConfig
+        reload(ftridynParameterConfig)
 
         for time in numpy.arange(driverParameterConfig.driverInitTime,driverParameterConfig.driverEndTime,driverParameterConfig.driverTimeStep):
 
@@ -101,13 +144,20 @@ class xolotlFtridynDriver(Component):
             reload(driverParameterConfig)
             print 'reading driver parameter config mode %s' %(driverParameterConfig.mode)
 
-            if (driverParameterConfig.mode == 'INIT'):
-                
+            if driverParameterConfig.mode == 'INIT':
                 driver_tmp_file='driverConfigFileRestart.tmp'
                 shutil.copyfile(driver_config_file,driver_tmp_file)
                 modeSedString="sed    -e 's/mode=[^ ]*/mode="'"RESTART"'"/' <%s >%s "   % (driver_tmp_file, driver_config_file)
                 subprocess.call([modeSedString], shell=True)
                 os.remove(driver_tmp_file)
+
+            if driverParameterConfig.driverStartMode != 'NEUTRAL':
+                driver_tmp_file='driverConfigFileRestart.tmp'
+                shutil.copyfile(driver_config_file,driver_tmp_file)
+                modeSedString="sed    -e 's/driverStartMode=[^ ]*/driverStartMode="'"NEUTRAL"'"/' <%s >%s "   % (driver_tmp_file, driver_config_file)
+                subprocess.call([modeSedString], shell=True)
+                os.remove(driver_tmp_file)
+
 
             reload(xolotlParameterConfig)
             print 'updating xolotl parameter config network File from %s' %(xolotlParameterConfig.networkFile)
@@ -129,4 +179,7 @@ class xolotlFtridynDriver(Component):
 
     def finalize(self, timeStamp=0.0):
         print('xolotl-ftridyn_driver: finalize')
+        ftridyn = self.services.get_port('WORKER')
+        xolotl = self.services.get_port('XWORKER')
         self.services.call(ftridyn, 'finalize', timeStamp)
+        self.services.call(xolotl, 'finalize', timeStamp)
