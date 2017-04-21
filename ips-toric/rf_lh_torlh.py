@@ -210,9 +210,6 @@ class torlh (Component):
         global INIT_Complete
         INIT_Complete = True
 
-# Temporary stop for diagnostic
-        raise Exception('Intentional stop after INIT')
-
         return 0
 
 # ------------------------------------------------------------------------------
