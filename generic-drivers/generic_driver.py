@@ -223,9 +223,6 @@ class generic_driver(Component):
 
         if 'EPA' in port_names:
             self.component_call(services, 'EPA', epaComp, init_mode, t)
-
-        if 'FP' in port_names:
-            self.component_call(services, 'FP', fpComp, init_mode, t)
         
         if 'RF_EC' in port_names:
             self.component_call(services, 'RF_EC', rf_ecComp, init_mode, t)
@@ -241,6 +238,9 @@ class generic_driver(Component):
 
         if 'FUS' in port_names:
             self.component_call(services, 'FUS', fusComp, init_mode, t)
+
+        if 'FP' in port_names:
+            self.component_call(services, 'FP', fpComp, init_mode, t)
 
         if 'MONITOR' in port_names:
             self.component_call(services, 'MONITOR', monitorComp, init_mode, t)
