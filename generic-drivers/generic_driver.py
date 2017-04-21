@@ -1,4 +1,8 @@
 #! /usr/bin/env python
+# Version 10.2 (Batchelor 4/21/2017)
+# reordered INIT phase so that RF INITs before Fokker-Planck. We expect the RF components
+# To set the RF grid dimensions and allocate them, then these are used by Fokker-Planck.
+# Fokker-Planck continues to run after RF in STEP.
 
 # Version 10.1 (Batchelor 11/18/2015)
 # Updated exception handling to new protocol.  Updated old Scientific.IO.NetCDF to
@@ -138,15 +142,6 @@ class generic_driver(Component):
             port_dict['EPA'] = epaComp
             port_id_list.append(epaComp)
             print (' ')
- 
-        if 'FP' in port_names:
-            fpComp = services.get_port('FP')
-            if(fpComp == None):
-                print 'Error accessing FP component'
-                raise
-            port_dict['FP'] = fpComp
-            port_id_list.append(fpComp)
-            print (' ')
        
         if 'RF_EC' in port_names:
             rf_ecComp = services.get_port('RF_EC')
@@ -191,6 +186,15 @@ class generic_driver(Component):
                 raise
             port_dict['FUS'] = fusComp
             port_id_list.append(fusComp)
+            print (' ')
+ 
+        if 'FP' in port_names:
+            fpComp = services.get_port('FP')
+            if(fpComp == None):
+                print 'Error accessing FP component'
+                raise
+            port_dict['FP'] = fpComp
+            port_id_list.append(fpComp)
             print (' ')
 
         if 'MONITOR' in port_names:
