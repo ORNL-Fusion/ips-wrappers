@@ -467,7 +467,7 @@ c           Set lh calc code name
             ps%lh_code_info='cql3d'
 
 c           Initialize arrays, 
-            write(*,*) 'Before rezoning: rho_lhrf =', ps%rho_lhrf(1:nrho)
+            write(*,*) 'Before rezoning: rho_lhrf =', ps%rho_lhrf(:)
             write(*,*) 'CQL3D grid is rya =', rya(1:nrho-1)
 ! ptb            call zone_check(nrho,ps%rho_lhrf,rya(1))  !rya dims 0:...
 ! ptb added this hack to get the preprare_cql3d_input to run through
