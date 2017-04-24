@@ -269,7 +269,7 @@ class generic_driver(Component):
         print ' init sequence complete--ready for time loop'
 
 # Temporary stop for diagnostic
-        raise Exception('Intentional stop after INIT')
+#        raise Exception('Intentional stop after INIT')
 
 # ------------------------------------------------------------------------------
 #
