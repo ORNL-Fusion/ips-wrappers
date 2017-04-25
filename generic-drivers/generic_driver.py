@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # Version 10.3 (Batcherlor 4/25/2017)
-# Added capabiity to terminate after INIT phase based on optional config parameter
-# INIT_ONLY.
+# Added capabiity to terminate simulation after INIT phase based on optional config 
+# parameter INIT_ONLY == True.
 
 # Version 10.2 (Batchelor 4/21/2017)
 # reordered INIT phase so that RF INITs before Fokker-Planck. We expect the RF components
