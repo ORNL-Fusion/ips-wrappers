@@ -383,7 +383,8 @@ class torlh (Component):
                    services.send_portal_event(event_type = 'COMPONENT_EVENT',\
                       event_comment =  'running ' + cmd_imchizz)
                    P=subprocess.Popen(cmd_imchizz,stdin=subprocess.PIPE,stdout=subprocess.PIPE,\
-                      stderr=subprocess.STDOUT, bufsize=1)
+                      stderr=subprocess.STDOUT)
+                #      stderr=subprocess.STDOUT, bufsize=1)
                 except :
                    logMsg = "Error executing" + cmd_imchizz
                    self.services.error(logMsg)
