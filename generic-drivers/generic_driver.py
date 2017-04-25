@@ -1,4 +1,8 @@
 #! /usr/bin/env python
+# Version 10.3 (Batcherlor 4/25/2017)
+# Added capabiity to terminate after INIT phase based on optional config parameter
+# INIT_ONLY.
+
 # Version 10.2 (Batchelor 4/21/2017)
 # reordered INIT phase so that RF INITs before Fokker-Planck. We expect the RF components
 # To set the RF grid dimensions and allocate them, then these are used by Fokker-Planck.
@@ -268,8 +272,12 @@ class generic_driver(Component):
 
         print ' init sequence complete--ready for time loop'
 
-# Temporary stop for diagnostic
-#        raise Exception('Intentional stop after INIT')
+        INIT_ONLY = self.get_component_param(services, 'INIT_ONLY', optional = True)
+        if INIT_ONLY in [True, 'true', 'True', 'TRUE']:   
+            message = 'required component config parameter ', param_name, ' not found'
+            print message
+            services.exception(message)
+            raise
 
 # ------------------------------------------------------------------------------
 #
@@ -434,8 +442,47 @@ class generic_driver(Component):
         except Exception, e:
             pass       
         
-
         print'generic_driver pre_step_logic: timeStamp = ', timeStamp
         
-
         return
+
+# ------------------------------------------------------------------------------
+#
+# "Private"  methods
+#
+# ------------------------------------------------------------------------------
+
+    # Try to get config parameter - wraps the exception handling for get_config_parameter()
+    def get_config_param(self, services, param_name, optional=False):
+
+        try:
+            value = services.get_config_param(param_name)
+            print param_name, ' = ', value
+        except Exception :
+            if optional: 
+                print 'config parameter ', param_name, ' not found'
+                value = None
+            else:
+                message = 'required config parameter ', param_name, ' not found'
+                print message
+                services.exception(message)
+                raise
+        
+        return value
+
+    # Try to get component specific config parameter - wraps the exception handling
+    def get_component_param(self, services, param_name, optional=False):
+
+        if hasattr(self, param_name):
+            value = getattr(self, param_name)
+            print param_name, ' = ', value
+        elif optional:
+            print 'optional config parameter ', param_name, ' not found'
+            value = None
+        else:
+            message = 'required component config parameter ', param_name, ' not found'
+            print message
+            services.exception(message)
+            raise
+        
+        return value
