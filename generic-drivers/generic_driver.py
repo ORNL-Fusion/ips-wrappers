@@ -274,7 +274,7 @@ class generic_driver(Component):
 
         INIT_ONLY = self.get_component_param(services, 'INIT_ONLY', optional = True)
         if INIT_ONLY in [True, 'true', 'True', 'TRUE']:   
-            message = 'required component config parameter ', param_name, ' not found'
+            message = 'INIT_ONLY: Intentional stop after INIT phase'
             print message
             services.exception(message)
             raise
