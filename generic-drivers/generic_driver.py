@@ -276,8 +276,7 @@ class generic_driver(Component):
         if INIT_ONLY in [True, 'true', 'True', 'TRUE']:   
             message = 'INIT_ONLY: Intentional stop after INIT phase'
             print message
-            services.exception(message)
-            raise
+            return
 
 # ------------------------------------------------------------------------------
 #
