@@ -74,16 +74,23 @@ class xolotlFtridynDriver(Component):
         xid.close()
 
         #ftridyn config file
-        #total substrate depth in [A]; set to 0.0 to use what Xolotl passes to ftridyn (as deep as He exists)
-        #and number of impacts (NH in generateInput)
-        ftridynTotalDepth=0.0;
-        ftridynNImpacts=1e6; 
+        #TotalDepth: total substrate depth in [A]; set to 0.0 to use what Xolotl passes to ftridyn (as deep as He exists)
+        #InitialTotalDepth: if TotalDepth=0.0, choose an appropriate depth for the irradiation energy in the 1st loop
+        #NImpacts: number of impacts (NH in generateInput) ;  InEnergy: impact energy (energy in generateInput); initialize SpYield
+        ftridynTotalDepth=0.0
+        ftridynInitialTotalDepth=200.0
+        ftridynNImpacts=1e5
+        ftridynSpYieldW=0.0
+        ftridynInEnergy=250.0 #eV
         driverFtridynTotalDepthString='totalDepth = %f' %ftridynTotalDepth
+        driverFtridynInitialTotalDepthString='initialTotalDepth = %f' %ftridynInitialTotalDepth
         driverFtridynNImpactsString='nImpacts = %f' %ftridynNImpacts
+        driverFtridynInEnergy='energyIn=%f' %ftridynInEnergy
+        driverFtridynSpYieldString='spYieldW=%f' %ftridynSpYieldW
 
         ftridyn_config_file = self.services.get_config_param('FTRIDYN_PARAMETER_CONFIG_FILE')
         ftid = open(ftridyn_config_file, 'w')
-        ftid.write("%s \n%s \n" % (driverFtridynTotalDepthString,driverFtridynNImpactsString))
+        ftid.write("%s \n%s \n%s \n%s \n%s \n" % (driverFtridynTotalDepthString,driverFtridynInitialTotalDepthString,driverFtridynNImpactsString,driverFtridynInEnergy,driverFtridynSpYieldString))
         ftid.close()
 
         #if driver start mode is in Restart, copy files to plasma_state

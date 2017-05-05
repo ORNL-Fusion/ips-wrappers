@@ -33,6 +33,9 @@ class xolotlWorker(Component):
         import xolotlParameterConfig
         reload(xolotlParameterConfig)
 
+        import ftridynParameterConfig
+        reload(ftridynParameterConfig)
+
         #print here what's been loaded from xolotlParameterConfig File
         xolotl_config_file = self.services.get_config_param('XOLOTL_PARAMETER_CONFIG_FILE')
         xid = open(xolotl_config_file, 'r')
@@ -54,10 +57,10 @@ class xolotlWorker(Component):
             print('run xolotl preprocessor')
             #run prepocessor and copy params.txt input file to plasma state
             os.system('java -Djava.library.path=/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps -cp .:/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps/*:/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-build/gov.ornl.xolotl.preprocessor/preprocessor/CMakeFiles/xolotlPreprocessor.dir/ gov.ornl.xolotl.preprocessor.Main --nxGrid 160 --maxVSize 250 --phaseCut')        
-            write_xolotl_paramfile.writeXolotlParameterFile_fromPreprocessor(start_stop=xolotlParameterConfig.start_stop,ts_final_time=runEndTime,networkFile=xolotlParameterConfig.networkFile)
+            write_xolotl_paramfile.writeXolotlParameterFile_fromPreprocessor(start_stop=xolotlParameterConfig.start_stop,ts_final_time=runEndTime,networkFile=xolotlParameterConfig.networkFile,sputtering=ftridynParameterConfig.spYieldW)
                 
         else:
-            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=xolotlParameterConfig.start_stop,ts_final_time=runEndTime,networkFile=xolotlParameterConfig.networkFile)
+            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=xolotlParameterConfig.start_stop,ts_final_time=runEndTime,networkFile=xolotlParameterConfig.networkFile,sputtering=ftridynParameterConfig.spYieldW)
         
         #store xolotls parameter and network files for each loop 
         currentXolotlParamFile='params_%f.txt' %driverParameterConfig.driverTime

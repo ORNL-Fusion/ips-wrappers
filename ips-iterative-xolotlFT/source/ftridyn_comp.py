@@ -8,6 +8,8 @@ import sys
 import translate_xolotl_to_ftridyn
 import generateInputIPS
 import numpy as np
+import subprocess
+import re
 
 class ftridynWorker(Component):
     def __init__(self, services, config):
@@ -31,7 +33,12 @@ class ftridynWorker(Component):
         #prepare and save (for each loop) ftridyn input
         if (driverParameterConfig.mode == 'INIT'):
             print('init mode yes')
-            generateInputIPS.main(NH=ftridynParameterConfig.nImpacts)
+            if (ftridynParameterConfig.totalDepth==0.0):
+                nTT=ftridynParameterConfig.initialTotalDepth
+            else:
+                nTT=ftridynParameterConfig.totalDepth
+            print 'calling generateInput with TT=%d, NH=%d and Ein=%f' % (nTT,ftridynParameterConfig.nImpacts, ftridynParameterConfig.energyIn)
+            generateInputIPS.main(TT=nTT, NH=ftridynParameterConfig.nImpacts,energy=ftridynParameterConfig.energyIn)
 
             newestIn = max(glob.iglob('*.IN'), key=os.path.getctime)
             currentFtridynInFile='%s_%f' %(newestIn,driverParameterConfig.driverTime)
@@ -49,8 +56,8 @@ class ftridynWorker(Component):
             else:
                 nTT=ftridynParameterConfig.totalDepth
 
-            print 'calling generateInput with NQX=%d , TT=%d and NH=%d' % (nDataPts, nTT, ftridynParameterConfig.nImpacts)
-            generateInputIPS.main(IQ0=-1,NQX=nDataPts,TT=nTT,NH=ftridynParameterConfig.nImpacts)
+            print 'calling generateInput with NQX=%d , TT=%d , NH=%d and Ein=%f' % (nDataPts, nTT, ftridynParameterConfig.nImpacts, ftridynParameterConfig.energyIn)
+            generateInputIPS.main(IQ0=-1,NQX=nDataPts,TT=nTT,NH=ftridynParameterConfig.nImpacts,energy=ftridynParameterConfig.energyIn)
             newestIn = max(glob.iglob('*.IN'), key=os.path.getctime)
             currentFtridynInFile='%s_%f' %(newestIn,driverParameterConfig.driverTime)
             shutil.copyfile(newestIn,  currentFtridynInFile)
@@ -72,6 +79,7 @@ class ftridynWorker(Component):
     def step(self, timeStamp=0.0):
         print('ftridyn_worker: step')
         self.services.stage_plasma_state()
+
         #call shell script that runs FTridyn and pipes input file
         task_id = self.services.launch_task(self.NPROC,
                                             self.services.get_working_dir(),
@@ -80,7 +88,40 @@ class ftridynWorker(Component):
         if (self.services.wait_task(task_id)):
             self.services.error('ftridyn_worker: step failed.')
 
+        #post-processing: re-format output (fit function to profile) for Xolotl
         os.system(' '.join(['python', self.POSTPROCESSING_SCRIPT]))
+
+        #get W sputtering yield from FT output: He_WSPYL.DAT or He_WOUT.DAT
+        import ftridynParameterConfig
+        reload(ftridynParameterConfig)
+
+        #FROM He_WSPYL.DAT
+        #ftridynYieldOutFile = open('He_WSPYL.DAT', 'rb')
+        #allSputteringData=[row.strip().split(" ") for row in ftridynYieldOutFile]
+        #sputteringData=[[x for x in allSputteringData[0] if x],[x for x in allSputteringData[1] if x]]
+        #sputteringYieldW=sputteringData[1][2]
+        #print 'W sputtering yield from file ',ftridynYieldOutFile,' is =', sputteringYieldW
+
+        #FROM He_WOUT.DAT and use NH
+        ftridynOutFile=open('He_WOUT.DAT',"r")
+        ftridynOutData=ftridynOutFile.read().split('\n')
+        searchString='PARTICLES(2)'
+        for line in ftridynOutData:
+            if searchString in line:
+                break
+        stringWithEmptyFields=line.strip().split(" ")
+        sputteringNparticlesString=[x for x in stringWithEmptyFields if x]
+        sputteringNparticles=sputteringNparticlesString[2]
+        sputteringYieldW=float(sputteringNparticles)/float(ftridynParameterConfig.nImpacts)
+        print 'W sputtering yield is =', sputteringYieldW
+
+        #and replace the value of spYieldW in FTridyn Parameter Config File
+        ftridyn_config_file = self.services.get_config_param('FTRIDYN_PARAMETER_CONFIG_FILE')
+        ftridyn_tmp_file='ftridynConfigFile.tmp'
+        shutil.copyfile(ftridyn_config_file,ftridyn_tmp_file)
+        sputteringYieldSedString="sed    -e 's/spYieldW=[^ ]*/spYieldW=%s/' <%s >%s "   %(sputteringYieldW,ftridyn_tmp_file,ftridyn_config_file)
+        subprocess.call([sputteringYieldSedString], shell=True)
+        os.remove(ftridyn_tmp_file)
 
         #append output
         tempfile = open(self.OUTPUT_FTRIDYN_TEMP,"r")
