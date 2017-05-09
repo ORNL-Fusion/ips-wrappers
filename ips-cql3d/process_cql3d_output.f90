@@ -668,83 +668,83 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
 
 contains
 
-SUBROUTINE write_inchizz_inp
-	
-  IMPLICIT NONE
-  integer, private, parameter :: r8 = SELECTED_REAL_KIND(12,100)
-  INTEGER, PARAMETER, PRIVATE:: LBOUND = 1, UBOUND = 2
-  INTEGER, PARAMETER, PRIVATE:: PSI_DIR = 1, BMOD_DIR = 2, NPAR_DIR = 3, &
-       N_DIR = NPAR_DIR - PSI_DIR + 1, BMOD_INDEX = 4, SIGN_DIR =  4
-  INTEGER, PARAMETER, PRIVATE:: Y_DIM = 1, X_DIM = 2, R_DIM = 3, &
-       NF_DIM = R_DIM - Y_DIM + 1
-  INTEGER, PARAMETER, PRIVATE:: N_STR = 80
-  INTEGER, PARAMETER, PRIVATE::  TE_DIM = 1, NE_DIM = 2, MAXPROF=128
+	  SUBROUTINE write_inchizz_inp
 
-  LOGICAL, PRIVATE:: output_F_data, output_Chi, mesh_output
-  INTEGER, PRIVATE:: npts(PSI_DIR:NPAR_DIR), n_uprp
-  INTEGER, DIMENSION(PSI_DIR:NPAR_DIR), PRIVATE:: n_mesh
-  REAL(r8), DIMENSION(PSI_DIR:NPAR_DIR, LLOWER:UUPPER), PRIVATE:: mesh_limits
-  REAL(r8), PRIVATE:: du_max_min_ratio
-  CHARACTER *(N_STR), PRIVATE:: F_source, shape, cdf_fn, cql3d_cdf_fn, &
-       psitable_fn
-  CHARACTER *(1),PRIVATE :: ibq
-  CHARACTER *(N_STR), PRIVATE:: uprp_grid_type, proftype
-  INTEGER, PRIVATE:: nF(PSI_DIR:NPAR_DIR)
-  REAL(r8), PRIVATE:: enorm, R_major, a, Btor, frequency, npar, theta, psi
-  REAL(r8), DIMENSION(TE_DIM:NE_DIM), PRIVATE:: p_inner, p_outer, maxx, minn
-  REAL(r8), DIMENSION(Y_DIM:R_DIM), PRIVATE:: lower, upper
-  INTEGER, PRIVATE:: RadMapDim
-  REAL(r8), DIMENSION(MAXPROF), PRIVATE:: Teprof, Neprof, rho_pol, rho_tor
+	  IMPLICIT NONE
+	  integer, private, parameter :: r8 = SELECTED_REAL_KIND(12,100)
+	  INTEGER, PARAMETER, PRIVATE:: LBOUND = 1, UBOUND = 2
+	  INTEGER, PARAMETER, PRIVATE:: PSI_DIR = 1, BMOD_DIR = 2, NPAR_DIR = 3, &
+		   N_DIR = NPAR_DIR - PSI_DIR + 1, BMOD_INDEX = 4, SIGN_DIR =  4
+      INTEGER, PARAMETER, PRIVATE:: Y_DIM = 1, X_DIM = 2, R_DIM = 3, &
+		   NF_DIM = R_DIM - Y_DIM + 1
+	  INTEGER, PARAMETER, PRIVATE:: N_STR = 80
+	  INTEGER, PARAMETER, PRIVATE::  TE_DIM = 1, NE_DIM = 2, MAXPROF=128
+
+	  LOGICAL, PRIVATE:: output_F_data, output_Chi, mesh_output
+	  INTEGER, PRIVATE:: npts(PSI_DIR:NPAR_DIR), n_uprp
+	  INTEGER, DIMENSION(PSI_DIR:NPAR_DIR), PRIVATE:: n_mesh
+	  REAL(r8), DIMENSION(PSI_DIR:NPAR_DIR, LLOWER:UUPPER), PRIVATE:: mesh_limits
+	  REAL(r8), PRIVATE:: du_max_min_ratio
+	  CHARACTER *(N_STR), PRIVATE:: F_source, shape, cdf_fn, cql3d_cdf_fn, &
+		   psitable_fn
+	  CHARACTER *(1),PRIVATE :: ibq
+	  CHARACTER *(N_STR), PRIVATE:: uprp_grid_type, proftype
+	  INTEGER, PRIVATE:: nF(PSI_DIR:NPAR_DIR)
+	  REAL(r8), PRIVATE:: enorm, R_major, a, Btor, frequency, npar, theta, psi
+	  REAL(r8), DIMENSION(TE_DIM:NE_DIM), PRIVATE:: p_inner, p_outer, maxx, minn
+	  REAL(r8), DIMENSION(Y_DIM:R_DIM), PRIVATE:: lower, upper
+	  INTEGER, PRIVATE:: RadMapDim
+	  REAL(r8), DIMENSION(MAXPROF), PRIVATE:: Teprof, Neprof, rho_pol, rho_tor
 
 !I/O units
-    integer :: inp_unit, out_unit, iarg
-    logical :: lex
+      integer :: inp_unit, out_unit, iarg
+      logical :: lex
 
-    NAMELIST / ImChizz_nml / F_source, npts, output_F_data, cdf_fn, &
+      NAMELIST / ImChizz_nml / F_source, npts, output_F_data, cdf_fn, &
          psitable_fn, ibq
-    NAMELIST / Fd_nml / nF, enorm, p_inner, p_outer, maxx, minn, &
+      NAMELIST / Fd_nml / nF, enorm, p_inner, p_outer, maxx, minn, &
          lower, upper, shape, R_major, a, Btor, frequency, cql3d_cdf_fn,&
          Teprof, Neprof, proftype, RadMapDim, rho_pol, rho_tor
-    NAMELIST / Num_nml / n_uprp, n_mesh, mesh_limits, mesh_output, &
+      NAMELIST / Num_nml / n_uprp, n_mesh, mesh_limits, mesh_output, &
          uprp_grid_type, du_max_min_ratio
 
 !****************************************************************************************
 ! Defaults
 !****************************************************************************************
 
-    uprp_grid_type = 'uniform'  ! 'uniform' or 'exponential'
-    du_max_min_ratio = 1._r8  
+      uprp_grid_type = 'uniform'  ! 'uniform' or 'exponential'
+      du_max_min_ratio = 1._r8  
     ! max(d_uprp) / min(d_uprp) for an exponential grid
 
-    F_source = 'analytic'  ! 'analytic' or 'cql3d'
-    shape = 'Maxwellian'
-    proftype = 'parabolic'
-    cdf_fn = 'ImChi.cdf'
-    psitable_fn = 'Dql_toric.cdf'
-    output_F_data = .TRUE.; output_Chi = .TRUE.
-    npts = (/ 10, 8, 20 /)
+      F_source = 'analytic'  ! 'analytic' or 'cql3d'
+      shape = 'Maxwellian'
+      proftype = 'parabolic'
+      cdf_fn = 'ImChi.cdf'
+      psitable_fn = 'Dql_toric.cdf'
+      output_F_data = .TRUE.; output_Chi = .TRUE.
+      npts = (/ 10, 8, 20 /)
 
-    nF = (/ 5, 16, 100 /)
-    enorm = 2500_r8
-    p_inner(TE_DIM:NE_DIM) =  2._r8
-    p_outer = (/ 2._r8, 1._r8 /)
-    lower(Y_DIM:R_DIM) = 0._r8
-    upper(Y_DIM:R_DIM) = (/ TWOPI, 1._r8, 1._r8 /)
-    minn(TE_DIM:NE_DIM) = (/ .1_r8, 1.E18_r8 /)
-    maxx(TE_DIM:NE_DIM) = (/ 4._r8, 1.E19_r8 /)
+      nF = (/ 5, 16, 100 /)
+      enorm = 2500_r8
+      p_inner(TE_DIM:NE_DIM) =  2._r8
+      p_outer = (/ 2._r8, 1._r8 /)
+      lower(Y_DIM:R_DIM) = 0._r8
+      upper(Y_DIM:R_DIM) = (/ TWOPI, 1._r8, 1._r8 /)
+      minn(TE_DIM:NE_DIM) = (/ .1_r8, 1.E18_r8 /)
+      maxx(TE_DIM:NE_DIM) = (/ 4._r8, 1.E19_r8 /)
 
-    R_major = 60._r8; a = 20._r8; Btor = 5._r8; frequency = 4.E9_r8
-    cql3d_cdf_fn = 'cql3d.cdf'
+      R_major = 60._r8; a = 20._r8; Btor = 5._r8; frequency = 4.E9_r8
+      cql3d_cdf_fn = 'cql3d.cdf'
 
-    n_uprp = 100  
+      n_uprp = 100  
     ! n_uprp is the number of cells, not the number of nodes 
     ! (which is n_uprp + 1)
 
-    n_mesh(PSI_DIR:NPAR_DIR) = (/ 10, 20, 30 /)
-    mesh_limits(PSI_DIR, LLOWER:UUPPER) = (/ 0._r8, 1._r8 /)
-    mesh_limits(BMOD_DIR, LLOWER:UUPPER) = (/ 1._r8, 2._r8 /) ! B/B_min
-    mesh_limits(NPAR_DIR, LLOWER:UUPPER) = (/ 1.10_r8, 8._r8 /)
-    mesh_output = .TRUE.
+      n_mesh(PSI_DIR:NPAR_DIR) = (/ 10, 20, 30 /)
+      mesh_limits(PSI_DIR, LLOWER:UUPPER) = (/ 0._r8, 1._r8 /)
+      mesh_limits(BMOD_DIR, LLOWER:UUPPER) = (/ 1._r8, 2._r8 /) ! B/B_min
+      mesh_limits(NPAR_DIR, LLOWER:UUPPER) = (/ 1.10_r8, 8._r8 /)
+      mesh_output = .TRUE.
 
 !****************************************************************************************
 ! Read template ImChizz.inp
@@ -769,36 +769,36 @@ SUBROUTINE write_inchizz_inp
 ! Load up data
 !****************************************************************************************
 	
-	rho_pol = sqrt(ps%psipol / ps%psipol(nprodt))
-	rho_tor = ps%rho
-	RadMapDim = nprodt
-	R_major = ps%R_axis
-	a = (ps%R_MAX_LCFS - ps%R_MIN_LCFS)/2.
-	Btor = ps%B_axis
-	frequency = ps%freq_lh(1)
+	  rho_pol = sqrt(ps%psipol / ps%psipol(nprodt))
+	  rho_tor = ps%rho
+	  RadMapDim = nprodt
+	  R_major = ps%R_axis
+	  a = (ps%R_MAX_LCFS - ps%R_MIN_LCFS)/2.
+	  Btor = ps%B_axis
+	  frequency = ps%freq_lh(1)
 
 !****************************************************************************************
 ! Write ImChizz.inp
 !****************************************************************************************
 
-    open(unit=out_unit, file='torica.inp',                &
+      open(unit=out_unit, file='torica.inp',                &
         status = 'unknown', form = 'formatted',delim='quote')
 
-    WRITE (*,*) 'ImChizz_nml = ', ImChizz_nml
-    WRITE (*,*) 'Fd_nml = ', Fd_nml
-    WRITE (*,*) 'Num_nml = ', Num_nml
+      WRITE (*,*) 'ImChizz_nml = ', ImChizz_nml
+      WRITE (*,*) 'Fd_nml = ', Fd_nml
+      WRITE (*,*) 'Num_nml = ', Num_nml
 
-	WRITE(out_unit,ImChizz_nml)
-	WRITE(out_unit,Fd_nml)
-	WRITE(out_unit,Num_nml)
+	  WRITE(out_unit,ImChizz_nml)
+	  WRITE(out_unit,Fd_nml)
+	  WRITE(out_unit,Num_nml)
 
-    close(out_unit)
+      close(out_unit)
 
-RETURN
-END SUBROUTINE write_inchizz_inp
+      RETURN
+      END SUBROUTINE write_inchizz_inp
 
 
-SUBROUTINE getlun (ilun,ierr)
+      SUBROUTINE getlun (ilun,ierr)
 !
 !-----------------------------------------------------------------------
 !
