@@ -1,5 +1,14 @@
       program process_cql3d_output
 
+! Modified to produce namelist needed by imchzz code (DBB and JL 5/9/2017)
+! The way this is done is to call a contained subroutine write_inchizz_inp which writes the
+! file.  The write_inchizz_inp subroutine uses the ImChizzrel_mod.F90 module, to read the
+! namelists in a template ImChizz.inp file.  It takes the toroidal and poloidal fluxes 
+! from the plasma state and inserts them into the namelist variables rho_tor = ps%rho and
+! rho_pol = sqrt(ps%psipol)/.
+! 
+
+
 !--------------------------------------------------------------------
 ! process_cql3d_output, BH 08/12/2012
 ! based on
@@ -77,6 +86,8 @@
       real*8, allocatable, dimension(:,:) :: wpar    !par energy/particle
                                                       !tdim, rdim
       real*8, allocatable, dimension(:,:,:) :: density !density of all species
+                                                      !tdim, r0dim, species dim
+      real*8, allocatable, dimension(:,:,:) :: temp !temperature of all species
                                                       !tdim, r0dim, species dim
       real*8, allocatable, dimension(:,:,:,:) :: powers !collection of power flows
 
@@ -276,6 +287,8 @@ c F2003-syntax call get_command_argument(1,cql3d_output)
 
 !     allocate space for arrays to be read
       allocate (rya(lrz))  !the radial grid
+      allocate (density(ngen,lrz,nt))  !the density
+      allocate (temp(ngen,lrz,nt))  !the temperature
       allocate (darea(lrz),dvol(lrz))
 c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
       allocate (powers(lrz, 13, ngen, nt))  
@@ -335,6 +348,16 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
       istatus = nf_get_var_double(ncid, vid, rya)
       write(*,*)'proc_cql3d_op: after ncvgt, rya = ',rya
  
+      ! the density
+      istatus = nf_inq_varid(ncid, 'density', vid)
+      istatus = nf_get_var_double(ncid, vid, density)
+      write(*,*)'proc_cql3d_op: after ncvgt, density = ',density
+      
+       ! the temperature
+      istatus = nf_inq_varid(ncid, 'temp', vid)
+      istatus = nf_get_var_double(ncid, vid, temp)
+      write(*,*)'proc_cql3d_op: after ncvgt, temp = ',temp
+      
       ! the bin pol cross-section areas
       istatus = nf_inq_varid(ncid, 'darea', vid)
       istatus = nf_get_var_double(ncid, vid, darea)
@@ -537,6 +560,9 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
       write(*,*) 'power_lh = ', powerlh, 'currlh = ', currlh
       write(*,*) 'power_lh_int = ', powerlh_int, 'currlh_int = ', currlh_int
 ! end of ptb diagnostics and hack
+
+      CALL write_inchizz_inp
+
       endif  !On cql3d_output.eq.'LH'
 
 
@@ -639,3 +665,181 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
 
      
       end program process_cql3d_output
+
+contains
+
+SUBROUTINE write_inchizz_inp
+	
+  IMPLICIT NONE
+  integer, private, parameter :: r8 = SELECTED_REAL_KIND(12,100)
+  INTEGER, PARAMETER, PRIVATE:: LBOUND = 1, UBOUND = 2
+  INTEGER, PARAMETER, PRIVATE:: PSI_DIR = 1, BMOD_DIR = 2, NPAR_DIR = 3, &
+       N_DIR = NPAR_DIR - PSI_DIR + 1, BMOD_INDEX = 4, SIGN_DIR =  4
+  INTEGER, PARAMETER, PRIVATE:: Y_DIM = 1, X_DIM = 2, R_DIM = 3, &
+       NF_DIM = R_DIM - Y_DIM + 1
+  INTEGER, PARAMETER, PRIVATE:: N_STR = 80
+  INTEGER, PARAMETER, PRIVATE::  TE_DIM = 1, NE_DIM = 2, MAXPROF=128
+
+  LOGICAL, PRIVATE:: output_F_data, output_Chi, mesh_output
+  INTEGER, PRIVATE:: npts(PSI_DIR:NPAR_DIR), n_uprp
+  INTEGER, DIMENSION(PSI_DIR:NPAR_DIR), PRIVATE:: n_mesh
+  REAL(r8), DIMENSION(PSI_DIR:NPAR_DIR, LLOWER:UUPPER), PRIVATE:: mesh_limits
+  REAL(r8), PRIVATE:: du_max_min_ratio
+  CHARACTER *(N_STR), PRIVATE:: F_source, shape, cdf_fn, cql3d_cdf_fn, &
+       psitable_fn
+  CHARACTER *(1),PRIVATE :: ibq
+  CHARACTER *(N_STR), PRIVATE:: uprp_grid_type, proftype
+  INTEGER, PRIVATE:: nF(PSI_DIR:NPAR_DIR)
+  REAL(r8), PRIVATE:: enorm, R_major, a, Btor, frequency, npar, theta, psi
+  REAL(r8), DIMENSION(TE_DIM:NE_DIM), PRIVATE:: p_inner, p_outer, maxx, minn
+  REAL(r8), DIMENSION(Y_DIM:R_DIM), PRIVATE:: lower, upper
+  INTEGER, PRIVATE:: RadMapDim
+  REAL(r8), DIMENSION(MAXPROF), PRIVATE:: Teprof, Neprof, rho_pol, rho_tor
+
+!I/O units
+    integer :: inp_unit, out_unit, iarg
+    logical :: lex
+
+    NAMELIST / ImChizz_nml / F_source, npts, output_F_data, cdf_fn, &
+         psitable_fn, ibq
+    NAMELIST / Fd_nml / nF, enorm, p_inner, p_outer, maxx, minn, &
+         lower, upper, shape, R_major, a, Btor, frequency, cql3d_cdf_fn,&
+         Teprof, Neprof, proftype, RadMapDim, rho_pol, rho_tor
+    NAMELIST / Num_nml / n_uprp, n_mesh, mesh_limits, mesh_output, &
+         uprp_grid_type, du_max_min_ratio
+
+!****************************************************************************************
+! Defaults
+!****************************************************************************************
+
+    uprp_grid_type = 'uniform'  ! 'uniform' or 'exponential'
+    du_max_min_ratio = 1._r8  
+    ! max(d_uprp) / min(d_uprp) for an exponential grid
+
+    F_source = 'analytic'  ! 'analytic' or 'cql3d'
+    shape = 'Maxwellian'
+    proftype = 'parabolic'
+    cdf_fn = 'ImChi.cdf'
+    psitable_fn = 'Dql_toric.cdf'
+    output_F_data = .TRUE.; output_Chi = .TRUE.
+    npts = (/ 10, 8, 20 /)
+
+    nF = (/ 5, 16, 100 /)
+    enorm = 2500_r8
+    p_inner(TE_DIM:NE_DIM) =  2._r8
+    p_outer = (/ 2._r8, 1._r8 /)
+    lower(Y_DIM:R_DIM) = 0._r8
+    upper(Y_DIM:R_DIM) = (/ TWOPI, 1._r8, 1._r8 /)
+    minn(TE_DIM:NE_DIM) = (/ .1_r8, 1.E18_r8 /)
+    maxx(TE_DIM:NE_DIM) = (/ 4._r8, 1.E19_r8 /)
+
+    R_major = 60._r8; a = 20._r8; Btor = 5._r8; frequency = 4.E9_r8
+    cql3d_cdf_fn = 'cql3d.cdf'
+
+    n_uprp = 100  
+    ! n_uprp is the number of cells, not the number of nodes 
+    ! (which is n_uprp + 1)
+
+    n_mesh(PSI_DIR:NPAR_DIR) = (/ 10, 20, 30 /)
+    mesh_limits(PSI_DIR, LLOWER:UUPPER) = (/ 0._r8, 1._r8 /)
+    mesh_limits(BMOD_DIR, LLOWER:UUPPER) = (/ 1._r8, 2._r8 /) ! B/B_min
+    mesh_limits(NPAR_DIR, LLOWER:UUPPER) = (/ 1.10_r8, 8._r8 /)
+    mesh_output = .TRUE.
+
+!****************************************************************************************
+! Read template ImChizz.inp
+!****************************************************************************************
+      call getlun(inp_unit,ierr)  ;  call getlun(out_unit,ierr)
+	
+      write(*,*) 'Process qcl3d output reading ImChizz.inp'
+      open(unit=inp_unit, file='ImChizz.inp', status='old', &
+              form='formatted')
+      INQUIRE(inp_unit, exist=lex)
+      IF (lex) THEN
+		READ(inp_unit,ImChizz_nml)
+		READ(inp_unit,Fd_nml)
+		READ(inp_unit,Num_nml)
+      ELSE
+         write(*,*) &
+            'ImChizz.inp does not exist or there was a read error'
+      END IF
+      close(inp_unit)
+
+!****************************************************************************************
+! Load up data
+!****************************************************************************************
+	
+	rho_pol = sqrt(ps%psipol / ps%psipol(nprodt))
+	rho_tor = ps%rho
+	RadMapDim = nprodt
+	R_major = ps%R_axis
+	a = (ps%R_MAX_LCFS - ps%R_MIN_LCFS)/2.
+	Btor = ps%B_axis
+	frequency = ps%freq_lh(1)
+
+!****************************************************************************************
+! Write ImChizz.inp
+!****************************************************************************************
+
+    open(unit=out_unit, file='torica.inp',                &
+        status = 'unknown', form = 'formatted',delim='quote')
+
+    WRITE (*,*) 'ImChizz_nml = ', ImChizz_nml
+    WRITE (*,*) 'Fd_nml = ', Fd_nml
+    WRITE (*,*) 'Num_nml = ', Num_nml
+
+	WRITE(out_unit,ImChizz_nml)
+	WRITE(out_unit,Fd_nml)
+	WRITE(out_unit,Num_nml)
+
+    close(out_unit)
+
+RETURN
+END SUBROUTINE write_inchizz_inp
+
+
+SUBROUTINE getlun (ilun,ierr)
+!
+!-----------------------------------------------------------------------
+!
+! ****** Return an unused logical unit identifier.
+!
+!-----------------------------------------------------------------------
+!
+! ****** Upon successful completion (IERR=0), the first
+! ****** unused logical unit number between MINLUN and
+! ****** MAXLUN, inclusive, is returned in variable ILUN.
+! ****** If all units between these limits are busy,
+! ****** IERR=1 is returned.
+!
+!-----------------------------------------------------------------------
+!
+      INTEGER, INTENT(OUT) :: ilun, ierr
+!
+!-----------------------------------------------------------------------
+!
+! ****** Range of valid units.
+!
+      INTEGER, PARAMETER :: minlun=30, maxlun=99
+      LOGICAL :: busy
+!
+!-----------------------------------------------------------------------
+!
+      ierr=0
+!
+! ****** Find an unused unit number.
+!
+      DO i=minlun,maxlun
+        INQUIRE (unit=i,opened=busy)
+        IF (.NOT.busy) THEN
+           ilun=1
+           RETURN
+        END IF
+      END DO
+!
+! ****** Fall through here if all units are busy.
+!
+      ierr=1
+      RETURN
+
+      END subroutine getlun
