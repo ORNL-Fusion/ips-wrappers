@@ -674,9 +674,9 @@ contains
 	  integer, private, parameter :: r8 = SELECTED_REAL_KIND(12,100)
 	  INTEGER, PARAMETER, PRIVATE:: LBOUND = 1, UBOUND = 2
 	  INTEGER, PARAMETER, PRIVATE:: PSI_DIR = 1, BMOD_DIR = 2, NPAR_DIR = 3, &
-		   N_DIR = NPAR_DIR - PSI_DIR + 1, BMOD_INDEX = 4, SIGN_DIR =  4
+		   &N_DIR = NPAR_DIR - PSI_DIR + 1, BMOD_INDEX = 4, SIGN_DIR =  4
       INTEGER, PARAMETER, PRIVATE:: Y_DIM = 1, X_DIM = 2, R_DIM = 3, &
-		   NF_DIM = R_DIM - Y_DIM + 1
+		   &NF_DIM = R_DIM - Y_DIM + 1
 	  INTEGER, PARAMETER, PRIVATE:: N_STR = 80
 	  INTEGER, PARAMETER, PRIVATE::  TE_DIM = 1, NE_DIM = 2, MAXPROF=128
 
@@ -686,7 +686,7 @@ contains
 	  REAL(r8), DIMENSION(PSI_DIR:NPAR_DIR, LLOWER:UUPPER), PRIVATE:: mesh_limits
 	  REAL(r8), PRIVATE:: du_max_min_ratio
 	  CHARACTER *(N_STR), PRIVATE:: F_source, shape, cdf_fn, cql3d_cdf_fn, &
-		   psitable_fn
+		   &psitable_fn
 	  CHARACTER *(1),PRIVATE :: ibq
 	  CHARACTER *(N_STR), PRIVATE:: uprp_grid_type, proftype
 	  INTEGER, PRIVATE:: nF(PSI_DIR:NPAR_DIR)
@@ -701,12 +701,12 @@ contains
       logical :: lex
 
       NAMELIST / ImChizz_nml / F_source, npts, output_F_data, cdf_fn, &
-         psitable_fn, ibq
+         &psitable_fn, ibq
       NAMELIST / Fd_nml / nF, enorm, p_inner, p_outer, maxx, minn, &
-         lower, upper, shape, R_major, a, Btor, frequency, cql3d_cdf_fn,&
+         &lower, upper, shape, R_major, a, Btor, frequency, cql3d_cdf_fn,&
          Teprof, Neprof, proftype, RadMapDim, rho_pol, rho_tor
       NAMELIST / Num_nml / n_uprp, n_mesh, mesh_limits, mesh_output, &
-         uprp_grid_type, du_max_min_ratio
+         &uprp_grid_type, du_max_min_ratio
 
 !****************************************************************************************
 ! Defaults
@@ -753,7 +753,7 @@ contains
 	
       write(*,*) 'Process qcl3d output reading ImChizz.inp'
       open(unit=inp_unit, file='ImChizz.inp', status='old', &
-              form='formatted')
+              &form='formatted')
       INQUIRE(inp_unit, exist=lex)
       IF (lex) THEN
 		READ(inp_unit,ImChizz_nml)
@@ -761,7 +761,7 @@ contains
 		READ(inp_unit,Num_nml)
       ELSE
          write(*,*) &
-            'ImChizz.inp does not exist or there was a read error'
+            &'ImChizz.inp does not exist or there was a read error'
       END IF
       close(inp_unit)
 
