@@ -22,20 +22,22 @@ class vmec_init(Component):
 
 #-------------------------------------------------------------------------------
 #
-#  VMEC init Component init method. This method prepairs the namelist input file.
+#  VMEC init Component init method. This method prepairs the namelist input
+#  file and creates a dummy out put file. This allows staging the plasma state
+#  files.
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
         print('vmec_init: init')
-    
+
         self.services.stage_input_files(self.INPUT_FILES)
         
         current_vmec_namelist = self.services.get_config_param('CURRENT_VMEC_NAMELIST')
         shutil.copyfile(self.INPUT_FILES, current_vmec_namelist)
-
+        
 #  Create a dummy wout file so the plasma state has something to update to.
         open(self.services.get_config_param('CURRENT_VMEC_WOUT_FILE'), 'a').close()
-
+        
         self.services.update_plasma_state()
 
 #-------------------------------------------------------------------------------

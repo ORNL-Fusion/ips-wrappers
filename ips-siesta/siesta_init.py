@@ -15,7 +15,7 @@ import shutil
 #  SIESTA init Component Constructor
 #
 #-------------------------------------------------------------------------------
-class vmec_init(Component):
+class siesta_init(Component):
     def __init__(self, services, config):
         print('siesta_init: Construct')
         Component.__init__(self, services, config)
@@ -47,6 +47,8 @@ class vmec_init(Component):
         siesta_namelist = open(current_siesta_namelist, 'r')
         siesta_namelist_lines = siesta_namelist.readlines()
         siesta_namelist.close()
+        
+        siesta_vmec_wout_set = False
         
 #  Reopen the file for writing.
         siesta_namelist = open(current_siesta_namelist, 'w')

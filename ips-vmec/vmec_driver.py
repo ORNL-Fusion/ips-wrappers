@@ -26,7 +26,7 @@ class vmec_driver(Component):
     def init(self, timeStamp=0.0):
         print('vmec_driver: init')
         
-        vmec_init = self.services.get_port('INIT')
+        vmec_init = self.services.get_port('AINIT')
         self.services.call(vmec_init, 'init', timeStamp)
         
         self.vmec_comp = self.services.get_port('VMEC')
