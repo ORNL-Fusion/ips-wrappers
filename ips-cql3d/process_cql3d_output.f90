@@ -698,9 +698,9 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
       logical :: lex
 
       NAMELIST / ImChizz_nml / F_source, npts, output_F_data, cdf_fn, psitable_fn, ibq
-      NAMELIST / Fd_nml / nF, enorm, p_inner, p_outer, maxx, minn, &
-         &lower, upper, shape, R_major, a, Btor, frequency, cql3d_cdf_fn,&
-         Teprof, Neprof, proftype, RadMapDim, rho_pol, rho_tor
+      NAMELIST / Fd_nml / nF, enorm, p_inner, p_outer, maxx, minn,
+     1 lower, upper, shape, R_major, a, Btor, frequency, cql3d_cdf_fn,
+     2 Teprof, Neprof, proftype, RadMapDim, rho_pol, rho_tor
       NAMELIST / Num_nml / n_uprp, n_mesh, mesh_limits, mesh_output, &
          &uprp_grid_type, du_max_min_ratio
 
