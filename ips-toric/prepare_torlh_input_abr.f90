@@ -251,7 +251,8 @@
 ! originally in t0_mod_qldce.F
       namelist /qldceinp/ &
      &     num_runs, path, iread_felice, files_toric, file_felice, &
-     &     d_u, u_extr, d_psi, psi_min, psi_max, enorm, ntres, uasp, pwtot
+     &     d_u, u_extr, d_psi, psi_min, psi_max, enorm, ntres, uasp
+!    &     d_u, u_extr, d_psi, psi_min, psi_max, enorm, ntres, uasp, pwtot
 !uasp yet to be validated, do not use this option in production JCW 22 JUNE 2011
 !enorm if non zero puts qldce on a momentum space mesh as used by CQL3D
 !otherwise qldce is on a v/vte mesh.
