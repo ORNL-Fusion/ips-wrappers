@@ -784,7 +784,7 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
 ! Write ImChizz.inp
 !****************************************************************************************
 
-      open(unit=out_unit, file='torica.inp',
+      open(unit=out_unit, file='ImChizz.inp',
      1 status = 'unknown', form = 'formatted',delim='quote')
 
       WRITE (*, nml = ImChizz_nml)
