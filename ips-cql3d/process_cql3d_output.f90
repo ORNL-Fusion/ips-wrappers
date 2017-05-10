@@ -668,30 +668,30 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
 	  SUBROUTINE write_inchizz_inp
 
 	  IMPLICIT NONE
-	  integer, private, parameter :: r8 = SELECTED_REAL_KIND(12,100)
-	  INTEGER, PARAMETER, PRIVATE:: LBOUND = 1, UBOUND = 2
-	  INTEGER, PARAMETER, PRIVATE:: PSI_DIR = 1, BMOD_DIR = 2, NPAR_DIR = 3
-	  INTEGER, PARAMETER, PRIVATE:: N_DIR = NPAR_DIR - PSI_DIR + 1, BMOD_INDEX = 4
-	  INTEGER, PARAMETER, PRIVATE:: SIGN_DIR =  4
-      INTEGER, PARAMETER, PRIVATE:: Y_DIM = 1, X_DIM = 2, R_DIM = 3
-	  INTEGER, PARAMETER, PRIVATE:: NF_DIM = R_DIM - Y_DIM + 1
-	  INTEGER, PARAMETER, PRIVATE:: N_STR = 80
-	  INTEGER, PARAMETER, PRIVATE::  TE_DIM = 1, NE_DIM = 2, MAXPROF=128
+	  integer, , parameter :: r8 = SELECTED_REAL_KIND(12,100)
+	  INTEGER, PARAMETER, :: LBOUND = 1, UBOUND = 2
+	  INTEGER, PARAMETER, :: PSI_DIR = 1, BMOD_DIR = 2, NPAR_DIR = 3
+	  INTEGER, PARAMETER, :: N_DIR = NPAR_DIR - PSI_DIR + 1, BMOD_INDEX = 4
+	  INTEGER, PARAMETER, :: SIGN_DIR =  4
+      INTEGER, PARAMETER, :: Y_DIM = 1, X_DIM = 2, R_DIM = 3
+	  INTEGER, PARAMETER, :: NF_DIM = R_DIM - Y_DIM + 1
+	  INTEGER, PARAMETER, :: N_STR = 80
+	  INTEGER, PARAMETER, ::  TE_DIM = 1, NE_DIM = 2, MAXPROF=128
 
-	  LOGICAL, PRIVATE:: output_F_data, output_Chi, mesh_output
-	  INTEGER, PRIVATE:: npts(PSI_DIR:NPAR_DIR), n_uprp
-	  INTEGER, DIMENSION(PSI_DIR:NPAR_DIR), PRIVATE:: n_mesh
-	  REAL(r8), DIMENSION(PSI_DIR:NPAR_DIR, LLOWER:UUPPER), PRIVATE:: mesh_limits
-	  REAL(r8), PRIVATE:: du_max_min_ratio
-	  CHARACTER *(N_STR), PRIVATE:: F_source, shape, cdf_fn, cql3d_cdf_fn, psitable_fn
-	  CHARACTER *(1),PRIVATE :: ibq
-	  CHARACTER *(N_STR), PRIVATE:: uprp_grid_type, proftype
-	  INTEGER, PRIVATE:: nF(PSI_DIR:NPAR_DIR)
-	  REAL(r8), PRIVATE:: enorm, R_major, a, Btor, frequency, npar, theta, psi
-	  REAL(r8), DIMENSION(TE_DIM:NE_DIM), PRIVATE:: p_inner, p_outer, maxx, minn
-	  REAL(r8), DIMENSION(Y_DIM:R_DIM), PRIVATE:: lower, upper
-	  INTEGER, PRIVATE:: RadMapDim
-	  REAL(r8), DIMENSION(MAXPROF), PRIVATE:: Teprof, Neprof, rho_pol, rho_tor
+	  LOGICAL, :: output_F_data, output_Chi, mesh_output
+	  INTEGER, :: npts(PSI_DIR:NPAR_DIR), n_uprp
+	  INTEGER, DIMENSION(PSI_DIR:NPAR_DIR), :: n_mesh
+	  REAL(r8), DIMENSION(PSI_DIR:NPAR_DIR, LLOWER:UUPPER), :: mesh_limits
+	  REAL(r8), :: du_max_min_ratio
+	  CHARACTER *(N_STR), :: F_source, shape, cdf_fn, cql3d_cdf_fn, psitable_fn
+	  CHARACTER *(1), :: ibq
+	  CHARACTER *(N_STR), :: uprp_grid_type, proftype
+	  INTEGER, :: nF(PSI_DIR:NPAR_DIR)
+	  REAL(r8), :: enorm, R_major, a, Btor, frequency, npar, theta, psi
+	  REAL(r8), DIMENSION(TE_DIM:NE_DIM), :: p_inner, p_outer, maxx, minn
+	  REAL(r8), DIMENSION(Y_DIM:R_DIM), :: lower, upper
+	  INTEGER, :: RadMapDim
+	  REAL(r8), DIMENSION(MAXPROF), :: Teprof, Neprof, rho_pol, rho_tor
 
 !I/O units
       integer :: inp_unit, out_unit, iarg
