@@ -125,7 +125,7 @@
       character(80) :: path, file_felice
       integer :: num_runs, nfel_nphi, iread_felice
       integer :: ntres=64
-      real(rspec) :: d_u, d_psi, enorm=0._rspec, unorm, uasp=1.0
+      real(rspec) :: d_u, d_psi, enorm=0._rspec, unorm, uasp=1.0, pwtot=1.0
       real(rspec) :: psi_min, psi_max
       real(rspec) :: u_extr = 10._rspec
       real(rspec):: uperp0
@@ -251,7 +251,7 @@
 ! originally in t0_mod_qldce.F
       namelist /qldceinp/ &
      &     num_runs, path, iread_felice, files_toric, file_felice, &
-     &     d_u, u_extr, d_psi, psi_min, psi_max, enorm, ntres, uasp
+     &     d_u, u_extr, d_psi, psi_min, psi_max, enorm, ntres, uasp, pwtot
 !uasp yet to be validated, do not use this option in production JCW 22 JUNE 2011
 !enorm if non zero puts qldce on a momentum space mesh as used by CQL3D
 !otherwise qldce is on a v/vte mesh.
@@ -566,7 +566,8 @@
       if(ierr .ne. 0) stop 'cannot get plasma state to get profiles '
 
       freqcy = ps%freq_lh(isrc)*GHz !Hz to GHz
-      prfin =  ps%power_lh(isrc) !watts
+      pwtot =  ps%power_lh(isrc) !watts
+      
 !     nspec = ps%nspec_th !+1 !torlh includes electrons in species count
 ! PTB - begins
 ! Use the abridged species list index count (nspec_alla) that includes:
