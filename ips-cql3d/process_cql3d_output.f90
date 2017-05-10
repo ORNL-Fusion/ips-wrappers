@@ -663,10 +663,7 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
       CALL PS_WRITE_UPDATE_FILE('FP_CQL3D_PARTIAL_STATE', ierr)
       WRITE (*,*) "Stored Partial FP_CQL3D Plasma State"
 
-     
-      end program process_cql3d_output
-
-contains
+      contains
 
 	  SUBROUTINE write_inchizz_inp
 
@@ -843,3 +840,5 @@ contains
       RETURN
 
       END subroutine getlun
+     
+      end program process_cql3d_output
