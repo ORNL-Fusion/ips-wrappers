@@ -2,8 +2,8 @@
 
 #-------------------------------------------------------------------------------
 #
-#  IPS wrapper for VMEC init component. This wapper only takes a VMEC input file
-#  and runs VMEC.
+#  IPS wrapper to bridge the DAKOTA init component. This wapper only initalizes
+#  empty dakota file.
 #
 #-------------------------------------------------------------------------------
 
@@ -12,46 +12,47 @@ import shutil
 
 #-------------------------------------------------------------------------------
 #
-#  VMEC init Component Constructor
+#  DAKOTA init Component Constructor
 #
 #-------------------------------------------------------------------------------
-class vmec_init(Component):
+class dakota_init(Component):
     def __init__(self, services, config):
-        print('vmec_init: Construct')
+        print('dakota_init: Construct')
         Component.__init__(self, services, config)
-
+    
 #-------------------------------------------------------------------------------
 #
-#  VMEC init Component init method. This method prepairs the namelist input
-#  file and creates a dummy out put file. This allows staging the plasma state
-#  files.
+#  DAKOTA init Component init method. This method reads the
+#  parameter file from datoka and adds to an existing namelist input file.
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
-        print('vmec_init: init')
+        print('dakota_init: init')
+        
+        if (self.INPUT_FILES != ''):
+            self.services.stage_input_files(self.INPUT_FILES)
+        
+            current_dakota_param_file = self.services.get_config_param('CURRENT_DAKOTA_PARAM_FILE')
+            shutil.copyfile(self.INPUT_FILES, current_dakota_param_file)
 
-        self.services.stage_input_files(self.INPUT_FILES)
+#  Create a dummy result file so the plasma state has something to update to.
+            open(self.services.get_config_param('CURRENT_DAKOTA_COST_FILE'), 'a').close()
         
-        current_vmec_namelist = self.services.get_config_param('CURRENT_VMEC_NAMELIST')
-        shutil.copyfile(self.INPUT_FILES, current_vmec_namelist)
-        
-#  Create a dummy wout file so the plasma state has something to update to.
-        open(self.services.get_config_param('CURRENT_VMEC_WOUT_FILE'), 'a').close()
-        
-        self.services.update_plasma_state()
+            self.services.update_plasma_state()
 
 #-------------------------------------------------------------------------------
 #
-#  VMEC init Component step method. This runs vmec.
+#  DAKOTA init Component step method. Not used.
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        print('vmec_init: step')
-
+        print('dakota_init: step')
+    
 #-------------------------------------------------------------------------------
 #
-#  VMEC init Component finalize method. This cleans up afterwards. Not used.
+#  DAKOTA init Component finalize method. This cleans up afterwards. Not
+#  used.
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('vmec_init: finalize')
+        print('dakota_init: finalize')

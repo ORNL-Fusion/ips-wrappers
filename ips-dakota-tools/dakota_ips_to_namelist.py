@@ -2,8 +2,7 @@
 
 #-------------------------------------------------------------------------------
 #
-#  IPS wrapper for V3FIT component. This wapper only takes a V3FIT input file
-#  and runs V3FIT.
+#  IPS wrapper to bridge the DAKOTA params to a namelist input file.
 #
 #-------------------------------------------------------------------------------
 
@@ -17,13 +16,13 @@ from component import Component
 #
 #-------------------------------------------------------------------------------
 def contains_end(line):
-    
+
 #  Check and remove every character after the !.
     line = line.split('!')[0]
-    
+
     if (line == ''):
         return False, ''
-    
+
     if (line[0] == '/'):
         return True, ''
 
@@ -31,7 +30,7 @@ def contains_end(line):
     in_double_quote = line[0] == '\"'
     
     for i, c in enumerate(line[1:]):
-        
+
 #  Do not close the quote when a single quote is encounterd in the following
 #  situations.
 #
@@ -52,91 +51,84 @@ def contains_end(line):
         elif ((c == '&') and not in_double_quote and not in_single_quote):
             if (i + 4 <= len(line)) and (line[i:i + 4] == '&end'):
                 return TRUE, line[:i]
-    
+
     return False, ''
 
 #-------------------------------------------------------------------------------
 #
-#  V3FIT Component Constructor
+#  DAKOTA to fortran namelist Component Constructor
 #
 #-------------------------------------------------------------------------------
-class v3fit(Component):
+class dakota_ips_to_namelist(Component):
     def __init__(self, services, config):
-        print('v3fit: Construct')
+        print('dakota_ips_to_namelist: Construct')
         Component.__init__(self, services, config)
+    
+#-------------------------------------------------------------------------------
+#
+#  DAKOTA to fortran namelist Component init method. This method reads the
+#  parameter file from datoka and adds to an existing namelist input file.
+#
+#-------------------------------------------------------------------------------
+    def init(self, timeStamp=0.0):
+        print('dakota_ips_to_namelist: init')
         
-        self.v3fit_exe = self.V3FIT_EXE
-
-#-------------------------------------------------------------------------------
-#
-#  V3FIT Component init method. This method prepairs the namelist input file.
-#
-#-------------------------------------------------------------------------------
-    def init(self, timeStamp=0.0, **keywords):
-        print('v3fit: init')
         self.services.stage_plasma_state()
         
-        self.current_v3fit_namelist = self.services.get_config_param('CURRENT_V3FIT_NAMELIST')
-
-        params = keywords['name_list_params']
-
+#  Parse the environment variables for the prefix.
+        params = {}
+    
+        for key, value in self.__dict__.iteritems():
+            if (self.PREFIX in key):
+                params[key.replace(self.PREFIX, '')] = value
+    
 #  Append the new parameters to the end of the namelist input file before the
 #  end. Mark the start of the dakota parameter with a comment. To avoid
 #  littering the namelist file. NAMELIST_FILE should reference a file in the
 #  plasma state.
-
-        v3fit_namelist = open(self.current_v3fit_namelist, 'r')
-        v3fit_namelist_lines = v3fit_namelist.readlines()
-        v3fit_namelist.close()
+        namelist_file = open(self.NAMELIST_FILE, 'r')
+        namelist_file_lines = namelist_file.readlines()
+        namelist_file.close()
         
-        #  Reopen for writting.
-        v3fit_namelist = open(self.current_v3fit_namelist, 'w')
-
-        for line in v3fit_namelist_lines:
+#  Reopen for writting.s
+        namelist_file = open(self.NAMELIST_FILE, 'w')
+        
+        todem_found = False
+        for line in namelist_file_lines:
 #  Name list input files can have strings containing path separators. Check for
 #  an equals sign to avoid these.
             end_found, short_line = contains_end(line)
-            if (end_found):
-                v3fit_namelist.write(short_line)
-                v3fit_namelist.write('\n!  V3FIT params\n')
+            if (end_found and not todem_found):
+                namelist_file.write(short_line)
+                namelist_file.write('\n!  DAKOTA params\n')
                 for key, value in params.iteritems():
-                    v3fit_namelist.write('%s = %s\n'%(key, value))
-                v3fit_namelist.write('/\n')
-                break
-            elif ('!  V3FIT params\n' in line):
-                v3fit_namelist.write(line)
+                    namelist_file.write('%s = %s\n'%(key, value))
+                namelist_file.write('/')
+            elif ('!  DAKOTA params\n' in line):
+                todem_found = True
+                namelist_file.write(line)
                 for key, value in params.iteritems():
-                    v3fit_namelist.write('%s = %s\n'%(key, value))
-                v3fit_namelist.write('/\n')
-                break
+                    namelist_file.write('%s = %s\n'%(key, value))
             else:
-                v3fit_namelist.write(line)
-
-        v3fit_namelist.close()
-
-#-------------------------------------------------------------------------------
-#
-#  V3FIT Component step method. This runs V3FIT.
-#
-#-------------------------------------------------------------------------------
-    def step(self, timeStamp=0.0):
-        print('v3fit: step')
-
-        task_id = self.services.launch_task(self.NPROC,
-                                            self.services.get_working_dir(),
-                                            self.V3FIT_EXE,
-                                            self.current_v3fit_namelist,
-                                            logfile = 'v3fit.log')
-    
-        if (self.services.wait_task(task_id)):
-            self.services.error('v3fit: step failed.')
+                namelist_file.write(line)
+                    
+        namelist_file.close()
 
         self.services.update_plasma_state()
 
 #-------------------------------------------------------------------------------
 #
-#  V3FIT Component finalize method. This cleans up afterwards. Not used.
+#  DAKOTA to fortran namelist Component step method. Not used.
+#
+#-------------------------------------------------------------------------------
+    def step(self, timeStamp=0.0):
+        print('dakota_ips_to_namelist: step')
+    
+#-------------------------------------------------------------------------------
+#
+#  DAKOTA to fortran namelist Component finalize method. This cleans up afterwards. Not
+#  used.
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('v3fit: finalize')
+        print('dakota_ips_to_namelist: finalize')
