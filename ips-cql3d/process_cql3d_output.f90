@@ -701,8 +701,8 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
       NAMELIST / Fd_nml / nF, enorm, p_inner, p_outer, maxx, minn,
      1 lower, upper, shape, R_major, a, Btor, frequency, cql3d_cdf_fn,
      2 Teprof, Neprof, proftype, RadMapDim, rho_pol, rho_tor
-      NAMELIST / Num_nml / n_uprp, n_mesh, mesh_limits, mesh_output, &
-         &uprp_grid_type, du_max_min_ratio
+      NAMELIST / Num_nml / n_uprp, n_mesh, mesh_limits, mesh_output,
+     1 uprp_grid_type, du_max_min_ratio
 
 !****************************************************************************************
 ! Defaults
@@ -748,16 +748,16 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
       call getlun(inp_unit,ierr)  ;  call getlun(out_unit,ierr)
 	
       write(*,*) 'Process qcl3d output reading ImChizz.inp'
-      open(unit=inp_unit, file='ImChizz.inp', status='old', &
-              &form='formatted')
+      open(unit=inp_unit, file='ImChizz.inp', status='old',
+     1 form='formatted')
       INQUIRE(inp_unit, exist=lex)
       IF (lex) THEN
 		READ(inp_unit,ImChizz_nml)
 		READ(inp_unit,Fd_nml)
 		READ(inp_unit,Num_nml)
       ELSE
-         write(*,*) &
-            &'ImChizz.inp does not exist or there was a read error'
+         write(*,*)
+     1     'ImChizz.inp does not exist or there was a read error'
       END IF
       close(inp_unit)
 
@@ -777,8 +777,8 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
 ! Write ImChizz.inp
 !****************************************************************************************
 
-      open(unit=out_unit, file='torica.inp',                &
-        status = 'unknown', form = 'formatted',delim='quote')
+      open(unit=out_unit, file='torica.inp',
+     1 status = 'unknown', form = 'formatted',delim='quote')
 
       WRITE (*,*) 'ImChizz_nml = ', ImChizz_nml
       WRITE (*,*) 'Fd_nml = ', Fd_nml
