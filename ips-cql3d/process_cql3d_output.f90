@@ -680,8 +680,8 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
 
 	  LOGICAL :: output_F_data, output_Chi, mesh_output
 	  INTEGER :: npts(PSI_DIR:NPAR_DIR), n_uprp
-	  INTEGER, DIMENSION(PSI_DIR:NPAR_DIR), :: n_mesh
-	  REAL(r8), DIMENSION(PSI_DIR:NPAR_DIR, LLOWER:UUPPER), :: mesh_limits
+	  INTEGER, DIMENSION(PSI_DIR:NPAR_DIR) :: n_mesh
+	  REAL(r8), DIMENSION(PSI_DIR:NPAR_DIR, LLOWER:UUPPER) :: mesh_limits
 	  REAL(r8) :: du_max_min_ratio
 	  CHARACTER *(N_STR) :: F_source, shape, cdf_fn, cql3d_cdf_fn, psitable_fn
 	  CHARACTER *(1) :: ibq
