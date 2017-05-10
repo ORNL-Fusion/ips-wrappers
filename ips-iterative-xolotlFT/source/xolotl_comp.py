@@ -57,10 +57,10 @@ class xolotlWorker(Component):
             print('run xolotl preprocessor')
             #run prepocessor and copy params.txt input file to plasma state
             os.system('java -Djava.library.path=/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps -cp .:/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps/*:/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-build/gov.ornl.xolotl.preprocessor/preprocessor/CMakeFiles/xolotlPreprocessor.dir/ gov.ornl.xolotl.preprocessor.Main --nxGrid 160 --maxVSize 250 --phaseCut')        
-            write_xolotl_paramfile.writeXolotlParameterFile_fromPreprocessor(start_stop=xolotlParameterConfig.start_stop,ts_final_time=runEndTime,networkFile=xolotlParameterConfig.networkFile,sputtering=ftridynParameterConfig.spYieldW)
+            write_xolotl_paramfile.writeXolotlParameterFile_fromPreprocessor(start_stop=xolotlParameterConfig.start_stop,ts_final_time=runEndTime,networkFile=xolotlParameterConfig.networkFile,sputtering=ftridynParameterConfig.spYieldW,flux=xolotlParameterConfig.flux)
                 
         else:
-            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=xolotlParameterConfig.start_stop,ts_final_time=runEndTime,networkFile=xolotlParameterConfig.networkFile,sputtering=ftridynParameterConfig.spYieldW)
+            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=xolotlParameterConfig.start_stop,ts_final_time=runEndTime,networkFile=xolotlParameterConfig.networkFile,sputtering=ftridynParameterConfig.spYieldW,flux=xolotlParameterConfig.flux)
         
         #store xolotls parameter and network files for each loop 
         currentXolotlParamFile='params_%f.txt' %driverParameterConfig.driverTime

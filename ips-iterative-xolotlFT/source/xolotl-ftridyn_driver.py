@@ -27,7 +27,6 @@ class xolotlFtridynDriver(Component):
         #RESTART mode requires providing a list of input files, and placing them in a 'restart_files' folder
         #for FTridyn: last_TRIDYN.dat; for Xolotl: params.txt (of the last run), networkfile (networkRestart.h5)
         #the mode is changed to NEUTRAL after the 1st loop
-
         driverStartMode = 'INIT'
 
         driverInitTime=0.0
@@ -62,26 +61,29 @@ class xolotlFtridynDriver(Component):
         #get config file and write Xolotl's parameter file options
         #write every parameter that will be passed in write_xolotl_paramfile functions 
         #i.e., different from default values (set to reproduce email-coupling of FTridyn-Xolotl)
-        startStopLine="start_stop='True'"
+        xolotlStartStopLine="start_stop='True'"
+        flux=4.0e4
+        xolotlFluxLine="flux=%e" %flux
         if driverStartMode=='INIT':
-            networkFileLine="networkFile='networkInit.h5'"
+            xolotlNetworkFileLine="networkFile='networkInit.h5'"
         elif driverStartMode=='RESTART':
-            networkFileLine="networkFile='networkRestart.h5'"
+            xolotlNetworkFileLine="networkFile='networkRestart.h5'"
 
         xolotl_config_file = self.services.get_config_param('XOLOTL_PARAMETER_CONFIG_FILE')
         xid = open(xolotl_config_file, 'w')
-        xid.write("%s \n%s \n" % (startStopLine, networkFileLine))
+        xid.write("%s \n%s \n%s \n" % (xolotlStartStopLine, xolotlNetworkFileLine,xolotlFluxLine))
         xid.close()
 
         #ftridyn config file
         #TotalDepth: total substrate depth in [A]; set to 0.0 to use what Xolotl passes to ftridyn (as deep as He exists)
         #InitialTotalDepth: if TotalDepth=0.0, choose an appropriate depth for the irradiation energy in the 1st loop
-        #NImpacts: number of impacts (NH in generateInput) ;  InEnergy: impact energy (energy in generateInput); initialize SpYield
+        #NImpacts: number of impacts (NH in generateInput) ;  InEnergy: impact energy (energy in generateInput, [eV]); initialize SpYield
         ftridynTotalDepth=0.0
         ftridynInitialTotalDepth=200.0
         ftridynNImpacts=1e5
+        ftridynInEnergy=250.0
         ftridynSpYieldW=0.0
-        ftridynInEnergy=250.0 #eV
+
         driverFtridynTotalDepthString='totalDepth = %f' %ftridynTotalDepth
         driverFtridynInitialTotalDepthString='initialTotalDepth = %f' %ftridynInitialTotalDepth
         driverFtridynNImpactsString='nImpacts = %f' %ftridynNImpacts
