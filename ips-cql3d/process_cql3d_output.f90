@@ -670,8 +670,8 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
 	  IMPLICIT NONE
 	  integer, private, parameter :: r8 = SELECTED_REAL_KIND(12,100)
 	  INTEGER, PARAMETER, PRIVATE:: LBOUND = 1, UBOUND = 2
-	  INTEGER, PARAMETER, PRIVATE:: PSI_DIR = 1, BMOD_DIR = 2, NPAR_DIR = 3, &
-		   &N_DIR = NPAR_DIR - PSI_DIR + 1, BMOD_INDEX = 4, SIGN_DIR =  4
+	  INTEGER, PARAMETER, PRIVATE:: PSI_DIR = 1, BMOD_DIR = 2, NPAR_DIR = 3,
+	 &  N_DIR = NPAR_DIR - PSI_DIR + 1, BMOD_INDEX = 4, SIGN_DIR =  4
       INTEGER, PARAMETER, PRIVATE:: Y_DIM = 1, X_DIM = 2, R_DIM = 3, &
 		   &NF_DIM = R_DIM - Y_DIM + 1
 	  INTEGER, PARAMETER, PRIVATE:: N_STR = 80
