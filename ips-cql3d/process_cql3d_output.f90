@@ -669,6 +669,7 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
 
 	  IMPLICIT NONE
 	  integer, parameter :: r8 = SELECTED_REAL_KIND(12,100)
+      INTEGER, PARAMETER :: LLOWER = 1, UUPPER = 2
 	  INTEGER, PARAMETER :: LBOUND = 1, UBOUND = 2
 	  INTEGER, PARAMETER :: PSI_DIR = 1, BMOD_DIR = 2, NPAR_DIR = 3
 	  INTEGER, PARAMETER :: N_DIR = NPAR_DIR - PSI_DIR + 1, BMOD_INDEX = 4
@@ -676,7 +677,8 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
       INTEGER, PARAMETER :: Y_DIM = 1, X_DIM = 2, R_DIM = 3
 	  INTEGER, PARAMETER :: NF_DIM = R_DIM - Y_DIM + 1
 	  INTEGER, PARAMETER :: N_STR = 80
-	  INTEGER, PARAMETER ::  TE_DIM = 1, NE_DIM = 2, MAXPROF=128
+	  INTEGER, PARAMETER :: TE_DIM = 1, NE_DIM = 2, MAXPROF=128
+      REAL(r8), PARAMETER :: PI = 3.14159265358979_r8, TWOPI = 6.28318530717958_r8
 
 	  LOGICAL :: output_F_data, output_Chi, mesh_output
 	  INTEGER :: npts(PSI_DIR:NPAR_DIR), n_uprp
@@ -752,9 +754,9 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
      1 form='formatted')
       INQUIRE(inp_unit, exist=lex)
       IF (lex) THEN
-		READ(inp_unit,ImChizz_nml)
-		READ(inp_unit,Fd_nml)
-		READ(inp_unit,Num_nml)
+		READ(inp_unit, nml = ImChizz_nml)
+		READ(inp_unit, nml = Fd_nml)
+		READ(inp_unit, nml = Num_nml)
       ELSE
          write(*,*)
      1     'ImChizz.inp does not exist or there was a read error'
@@ -765,9 +767,9 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
 ! Load up data
 !****************************************************************************************
 	
-	  rho_pol = sqrt(ps%psipol / ps%psipol(nprodt))
+	  rho_pol = sqrt(ps%psipol / ps%psipol(ps%nrho))
 	  rho_tor = ps%rho
-	  RadMapDim = nprodt
+	  RadMapDim = ps%nrho
 	  R_major = ps%R_axis
 	  a = (ps%R_MAX_LCFS - ps%R_MIN_LCFS)/2.
 	  Btor = ps%B_axis
@@ -780,13 +782,13 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
       open(unit=out_unit, file='torica.inp',
      1 status = 'unknown', form = 'formatted',delim='quote')
 
-      WRITE (*,*) 'ImChizz_nml = ', ImChizz_nml
-      WRITE (*,*) 'Fd_nml = ', Fd_nml
-      WRITE (*,*) 'Num_nml = ', Num_nml
+      WRITE (*,*) 'ImChizz_nml = ', nml = ImChizz_nml
+      WRITE (*,*) 'Fd_nml = ', nml = Fd_nml
+      WRITE (*,*) 'Num_nml = ', nml = Num_nml
 
-	  WRITE(out_unit,ImChizz_nml)
-	  WRITE(out_unit,Fd_nml)
-	  WRITE(out_unit,Num_nml)
+	  WRITE(out_unit, nml = ImChizz_nml)
+	  WRITE(out_unit, nml = Fd_nml)
+	  WRITE(out_unit, nml = Num_nml)
 
       close(out_unit)
 
@@ -818,6 +820,7 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
 !
       INTEGER, PARAMETER :: minlun=30, maxlun=99
       LOGICAL :: busy
+      INTEGER :: i
 !
 !-----------------------------------------------------------------------
 !
