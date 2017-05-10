@@ -561,6 +561,7 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
       write(*,*) 'power_lh_int = ', powerlh_int, 'currlh_int = ', currlh_int
 ! end of ptb diagnostics and hack
 
+      WRITE (*,*) "About to call write_inchizz_inp"
       CALL write_inchizz_inp
 
       endif  !On cql3d_output.eq.'LH'
@@ -706,6 +707,8 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
       NAMELIST / Num_nml / n_uprp, n_mesh, mesh_limits, mesh_output,
      1 uprp_grid_type, du_max_min_ratio
 
+      WRITE (*,*) "Entered write_inchizz_inp"
+      
 !****************************************************************************************
 ! Defaults
 !****************************************************************************************
