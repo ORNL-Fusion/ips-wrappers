@@ -673,8 +673,8 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
 	  INTEGER, PARAMETER, PRIVATE:: PSI_DIR = 1, BMOD_DIR = 2, NPAR_DIR = 3
 	  INTEGER, PARAMETER, PRIVATE:: N_DIR = NPAR_DIR - PSI_DIR + 1, BMOD_INDEX = 4
 	  INTEGER, PARAMETER, PRIVATE:: SIGN_DIR =  4
-      INTEGER, PARAMETER, PRIVATE:: Y_DIM = 1, X_DIM = 2, R_DIM = 3, &
-		   &NF_DIM = R_DIM - Y_DIM + 1
+      INTEGER, PARAMETER, PRIVATE:: Y_DIM = 1, X_DIM = 2, R_DIM = 3
+	  INTEGER, PARAMETER, PRIVATE:: NF_DIM = R_DIM - Y_DIM + 1
 	  INTEGER, PARAMETER, PRIVATE:: N_STR = 80
 	  INTEGER, PARAMETER, PRIVATE::  TE_DIM = 1, NE_DIM = 2, MAXPROF=128
 
@@ -683,8 +683,7 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
 	  INTEGER, DIMENSION(PSI_DIR:NPAR_DIR), PRIVATE:: n_mesh
 	  REAL(r8), DIMENSION(PSI_DIR:NPAR_DIR, LLOWER:UUPPER), PRIVATE:: mesh_limits
 	  REAL(r8), PRIVATE:: du_max_min_ratio
-	  CHARACTER *(N_STR), PRIVATE:: F_source, shape, cdf_fn, cql3d_cdf_fn, &
-		   &psitable_fn
+	  CHARACTER *(N_STR), PRIVATE:: F_source, shape, cdf_fn, cql3d_cdf_fn, psitable_fn
 	  CHARACTER *(1),PRIVATE :: ibq
 	  CHARACTER *(N_STR), PRIVATE:: uprp_grid_type, proftype
 	  INTEGER, PRIVATE:: nF(PSI_DIR:NPAR_DIR)
@@ -698,8 +697,7 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
       integer :: inp_unit, out_unit, iarg
       logical :: lex
 
-      NAMELIST / ImChizz_nml / F_source, npts, output_F_data, cdf_fn, &
-         &psitable_fn, ibq
+      NAMELIST / ImChizz_nml / F_source, npts, output_F_data, cdf_fn, psitable_fn, ibq
       NAMELIST / Fd_nml / nF, enorm, p_inner, p_outer, maxx, minn, &
          &lower, upper, shape, R_major, a, Btor, frequency, cql3d_cdf_fn,&
          Teprof, Neprof, proftype, RadMapDim, rho_pol, rho_tor
