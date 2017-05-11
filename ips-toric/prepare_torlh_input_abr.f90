@@ -4,6 +4,10 @@
 !25 Jan 2008 - added optional command line arg for state file
 !JCW 2007, 2008
 
+! Working notes: DBB 5-11-2017
+! Modified to pick up LH power (pwtot) from plasma state ps%power_lh(1)
+! And get enorm from command line argument.
+
 ! Working notes: DBB 4-13-2017
 ! Previous versions had wrong logic for controlling the INUMIN variable.  In particular the
 ! explanation in Working notes: DBB 9-8-2016 was wrong so I'm eliminating that and fixing.
@@ -62,7 +66,7 @@
       character(10):: arg_toric_Mode = 'toric'
       character(10):: arg_inumin_Mode = 'Maxwell'
       character(1):: arg_isol_Mode = '1'
-
+      character(16):: arg_enorm = 'None'
 
 !------Namelist inputs-------------
 ! see the rf component write-up in the svn repository for more description of
@@ -251,8 +255,7 @@
 ! originally in t0_mod_qldce.F
       namelist /qldceinp/ &
      &     num_runs, path, iread_felice, files_toric, file_felice, &
-     &     d_u, u_extr, d_psi, psi_min, psi_max, enorm, ntres, uasp
-!    &     d_u, u_extr, d_psi, psi_min, psi_max, enorm, ntres, uasp, pwtot
+     &     d_u, u_extr, d_psi, psi_min, psi_max, enorm, ntres, uasp, pwtot
 !uasp yet to be validated, do not use this option in production JCW 22 JUNE 2011
 !enorm if non zero puts qldce on a momentum space mesh as used by CQL3D
 !otherwise qldce is on a v/vte mesh.
@@ -511,11 +514,12 @@
          arg_inumin_Mode = "Maxwell"
          arg_isol_Mode = "1"
 
-      case(4)
+      case(5)
          call get_arg(1,cur_state_file)
          call get_arg(2,arg_toric_Mode)
          call get_arg(3,arg_inumin_Mode)
          call get_arg(4,arg_isol_Mode)
+         call get_arg(5,arg_enorm)
 
          toricmode = trim(arg_toric_Mode)
       
@@ -536,21 +540,27 @@
 			write (*,*) 'prepare_torlh_input_abr: unknown arg_isol_Mode = ', arg_isol_Mode
 			stop
 		 end if
+		 
+		 if (trim(arg_enorm) /= 'None') then
+			read(trim(arg_enorm),*) enorm
+		 
 
       case(2:3)
          write(0,*) 'Error. Illegal number of arguments.'
          write(0,*) 'prepare torlh usage: '
        	 write(0,*) 'zero args: uses default state file name'
        	 write(0,*) 'one arg: current state file name'
-       	 write(0,*) 'four args: current state file, arg_toric_Mode, arg_inumin_Mode, arg_isol_Mode'
+       	 write(0,*) 'five args: current state file, arg_toric_Mode, arg_inumin_Mode, &
+       	 		arg_isol_Mode, arg_enorm'
        	 stop 'incorrect command line arguments'
 
-      case(5:)
+      case(6:)
          write(0,*) 'Error. Illegal number of arguments.'
          write(0,*) 'prepare torlh usage: '
        	 write(0,*) 'zero args: uses default state file name'
        	 write(0,*) 'one arg: current state file name'
-       	 write(0,*) 'four args: current state file, arg_toric_Mode, arg_inumin_Mode, arg_isol_Mode'
+       	 write(0,*) 'five args: current state file, arg_toric_Mode, arg_inumin_Mode, &
+       	 		arg_isol_Mode, arg_enorm'
        	 stop 'incorrect command line arguments'
 
       end select
