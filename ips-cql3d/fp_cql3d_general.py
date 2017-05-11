@@ -411,7 +411,7 @@ class cql3d(Component):
 
           print 'running', command
           services.send_portal_event(event_type = 'COMPONENT_EVENT',\
-              event_comment =  cmd_eqdsk)
+              event_comment =  command)
 
           retcode = subprocess.call(command.split(), stdout = log_file,\
                                     stderr = subprocess.STDOUT)
