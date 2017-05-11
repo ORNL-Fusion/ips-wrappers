@@ -542,7 +542,7 @@
 		 end if
 		 
 		 if (trim(arg_enorm) /= 'None') then
-			read(trim(arg_enorm),*) enorm
+			read(arg_enorm,*) enorm
 		 end if
 		 
 
