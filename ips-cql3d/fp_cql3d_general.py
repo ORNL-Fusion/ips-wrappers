@@ -366,7 +366,7 @@ class cql3d(Component):
         power_lh = ps.variables['power_lh'].getValue()[0]
         ps.close()
         print 'power = ', power_lh
-        if(power_lh > 2.0E+04):
+        if(power_lh > 1.0E-04):
 
     # Copy current Dql file to generic name -> genray.nc
           try:
@@ -408,6 +408,11 @@ class cql3d(Component):
           command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
           cql3d_output + ' ' + cql3d_nml + ' ' + restart + ' ' + nsteps_str + ' ' +\
           ' ' + deltat_str + ' ' + ps_add_nml
+
+          print 'running', command
+          services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+              event_comment =  cmd_eqdsk)
+
           retcode = subprocess.call(command.split(), stdout = log_file,\
                                     stderr = subprocess.STDOUT)
           if (retcode != 0):
