@@ -543,6 +543,7 @@
 		 
 		 if (trim(arg_enorm) /= 'None') then
 			read(trim(arg_enorm),*) enorm
+		 end if
 		 
 
       case(2:3)
