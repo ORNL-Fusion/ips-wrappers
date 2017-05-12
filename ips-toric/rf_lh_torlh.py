@@ -324,6 +324,8 @@ class torlh (Component):
         cur_eqdsk_file = self.try_get_config_param(services,'CURRENT_EQDSK')
         cur_cql_file = self.try_get_config_param(services,'CURRENT_CQL')
         cur_dql_file = self.try_get_config_param(services,'CURRENT_DQL')
+        # enorm which is used here and in cql3d
+        arg_enorm = self.try_get_config_param(services,'ENORM', optional = True)
 
         torlh_log = os.path.join(workdir, 'log.torlh')
         cwd = os.getcwd()
@@ -408,9 +410,6 @@ class torlh (Component):
             arg_enorm = 'None'
             if INIT_Complete and CQL_COUPLE_MODE:
                 arg_inumin_Mode = 'nonMaxwell'                
-                # enorm which is used here and in cql3d
-                arg_enorm = self.try_get_config_param(services,'ENORM', optional = True)
-
             
             cmd_prepare_input = [prepare_input, cur_state_file, arg_toric_Mode,\
                       arg_inumin_Mode,arg_isol_Mode, arg_enorm]
@@ -468,8 +467,8 @@ class torlh (Component):
                     arg_inumin_Mode = 'nonMaxwell'
 
                 cmd_prepare_input = [prepare_input, cur_state_file, arg_toric_Mode,\
-                          arg_inumin_Mode,arg_isol_Mode]
-                print 'running = ', cmd_prepare_input
+                      arg_inumin_Mode,arg_isol_Mode, arg_enorm]
+               print 'running = ', cmd_prepare_input
                 services.send_portal_event(event_type = 'COMPONENT_EVENT',\
                   event_comment =  cmd_prepare_input)
                 retcode = subprocess.call(cmd_prepare_input)
