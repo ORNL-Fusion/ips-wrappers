@@ -325,6 +325,7 @@ class torlh (Component):
         cur_cql_file = self.try_get_config_param(services,'CURRENT_CQL')
         cur_dql_file = self.try_get_config_param(services,'CURRENT_DQL')
         # enorm which is used here and in cql3d
+        arg_enorm = 'None'
         arg_enorm = self.try_get_config_param(services,'ENORM', optional = True)
 
         torlh_log = os.path.join(workdir, 'log.torlh')
@@ -407,7 +408,6 @@ class torlh (Component):
             arg_toric_Mode = 'toric'
             arg_isol_Mode = '1'           
             arg_inumin_Mode = 'Maxwell'
-            arg_enorm = 'None'
             if INIT_Complete and CQL_COUPLE_MODE:
                 arg_inumin_Mode = 'nonMaxwell'                
             
