@@ -468,7 +468,7 @@ class torlh (Component):
 
                 cmd_prepare_input = [prepare_input, cur_state_file, arg_toric_Mode,\
                       arg_inumin_Mode,arg_isol_Mode, arg_enorm]
-               print 'running = ', cmd_prepare_input
+                print 'running = ', cmd_prepare_input
                 services.send_portal_event(event_type = 'COMPONENT_EVENT',\
                   event_comment =  cmd_prepare_input)
                 retcode = subprocess.call(cmd_prepare_input)
@@ -512,7 +512,7 @@ class torlh (Component):
                      event_comment = 'running ' + mapin_bin)
                 retcode = subprocess.call([mapin_bin])
                 if (retcode != 0):
-                    logMsg = 'Error executing ' + RUN_MAPIN
+                    logMsg = 'Error executing ' + mapin_bin
                     self.services.error(logMsg)
                     raise Exception(logMsg)
                     
