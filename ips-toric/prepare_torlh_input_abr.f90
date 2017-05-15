@@ -4,6 +4,10 @@
 !25 Jan 2008 - added optional command line arg for state file
 !JCW 2007, 2008
 
+! Working notes: DBB 5-11-2017
+! Modified to pick up LH power (pwtot) from plasma state ps%power_lh(1)
+! And get enorm from command line argument.
+
 ! Working notes: DBB 4-13-2017
 ! Previous versions had wrong logic for controlling the INUMIN variable.  In particular the
 ! explanation in Working notes: DBB 9-8-2016 was wrong so I'm eliminating that and fixing.
@@ -62,7 +66,7 @@
       character(10):: arg_toric_Mode = 'toric'
       character(10):: arg_inumin_Mode = 'Maxwell'
       character(1):: arg_isol_Mode = '1'
-
+      character(16):: arg_enorm = 'None'
 
 !------Namelist inputs-------------
 ! see the rf component write-up in the svn repository for more description of
@@ -125,7 +129,7 @@
       character(80) :: path, file_felice
       integer :: num_runs, nfel_nphi, iread_felice
       integer :: ntres=64
-      real(rspec) :: d_u, d_psi, enorm=0._rspec, unorm, uasp=1.0
+      real(rspec) :: d_u, d_psi, enorm=0._rspec, unorm, uasp=1.0, pwtot=1.0
       real(rspec) :: psi_min, psi_max
       real(rspec) :: u_extr = 10._rspec
       real(rspec):: uperp0
@@ -251,7 +255,7 @@
 ! originally in t0_mod_qldce.F
       namelist /qldceinp/ &
      &     num_runs, path, iread_felice, files_toric, file_felice, &
-     &     d_u, u_extr, d_psi, psi_min, psi_max, enorm, ntres, uasp
+     &     d_u, u_extr, d_psi, psi_min, psi_max, enorm, ntres, uasp, pwtot
 !uasp yet to be validated, do not use this option in production JCW 22 JUNE 2011
 !enorm if non zero puts qldce on a momentum space mesh as used by CQL3D
 !otherwise qldce is on a v/vte mesh.
@@ -510,11 +514,12 @@
          arg_inumin_Mode = "Maxwell"
          arg_isol_Mode = "1"
 
-      case(4)
+      case(5)
          call get_arg(1,cur_state_file)
          call get_arg(2,arg_toric_Mode)
          call get_arg(3,arg_inumin_Mode)
          call get_arg(4,arg_isol_Mode)
+         call get_arg(5,arg_enorm)
 
          toricmode = trim(arg_toric_Mode)
       
@@ -535,21 +540,28 @@
 			write (*,*) 'prepare_torlh_input_abr: unknown arg_isol_Mode = ', arg_isol_Mode
 			stop
 		 end if
+		 
+		 if (trim(arg_enorm) /= 'None') then
+			read(arg_enorm,*) enorm
+		 end if
+		 
 
       case(2:3)
          write(0,*) 'Error. Illegal number of arguments.'
          write(0,*) 'prepare torlh usage: '
        	 write(0,*) 'zero args: uses default state file name'
        	 write(0,*) 'one arg: current state file name'
-       	 write(0,*) 'four args: current state file, arg_toric_Mode, arg_inumin_Mode, arg_isol_Mode'
+       	 write(0,*) 'five args: current state file, arg_toric_Mode, arg_inumin_Mode, &
+       	 		arg_isol_Mode, arg_enorm'
        	 stop 'incorrect command line arguments'
 
-      case(5:)
+      case(6:)
          write(0,*) 'Error. Illegal number of arguments.'
          write(0,*) 'prepare torlh usage: '
        	 write(0,*) 'zero args: uses default state file name'
        	 write(0,*) 'one arg: current state file name'
-       	 write(0,*) 'four args: current state file, arg_toric_Mode, arg_inumin_Mode, arg_isol_Mode'
+       	 write(0,*) 'five args: current state file, arg_toric_Mode, arg_inumin_Mode, &
+       	 		arg_isol_Mode, arg_enorm'
        	 stop 'incorrect command line arguments'
 
       end select
@@ -566,7 +578,8 @@
       if(ierr .ne. 0) stop 'cannot get plasma state to get profiles '
 
       freqcy = ps%freq_lh(isrc)*GHz !Hz to GHz
-      prfin =  ps%power_lh(isrc) !watts
+      pwtot =  ps%power_lh(isrc) !watts
+      
 !     nspec = ps%nspec_th !+1 !torlh includes electrons in species count
 ! PTB - begins
 ! Use the abridged species list index count (nspec_alla) that includes:

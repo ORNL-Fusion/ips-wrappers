@@ -4,6 +4,10 @@
 TORLH component.  Adapted from RF_LH_toric_abr_mcmd.py. (5-14-2016)
 
 """
+# Working notes: DBB 5-11-2017
+# Modified to pick up enorm as global config parameter and pass to prepare_torlh_input
+# through a command line argument
+#
 # Working notes: DBB 9-5-2016 (updated 4-17-2017)
 # Modified to run in two modes.  A normal torlh mode in which it acts as a normal IPS
 # component.  There is a new optional config parameter, CQL_COUPLE_MODE.  If this parameter
@@ -320,6 +324,9 @@ class torlh (Component):
         cur_eqdsk_file = self.try_get_config_param(services,'CURRENT_EQDSK')
         cur_cql_file = self.try_get_config_param(services,'CURRENT_CQL')
         cur_dql_file = self.try_get_config_param(services,'CURRENT_DQL')
+        # enorm which is used here and in cql3d
+        arg_enorm = 'None'
+        arg_enorm = self.try_get_config_param(services,'ENORM', optional = True)
 
         torlh_log = os.path.join(workdir, 'log.torlh')
         cwd = os.getcwd()
@@ -402,10 +409,11 @@ class torlh (Component):
             arg_isol_Mode = '1'           
             arg_inumin_Mode = 'Maxwell'
             if INIT_Complete and CQL_COUPLE_MODE:
-                arg_inumin_Mode = 'nonMaxwell'
+                arg_inumin_Mode = 'nonMaxwell'                
             
             cmd_prepare_input = [prepare_input, cur_state_file, arg_toric_Mode,\
-                      arg_inumin_Mode,arg_isol_Mode]
+                      arg_inumin_Mode,arg_isol_Mode, arg_enorm]
+                      
             print 'running = ', cmd_prepare_input
             services.send_portal_event(event_type = 'COMPONENT_EVENT',\
               event_comment =  cmd_prepare_input)
@@ -459,7 +467,7 @@ class torlh (Component):
                     arg_inumin_Mode = 'nonMaxwell'
 
                 cmd_prepare_input = [prepare_input, cur_state_file, arg_toric_Mode,\
-                          arg_inumin_Mode,arg_isol_Mode]
+                      arg_inumin_Mode,arg_isol_Mode, arg_enorm]
                 print 'running = ', cmd_prepare_input
                 services.send_portal_event(event_type = 'COMPONENT_EVENT',\
                   event_comment =  cmd_prepare_input)
@@ -504,7 +512,7 @@ class torlh (Component):
                      event_comment = 'running ' + mapin_bin)
                 retcode = subprocess.call([mapin_bin])
                 if (retcode != 0):
-                    logMsg = 'Error executing ' + RUN_MAPIN
+                    logMsg = 'Error executing ' + mapin_bin
                     self.services.error(logMsg)
                     raise Exception(logMsg)
                     
