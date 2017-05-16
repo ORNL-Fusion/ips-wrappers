@@ -3,8 +3,8 @@
       program prepare_cql3d_input
 
 !Invoked as:  prepare_cql3d_input [ips_mode cql3d_mode cql3d_output
-!             cql3d_nml restart nsteps_str deltat_str ps_add_nml ]
-!             Up to 8 command line arguments, as described below.
+!             cql3d_nml restart nsteps_str deltat_str ps_add_nml, enorm (optional) ]
+!             Up to 9 command line arguments, as described below.
 !             Output is cqlinput namelist file, adjusted with PS data.
 !
 !             Probably better to code some of these inputs as optional
@@ -72,6 +72,9 @@
 !                       Valid values: 'disabled','enabled','force'.
 !                       E.G., Can be used to update a test PS.
 !                       default='disabled' [the usual situation].
+!                  9th: enorm (optional) (added by DBB 5-16-2017) Set in call from 
+!                       fp_cql3d_general.py which gets it from IPS config
+!                       parameter.
 !
 !     CONSIDER: adding enorm and jx arguments, to adjust if changed
 !     from cqlinput.
@@ -198,9 +201,10 @@ c-----------------------------------
 
       character*8 ips_mode,cql3d_mode,cql3d_output,restart,ps_add_nml
       character(swim_filename_length) cql3d_nml
-      character(len = 128) :: deltat_str, nsteps_str
+      character(len = 128) :: deltat_str, nsteps_str, enorm_str = ' '
       character(len = 128) :: nlrestrt_str
       REAL(KIND=rspec) :: deltat
+      LOGICAL :: enorm_str_present
 
       integer nj,njp1,nrho
       integer nsteps
@@ -261,6 +265,7 @@ c     Defaults:
       nsteps_str='10'
       deltat_str='0.1e-3'  !secs
       ps_add_nml='disabled'
+      enorm_str_present = .FALSE.
 
 c     F2003-syntax: command_argument_count()/get_command_argument(,)
       iargs=command_argument_count()
@@ -281,6 +286,11 @@ c     F2003-syntax: command_argument_count()/get_command_argument(,)
       if (iargs.ge.6)   call get_command_argument(6,nsteps_str)
       if (iargs.ge.7)   call get_command_argument(7,deltat_str)
       if (iargs.ge.8)   call get_command_argument(8,ps_add_nml)
+      if (iargs.ge.9) then
+        call get_command_argument(9,enorm_str)
+        enorm_str_present = .TRUE.
+        enorm_str=trim(enorm_str)
+      end if
 
       ips_mode=trim(ips_mode)
       cql3d_mode=trim(cql3d_mode)
@@ -293,7 +303,8 @@ c     F2003-syntax: command_argument_count()/get_command_argument(,)
 
       write(*,*)'prepare_cql3d_input command line arguments: ',
      +  ips_mode,'  ',cql3d_mode,'  ',cql3d_output,'  ',cql3d_nml,
-     +  '  ',restart,'  ',nsteps_str,'  ',deltat_str,'  ',ps_add_nml
+     +  '  ',restart,'  ',nsteps_str,'  ',deltat_str,'  ',ps_add_nml,
+     + ' ', enorm_str
 
 
 c-----------------------------------------------------------------------
@@ -703,7 +714,7 @@ c           Initialize arrays,
       endif
 
 !.......................................................................
-!     Set cqlinput nsteps and dtr
+!     Set cqlinput nsteps, dtr and enorm
 !.......................................................................
 
       write(*,*) 'nsteps_str = ', nsteps_str
@@ -719,6 +730,12 @@ c           Initialize arrays,
       dtr=deltat
       write(*,*) 'deltat from deltat_string = ', deltat  ! ptb:
       write(*,*) 'nsteps from nsteps_string = ', nsteps  ! ptb:
+
+	 if (enorm_str_present .and. trim(enorm_str) /= 'None') then
+        write(*,*) 'enorm_str = ', enorm_str
+		read(enorm_str,*) enorm
+	 end if
+
 !.......................................................................
 c     If only need electron profiles plus zeff (ngen=1 and 
 c     iprozeff=spline from cql3d namelist), then specify

@@ -1,5 +1,9 @@
 #! /usr/bin/env python
 
+# fp_cql3d_general.py, Version 0.2 Batchelor 5-16-2017
+# Added code to pick up enorm from global parameter in config file and add to argument list
+# of prepare_cql3d_input.f90
+
 # fp_cql3d_general.py, Version 0.1 Batchelor 3-2-2017
 # Added cur_cql_file only to update_plasma_state for iteration (not full update).
 # Plasma state variables are already updated with merge_current_plasma_state.  So this 
@@ -136,6 +140,10 @@ class cql3d(Component):
             raise Exception, 'fp_cql3d_general: error getting cql3d-specific\
             config parameters'
 
+        # enorm which is used here and in cql3d
+        arg_enorm = 'None'
+        arg_enorm = self.try_get_config_param(services,'ENORM', optional = True)
+
     # Copy plasma state files over to working directory
         try:
           services.stage_plasma_state()
@@ -232,7 +240,11 @@ class cql3d(Component):
     # ptb:    cql3d_output + ' ' + cql3d_nml + ' ' + nsteps_str + ' ' + ps_add_nml
         command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
         cql3d_output + ' ' + cql3d_nml + ' ' + restart + ' ' + nsteps_str + ' ' +\
-        ' ' + deltat_str + ' ' + ps_add_nml
+        ' ' + deltat_str + ' ' + ps_add_nml + ' ' + arg_enorm
+        
+        print 'running = ', command
+        services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+          event_comment =  command)
         
         retcode = subprocess.call(command.split(), stdout = log_file,\
                                   stderr = subprocess.STDOUT)
