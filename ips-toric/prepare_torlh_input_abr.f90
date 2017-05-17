@@ -597,7 +597,7 @@
          IF (trim(toricmode) == 'qldce') THEN
              write (*,*) 'reading namelist qldceinp'
        			 read(inp_unit, nml = qldceinp)
-       			 WRITE (*, nml = qldceinp)
+       			 !WRITE (*, nml = qldceinp)
        			 WRITE (*,*)
          END IF
 
@@ -691,6 +691,8 @@
       WRITE (*,*) 'toricmode = ', toricmode
       WRITE (*,*) 'inumin = ', inumin
       WRITE (*,*) 'isol = ', isol
+      WRITE (*,*) 'pwtot = ', pwtot
+      WRITE (*,*) 'enorm = ', enorm
 
       write(out_unit, nml = toric_mode)
       write(out_unit, nml = qldceinp)
