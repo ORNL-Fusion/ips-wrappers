@@ -539,12 +539,7 @@
 		 else
 			write (*,*) 'prepare_torlh_input_abr: unknown arg_isol_Mode = ', arg_isol_Mode
 			stop
-		 end if
-		 
-		 if (trim(arg_enorm) /= 'None') then
-			read(arg_enorm,*) enorm
-		 end if
-		 
+		 end if		 
 
       case(2:3)
          write(0,*) 'Error. Illegal number of arguments.'
@@ -576,9 +571,6 @@
 
       call ps_get_plasma_state(ierr,trim(cur_state_file))
       if(ierr .ne. 0) stop 'cannot get plasma state to get profiles '
-
-      freqcy = ps%freq_lh(isrc)*GHz !Hz to GHz
-      pwtot =  ps%power_lh(isrc) !watts
       
 !     nspec = ps%nspec_th !+1 !torlh includes electrons in species count
 ! PTB - begins
@@ -621,6 +613,16 @@
          write(*,*) "Error, nspec > nspmx in torlh, reducing to nspmx"
          nspec=nspmx
       END IF
+
+! Overwrite freqcy, pwtot, and enorm found in machine.inp
+
+      freqcy = ps%freq_lh(isrc)*GHz !Hz to GHz
+      pwtot =  ps%power_lh(isrc) !watts
+		 
+	  if (trim(arg_enorm) /= 'None') then
+		read(arg_enorm,*) enorm
+	  end if
+
 
 !radial profiles generation, these are output to equilequ_file
       s_nrho_n = ps%nrho
