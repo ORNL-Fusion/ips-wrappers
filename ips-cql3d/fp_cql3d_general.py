@@ -563,3 +563,42 @@ class cql3d(Component):
         fd.close()
         return
 
+# ------------------------------------------------------------------------------
+#
+# "Private"  methods
+#
+# ------------------------------------------------------------------------------
+
+    def try_get_config_param(self, services, param_name, optional=False):
+
+        try:
+            value = services.get_config_param(param_name)
+            print param_name, ' = ', value
+        except Exception:
+            if optional:
+                print 'config parameter ', param_name, ' not found'
+                value = None
+            else:
+                message = 'required config parameter ', param_name, ' not found'
+                print message
+                services.exception(message)
+                raise
+
+        return value
+
+    # Try to get component specific config parameter - wraps the exception handling
+    def try_get_component_param(self, services, param_name, optional=False):
+
+        if hasattr(self, param_name):
+            value = getattr(self, param_name)
+            print param_name, ' = ', value
+        elif optional:
+            print 'optional config parameter ', param_name, ' not found'
+            value = None
+        else:
+            message = 'required component config parameter ', param_name, ' not found'
+            print message
+            services.exception(message)
+            raise
+
+        return value
