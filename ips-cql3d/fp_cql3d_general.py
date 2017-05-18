@@ -395,6 +395,10 @@ class cql3d(Component):
           deltat_str = self.DELTAT_STR
           ps_add_nml = self.PS_ADD_NML
 
+        # enorm which is used here and in cql3d
+          arg_enorm = 'None'
+          arg_enorm = self.try_get_config_param(services,'ENORM', optional = True)
+          
     # Call prepare_input - step
           print 'fp_cql3d step: calling prepare_input'
           
@@ -419,7 +423,7 @@ class cql3d(Component):
     # ptb:    cql3d_output + ' ' + cql3d_nml + ' ' + nsteps_str + ' ' + ps_add_nml
           command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
           cql3d_output + ' ' + cql3d_nml + ' ' + restart + ' ' + nsteps_str + ' ' +\
-          ' ' + deltat_str + ' ' + ps_add_nml
+          ' ' + deltat_str + ' ' + ps_add_nml+ ' ' + arg_enorm
 
           print 'running', command
           services.send_portal_event(event_type = 'COMPONENT_EVENT',\
@@ -563,3 +567,42 @@ class cql3d(Component):
         fd.close()
         return
 
+# ------------------------------------------------------------------------------
+#
+# "Private"  methods
+#
+# ------------------------------------------------------------------------------
+
+    def try_get_config_param(self, services, param_name, optional=False):
+
+        try:
+            value = services.get_config_param(param_name)
+            print param_name, ' = ', value
+        except Exception:
+            if optional:
+                print 'config parameter ', param_name, ' not found'
+                value = None
+            else:
+                message = 'required config parameter ', param_name, ' not found'
+                print message
+                services.exception(message)
+                raise
+
+        return value
+
+    # Try to get component specific config parameter - wraps the exception handling
+    def try_get_component_param(self, services, param_name, optional=False):
+
+        if hasattr(self, param_name):
+            value = getattr(self, param_name)
+            print param_name, ' = ', value
+        elif optional:
+            print 'optional config parameter ', param_name, ' not found'
+            value = None
+        else:
+            message = 'required component config parameter ', param_name, ' not found'
+            print message
+            services.exception(message)
+            raise
+
+        return value
