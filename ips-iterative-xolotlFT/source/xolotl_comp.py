@@ -20,34 +20,6 @@ class xolotlWorker(Component):
         print('xolotl_worker: init')
         self.services.stage_plasma_state()
 
-#        sys.path.append(os.getcwd())
-#        import driverParameterConfig
-#        reload(driverParameterConfig)
-
-#        print 'from drivers parameterConfig file: mode is ', driverParameterConfig.mode
-#        print '\t \t \t \t this run starts at time ', driverParameterConfig.driverTime
-#        print '\t \t \t \t driverTimeStep is ', driverParameterConfig.driverTimeStep
-#        runEndTime=driverParameterConfig.driverTime+driverParameterConfig.driverTimeStep
-#        print '\t \t \t \t this runs ends at time: ', runEndTime
-
-#        import xolotlParameterConfig
-#        reload(xolotlParameterConfig)
-
-#        import ftridynParameterConfig
-#        reload(ftridynParameterConfig)
-
-        #print here what's been loaded from xolotlParameterConfig File
-#        xolotl_config_file = self.services.get_config_param('XOLOTL_PARAMETER_CONFIG_FILE')
-#        xid = open(xolotl_config_file, 'r')
-        #currently only start_stop might be passed to writing the parameter file.
-        #if more parameters, it'd require writing them all as a string. something similar to:
-#        xolotlParamString=""
-#        for line in xid: 
-#            print line  
-#            xolotlParamString=xolotlParamString+line.replace("\n", " , ")
-
-#        print 'from xolotls parameterConfig file:', xolotlParamString
-
         print 'check that all arguments are read well by xolotl-init' 
         for (k, v) in keywords.iteritems():
             print '\t', k, " = ", v
@@ -105,10 +77,6 @@ class xolotlWorker(Component):
 
     def step(self, timeStamp=0.0,**keywords):
         print('xolotl_worker: step')
-
-#        sys.path.append(os.getcwd())
-#        import driverParameterConfig
-#        reload(driverParameterConfig)
 
         #asign a local variable to arguments used multiple times
         driverTime=keywords['dTime']

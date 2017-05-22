@@ -24,12 +24,6 @@ class ftridynWorker(Component):
         #stage plasma state files for use on execution of FTridyn
         self.services.stage_plasma_state()
 
-#        sys.path.append(os.getcwd())
-#        import driverParameterConfig
-#        reload(driverParameterConfig)
-#        import ftridynParameterConfig
-#        reload(ftridynParameterConfig)
-
         print 'check that all arguments are read well by ftridyn-init'
         for (k, v) in keywords.iteritems():
             print '\t', k, " = ", v
@@ -108,9 +102,7 @@ class ftridynWorker(Component):
         os.system(' '.join(['python', self.POSTPROCESSING_SCRIPT]))
 
         #get W sputtering yield from FT output: He_WSPYL.DAT or He_WOUT.DAT
-#        import ftridynParameterConfig
-#        reload(ftridynParameterConfig)
-
+        #THIS IS CURRENTLY DONE IN XOLOTL'S COMPONENT, AS SPYIELD CANNOT BE PASSED BACK TO DRIVER
         #FROM He_WSPYL.DAT
         #ftridynYieldOutFile = open('He_WSPYL.DAT', 'rb')
         #allSputteringData=[row.strip().split(" ") for row in ftridynYieldOutFile]
@@ -119,25 +111,17 @@ class ftridynWorker(Component):
         #print 'W sputtering yield from file ',ftridynYieldOutFile,' is =', sputteringYieldW
 
         #FROM He_WOUT.DAT and use NH
-        ftridynOutFile=open('He_WOUT.DAT',"r")
-        ftridynOutData=ftridynOutFile.read().split('\n')
-        searchString='PARTICLES(2)'
-        for line in ftridynOutData:
-            if searchString in line:
-                break
-        stringWithEmptyFields=line.strip().split(" ")
-        sputteringNparticlesString=[x for x in stringWithEmptyFields if x]
-        sputteringNparticles=sputteringNparticlesString[2]
-        keywords['fSpYieldW']=float(sputteringNparticles)/float(keywords['fNImpacts'])
-        print 'calculated in ftridyn-component: W sputtering yield is =', keywords['fSpYieldW']
-
-        #and replace the value of spYieldW in FTridyn Parameter Config File
-#        ftridyn_config_file = self.services.get_config_param('FTRIDYN_PARAMETER_CONFIG_FILE')
-#        ftridyn_tmp_file='ftridynConfigFile.tmp'
-#        shutil.copyfile(ftridyn_config_file,ftridyn_tmp_file)
-#        sputteringYieldSedString="sed    -e 's/spYieldW=[^ ]*/spYieldW=%s/' <%s >%s "   %(sputteringYieldW,ftridyn_tmp_file,ftridyn_config_file)
-#        subprocess.call([sputteringYieldSedString], shell=True)
-#        os.remove(ftridyn_tmp_file)
+        #ftridynOutFile=open('He_WOUT.DAT',"r")
+        #ftridynOutData=ftridynOutFile.read().split('\n')
+        #searchString='PARTICLES(2)'
+        #for line in ftridynOutData:
+        #    if searchString in line:
+        #        break
+        #stringWithEmptyFields=line.strip().split(" ")
+        #sputteringNparticlesString=[x for x in stringWithEmptyFields if x]
+        #sputteringNparticles=sputteringNparticlesString[2]
+        #keywords['fSpYieldW']=float(sputteringNparticles)/float(keywords['fNImpacts'])
+        #print 'calculated in ftridyn-component: W sputtering yield is =', keywords['fSpYieldW']
 
         #append output
         tempfile = open(self.OUTPUT_FTRIDYN_TEMP,"r")
@@ -147,7 +131,6 @@ class ftridynWorker(Component):
         tempfile.close()
 
         #store ftridyns output for each loop (not plasma state)
-#        import driverParameterConfig
         currentFtridynOutputFile='He_WDUMPPRJ_%f.dat' %keywords['dTime']
         shutil.copyfile('He_WDUMPPRJ.dat',currentFtridynOutputFile)
 
