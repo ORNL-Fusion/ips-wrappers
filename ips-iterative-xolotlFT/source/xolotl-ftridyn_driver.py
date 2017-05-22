@@ -34,8 +34,8 @@ class xolotlFtridynDriver(Component):
         self.startMode = 'INIT'
 
         self.initTime=0.0
-        self.endTime=0.002
-        self.timeStep=0.001
+        self.endTime=0.2
+        self.timeStep=0.1
 
 #        driverInitTimeString='driverInitTime = %f' %driverInitTime
 #        driverEndTimeString='driverEndTime = %f' %driverEndTime
@@ -110,7 +110,7 @@ class xolotlFtridynDriver(Component):
 
         self.ftridynTotalDepth=0.0
         self.ftridynInitialTotalDepth=200.0
-        self.ftridynNImpacts=1e4
+        self.ftridynNImpacts=1e5
         self.ftridynInEnergy=200.0
         self.ftridynSpYieldW=0.0
 
@@ -160,14 +160,14 @@ class xolotlFtridynDriver(Component):
 #            os.remove(driver_tmp_file)
 
 #            self.services.update_plasma_state()
-
+            
             #component/method calls now include arguments (variables)
             self.services.call(ftridyn, 'init', timeStamp, dMode=self.driverMode, dTime=time, fInitialTotalDepth=self.ftridynInitialTotalDepth, fTotalDepth=self.ftridynTotalDepth, fNImpacts=self.ftridynNImpacts, fEnergyIn=self.ftridynInEnergy)
             self.services.call(ftridyn, 'step', timeStamp, dTime=time, fNImpacts=self.ftridynNImpacts, fSpYieldW=self.ftridynSpYieldW)
-            
+
             self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xNetworkFile=self.xolotlNetworkFile, xStartStop=self.xolotlStartStop, xFlux=self.xolotlFlux, fNImpacts=self.ftridynNImpacts) #fSpYieldW=self.ftridynSpYieldW
             self.services.call(xolotl, 'step', timeStamp, dTime=time)
-            
+
 #            self.services.stage_plasma_state() 
             
 #            import parameterConfig
@@ -183,8 +183,8 @@ class xolotlFtridynDriver(Component):
 
             #update driver mode after the 1st loop, from INIT to RESTART
             if self.driverMode == 'INIT':
-                self.driverMode == 'RESTART'
-                print 'switched from INIT to RESTART mode'
+                self.driverMode = 'RESTART'
+                print 'switched driverMode to ', self.driverMode
 
 #            if driverParameterConfig.driverStartMode != 'NEUTRAL':
 #                driver_tmp_file='driverConfigFileRestart.tmp'
@@ -194,8 +194,8 @@ class xolotlFtridynDriver(Component):
 #                os.remove(driver_tmp_file)
 
             if self.startMode != 'NEUTRAL':
-                self.startMode == 'NEUTRAL'
-                print 'switched startMode to NEUTRAL'
+                self.startMode = 'NEUTRAL'
+                print 'switched startMode to ',  self.startMode 
 
 #            reload(xolotlParameterConfig)
 #            print 'updating xolotl parameter config network File from %s' %(xolotlParameterConfig.networkFile)
