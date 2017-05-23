@@ -616,7 +616,7 @@
 
 ! Overwrite freqcy, pwtot, and enorm found in machine.inp
 
-      freqcy = ps%freq_lh(isrc)*GHz !Hz to GHz
+      freqcy = ps%freq_lh(isrc) !Hz
       pwtot =  ps%power_lh(isrc) !watts
 		 
 	  if (trim(arg_enorm) /= 'None') then
