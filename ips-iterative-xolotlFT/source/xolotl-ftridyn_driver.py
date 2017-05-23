@@ -55,12 +55,18 @@ class xolotlFtridynDriver(Component):
         #TotalDepth: total substrate depth in [A]; set to 0.0 to use what Xolotl passes to ftridyn (as deep as He exists)
         #InitialTotalDepth: if TotalDepth=0.0, choose an appropriate depth for the irradiation energy in the 1st loop
         #NImpacts: number of impacts (NH in generateInput) ;  InEnergy: impact energy (energy in generateInput, [eV]); initialize SpYield
-
+        #if spYield < 0 -> use calculated value; else, use fixed value, usually [0,1) 
+            
         self.ftridynTotalDepth=0.0
         self.ftridynInitialTotalDepth=200.0
         self.ftridynNImpacts=1e5
         self.ftridynInEnergy=200.0
-        #self.ftridynSpYieldW=0.0
+        self.ftridynSpYieldW=1.0
+
+        if self.ftridynSpYieldW<0:
+            self.ftridynSpYieldMode='calculate'
+        else:
+            self.ftridynSpYieldMode='fixed'
 
         #if driver start mode is in Restart, copy files to plasma_state
         #MAYBE THIS CAN ALSO BE WRITTEN MORE ELEGANTLY
@@ -84,15 +90,17 @@ class xolotlFtridynDriver(Component):
         for time in numpy.arange(self.initTime,self.endTime,self.timeStep):
 
             self.services.stage_plasma_state()
-
             print 'driver time (in loop)  %f' %(time)
+            self.services.update_plasma_state()
             
             #component/method calls now include arguments (variables)
             self.services.call(ftridyn, 'init', timeStamp, dMode=self.driverMode, dTime=time, fInitialTotalDepth=self.ftridynInitialTotalDepth, fTotalDepth=self.ftridynTotalDepth, fNImpacts=self.ftridynNImpacts, fEnergyIn=self.ftridynInEnergy)
             self.services.call(ftridyn, 'step', timeStamp, dTime=time, fNImpacts=self.ftridynNImpacts)#, fSpYieldW=self.ftridynSpYieldW)
 
-            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xNetworkFile=self.xolotlNetworkFile, xStartStop=self.xolotlStartStop, xFlux=self.xolotlFlux, fNImpacts=self.ftridynNImpacts) #fSpYieldW=self.ftridynSpYieldW
+            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xNetworkFile=self.xolotlNetworkFile, xStartStop=self.xolotlStartStop, xFlux=self.xolotlFlux, fNImpacts=self.ftridynNImpacts, fSpYieldMode=self.ftridynSpYieldMode, fSpYieldW=self.ftridynSpYieldW)
             self.services.call(xolotl, 'step', timeStamp, dTime=time)
+
+            self.services.stage_plasma_state()
 
             #update driver mode after the 1st loop, from INIT to RESTART
             if self.driverMode == 'INIT':

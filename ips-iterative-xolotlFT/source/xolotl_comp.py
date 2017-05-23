@@ -41,19 +41,27 @@ class xolotlWorker(Component):
         print '\t \t driver step is', keywords['dTimeStep']
 
 
-        #get sputtering yield
-        #FROM He_WOUT.DAT and use NH         
-        ftridynOutFile=open('He_WOUT.DAT',"r")
-        ftridynOutData=ftridynOutFile.read().split('\n')
-        searchString='PARTICLES(2)'
-        for line in ftridynOutData:
-            if searchString in line:
-                break
-        stringWithEmptyFields=line.strip().split(" ")
-        sputteringNparticlesString=[x for x in stringWithEmptyFields if x]
-        sputteringNparticles=sputteringNparticlesString[2]
-        spYieldW=float(sputteringNparticles)/float(keywords['fNImpacts'])
-        print 'calculated in Xolotl-component: W sputtering yield is =', spYieldW
+        #if fSpYield in driver < 0, fSpYieldMode = calculate -> get sputtering yield FROM He_WOUT.DAT
+        if keywords['fSpYieldMode']=='calculate':
+            ftridynOutFile=open('He_WOUT.DAT',"r")
+            ftridynOutData=ftridynOutFile.read().split('\n')
+            searchString='PARTICLES(2)'
+            for line in ftridynOutData:
+                if searchString in line:
+                    break
+            stringWithEmptyFields=line.strip().split(" ")
+            sputteringNparticlesString=[x for x in stringWithEmptyFields if x]
+            sputteringNparticles=sputteringNparticlesString[2]
+            spYieldW=float(sputteringNparticles)/float(keywords['fNImpacts'])
+            print 'calculated in Xolotl-component: W sputtering yield is =', spYieldW
+        #if fSpYield in driver >= 0, fSpYieldMode = fixed 
+        elif keywords['fSpYieldMode']=='fixed':
+            spYieldW=keywords['fSpYieldW']
+            print 'Fixed value of W sputtering yield is =', spYieldW
+        else:
+            print 'Invalid value of fSpYieldMode, ', keywords['fSpYieldMode'] 
+            print 'set yield to zero!'
+            spYieldW=0.0;
 
         if keywords['dStartMode']=='RESTART':
             restartNetworkFile = networkFile
@@ -78,6 +86,8 @@ class xolotlWorker(Component):
     def step(self, timeStamp=0.0,**keywords):
         print('xolotl_worker: step')
 
+        self.services.stage_plasma_state()
+
         #asign a local variable to arguments used multiple times
         driverTime=keywords['dTime']
 
@@ -85,7 +95,6 @@ class xolotlWorker(Component):
         for (k, v) in keywords.iteritems():
             print '\t', k, " = ", v
 
-        self.services.stage_plasma_state()
         #call shell script that runs Xolotl and pipes input file
         task_id = self.services.launch_task(self.NPROC,
                                             self.services.get_working_dir(),

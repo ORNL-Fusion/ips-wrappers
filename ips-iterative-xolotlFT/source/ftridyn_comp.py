@@ -57,8 +57,10 @@ class ftridynWorker(Component):
             shutil.copyfile(newestLay, currentFtridynLayFile)
             
             if (totalDepth==0.0):
+                print 'Totaldepth from last_TRIDYN.dat'
                 nTT=10*np.max(np.loadtxt('last_TRIDYN.dat')[:,0]) 
             else:
+                print 'totalDepth fixed to ', totalDepth 
                 nTT=totalDepth
 
             print 'calling generateInput with NQX=%d , TT=%d , NH=%d and Ein=%f' % (nDataPts, nTT,nImpacts,energyIn)
