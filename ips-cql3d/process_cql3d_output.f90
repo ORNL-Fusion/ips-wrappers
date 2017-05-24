@@ -753,7 +753,7 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
       call getlun(inp_unit,ierr)  ;  call getlun(out_unit,ierr)
 	
       write(*,*) 'Process qcl3d output reading ImChizz.inp'
-      open(unit=inp_unit, file='ImChizz.inp', status='old',
+      open(unit=inp_unit, file='ImChizz.inp_template', status='old',
      1 form='formatted')
       INQUIRE(inp_unit, exist=lex)
       IF (lex) THEN
