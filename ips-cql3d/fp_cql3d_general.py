@@ -357,6 +357,7 @@ class cql3d(Component):
         cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
         cur_dql_file = services.get_config_param('CURRENT_DQL')
         cur_cql_file = services.get_config_param('CURRENT_CQL')
+        cur_ImChizz_inp_file = services.get_config_param('CURRENT_ImChizz_inp')
         print 'CURRENT_CQL = ', cur_cql_file
     # Copy current plasma state file to generic name -> cur_state.cdf
         try:
