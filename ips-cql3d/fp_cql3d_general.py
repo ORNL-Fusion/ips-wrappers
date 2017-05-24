@@ -111,6 +111,7 @@ class cql3d(Component):
             cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
             cur_dql_file = services.get_config_param('CURRENT_DQL')
             cur_cql_file = services.get_config_param('CURRENT_CQL')
+            cur_ImChizz_inp_file = services.get_config_param('CURRENT_ImChizz_inp')
         except:
             print 'fp_cql3d_general: error getting config parameters CURRENT_STATE CURRENT_EQDSK'
             services.error('fp_cql3d_general: error getting config parameters CURRENT_STATE CURRENT_EQDSK')
@@ -485,7 +486,7 @@ class cql3d(Component):
           print 'CURRENT_CQL = ', cur_cql_file
           try:
 #            services.update_plasma_state(plasma_state_files = cur_cql_file)
-            services.update_plasma_state([cur_cql_file])
+            services.update_plasma_state([cur_cql_file, cur_ImChizz_inp_file])
           except Exception:
             logMsg = 'Error in call to update_plasma_state()'
             self.services.exception(logMsg)
