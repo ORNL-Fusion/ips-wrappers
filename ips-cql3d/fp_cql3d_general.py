@@ -457,6 +457,11 @@ class cql3d(Component):
           mode = 'step'
 # ptb;          command = process_output_bin + ' ' +  cql3d_mode
           command = process_output_bin + ' ' +  cql3d_output    
+
+          print 'running', command
+          services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+              event_comment =  command)
+
           retcode = subprocess.call(command.split(), stdout = log_file,\
                                     stderr = subprocess.STDOUT)                                  
           if (retcode != 0):
