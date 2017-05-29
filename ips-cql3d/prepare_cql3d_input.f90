@@ -270,12 +270,13 @@ c     Defaults:
 c     F2003-syntax: command_argument_count()/get_command_argument(,)
       iargs=command_argument_count()
       write(*,*)'iargs=',iargs
-      if (iargs.ne.8) then
+      if (iargs.ne.9) then
          write(*,*)'prepare_cql3d_input usage: '
-         write(*,*)'Up to eight command line arguments, '
+         write(*,*)'Up to nine command line arguments, '
          write(*,*)
      +   'ips_mode cql3d_mode cql3d_output cql3d_nml restart nsteps_str '
      +   //'deltat_str ps_add_nml (refer to code)'
+     +   //'enorm (optional)'
       endif
 
       if (iargs.ge.1)   call get_command_argument(1,ips_mode)
@@ -303,8 +304,8 @@ c     F2003-syntax: command_argument_count()/get_command_argument(,)
 
       write(*,*)'prepare_cql3d_input command line arguments: ',
      +  ips_mode,'  ',cql3d_mode,'  ',cql3d_output,'  ',cql3d_nml,
-     +  '  ',restart,'  ',nsteps_str,'  ',deltat_str,'  ',ps_add_nml,
-     + ' ', enorm_str
+     +  '  ',restart,'  ',nsteps_str,'  ',deltat_str,'  ',ps_add_nml
+      if (enorm_str_present == .TRUE.) write(*,*) 'enorm_str'
 
 
 c-----------------------------------------------------------------------
