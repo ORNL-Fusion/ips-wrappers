@@ -36,7 +36,7 @@ class xolotlFtridynDriver(Component):
 
         self.initTime=0.0
         self.endTime=0.2
-        self.timeStep=0.1
+        self.timeStep=0.02
 
         print 'running IPS from t = %f to t=%f, in steps of dt=%f' % (self.initTime, self.endTime, self.timeStep)
 
@@ -54,14 +54,15 @@ class xolotlFtridynDriver(Component):
         #ftridyn parameters:
         #TotalDepth: total substrate depth in [A]; set to 0.0 to use what Xolotl passes to ftridyn (as deep as He exists)
         #InitialTotalDepth: if TotalDepth=0.0, choose an appropriate depth for the irradiation energy in the 1st loop
+        #     use TotalDepth=0.0 if startMode is RESTART (not understood why, but a fixed totalDepth doesn't work on the 1st loop)
         #NImpacts: number of impacts (NH in generateInput) ;  InEnergy: impact energy (energy in generateInput, [eV]); initialize SpYield
         #if spYield < 0 -> use calculated value; else, use fixed value, usually [0,1) 
             
         self.ftridynTotalDepth=0.0
-        self.ftridynInitialTotalDepth=200.0
+        self.ftridynInitialTotalDepth=300.0
         self.ftridynNImpacts=1e5
-        self.ftridynInEnergy=200.0
-        self.ftridynSpYieldW=1.0
+        self.ftridynInEnergy=250.0
+        self.ftridynSpYieldW=-1.0
 
         if self.ftridynSpYieldW<0:
             self.ftridynSpYieldMode='calculate'
