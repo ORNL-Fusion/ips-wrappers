@@ -6,11 +6,11 @@
  
 import numpy as np
 import math
-import matplotlib.pyplot as plt
-from   pylab import *
-from scipy.optimize import curve_fit
-from   scipy import stats
-from scipy import interpolate
+#import matplotlib.pyplot as plt
+#from   pylab import spicy # *
+#from scipy.optimize import curve_fit
+#from   scipy import stats
+#from scipy import interpolate
 import numpy.polynomial.polynomial as poly
  
 ## Create plots
@@ -18,7 +18,7 @@ import numpy.polynomial.polynomial as poly
 #plot1 = plt.subplot(111)
  
 ## Open files ("bla1" is not used but I could not figure out how to easily open a file without using two columns)
-depth1, bla1 = loadtxt('He_WDUMPPRJ.dat', usecols = (2,3) , unpack=True)
+depth1, bla1 = np.loadtxt('He_WDUMPPRJ.dat', usecols = (2,3) , unpack=True)
  
 ## Put first data into the plot
 #n, bins, patches = plt.hist(depth1/10.0, 200, normed=True, facecolor=plt.cm.jet(200), alpha=0.4)

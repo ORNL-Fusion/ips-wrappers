@@ -4,7 +4,7 @@
 
 import numpy as np
 import math
-from   pylab import *
+#from   pylab import *
 
 def binTridyn(inFile='last_TRIDYN_toBin.dat', outFile='last_TRIDYN.dat'):
 

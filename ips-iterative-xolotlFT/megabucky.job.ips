@@ -1,0 +1,17 @@
+#!/bin/sh
+#PBS -l nodes=1:ppn=4
+#PBS -l walltime=00:30:00
+#PBS -l cput=2:15:00
+##PBS -v tpt=4                for OpenMP jobs only : default value tpt=1
+#PBS -M lasaesquisaa@ornl.gov
+#PBS -m ae
+###PBS -o std.out 
+###PBS -e std.err
+### start of jobscript
+
+cd $PBS_O_WORKDIR
+
+source /home/a7l/ips-atom//env.ips.megabucky
+
+IPS_PATH=/home/m4c/ipsinstall/bin
+$IPS_PATH/ips.py --config=ips.config --platform=conf.ips.megabucky --log=log.framework 2>>log.stdErr 1>>log.stdOut

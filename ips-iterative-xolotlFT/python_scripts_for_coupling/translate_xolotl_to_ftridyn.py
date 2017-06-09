@@ -1,6 +1,6 @@
 from __future__ import print_function
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
  
 def xolotlToLay(tridynFile='last_TRIDYN.dat', totalDepth=0.0):
   DNS_W_A3_0 = 0.06306

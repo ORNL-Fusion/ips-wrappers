@@ -69,9 +69,17 @@ class xolotlWorker(Component):
             shutil.copyfile(filepath,restartNetworkFile)
 
         if driverMode == 'INIT':
-            print('run xolotl preprocessor')
+            print ('run xolotl preprocessor')
+            print 'with java', os.system('echo $JAVA_EXE')
             #run prepocessor and copy params.txt input file to plasma state
-            os.system('java -Djava.library.path=/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps -cp .:/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps/*:/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-build/gov.ornl.xolotl.preprocessor/preprocessor/CMakeFiles/xolotlPreprocessor.dir/ gov.ornl.xolotl.preprocessor.Main --nxGrid 160 --maxVSize 250 --phaseCut')        
+            #since java is handled a little differently accross machines, 
+            #a JAVA-XOLOTL environment variables are defined in the machine environment file
+            #with environment variables:
+            os.system('$JAVA_XOLOTL_EXE -Djava.library.path=$JAVA_XOLOTL_LIBRARY -cp .:$JAVA_XOLOTL_LIBRARY/*::$XOLOTL_PREPROCESSOR_DIR gov.ornl.xolotl.preprocessor.Main --perfHandler dummy --nxGrid 160 --maxVSize 250 --phaseCut')
+            #Edison:
+            #os.system('java -Djava.library.path=/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps -cp .:/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-source/gov.ornl.xolotl.preprocessor/deps/*:/project/projectdirs/atom/atom-install-edison/xolotl/xolotl-trunk-build/gov.ornl.xolotl.preprocessor/preprocessor/CMakeFiles/xolotlPreprocessor.dir/ gov.ornl.xolotl.preprocessor.Main --nxGrid 160 --maxVSize 250 --phaseCut')        
+            #megabucky:
+            #os.system('/cm/shared/apps/java/java-1.8.0-openjdk-1.8.0.131-0.b11.el6_9.x86_64/bin/java -Djava.library.path=/home/a7l/xolotl/xolotl-source/gov.ornl.xolotl.preprocessor/deps -cp .:/home/a7l/xolotl/xolotl-source/gov.ornl.xolotl.preprocessor/deps/*::/home/a7l/xolotl/xolotl-build/gov.ornl.xolotl.preprocessor/preprocessor/CMakeFiles/xolotlPreprocessor.dir/ gov.ornl.xolotl.preprocessor.Main --perfHandler dummy --nxGrid 160 --maxVSize 250 --phaseCut')
             write_xolotl_paramfile.writeXolotlParameterFile_fromPreprocessor(start_stop=startStop,ts_final_time=runEndTime,networkFile=networkFile,sputtering=spYieldW,flux=flux)
                 
         else:

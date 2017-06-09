@@ -6,7 +6,8 @@ import shutil
 import glob
 import sys
 import translate_xolotl_to_ftridyn
-import generateInputIPS
+#import generateInputIPS
+import generate_ftridyn_input #new script to generate FTridyn input
 import numpy as np
 import subprocess
 import re
@@ -42,8 +43,12 @@ class ftridynWorker(Component):
                 nTT=initialTotalDepth
             else:
                 nTT=totalDepth
-            print 'calling generateInput with TT=%d, NH=%d and Ein=%f' % (nTT,nImpacts,energyIn)
-            generateInputIPS.main(TT=nTT,NH=nImpacts,energy=energyIn)
+            #new script to generate FTridyn input:
+            #print 'calling generateInput with TT=%d, NH=%d and Ein=%f' % (nTT,nImpacts,energyIn)
+            #generateInputIPS.main(TT=nTT,NH=nImpacts,energy=energyIn)
+
+            print 'calling script to generate FTridyn input with depth=%d, NH=%d and Ein=%f' % (nTT,nImpacts,energyIn)
+            generate_ftridyn_input.He_W_xolotl(depth=nTT,number_histories=nImpacts,incident_energy=energyIn)
 
             newestIn = max(glob.iglob('*.IN'), key=os.path.getctime)
             currentFtridynInFile='%s_%f' %(newestIn,driverTime)
@@ -63,8 +68,11 @@ class ftridynWorker(Component):
                 print 'totalDepth fixed to ', totalDepth 
                 nTT=totalDepth
 
-            print 'calling generateInput with NQX=%d , TT=%d , NH=%d and Ein=%f' % (nDataPts, nTT,nImpacts,energyIn)
-            generateInputIPS.main(IQ0=-1,NQX=nDataPts,TT=nTT,NH=nImpacts,energy=energyIn)
+            #new script to generate FTridyn input:  
+            #print 'calling generateInput with NQX=%d , TT=%d , NH=%d and Ein=%f' % (nDataPts, nTT,nImpacts,energyIn)
+            #generateInputIPS.main(IQ0=-1,NQX=nDataPts,TT=nTT,NH=nImpacts,energy=energyIn)
+            print 'calling script to generate FTridyn input with IQO=%d, number_layers=%d, depth=%d, NH=%d and Ein=%f' %(-1,nDataPts, nTT,nImpacts,energyIn)
+            generate_ftridyn_input.He_W_xolotl(IQ0=-1,number_layers=nDataPts,depth=nTT,number_histories=nImpacts,incident_energy=energyIn)
             newestIn = max(glob.iglob('*.IN'), key=os.path.getctime)
             currentFtridynInFile='%s_%f' %(newestIn,driverTime)
             shutil.copyfile(newestIn,  currentFtridynInFile)
