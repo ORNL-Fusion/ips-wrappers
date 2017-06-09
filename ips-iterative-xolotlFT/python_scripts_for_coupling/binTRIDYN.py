@@ -9,7 +9,7 @@ import math
 def binTridyn(inFile='last_TRIDYN_toBin.dat', outFile='last_TRIDYN.dat'):
 
 ## Open the files
-    depth, He, V, I = loadtxt(inFile, usecols = (0,1,2,3) , unpack=True)
+    depth, He, V, I = np.loadtxt(inFile, usecols = (0,1,2,3) , unpack=True)
 
 ## Look for indiceCut
     indiceCut = -1
@@ -33,12 +33,12 @@ def binTridyn(inFile='last_TRIDYN_toBin.dat', outFile='last_TRIDYN.dat'):
     oldIndice = -10
     i = 0
     for k in range(0, len(depth)):
-        indice = int(floor(depth[k] * 2.0))
+        indice = int(math.floor(depth[k] * 2.0))
         if (indice != oldIndice):
             if (oldIndice >= 0):
-                heBin[oldIndice] = heBin[oldIndice] / double(i)
-                vBin[oldIndice] = vBin[oldIndice] / double(i)
-                iBin[oldIndice] = iBin[oldIndice] / double(i)
+                heBin[oldIndice] = heBin[oldIndice] / float(i)
+                vBin[oldIndice] = vBin[oldIndice] / float(i)
+                iBin[oldIndice] = iBin[oldIndice] / float(i)
             i = 0
             oldIndice = indice
     
