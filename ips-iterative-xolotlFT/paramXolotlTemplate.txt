@@ -1,0 +1,14 @@
+dimensions=1
+process=reaction advec modifiedTM diff movingSurface
+netParam=8 250 6 true
+grid=160 0.5
+vizHandler=dummy
+perfHandler=dummy
+material=W100
+startTemp=773.000000
+flux=2.50000e+03
+#flux=40000.0
+petscArgs=-start_stop 0.010000 -ts_adapt_dt_max 1.000000e-06 -fieldsplit_1_pc_type redundant -fieldsplit_0_pc_type sor -ts_max_steps 1000000 -pc_type fieldsplit  -pc_fieldsplit_detect_coupling -ts_exact_final_time matchstep -ts_final_time 0.010000 -ts_max_snes_failures -1 -ts_monitor   -tridyn  -helium_retention
+regularGrid=no
+voidPortion=40.000000
+sputtering=0.004070

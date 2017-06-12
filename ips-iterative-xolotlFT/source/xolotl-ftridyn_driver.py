@@ -24,6 +24,11 @@ class xolotlFtridynDriver(Component):
         #for file in plasma_state_list:
         #    open(file, 'a').close()
 
+        #copy the Xolotl paramter template file
+        xolotlTemplateFile='paramXolotlTemplate.txt'
+        print 'copy xolotl template file from ',self.XOLOTL_PARAM_TEMPLATE, ' to ', xolotlTemplateFile 
+        shutil.copyfile(self.XOLOTL_PARAM_TEMPLATE,xolotlTemplateFile)
+
         self.services.update_plasma_state()
         self.services.stage_plasma_state()
 
@@ -47,7 +52,7 @@ class xolotlFtridynDriver(Component):
         self.xolotlStartStop='True'
         self.xolotlFlux=4e4
         if self.startMode=='INIT':
-            self.xolotlNetworkFile='networkInit.h5'
+            self.xolotlNetworkFile='notInUse'
         elif self.startMode=='RESTART':
             self.xolotlNetworkFile='networkRestart.h5'
 
