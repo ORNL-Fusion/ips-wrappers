@@ -778,7 +778,7 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
 	  R_major = ps%R_axis*100.
 	  a = 100.*(ps%R_MAX_LCFS - ps%R_MIN_LCFS)/2.
 	  Btor = ps%B_axis
-	  frequency = 1.0e6*ps%freq_lh(1)
+	  frequency = ps%freq_lh(1)
 
 !****************************************************************************************
 ! Write ImChizz.inp
