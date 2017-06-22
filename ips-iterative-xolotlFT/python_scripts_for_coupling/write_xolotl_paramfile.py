@@ -33,6 +33,8 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
                                           process="reaction advec modifiedTM attenuation diff movingSurface",
                                           sputtering=0.000129,
                                           
+                                          #   netParam=nHe maxVSize  nInterstitials phaseCut
+                                          #   grid=nxGrid dxGrid
                                           useNetFile=False,
                                           networkFile="xolotlStop.h5",                                          
                                           nHe=8,
@@ -40,7 +42,9 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
                                           nInterstitials=6, 
                                           phaseCut='true',
                                           nxGrid=160,
-                                          dxGrid=0.5
+                                          dxGrid=0.5,
+
+                                          initialV=0.0
                                           ):
    tmp="temp.txt"
 #   ftmp=open("temp.txt", "w")                                                                                                                                                                
@@ -82,19 +86,9 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
    #run sed line for Petsc                                                                                                                                                                    
    subprocess.call([petscArgSedString], shell=True)
 
-#   netParam=8 250 6 true
-#   grid=160 0.5
-#
-#   nHe=8
-#   maxVSize=250
-#   nInterstitials=6
-#   phaseCut='true'
-#   nxGrid=160
-#   dxGrid=0.5
-
    #other input parameters
    os.rename(outfile, tmp)
-   paramSedString="sed    -e 's/vizHandler=[^ ]*/vizHandler=%s/'    -e 's/flux=[^ ]*/flux=%e/'    -e 's/netParam=.*$/netParam=%g %g %g %s/'   -e 's/grid=.*$/grid=%g %g/'    -e 's/material=[^ ]*/material=%s/'    -e 's/dimensions=[^ ]*/dimensions=%d/'    -e 's/perfHandler=[^ ]*/perfHandler=%s/'    -e 's/startTemp=[^ ]*/startTemp=%f/'   -e 's/sputtering=[^ ]*/sputtering=%f/'    -e 's/process=.*$/process=%s/' < %s > %s"   % (vizHandler, flux, nHe, maxVSize, nInterstitials, phaseCut, nxGrid, dxGrid , material, dimensions, perfHandler, startTemp, sputtering, process, tmp, outfile)
+   paramSedString="sed    -e 's/vizHandler=[^ ]*/vizHandler=%s/'    -e 's/flux=[^ ]*/flux=%e/'    -e 's/netParam=.*$/netParam=%g %g %g %s/'   -e 's/grid=.*$/grid=%g %g/'    -e 's/material=[^ ]*/material=%s/'    -e 's/dimensions=[^ ]*/dimensions=%d/'    -e 's/perfHandler=[^ ]*/perfHandler=%s/'    -e 's/startTemp=[^ ]*/startTemp=%f/'   -e 's/sputtering=[^ ]*/sputtering=%f/'   -e 's/initialV=[^ ]*/initialV=%g/' -e 's/process=.*$/process=%s/' < %s > %s"   % (vizHandler, flux, nHe, maxVSize, nInterstitials, phaseCut, nxGrid, dxGrid , material, dimensions, perfHandler, startTemp, sputtering, initialV, process, tmp, outfile)
 
    #print " sedline call parameters: %s " %(paramSedString)                                                                                                                                   
    subprocess.call([paramSedString], shell=True)

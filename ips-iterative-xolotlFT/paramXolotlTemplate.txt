@@ -12,3 +12,4 @@ petscArgs=-start_stop 0.010000 -ts_adapt_dt_max 1.000000e-06 -fieldsplit_1_pc_ty
 regularGrid=no
 voidPortion=40.000000
 sputtering=0.004070
+initialV=0.0

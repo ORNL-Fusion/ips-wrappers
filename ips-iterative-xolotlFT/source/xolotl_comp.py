@@ -76,10 +76,10 @@ class xolotlWorker(Component):
             #a JAVA-XOLOTL environment variables are defined in the machine environment file
             #os.system('$JAVA_XOLOTL_EXE -Djava.library.path=$JAVA_XOLOTL_LIBRARY -cp .:$JAVA_XOLOTL_LIBRARY/*::$XOLOTL_PREPROCESSOR_DIR gov.ornl.xolotl.preprocessor.Main --perfHandler dummy --nxGrid 160 --maxVSize 250 --phaseCut')
             print 'run parameter file without preprocessor'
-            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=startStop,ts_final_time=runEndTime,sputtering=spYieldW,flux=flux)
+            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=startStop,ts_final_time=runEndTime,sputtering=spYieldW,flux=flux,initialV=keywords['xInitialV'])
                 
         else:
-            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=startStop,ts_final_time=runEndTime,useNetFile=True,networkFile=networkFile,sputtering=spYieldW,flux=flux)
+            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=startStop,ts_final_time=runEndTime,useNetFile=True,networkFile=networkFile,sputtering=spYieldW,flux=flux, initialV=keywords['xInitialV'])
         
         #store xolotls parameter and network files for each loop 
         currentXolotlParamFile='params_%f.txt' %driverTime
