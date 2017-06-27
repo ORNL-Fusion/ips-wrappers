@@ -756,7 +756,7 @@
 
 	  call ps_rho_rezone(ps%rho, ps%id_psipol, x_torlh, ierr, zonesmoo=.TRUE.)
 	  write(*,*)'after ps_rho_rezone psipol: ierr=',ierr
-	  call ckerr('ps_rho_rezone psipol',ierr)
+	  call ckerr('ps_rho_rezone psipol')
       x_torlh = sqrt(x_torlh/x_torlh(nprodt))
 !     write(out_unit,'(A10)')  'rho'
 !     write(out_unit,'(5E16.9)')  ps%rho !check units
