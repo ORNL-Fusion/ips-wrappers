@@ -4,6 +4,19 @@
 !25 Jan 2008 - added optional command line arg for state file
 !JCW 2007, 2008
 
+! Working notes: DBB 6-26_2017
+! After discussions with PTB it was determined that the thermal profile interpolations 
+! going from plasma state grid in sqrt(toroidal flux) to torlh grid sqrt(poloidal flux)
+! were not right.  Here is what we decided:
+! 1) Rezone (don't interpolate) PSIPOL(rho_eq) from rho_eq to rho grid, PSIPOL(rho).  
+!    Then rho(i) and PSIPOL(i) both refer to the same radius.
+! 2) Take sqrt of PSIPOL(rho) and normalize it.  This becomes the torlh grid, x_torlh,
+!    (not uniform).
+! 3) Don't interpolate zone centered plasma state profiles such as ns() and Ts() that use
+!    the rho grid already.
+! 4) Rezone zone centered profiles such as nbeami(), nfusi(), nmini() and vol() from 
+!    their grids (rho_nbi, rho_fus, rho_lhrf, rho_eq) to the rho grid.
+
 ! Working notes: DBB 5-11-2017
 ! Modified to pick up LH power (pwtot) from plasma state ps%power_lh(1)
 ! And get enorm from command line argument.
@@ -739,8 +752,12 @@
 ! TORIC uses only one radial mesh for density and temperature profiles that is
 ! that is defined in terms of the sqrt (Psi_pol) - normalized
 !
-      x_torlh = sqrt(ps%psipol / ps%psipol(nprodt))
+!      x_torlh = sqrt(ps%psipol / ps%psipol(nprodt))
 
+	  call ps_rho_rezone(ps%rho, ps%id_psipol, x_torlh, ierr, zonesmoo=.TRUE.)
+	  write(*,*)'after ps_rho_rezone psipol: ierr=',ierr
+	  call ckerr('ps_rho_rezone psipol',ierr)
+      x_torlh = sqrt(x_torlh/x_torlh(nprodt))
 !     write(out_unit,'(A10)')  'rho'
 !     write(out_unit,'(5E16.9)')  ps%rho !check units
 
@@ -754,12 +771,12 @@
       write(*,*) 'ps%ns(1,0)', ps%ns(1,0)
 !
 ! Interpolate the electron density profile from the Plasma State grid to the Toric grid
+! Interpolate the volume profile from the Plasma State grid to the Toric grid
 !
          call ps_user_1dintrp_vec(x_torlh, x_orig, ps%ns(:,0), &
                tmp_prof(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS electron density profile onto Toric grid'
 !
-! Interpolate the volume profile from the Plasma State grid to the Toric grid
 !
          call ps_user_1dintrp_vec(x_torlh, ps%rho_eq, ps%vol(:), &
                vol_int(:),ierr )
