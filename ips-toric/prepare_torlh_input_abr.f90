@@ -808,7 +808,9 @@
          call ps_user_1dintrp_vec(ps%rho, x_orig, ps%Ts(:,0), tmp_prof(:),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS electron temperature profile onto Torlh grid'
       write(out_unit,'(5E16.9)')  tmp_prof   !keV
-
+	  write (*,*) " "
+	  write (*,*) "tmp_prof = "
+	  write (*,*) tmp_prof
 ! PTB - begins
         call ps_tha_fetch (ierr, ps, tol_zero, &
              ns_tha, ts_tha, v_pars, iwarn)
@@ -818,6 +820,9 @@
          call ps_user_1dintrp_vec(ps%rho, x_orig, ns_tha(:,isp), tmp_prof(:),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS ion density profile onto Torlh grid'
          write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
+	     write (*,*) " "
+	     write (*,*) "density_prof = "
+	     write (*,*) tmp_prof
 
          write(out_unit,'(A4,I2.2)')  't_i_',isp
          write(*,*) "Thermal ion name, A, Z, dens, temp = "
@@ -825,6 +830,9 @@
          call ps_user_1dintrp_vec(ps%rho, x_orig, Ts_tha(:,isp), tmp_prof(:),ierr )  !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS ion temperature profile onto Torlh grid'
          write(out_unit,'(5E16.9)')  tmp_prof !keV
+	     write (*,*) " "
+	     write (*,*) "temperature_prof = "
+	     write (*,*) tmp_prof
       end do
 ! PTB - ends
       STOP
