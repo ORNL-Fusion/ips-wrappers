@@ -746,12 +746,23 @@
 ! DBB begins: First interpolate psi_poloidal_rho onto rho grid then interpolate to x_torlh
 ! N.B. The first value of psi_poloidal_rho (and also x_torlh) is psi_poloidal at the 
 ! center of the first rho zone, !=0.  Should I artificially set it to 0?
+	  
+	  write (*,*) "Rezone psipol to rho then interpolate to x_torlh"
 	  call ps_rho_rezone(ps%rho, ps%id_psipol, psi_poloidal_rho, ierr, zonesmoo=.TRUE.)
 	  write(*,*)'after ps_rho_rezone psipol: ierr=',ierr
 	  call ckerr('ps_rho_rezone psipol')
 	  write (*,*) "psi_poloidal_rho = "
 	  write (*,*) psi_poloidal_rho
       call ps_user_1dintrp_vec(ps%rho, x_orig, psi_poloidal_rho, x_torlh, ierr )
+      x_torlh = sqrt(x_torlh/x_torlh(nprodt))
+	  write (*,*) " "
+	  write (*,*) "x_torlh = "
+	  write (*,*) x_torlh
+
+	  write (*,*) " "
+	  write (*,*) "Just interpolate psipol from rho_eq to x_torlh"
+	  write (*,*) psi_poloidal_rho
+      call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, ps%psipol, x_torlh, ierr )
       x_torlh = sqrt(x_torlh/x_torlh(nprodt))
 	  write (*,*) " "
 	  write (*,*) "x_torlh = "
