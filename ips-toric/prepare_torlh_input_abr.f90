@@ -745,40 +745,17 @@
 ! TORIC uses only one radial mesh for density and temperature profiles that is
 ! that is defined in terms of the sqrt (Psi_pol) - normalized
 !
-! DBB begins: First interpolate psi_poloidal_rho onto rho grid then interpolate to x_torlh
-! N.B. The first value of psi_poloidal_rho (and also x_torlh) is psi_poloidal at the 
-! center of the first rho zone, !=0.  Should I artificially set it to 0?
+! DBB begins: First interpolate psi_poloidal from rho_eq grid to rho grid.  Note, if you
+!             try to interpolate ps%psipol with the ps_user_1dintrp_vec routine it will
+!              detect that ps%psipol is a zone centered variable and will interpolate it
+!              to length nrho-1. So fool it by introducing dummy non-PS varible psi_poloidal_eq
 	  
-	  write (*,*) "Rezone psipol to rho then interpolate to x_torlh"
-	  call ps_rho_rezone(ps%rho, ps%id_psipol, psi_poloidal_rho, ierr, zonesmoo=.TRUE.)
-	  write(*,*)'after ps_rho_rezone psipol: ierr=',ierr
-	  call ckerr('ps_rho_rezone psipol')
-	  write (*,*) "psi_poloidal_rho = "
-	  write (*,*) psi_poloidal_rho
-      call ps_user_1dintrp_vec(ps%rho, x_orig, psi_poloidal_rho, x_torlh, ierr )
-      x_torlh = sqrt(x_torlh/x_torlh(nprodt))
-	  write (*,*) " "
-	  write (*,*) "x_torlh = "
-	  write (*,*) x_torlh
-
-	  write (*,*) " "
-	  write (*,*) "Just interpolate psipol from rho_eq to x_torlh"
 	  psi_poloidal_eq = ps%psipol
       call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, psi_poloidal_eq, x_torlh, ierr )
       x_torlh = sqrt(x_torlh/x_torlh(nprodt))
 	  write (*,*) " "
 	  write (*,*) "x_torlh = "
 	  write (*,*) x_torlh
-
-	  call ps_rho_rezone(ps%rho, ps%id_vol, vol_rho, ierr, zonesmoo=.TRUE.)
-	  write(*,*)'after ps_rho_rezone vol: ierr=',ierr
-	  call ckerr('ps_rho_rezone vol')
-	  write (*,*) "vol_rho = "
-	  write (*,*) vol_rho
-      call ps_user_1dintrp_vec(ps%rho, x_orig, vol_rho, vol_int, ierr )
-	  write (*,*) " "
-	  write (*,*) "rezoned and interpolated vol_int = "
-	  write (*,*) vol_int
 ! DBB ends
 
 !     write(out_unit,'(A10)')  'rho'
@@ -794,8 +771,7 @@
       write(*,*) 'ps%ns(1,0)', ps%ns(1,0)
 !
 ! Interpolate the electron density profile from the Plasma State grid to the Toric grid
-! Interpolate the volume profile from the Plasma State grid to the Toric grid
-!
+! N.B. Toric grid maps directly to rho grid ps%rho, same radii.
          call ps_user_1dintrp_vec(ps%rho, x_orig, ps%ns(:,0), tmp_prof(:),ierr )  !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS electron density profile onto Toric grid'
 !
@@ -829,12 +805,9 @@
       write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
 
       write(out_unit,'(A10)')  't_e'
-         call ps_user_1dintrp_vec(x_torlh, x_orig, ps%Ts(:,0), &
-               tmp_prof(:),ierr )
+         call ps_user_1dintrp_vec(ps%rho, x_orig, ps%Ts(:,0), tmp_prof(:),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS electron temperature profile onto Torlh grid'
       write(out_unit,'(5E16.9)')  tmp_prof   !keV
-      
-      STOP
 
 ! PTB - begins
         call ps_tha_fetch (ierr, ps, tol_zero, &
@@ -842,21 +815,19 @@
          if(ierr .ne. 0) stop 'error getting the density and temperature data from the abridged species list'
       do isp=1,ps%nspec_tha
          write(out_unit,'(A4,I2.2)')  'n_i_',isp
-         call ps_user_1dintrp_vec(x_torlh, x_orig, ns_tha(:,isp), &
-               tmp_prof(:),ierr )
+         call ps_user_1dintrp_vec(ps%rho, x_orig, ns_tha(:,isp), tmp_prof(:),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS ion density profile onto Torlh grid'
          write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
 
          write(out_unit,'(A4,I2.2)')  't_i_',isp
          write(*,*) "Thermal ion name, A, Z, dens, temp = "
          write(*,*) trim(ps%alla_name(isp)), atm(isp),azi(isp),ns_tha(1,isp),ts_tha(1,isp)
-         call ps_user_1dintrp_vec(x_torlh, x_orig, Ts_tha(:,isp), &
-               tmp_prof(:),ierr )
+         call ps_user_1dintrp_vec(ps%rho, x_orig, Ts_tha(:,isp), tmp_prof(:),ierr )  !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS ion temperature profile onto Torlh grid'
          write(out_unit,'(5E16.9)')  tmp_prof !keV
       end do
 ! PTB - ends
-
+      STOP
 ! PTB - begins
 !
 ! Move on to the non-thermal ion species - in order of NBI, RF minority, and fusion alphas
