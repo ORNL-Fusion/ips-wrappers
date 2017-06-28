@@ -1010,6 +1010,17 @@
 
       end subroutine zone_check
 
+
+    SUBROUTINE ckerr(sbrtn)
+      character*(*), intent(in) :: sbrtn
+
+      IF(ierr.NE.0) then
+         write(6,*) ' ?plasma_state_test: error in call: '//trim(sbrtn)
+         stop
+      ENDIF
+    END SUBROUTINE ckerr
+
+
       SUBROUTINE getlun (ilun,ierr)
 !
 !-----------------------------------------------------------------------
