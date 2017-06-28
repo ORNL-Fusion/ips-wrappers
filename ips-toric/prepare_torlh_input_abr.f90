@@ -48,6 +48,7 @@
 
 
       real(rspec), dimension(:),allocatable :: psi_poloidal_rho !DBB 6-27-2917
+      real(rspec), dimension(:),allocatable :: vol_rho !DBB 6-27-2917
       real(rspec), dimension(:),allocatable :: tmp_prof
       real(rspec), dimension(:),allocatable :: vol_int
 ! PTB begins -
@@ -709,6 +710,7 @@
 
 ! PTB begins -
       allocate( psi_poloidal_rho(nprodt-1))  !DBB 6-27_2017
+      allocate( vol_rho(nprodt-1))  !DBB 6-27_2017
       allocate( tmp_prof(nprodt))
       allocate( vol_int(nprodt))
       allocate( ns_tha(nprodt-1,ps%nspec_tha))
