@@ -47,6 +47,7 @@
       character(len =swim_string_length) :: cur_state_file, cur_geq_file
 
 
+      real(rspec), dimension(:),allocatable :: psi_poloidal_rho !DBB 6-27-2917
       real(rspec), dimension(:),allocatable :: tmp_prof
       real(rspec), dimension(:),allocatable :: vol_int
 ! PTB begins -
@@ -707,6 +708,7 @@
       nproeq = size(ps%rho_eq)
 
 ! PTB begins -
+      allocate( psi_poloidal_rho, nprodt-1)  !DBB 6-27_2017
       allocate( tmp_prof(nprodt))
       allocate( vol_int(nprodt))
       allocate( ns_tha(nprodt-1,ps%nspec_tha))
@@ -739,7 +741,25 @@
 ! TORIC uses only one radial mesh for density and temperature profiles that is
 ! that is defined in terms of the sqrt (Psi_pol) - normalized
 !
-      x_torlh = sqrt(ps%psipol / ps%psipol(nprodt))
+ ! DBB begins
+! DBB begins: First interpolate psi_poloidal_rho onto rho grid then interpolate to x_torlh
+	  call ps_rho_rezone(ps%rho, ps%id_psipol, psi_poloidal_rho, ierr, zonesmoo=.TRUE.)
+	  write(*,*)'after ps_rho_rezone psipol: ierr=',ierr
+	  call ckerr('ps_rho_rezone psipol')
+	  write (*,*) "psi_poloidal_rho = "
+	  write (*,*) psi_poloidal_rho
+      call ps_user_1dintrp_vec(ps%rho, x_orig, psi_poloidal_rho, x_torlh, ierr )
+	  write (*,*) " "
+	  write (*,*) "x_torlh = "
+      x_torlh = sqrt(x_torlh/x_torlh(nprodt))
+	  write (*,*) x_torlh
+	  STOP
+
+	  call ps_rho_rezone(ps%rho, ps%id_vol, vol_int, ierr, zonesmoo=.TRUE.)
+	  write(*,*)'after ps_rho_rezone psipol: ierr=',ierr
+	  call ckerr('ps_rho_rezone psipol')
+
+! DBB ends
 
 !     write(out_unit,'(A10)')  'rho'
 !     write(out_unit,'(5E16.9)')  ps%rho !check units
