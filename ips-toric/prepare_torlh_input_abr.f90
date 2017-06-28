@@ -711,7 +711,6 @@
 
 ! PTB begins -
       allocate( psi_poloidal_rho(nprodt-1))  !DBB 6-27_2017
-      allocate( psi_poloidal_rho(nprodt-1))  !DBB 6-27_2017
       allocate( psi_poloidal_eq(nproeq))  !DBB 6-27_2017
       allocate( vol_rho(nprodt-1))  !DBB 6-27_2017
       allocate( tmp_prof(nprodt))
