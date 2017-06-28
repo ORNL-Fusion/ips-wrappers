@@ -787,8 +787,8 @@
          if(ierr .ne. 0) stop 'error interpolating PS electron density profile onto Toric grid'
 !
 !
-         call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, ps%vol(:), vol_int(:),ierr ) !DBB 6-27_2017
-         if(ierr .ne. 0) stop 'error interpolating PS volume onto Toric grid'
+!          call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, ps%vol(:), vol_int(:),ierr ) !DBB 6-27_2017
+!          if(ierr .ne. 0) stop 'error interpolating PS volume onto Toric grid'
 !
 ! PTB Compare the volume average of the orginal density profile from the Plasma State
 ! and the volume average of the interpolated profile
