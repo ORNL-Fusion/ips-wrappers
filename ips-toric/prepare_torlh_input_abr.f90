@@ -835,7 +835,7 @@
 	     write (*,*) tmp_prof
       end do
 ! PTB - ends
-      STOP
+
 ! PTB - begins
 !
 ! Move on to the non-thermal ion species - in order of NBI, RF minority, and fusion alphas
@@ -849,25 +849,32 @@
        isp = ps%snbi_to_alla(1)
          write(*,*) "Fast ion name, A, Z = ", trim(ps%alla_name(isp)), &
      &              NINT(ps%m_alla(isp)/ps_mp), NINT(ps%q_alla(isp)/ps_xe)
-         call ps_user_1dintrp_vec(x_torlh, ps%rho_nbi, ps%nbeami(:,1), &
-               tmp_prof(:),ierr )
+         call ps_user_1dintrp_vec(ps%rho, ps%rho_nbi, ps%nbeami(:,1), tmp_prof(:),ierr )  !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS NBI density profile onto Torlh grid'
          write(out_unit,'(A4,I2.2)')  'n_i_',isp
          write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
+	     write (*,*) " "
+	     write (*,*) "beam density profile = "
+	     write (*,*) tmp_prof
+
 !
 ! Next interpolate the NBI energies [eperp_beami(:,1) and epll_beami(:,1)] from the NuBeam grid
 ! onto the Torlh input data grid. Then compute the equivalent temperature profile for the NBI and
 ! write it to the equidt.data file.
 !
-          call ps_user_1dintrp_vec(x_torlh, ps%rho_nbi, ps%eperp_beami(:,1), &
-               aa_prof(:),ierr )
+          call ps_user_1dintrp_vec(ps%rho, ps%rho_nbi, ps%eperp_beami(:,1), &
+               aa_prof(:),ierr )  !DBB 6-27_2017
           if(ierr .ne. 0) stop 'error interpolating PS NBI perp. energy profile onto Torlh grid'
-          call ps_user_1dintrp_vec(x_torlh, ps%rho_nbi, ps%epll_beami(:,1),  &
-               bb_prof(:),ierr )
+          call ps_user_1dintrp_vec(ps%rho, ps%rho_nbi, ps%epll_beami(:,1),  &
+               bb_prof(:),ierr )  !DBB 6-27_2017
           if(ierr .ne. 0) stop 'error interpolating PS NBI parallel energy profile onto Torlh grid'
           tmp_prof = 0.667 * (aa_prof + bb_prof)
           write(out_unit,'(A4,I2.2)')  't_i_',isp
           write(out_unit,'(5E16.9)')  tmp_prof !keV
+ 	      write (*,*) " "
+	      write (*,*) "beam temperature profile = "
+	      write (*,*) tmp_prof
+
       endif
 !
 ! (2) Write the rf minority tail data to the Torlh equidt.data file:
@@ -885,30 +892,41 @@
 !
         if (trim(kdens_rfmin) .EQ. 'fraction') then
          call ps_user_1dintrp_vec(x_torlh, ps%rho, ps%ns(:,0), &
-               tmp_prof(:),ierr )
+               tmp_prof(:),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS electron density profile onto Torlh grid'
          tmp_prof(:) = fracmin * tmp_prof(:)
          write(out_unit,'(A4,I2.2)')  'n_rfmin_',isp
          write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
+ 	      write (*,*) " "
+	      write (*,*) "rf minority density = "
+	      write (*,*) tmp_prof
+
 !
 ! Next update ps%nmini in the Plasma State with th new minority ion density profile, by mapping
 ! fracmin * ps%ns(:,0) from the PS grid to the ICRF rho grid:
 !
-         call ps_user_1dintrp_vec(ps%rho_lhrf,x_orig, fracmin*ps%ns(:,0), &
-               ps%nmini(:,1),ierr )
+         call ps_user_1dintrp_vec(ps%rho_lhrf,ps%rho, fracmin*ps%ns(:,0), &
+               ps%nmini(:,1),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating new minority desnity profile onto PS grid'
         endif
+ 	      write (*,*) " "
+	      write (*,*) "rf minority density put back into plasma state = "
+	      write (*,*) ps%nmini(:,1)
+
 !
 ! If (kdens_rfmin .EQ. 'data') then assume nmini is available in the PS, read it, and interpolate
 ! it from the rho-icrf grid onto the Toric radial grid
 !
         if (trim(kdens_rfmin) .EQ. 'data') then
-         call ps_user_1dintrp_vec(x_torlh, ps%rho_lhrf, ps%nmini(:,1), &
-               tmp_prof(:),ierr )
+         call ps_user_1dintrp_vec(ps%rho, ps%rho_lhrf, ps%nmini(:,1), &
+               tmp_prof(:),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS minority density profile onto Toric grid'
          write(out_unit,'(A4,I2.2)')  'n_rfmin_',isp
          write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
-        endif
+  	      write (*,*) " "
+	      write (*,*) "rf minority density interpolated from plasma state = "
+	      write (*,*) tmp_prof
+       endif
 !
 ! If isThermal=1 then assume the RF minority tail temperature is equal to the bulk ion temperature.
 ! Set the minority tail temperature equal to the temperature profile of the first bulk ion species
@@ -916,11 +934,14 @@
 ! grid, and then writing it to the equidt.data file.
 !
          write(out_unit,'(A4,I2.2)')  't_rfmin_',isp
-         if (ps%isThermal(1) .eq. 1) then
-         call ps_user_1dintrp_vec(x_torlh, ps%rho, Ts_tha(:,1), &
-               tmp_prof(:),ierr )
-         if(ierr .ne. 0) stop 'error interpolating PS RF minority temperature profile onto Torlh grid'
-         write(out_unit,'(5E16.9)')  tmp_prof !keV
+         if (ps%isThermal(1) .eq. 1) then 
+			 call ps_user_1dintrp_vec(x_torlh, ps%rho, Ts_tha(:,1), &
+				   tmp_prof(:),ierr ) !DBB 6-27_2017
+			 if(ierr .ne. 0) stop 'error interpolating PS RF minority temperature profile onto Torlh grid'
+			 write(out_unit,'(5E16.9)')  tmp_prof !keV
+			  write (*,*) " "
+			  write (*,*) "rf minority tail temperature interpolated from Ts_tha(:,1) = "
+			  write (*,*) tmp_prof		 
          endif
 !
 ! If isThermal=2 then assume the RF minority tail temperature data is available in the PS. In this
@@ -929,15 +950,17 @@
 ! the RF minority profile. Finally write this array to the equidt.data file.
 !
          if (ps%isThermal(1) .eq. 2) then
-          call ps_user_1dintrp_vec(x_torlh, ps%rho_lhrf, ps%eperp_mini(:,1), &
-
-               aa_prof(:),ierr )
+          call ps_user_1dintrp_vec(ps%rho, ps%rho_lhrf, ps%eperp_mini(:,1), &
+               aa_prof(:),ierr )  !DBB 6-27_2017
           if(ierr .ne. 0) stop 'error interpolating PS RF minority perp. energy profile onto Torlh grid'
-          call ps_user_1dintrp_vec(x_torlh, ps%rho_lhrf, ps%epll_mini(:,1),  &
-               bb_prof(:),ierr )
+          call ps_user_1dintrp_vec(ps%rho, ps%rho_lhrf, ps%epll_mini(:,1),  &
+               bb_prof(:),ierr )  !DBB 6-27_2017
           if(ierr .ne. 0) stop 'error interpolating PS RF minority parallel energy profile onto Torlh grid'
           tmp_prof = 0.667 * (aa_prof + bb_prof)
           write(out_unit,'(5E16.9)')  tmp_prof !keV
+			  write (*,*) " "
+			  write (*,*) "rf minority tail temperature interpolated from plasma state = "
+			  write (*,*) tmp_prof		 
          endif
       endif
 !
@@ -950,25 +973,33 @@
        isp = ps%sfus_to_alla(1)
          write(*,*) "Fast ion name, A, Z = ", trim(ps%alla_name(isp)), &
      &              NINT(ps%m_alla(isp)/ps_mp), NINT(ps%q_alla(isp)/ps_xe)
-         call ps_user_1dintrp_vec(x_torlh, ps%rho_fus, ps%nfusi(:,1), &
-               tmp_prof(:),ierr )
+         call ps_user_1dintrp_vec(ps%rho, ps%rho_fus, ps%nfusi(:,1), &
+               tmp_prof(:),ierr )  !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS fusion alpha density profile onto Torlh grid'
          write(out_unit,'(A4,I2.2)')  'n_i_',isp
          write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
+		  write (*,*) " "
+		  write (*,*) "nfusi interpolated from plasma state = "
+		  write (*,*) tmp_prof		 
+
 !
 ! Next interpolate the alpha energies [eperp_fusi(:,1) and epll_fusi(:,1)] from the fusion grid
 ! onto the Torlh input data grid. Then compute the equivalent temperature profile for the NBI and
 ! write it to the equidt.data file.
 !
-          call ps_user_1dintrp_vec(x_torlh, ps%rho_fus, ps%eperp_fusi(:,1), &
-               aa_prof(:),ierr )
+          call ps_user_1dintrp_vec(ps%rho, ps%rho_fus, ps%eperp_fusi(:,1), &
+               aa_prof(:),ierr )  !DBB 6-27_2017
           if(ierr .ne. 0) stop 'error interpolating PS fusion alpha perp. energy profile onto Torlh grid'
-          call ps_user_1dintrp_vec(x_torlh, ps%rho_fus, ps%epll_fusi(:,1),  &
+          call ps_user_1dintrp_vec(ps%rho, ps%rho_fus, ps%epll_fusi(:,1),  &
                bb_prof(:),ierr )
           if(ierr .ne. 0) stop 'error interpolating PS fusion alpha parallel energy profile onto Torlh grid'
           tmp_prof = 0.667 * (aa_prof + bb_prof)
           write(out_unit,'(A4,I2.2)')  't_i_',isp
           write(out_unit,'(5E16.9)')  tmp_prof !keV
+		  write (*,*) " "
+		  write (*,*) "alpha energy interpolated from plasma state = "
+		  write (*,*) tmp_prof		 
+
       endif
 !
 ! Update Plasma State with new information - ps%nmini, ps%eperp_mini, ps%epll_mini
