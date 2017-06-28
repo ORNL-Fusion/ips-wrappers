@@ -743,9 +743,8 @@
 ! TORIC uses only one radial mesh for density and temperature profiles that is
 ! that is defined in terms of the sqrt (Psi_pol) - normalized
 !
- ! DBB begins
 ! DBB begins: First interpolate psi_poloidal_rho onto rho grid then interpolate to x_torlh
-! N.B. The first value of psi_poloidal_rho (and also x_torlh) is psi_ploloidal at the 
+! N.B. The first value of psi_poloidal_rho (and also x_torlh) is psi_poloidal at the 
 ! center of the first rho zone, !=0.  Should I artificially set it to 0?
 	  call ps_rho_rezone(ps%rho, ps%id_psipol, psi_poloidal_rho, ierr, zonesmoo=.TRUE.)
 	  write(*,*)'after ps_rho_rezone psipol: ierr=',ierr
@@ -767,8 +766,6 @@
 	  write (*,*) " "
 	  write (*,*) "vol_int = "
 	  write (*,*) vol_int
-
-      STOP
 ! DBB ends
 
 !     write(out_unit,'(A10)')  'rho'
@@ -786,13 +783,11 @@
 ! Interpolate the electron density profile from the Plasma State grid to the Toric grid
 ! Interpolate the volume profile from the Plasma State grid to the Toric grid
 !
-         call ps_user_1dintrp_vec(x_torlh, x_orig, ps%ns(:,0), &
-               tmp_prof(:),ierr )
+         call ps_user_1dintrp_vec(ps%rho, x_orig, ps%ns(:,0), tmp_prof(:),ierr )  !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS electron density profile onto Toric grid'
 !
 !
-         call ps_user_1dintrp_vec(x_torlh, ps%rho_eq, ps%vol(:), &
-               vol_int(:),ierr )
+         call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, ps%vol(:), vol_int(:),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS volume onto Toric grid'
 !
 ! PTB Compare the volume average of the orginal density profile from the Plasma State
@@ -821,6 +816,8 @@
                tmp_prof(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS electron temperature profile onto Torlh grid'
       write(out_unit,'(5E16.9)')  tmp_prof   !keV
+      
+      STOP
 
 ! PTB - begins
         call ps_tha_fetch (ierr, ps, tol_zero, &
