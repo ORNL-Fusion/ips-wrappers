@@ -708,7 +708,7 @@
       nproeq = size(ps%rho_eq)
 
 ! PTB begins -
-      allocate( psi_poloidal_rho, nprodt-1)  !DBB 6-27_2017
+      allocate( psi_poloidal_rho(nprodt-1))  !DBB 6-27_2017
       allocate( tmp_prof(nprodt))
       allocate( vol_int(nprodt))
       allocate( ns_tha(nprodt-1,ps%nspec_tha))
