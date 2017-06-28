@@ -743,22 +743,30 @@
 !
  ! DBB begins
 ! DBB begins: First interpolate psi_poloidal_rho onto rho grid then interpolate to x_torlh
+! N.B. The first value of psi_poloidal_rho (and also x_torlh) is psi_ploloidal at the 
+! center of the first rho zone, !=0.  Should I artificially set it to 0?
 	  call ps_rho_rezone(ps%rho, ps%id_psipol, psi_poloidal_rho, ierr, zonesmoo=.TRUE.)
 	  write(*,*)'after ps_rho_rezone psipol: ierr=',ierr
 	  call ckerr('ps_rho_rezone psipol')
 	  write (*,*) "psi_poloidal_rho = "
 	  write (*,*) psi_poloidal_rho
       call ps_user_1dintrp_vec(ps%rho, x_orig, psi_poloidal_rho, x_torlh, ierr )
+      x_torlh = sqrt(x_torlh/x_torlh(nprodt))
 	  write (*,*) " "
 	  write (*,*) "x_torlh = "
-      x_torlh = sqrt(x_torlh/x_torlh(nprodt))
 	  write (*,*) x_torlh
-	  STOP
 
-	  call ps_rho_rezone(ps%rho, ps%id_vol, vol_int, ierr, zonesmoo=.TRUE.)
-	  write(*,*)'after ps_rho_rezone psipol: ierr=',ierr
-	  call ckerr('ps_rho_rezone psipol')
+	  call ps_rho_rezone(ps%rho, ps%id_vol, vol_rho, ierr, zonesmoo=.TRUE.)
+	  write(*,*)'after ps_rho_rezone vol: ierr=',ierr
+	  call ckerr('ps_rho_rezone vol')
+	  write (*,*) "vol_rho = "
+	  write (*,*) vol_rho
+      call ps_user_1dintrp_vec(ps%rho, x_orig, vol_rho, vol_int, ierr )
+	  write (*,*) " "
+	  write (*,*) "vol_int = "
+	  write (*,*) vol_int
 
+      STOP
 ! DBB ends
 
 !     write(out_unit,'(A10)')  'rho'
