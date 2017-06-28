@@ -48,6 +48,7 @@
 
 
       real(rspec), dimension(:),allocatable :: psi_poloidal_rho !DBB 6-27-2917
+      real(rspec), dimension(:),allocatable :: psi_poloidal_eq !DBB 6-27-2917
       real(rspec), dimension(:),allocatable :: vol_rho !DBB 6-27-2917
       real(rspec), dimension(:),allocatable :: tmp_prof
       real(rspec), dimension(:),allocatable :: vol_int
@@ -710,6 +711,8 @@
 
 ! PTB begins -
       allocate( psi_poloidal_rho(nprodt-1))  !DBB 6-27_2017
+      allocate( psi_poloidal_rho(nprodt-1))  !DBB 6-27_2017
+      allocate( psi_poloidal_eq(nproeq))  !DBB 6-27_2017
       allocate( vol_rho(nprodt-1))  !DBB 6-27_2017
       allocate( tmp_prof(nprodt))
       allocate( vol_int(nprodt))
@@ -761,8 +764,8 @@
 
 	  write (*,*) " "
 	  write (*,*) "Just interpolate psipol from rho_eq to x_torlh"
-	  write (*,*) psi_poloidal_rho
-      call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, ps%psipol, x_torlh, ierr )
+	  psi_poloidal_eq = ps%psipol
+      call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, psi_poloidal_eq, x_torlh, ierr )
       x_torlh = sqrt(x_torlh/x_torlh(nprodt))
 	  write (*,*) " "
 	  write (*,*) "x_torlh = "
