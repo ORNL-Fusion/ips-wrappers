@@ -4,20 +4,20 @@ MPIRUN = mpirun # OR mpiexec
 
 PHYS_BIN_ROOT = /project/projectdirs/m876/phys-bin/phys-hopper/
 DATA_TREE_ROOT = /project/projectdirs/m876/data
-PORTAL_URL = http://localhost #http://swim.gat.com:8080/monitor           # URL for the portal
-RUNID_URL  = http://localhost  #http://swim.gat.com:4040/runid.esp
+PORTAL_URL = http://swim.gat.com:8080/monitor #http://localhost
+RUNID_URL  = http://swim.gat.com:4040/runid.esp #http://localhost
 DATA_ROOT = /project/projectdirs/m876/data/
 
 #######################################                         
 # resource detection method                                     
 #######################################                         
-NODE_DETECTION = pbs_env # checkjob | qstat | pbs_env | slurm_env
+NODE_DETECTION = pbs_env # manual | checkjob | qstat | pbs_env | slurm_env
 
 #######################################                          
 # manual allocation description                                 
 #######################################                          
-TOTAL_PROCS = 96
-NODES = 4
+TOTAL_PROCS = 24
+NODES = 1
 
 PROCS_PER_NODE = 24
 
@@ -41,6 +41,6 @@ SOCKETS_PER_NODE = 16
 # USE_ACCURATE_NODES                                           
 #   * ON : use accurate nodes if detected properly             
 #   * OFF : DO NOT use accurate nodes even if detected properly
-NODE_ALLOCATION_MODE = SHARED # SHARED | EXCLUSIVE
+NODE_ALLOCATION_MODE = EXCLUSIVE # SHARED | EXCLUSIVE
 #USE_ACCURATE_NODES = ON # ON | OFF 
 #USE_ACCURATE_NODES = OFF # ON | OFF

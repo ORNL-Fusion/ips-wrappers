@@ -1,17 +1,25 @@
 #!/bin/sh
-#PBS -l nodes=1:ppn=4
-#PBS -l walltime=00:30:00
-#PBS -l cput=2:15:00
-##PBS -v tpt=4                for OpenMP jobs only : default value tpt=1
+#PBS -l nodes=1:ppn=24
+#PBS -l walltime=02:00:00
+#PBS -l cput=96:00:00
+###PBS -v tpt=4               for OpenMP jobs only : default value tpt=1
 #PBS -M lasaesquisaa@ornl.gov
-#PBS -m ae
+#PBS -m a
 ###PBS -o std.out 
 ###PBS -e std.err
 ### start of jobscript
 
 cd $PBS_O_WORKDIR
 
-source /home/a7l/ips-atom//env.ips.megabucky
+source /home/a7l/ips-atom/env.ips.megabucky
+module load gcc/6.3.0
+module load openmpi/gcc_6.3.0/2.1.1_head
+module load hdf5_parallel/gcc_6.3.0/1.8.19
+#module load openmpi/gcc/64/1.10.3 
+#module load mpiexec/0.84_432
 
-IPS_PATH=/home/m4c/ipsinstall/bin
-$IPS_PATH/ips.py --config=ips.config --platform=conf.ips.megabucky --log=log.framework 2>>log.stdErr 1>>log.stdOut
+#IPS_PATH=/home/m4c/ipsinstall/bin
+#$IPS_PATH/ips.py --config=ips.config --platform=conf.ips.megabucky --log=log.framework 2>>log.stdErr 1>>log.stdOut
+
+#ips.py --config=ips.config --log=log.framework 2>>log.stdErr 1>>log.stdOut
+ips.py --config=ips.config --platform=$IPS_PLATFORM_FILE --log=log.framework 2>>log.stdErr 1>>log.stdOut

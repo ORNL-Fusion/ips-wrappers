@@ -5,7 +5,7 @@ import os
 import shutil
 import subprocess
 import glob
-import translate_xolotl_to_ftridyn
+#import translate_xolotl_to_ftridyn
 import binTRIDYN
 import write_xolotl_paramfile
 import sys
