@@ -50,8 +50,9 @@ class xolotlFtridynDriver(Component):
         #i.e., anything different from default values (those set to reproduce email-coupling of FTridyn-Xolotl)
 
         self.xolotlStartStop='True'
-        self.xolotlFlux=4e4 #ion/nm2
-        self.initialV=3.15e-4 #V/nm3
+        self.xolotlFlux=4.0e4 #ion/nm2
+        self.initialV=3.15e-4 #V/nm3 ; e.g., 3.15e-4 V/nm3 = 5ppm
+        self.nGrid=200
         if self.startMode=='INIT':
             self.xolotlNetworkFile='notInUse'
         elif self.startMode=='RESTART':
@@ -104,7 +105,7 @@ class xolotlFtridynDriver(Component):
             self.services.call(ftridyn, 'init', timeStamp, dMode=self.driverMode, dTime=time, fInitialTotalDepth=self.ftridynInitialTotalDepth, fTotalDepth=self.ftridynTotalDepth, fNImpacts=self.ftridynNImpacts, fEnergyIn=self.ftridynInEnergy)
             self.services.call(ftridyn, 'step', timeStamp, dTime=time, fNImpacts=self.ftridynNImpacts)#, fSpYieldW=self.ftridynSpYieldW)
 
-            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xNetworkFile=self.xolotlNetworkFile, xStartStop=self.xolotlStartStop, xFlux=self.xolotlFlux, xInitialV=self.initialV, fNImpacts=self.ftridynNImpacts, fSpYieldMode=self.ftridynSpYieldMode, fSpYieldW=self.ftridynSpYieldW)
+            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xNetworkFile=self.xolotlNetworkFile, xStartStop=self.xolotlStartStop, xFlux=self.xolotlFlux, xInitialV=self.initialV, xNGrid=self.nGrid, fNImpacts=self.ftridynNImpacts, fSpYieldMode=self.ftridynSpYieldMode, fSpYieldW=self.ftridynSpYieldW)
             self.services.call(xolotl, 'step', timeStamp, dTime=time)
 
             self.services.stage_plasma_state()
