@@ -4,30 +4,29 @@
 TORLH component.  Adapted from rf_lh_torlh.py. (7-24-2015)
 
 """
+# Working notes: DBB 7-28-2017
+# TORLH runs in either of two modes.  
+# toric_Mode = 'toric' -> normal torlh run that solves wave equation
+# toric_Mode = 'tqldce' -> does not solve wave equation, generates QL operator file toric_qlde.cdf
+# This is controlled by optional keyword argument to STEP function 'toric_mode'
+#
+# There are 2 additional keyword args to STEP that set the parameters 'inumin' and 'isol'.
+# These 3 parameters are communicated as command line args to the prepare_torlh_input_abr.f90
+# code, which in turn writes them into the 'torica.inp' file, which is the actual input file
+# to TORLH.
+#  
+# The optional command line arguments to prepare_torlh_input_abr.f90 are:
+# arg_toric_Mode = 'toric' or 'qldce'
+# arg_inumin_Mode = Maxwell (sets inumin = (0,0,0,0)) or nonMaxwell (sets inumin = (3,0,0,0))
+# arg_isol_Mode = 0 or 1 (Normally = 1)
+#
+# The defaults are arg_toric_Mode = 'toric', arg_inumin_Mode = 'Maxwell', arg_isol_Mode = 1
+# So if no keyword args are provided to the call to STEP the component functions as a normal
+# TORLH RF component.
+#
 # Working notes: DBB 5-11-2017
 # Modified to pick up enorm as global config parameter and pass to prepare_torlh_input
 # through a command line argument
-#
-# Working notes: DBB 9-5-2016 (updated 4-17-2017)
-# Modified to run in two modes.  A normal torlh mode in which it acts as a normal IPS
-# component.  There is a new optional config parameter, CQL_COUPLE_MODE.  If this parameter
-# is either absent or == False then in component STEP torlh runs in toricmode with inumin
-# set for Maxwellian inumin = (0,0,0,0).
-#
-# But if optional parameter CQL_COUPLE_MODE = True in the config file then the action is 
-# as follows: 
-# 1) During the INIT do_torlh_init_abr.f90 runs, then torlh runs in toric mode with inumin
-#    set for Maxwellian, inumin = (0,0,0,0), then toric runs in qldce mode, then mapin runs.
-# 2) During STEP ImChizz runs, then torlh runs in toric mode with inumin set for
-#    nonMaxwellian, inumin = (3,0,0,0), then torlh runs in qldce mode, then mapin runs.
-#
-# This requires that some parameters must be adjusted in the torica.inp file:
-# toricmode, inumin, and isol.  This is implemented by using command line arguments
-# to the prepare_torlh_input_abr.f90, which writes the torica.inp file.
-# The optional command line arguments are arg_toric_Mode, arg_inumin_Mode, and arg_isol_Mode.
-# arg_toric_Mode = toric or qldce
-# arg_inumin_Mode = Maxwell or nonMaxwell
-# arg_isol_Mode = 0 or 1 (Normally = 1)
 #
 # Nota Bene: This component uses services.update_plasma_state() which overwrites all state
 # files. To use this in a concurrent simulation should use merge_plasma_state instead.
@@ -91,12 +90,6 @@ import getopt
 import shutil
 import string
 from  component import Component
-#Numeric should be replace by numpy, if needed -JCW
-from Numeric import *
-from Scientific.IO.NetCDF import *
-
-INIT_Complete = False
-CQL_COUPLE_MODE = False
 
 class torlh (Component):
 
@@ -208,12 +201,6 @@ class torlh (Component):
             self.services.exception(logMsg)
             raise 
 
-        if CQL_COUPLE_MODE in [True, 'true', 'True', 'TRUE']:
-            self.step(timeStamp)
-            
-        global INIT_Complete
-        INIT_Complete = True
-
         return 0
 
 # ------------------------------------------------------------------------------
@@ -258,7 +245,7 @@ class torlh (Component):
 #
 # ------------------------------------------------------------------------------
 
-    def step(self, timeStamp):
+    def step(self, timeStamp, **keywords):
         """Take a step for the torlh component.  Really a complete run."""
         print '\ntorlh.step() called'
 
@@ -363,24 +350,23 @@ class torlh (Component):
             print 'continuing power from previous time step'
             ps.variables['power_lh'].assignValue(-power_lh)
             ps.close()
+# ------------------------------------------------------------------------------                
 
     # Or actually run torlh
 
         else:
-
             if not os.path.isfile(prepare_input):
                 logMsg = 'Cannot find torlh prepare_input binary: ' + prepare_input
                 self.services.error(logMsg)
                 raise Exception(logMsg)
-# ------------------------------------------------------------------------------                
-        # Run in toricmode = 'toric'
+
             # Call torlh prepare_input to generate torlha.inp
 
-            arg_toric_Mode = 'toric'
-            arg_isol_Mode = '1'           
-            arg_inumin_Mode = 'Maxwell'
-            if INIT_Complete and CQL_COUPLE_MODE:
-                arg_inumin_Mode = 'nonMaxwell'                
+            arg_toric_Mode = kwargs.get('toric_Mode', 'toric')
+            arg_isol_Mode = kwargs.get('isol_Mode', '1')           
+            arg_inumin_Mode = kwargs.get('inumin_Mode', 'Maxwell')
+            if arg_toric_Mode == 'qldce':
+            	torlh_log = os.path.join(workdir, 'log.torlh_qldce')
             
             cmd_prepare_input = [prepare_input, cur_state_file, arg_toric_Mode,\
                       arg_inumin_Mode,arg_isol_Mode, arg_enorm]
@@ -416,9 +402,10 @@ class torlh (Component):
                 self.services.error(logMsg)
                 raise Exception(logMsg)
                 
-            # Preserve torica.out from run in toric mode
+            # Preserve torica.out from run to distinguish toric mode = 'toric' from 'qldce'
+            new_file_name = 'torica_' + arg_toric_Mode + '.out'
             try:
-                shutil.copyfile('torica.out', 'torica_toricMode.out')
+                shutil.copyfile('torica.out', new_file_name)
             except IOError, (errno, strerror):
                 logMsg =  'Error copying file %s to %s' % ('torica.out', 'torica_toricMode.out'\
                         , strerror)
@@ -426,57 +413,8 @@ class torlh (Component):
                 services.exception(logMsg)
                 raise 
             
-                
-# ------------------------------------------------------------------------------                
-        # Run in toricmode = 'qldce' if needed
-            if CQL_COUPLE_MODE in [True, 'true', 'True', 'TRUE']:
-
-                arg_toric_Mode = 'qldce'
-                arg_isol_Mode = '1'            
-                arg_inumin_Mode = 'Maxwell'
-                if INIT_Complete:
-                    arg_inumin_Mode = 'nonMaxwell'
-
-                cmd_prepare_input = [prepare_input, cur_state_file, arg_toric_Mode,\
-                      arg_inumin_Mode,arg_isol_Mode, arg_enorm]
-                print 'running = ', cmd_prepare_input
-                services.send_portal_event(event_type = 'COMPONENT_EVENT',\
-                  event_comment =  cmd_prepare_input)
-                retcode = subprocess.call(cmd_prepare_input)
-                if (retcode != 0):
-                    logMsg = 'Error executing ' + prepare_input
-                    self.services.error(logMsg)
-                    raise Exception(logMsg)
-# 
-#                 print '\nRunning torlh in qldce mode, inumin_Mode = ', arg_inumin_Mode
-#                 retcode = subprocess.call([prepare_input, cur_state_file, arg_toric_Mode,\
-#                       arg_inumin_Mode,arg_isol_Mode])
-#                 if (retcode != 0):
-#                     logMsg = 'Error executing ' + prepare_input
-#                     self.services.error(logMsg)
-#                     raise Exception(logMsg)
-
-                # Launch torlh executable
-                print 'torlh processors = ', self.NPROC
-                cwd = services.get_working_dir()
-                task_id = services.launch_task(self.NPROC, cwd, torlh_bin, logfile=torlh_log)
-                retcode = services.wait_task(task_id)
-                if (retcode != 0):
-                    logMsg = 'Error executing command: ' + torlh_bin
-                    self.services.error(logMsg)
-                    raise Exception(logMsg)
-
-            # Preserve torica.out from run in qldce mode
-                try:
-                    shutil.copyfile('torica.out', 'torica_qldceMode.out')
-                except IOError, (errno, strerror):
-                    logMsg =  'Error copying file %s to %s' % ('torica.out', 'torica_qldceMode.out'\
-                            , strerror)
-                    print logMsg
-                    services.exception(logMsg)
-                    raise
-                     
-            # Run mapin
+            # For qldce mode need to also run mapin
+            if arg_toric_Mode == 'qldce':
                 mapin_bin = self.try_get_component_param(services,'MAPIN_BIN')
                 print '\nRunning ' + mapin_bin
                 services.send_portal_event(event_type = 'COMPONENT_EVENT', \
@@ -486,37 +424,27 @@ class torlh (Component):
                     logMsg = 'Error executing ' + mapin_bin
                     self.services.error(logMsg)
                     raise Exception(logMsg)
-                    
-            # Call process_output
-            # First rename default fort.* to expected names by component method as of torlh5 r918 from ipp
-            #os.rename('fort.9','torlh_cfg.nc')
-            #os.rename('fort.21','torlh.nc')
-            # No process_output code yet.  And don't find fort.9 or fort.21 in work directory.
-            # retcode = subprocess.call([process_output, cur_state_file])
-#             if (retcode != 0):
-#                 logMsg = 'Error executing' + process_output
-#                 self.services.error(logMsg)
-#                 raise Exception(logMsg)
 
-# Merge partial plasma state containing updated IC data
-        try:
-            partial_file = cwd + '/RF_LH_' + cur_state_file
-            # No process_output code yet
-            #services.merge_current_plasma_state(partial_file, logfile='log.update_state')
-            #print 'merged torlh plasma state data ', partial_file
-            print 'No process_output code yet, so no plasma state merge'
-        except:
-            logMsg = 'Error in call to merge_current_plasma_state(' + partial_file + ')'
-            self.services.exception(logMsg)
-            raise 
+# For toric mode merge partial plasma state containing updated IC data
+        if arg_toric_Mode == 'toric':
+            try:
+                partial_file = cwd + '/RF_LH_' + cur_state_file
+                # No process_output code yet
+                #services.merge_current_plasma_state(partial_file, logfile='log.update_state')
+                #print 'merged torlh plasma state data ', partial_file
+                print 'No process_output code yet, so no plasma state merge'
+            except:
+                logMsg = 'Error in call to merge_current_plasma_state(' + partial_file + ')'
+                self.services.exception(logMsg)
+                raise 
 
-      # Update plasma state files in plasma_state work directory
-        try:
-            services.update_plasma_state()
-        except Exception:
-            logMsg = 'Error in call to update_plasma_state()'
-            self.services.exception(logMsg)
-            raise 
+          # Update plasma state files in plasma_state work directory
+            try:
+                services.update_plasma_state()
+            except Exception:
+                logMsg = 'Error in call to update_plasma_state()'
+                self.services.exception(logMsg)
+                raise 
 
       # Archive output files
         try:
