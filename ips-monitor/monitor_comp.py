@@ -183,6 +183,7 @@ import os
 import subprocess
 import shutil
 import pickle
+import time
 
 from  component import Component
 
@@ -934,6 +935,7 @@ class monitor(Component):
         services = self.services
 
         workdir = services.get_working_dir()
+        time.sleep(3)
         run_id = services.get_config_param('PORTAL_RUNID')
         monitor_file = 'monitor_file.nc'
     #      print 'monitor file = ', monitor_file
