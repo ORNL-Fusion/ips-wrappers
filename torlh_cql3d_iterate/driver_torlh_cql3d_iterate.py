@@ -212,8 +212,7 @@ class generic_driver(Component):
         print ' Zeroth step - Maxwellian sequence'
 
         try:
-            services.call('RF_IC', 'STEP', float(t), toric_Mode = 'toric', \
-            inumin_Mode = 'Maxwell' , isol_Mode = '1')
+            services.call('RF_IC', 'STEP', float(t), toric_Mode = 'toric', inumin_Mode = 'Maxwell' , isol_Mode = '1')
         except Exception:
             message = 'RF_IC toric mode STEP failed'
             print message
