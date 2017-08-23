@@ -212,7 +212,7 @@ class generic_driver(Component):
         print ' Zeroth step - Maxwellian sequence'
 
         try:
-            services.call('RF_IC', 'STEP', t, toric_Mode = 'toric', \
+            services.call('RF_IC', 'STEP', float(t), toric_Mode = 'toric', \
             inumin_Mode = 'Maxwell' , isol_Mode = '1')
         except Exception:
             message = 'RF_IC toric mode STEP failed'
@@ -221,7 +221,7 @@ class generic_driver(Component):
             raise 
 
         try:
-            services.call('RF_IC', 'STEP', t, toric_Mode = 'qldce', \
+            services.call('RF_IC', 'STEP', float(t), toric_Mode = 'qldce', \
             inumin_Mode = 'Maxwell' , isol_Mode = '1')
         except Exception:
             message = 'RF_IC qldce mode STEP failed'
@@ -254,7 +254,7 @@ class generic_driver(Component):
                 raise 
 
             try:
-                services.call('RF_IC', 'STEP', t, toric_Mode = 'toric', \
+                services.call('RF_IC', 'STEP', float(t), toric_Mode = 'toric', \
                 inumin_Mode = 'nonMaxwell' , isol_Mode = '1')
             except Exception:
                 message = 'RF_IC toric mode STEP failed'
@@ -263,7 +263,7 @@ class generic_driver(Component):
                 raise 
 
             try:
-                services.call('RF_IC', 'STEP', t, toric_Mode = 'qldce', \
+                services.call('RF_IC', 'STEP', float(t), toric_Mode = 'qldce', \
                 inumin_Mode = 'nonMaxwell' , isol_Mode = '1')
             except Exception:
                 message = 'RF_IC qldce mode STEP failed'
