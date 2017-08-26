@@ -162,8 +162,8 @@ class generic_ps_init (Component):
             
         if simulation_mode == 'RESTART':
             # Get restart files listed in config file. Here just the plasma state files.
-            restart_root = self.try_get_config_param('RESTART_ROOT')
-            restart_time = self.try_get_config_param('RESTART_TIME')
+            restart_root = self.try_get_config_param(services, 'RESTART_ROOT')
+            restart_time = self.try_get_config_param(services, 'RESTART_TIME')
             try:
                  services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
             except:
