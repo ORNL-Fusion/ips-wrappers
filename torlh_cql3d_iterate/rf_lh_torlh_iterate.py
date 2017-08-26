@@ -326,7 +326,7 @@ class torlh (Component):
 #         power_lh = ps.variables['power_lh'].getValue()[0]
 #         ps.close()
         ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
-        power_lh = ps.variables['power_lh'].getValue()
+        power_lh = ps.variables['power_lh'].getValue()[0]
         ps.close()
         
         print 'power = ', power_lh
