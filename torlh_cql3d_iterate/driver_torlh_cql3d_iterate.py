@@ -212,18 +212,18 @@ class generic_driver(Component):
         print ' Zeroth step - Maxwellian sequence'
 
         try:
-            services.call(rf_lhComp, 'STEP', float(t), toric_Mode = 'toric', inumin_Mode = 'Maxwell' , isol_Mode = '1')
+            services.call(rf_lhComp, 'step', float(t), toric_Mode = 'toric', inumin_Mode = 'Maxwell' , isol_Mode = '1')
         except Exception:
-            message = 'RF_LH toric mode STEP failed'
+            message = 'RF_LH toric mode step failed'
             print message
             services.exception(message)
             raise 
 
         try:
-            services.call(rf_lhComp, 'STEP', float(t), toric_Mode = 'qldce', \
+            services.call(rf_lhComp, 'step', float(t), toric_Mode = 'qldce', \
             inumin_Mode = 'Maxwell' , isol_Mode = '1')
         except Exception:
-            message = 'RF_LH qldce mode STEP failed'
+            message = 'RF_LH qldce mode step failed'
             print message
             services.exception(message)
             raise 
@@ -245,27 +245,27 @@ class generic_driver(Component):
             print (' ')
 
             try:
-                services.call(fpComp, 'STEP', t)
+                services.call(fpComp, 'step', t)
             except Exception:
-                message = 'FP STEP failed'
+                message = 'FP step failed'
                 print message
                 services.exception(message)
                 raise 
 
             try:
-                services.call(rf_lhComp, 'STEP', float(t), toric_Mode = 'toric', \
+                services.call(rf_lhComp, 'step', float(t), toric_Mode = 'toric', \
                 inumin_Mode = 'nonMaxwell' , isol_Mode = '1')
             except Exception:
-                message = 'RF_LH toric mode STEP failed'
+                message = 'RF_LH toric mode step failed'
                 print message
                 services.exception(message)
                 raise 
 
             try:
-                services.call(rf_lhComp, 'STEP', float(t), toric_Mode = 'qldce', \
+                services.call(rf_lhComp, 'step', float(t), toric_Mode = 'qldce', \
                 inumin_Mode = 'nonMaxwell' , isol_Mode = '1')
             except Exception:
-                message = 'RF_LH qldce mode STEP failed'
+                message = 'RF_LH qldce mode step failed'
                 print message
                 services.exception(message)
                 raise 
