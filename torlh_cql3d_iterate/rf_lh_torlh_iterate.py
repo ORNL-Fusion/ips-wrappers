@@ -89,7 +89,8 @@ import subprocess
 import getopt
 import shutil
 import string
-from netCDF4 import *
+#from netCDF4 import *
+from Scientific.IO.NetCDF import *
 from  component import Component
 
 class torlh (Component):
@@ -322,12 +323,12 @@ class torlh (Component):
 # Check if LH power is zero (or effectively zero).  If true don't run torlh just
 # run zero_RF_LH_power fortran code
         print 'cur_state_file = ', cur_state_file
-#         ps = NetCDFFile(cur_state_file, 'r')
-#         power_lh = ps.variables['power_lh'].getValue()[0]
-#         ps.close()
-        ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
+        ps = NetCDFFile(cur_state_file, 'r')
         power_lh = ps.variables['power_lh'].getValue()[0]
         ps.close()
+#         ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
+#         power_lh = ps.variables['power_lh'].getValue()[0]
+#         ps.close()
         
         print 'power = ', power_lh
         if(-0.02 < power_lh < 0.02):
