@@ -247,7 +247,7 @@ class torlh (Component):
 #
 # ------------------------------------------------------------------------------
 
-    def step(self, timeStamp, **keywords):
+    def step(self, timeStamp, **kwargs):
         """Take a step for the torlh component.  Really a complete run."""
         print '\ntorlh.step() called'
 
