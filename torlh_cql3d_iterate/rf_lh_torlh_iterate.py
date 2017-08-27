@@ -398,6 +398,34 @@ class torlh (Component):
                 self.services.error(logMsg)
                 raise Exception(logMsg)
 
+            # For non Maxwellian run ImChizz
+            if arg_inumin_Mode == 'nonMaxwell':
+                print '\nRunning ImChizz'
+                try:
+                    subprocess.call(['cp', cur_cql_file, 'cql3d.cdf' ])
+                except Exception:
+                    message = 'generic_ps_init: Error copying CURRENT_CQL_FILE to cql3d.cdf'
+                    print message
+                    services.exception(message)
+                    raise              
+                imchzz_bin = self.ImChizz_BIN
+                cmd_imchizz=self.ImChizz_BIN
+                try:
+                   services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+                      event_comment =  'running ' + cmd_imchizz)
+                   P=subprocess.Popen(cmd_imchizz,stdin=subprocess.PIPE,stdout=subprocess.PIPE,\
+                      stderr=subprocess.STDOUT, bufsize=1)
+                #      stderr=subprocess.STDOUT, bufsize=1)
+                except :
+                   logMsg = "Error executing" + cmd_imchizz
+                   self.services.error(logMsg)
+                   raise
+               # P.stdin.write("b\n")
+                print P.communicate("b\n")
+                #P.wait()
+                print 'Finished ImChizz'
+
+
             # Launch torlh executable
             print 'torlh processors = ', self.NPROC
             cwd = services.get_working_dir()
