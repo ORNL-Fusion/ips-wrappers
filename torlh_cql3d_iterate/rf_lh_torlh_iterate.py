@@ -398,8 +398,8 @@ class torlh (Component):
                 self.services.error(logMsg)
                 raise Exception(logMsg)
 
-            # For non Maxwellian run ImChizz
-            if arg_inumin_Mode == 'nonMaxwell':
+            # For toric mode and nonMaxwellian run ImChizz
+            if arg_toric_Mode == 'toric' and arg_inumin_Mode == 'nonMaxwell':
                 print '\nRunning ImChizz'
                 try:
                     subprocess.call(['cp', cur_cql_file, 'cql3d.cdf' ])
