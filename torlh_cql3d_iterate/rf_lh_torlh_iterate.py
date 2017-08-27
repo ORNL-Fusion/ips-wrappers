@@ -372,7 +372,7 @@ class torlh (Component):
             arg_isol_Mode = kwargs.get('isol_Mode', '1')           
             arg_inumin_Mode = kwargs.get('inumin_Mode', 'Maxwell')
             if arg_toric_Mode == 'qldce':
-            	torlh_log = os.path.join(workdir, 'log.torlh_qldce')
+                torlh_log = os.path.join(workdir, 'log.torlh_qldce')
             
             cmd_prepare_input = [prepare_input, cur_state_file, arg_toric_Mode,\
                       arg_inumin_Mode,arg_isol_Mode, arg_enorm]
@@ -408,12 +408,22 @@ class torlh (Component):
                 self.services.error(logMsg)
                 raise Exception(logMsg)
                 
-            # Preserve torica.out from run to distinguish toric mode = 'toric' from 'qldce'
+            # Preserve log.torlh and torica.out from run to distinguish toric mode = 'toric' from 'qldce'
             new_file_name = 'torica_' + arg_toric_Mode + '.out'
             try:
                 shutil.copyfile('torica.out', new_file_name)
             except IOError, (errno, strerror):
                 logMsg =  'Error copying file %s to %s' % ('torica.out', 'torica_toricMode.out'\
+                        , strerror)
+                print logMsg
+                services.exception(logMsg)
+                raise 
+
+            new_file_name = 'log.torlh_' + arg_toric_Mode
+            try:
+                shutil.copyfile('log.torlh', new_file_name)
+            except IOError, (errno, strerror):
+                logMsg =  'Error copying file %s to %s' % ('log.torlh', new_file_name\
                         , strerror)
                 print logMsg
                 services.exception(logMsg)
@@ -444,13 +454,13 @@ class torlh (Component):
                 self.services.exception(logMsg)
                 raise 
 
-          # Update plasma state files in plasma_state work directory
-            try:
-                services.update_plasma_state()
-            except Exception:
-                logMsg = 'Error in call to update_plasma_state()'
-                self.services.exception(logMsg)
-                raise 
+      # Update plasma state files in plasma_state work directory
+        try:
+            services.update_plasma_state()
+        except Exception:
+            logMsg = 'Error in call to update_plasma_state()'
+            self.services.exception(logMsg)
+            raise 
 
       # Archive output files
         try:
