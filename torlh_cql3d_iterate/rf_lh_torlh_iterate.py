@@ -366,7 +366,7 @@ class torlh (Component):
                 self.services.error(logMsg)
                 raise Exception(logMsg)
 
-            # Call torlh prepare_input to generate torlha.inp
+            # Call torlh prepare_input to generate torlh.inp
 
             arg_toric_Mode = kwargs.get('toric_Mode', 'toric')
             arg_isol_Mode = kwargs.get('isol_Mode', '1')           
@@ -422,6 +422,7 @@ class torlh (Component):
                    raise
                # P.stdin.write("b\n")
                 print P.communicate("b\n")
+                
                 #P.wait()
                 print 'Finished ImChizz'
 
@@ -436,7 +437,7 @@ class torlh (Component):
                 self.services.error(logMsg)
                 raise Exception(logMsg)
                 
-            # Preserve log.torlh and torica.out from run to distinguish toric mode = 'toric' from 'qldce'
+            # Preserve torica.out from run to distinguish toric mode = 'toric' from 'qldce'
             new_file_name = 'torica_' + arg_toric_Mode + '.out'
             try:
                 shutil.copyfile('torica.out', new_file_name)
@@ -447,15 +448,15 @@ class torlh (Component):
                 services.exception(logMsg)
                 raise 
 
-            new_file_name = 'log.torlh_' + arg_toric_Mode
-            try:
-                shutil.copyfile('log.torlh', new_file_name)
-            except IOError, (errno, strerror):
-                logMsg =  'Error copying file %s to %s' % ('log.torlh', new_file_name\
-                        , strerror)
-                print logMsg
-                services.exception(logMsg)
-                raise 
+#             new_file_name = 'log.torlh_' + arg_toric_Mode
+#             try:
+#                 shutil.copyfile('log.torlh', new_file_name)
+#             except IOError, (errno, strerror):
+#                 logMsg =  'Error copying file %s to %s' % ('log.torlh', new_file_name\
+#                         , strerror)
+#                 print logMsg
+#                 services.exception(logMsg)
+#                 raise 
             
             # For qldce mode need to also run mapin
             if arg_toric_Mode == 'qldce':
