@@ -89,8 +89,8 @@ import subprocess
 import getopt
 import shutil
 import string
-#from netCDF4 import *
-from Scientific.IO.NetCDF import *
+from netCDF4 import *
+#from Scientific.IO.NetCDF import *
 from  component import Component
 
 class torlh (Component):
@@ -323,12 +323,12 @@ class torlh (Component):
 # Check if LH power is zero (or effectively zero).  If true don't run torlh just
 # run zero_RF_LH_power fortran code
         print 'cur_state_file = ', cur_state_file
-        ps = NetCDFFile(cur_state_file, 'r')
-        power_lh = ps.variables['power_lh'].getValue()[0]
-        ps.close()
-#         ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
+#         ps = NetCDFFile(cur_state_file, 'r')
 #         power_lh = ps.variables['power_lh'].getValue()[0]
 #         ps.close()
+        ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
+        power_lh = ps.variables['power_lh'][0]
+        ps.close()
         
         print 'power = ', power_lh
         if(-0.02 < power_lh < 0.02):
@@ -415,12 +415,10 @@ class torlh (Component):
                       event_comment =  'running ' + cmd_imchizz)
                    P=subprocess.Popen(cmd_imchizz,stdin=subprocess.PIPE,stdout=subprocess.PIPE,\
                       stderr=subprocess.STDOUT, bufsize=1)
-                #      stderr=subprocess.STDOUT, bufsize=1)
                 except :
                    logMsg = "Error executing" + cmd_imchizz
                    self.services.error(logMsg)
                    raise
-               # P.stdin.write("b\n")
                 print P.communicate("b\n")
                 
                 #P.wait()
@@ -442,21 +440,11 @@ class torlh (Component):
             try:
                 shutil.copyfile('torica.out', new_file_name)
             except IOError, (errno, strerror):
-                logMsg =  'Error copying file %s to %s' % ('torica.out', 'torica_toricMode.out'\
+                logMsg =  'Error copying file %s to %s' % ('torica.out', new_file_name\
                         , strerror)
                 print logMsg
                 services.exception(logMsg)
                 raise 
-
-#             new_file_name = 'log.torlh_' + arg_toric_Mode
-#             try:
-#                 shutil.copyfile('log.torlh', new_file_name)
-#             except IOError, (errno, strerror):
-#                 logMsg =  'Error copying file %s to %s' % ('log.torlh', new_file_name\
-#                         , strerror)
-#                 print logMsg
-#                 services.exception(logMsg)
-#                 raise 
             
             # For qldce mode need to also run mapin
             if arg_toric_Mode == 'qldce':
