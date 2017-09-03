@@ -210,23 +210,23 @@ class generic_driver(Component):
 
 
         print ' Zeroth step - Maxwellian sequence'
+        if sim_mode == 'NORMAL' :   # i.e. not RESTART do Maxwellian runs
+			try:
+				services.call(rf_lhComp, 'step', float(t), toric_Mode = 'toric', inumin_Mode = 'Maxwell' , isol_Mode = '1')
+			except Exception:
+				message = 'RF_LH toric mode step failed'
+				print message
+				services.exception(message)
+				raise 
 
-        try:
-            services.call(rf_lhComp, 'step', float(t), toric_Mode = 'toric', inumin_Mode = 'Maxwell' , isol_Mode = '1')
-        except Exception:
-            message = 'RF_LH toric mode step failed'
-            print message
-            services.exception(message)
-            raise 
-
-        try:
-            services.call(rf_lhComp, 'step', float(t), toric_Mode = 'qldce', \
-            inumin_Mode = 'Maxwell' , isol_Mode = '1')
-        except Exception:
-            message = 'RF_LH qldce mode step failed'
-            print message
-            services.exception(message)
-            raise 
+			try:
+				services.call(rf_lhComp, 'step', float(t), toric_Mode = 'qldce', \
+				inumin_Mode = 'Maxwell' , isol_Mode = '1')
+			except Exception:
+				message = 'RF_LH qldce mode step failed'
+				print message
+				services.exception(message)
+				raise 
 
         # Iterate through the timeloop, or in this case iteration loop
         for t in tlist_str[1:len(timeloop)]:
