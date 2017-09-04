@@ -211,7 +211,7 @@ class generic_driver(Component):
 
         print ' \n First step - Run torlh only in toric mode and qldce more for Maxwellian'
         if sim_mode == 'NORMAL' :   # i.e. not RESTART do Maxwellian runs
-            t = tlist_str[1]
+            t = tlist_str[0]
             try:
                 services.call(rf_lhComp, 'step', t, toric_Mode = 'toric', inumin_Mode = 'Maxwell' , isol_Mode = '1')
             except Exception:
@@ -230,7 +230,7 @@ class generic_driver(Component):
                 raise 
 
         # Iterate through the timeloop, or in this case iteration loop
-        for t in tlist_str[2:len(timeloop)]:
+        for t in tlist_str[1:len(timeloop)]:
             print (' ')
             print '\nDriver: starting iteration ', t
             services.update_time_stamp(t)
