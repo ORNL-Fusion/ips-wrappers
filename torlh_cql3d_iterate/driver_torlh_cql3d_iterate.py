@@ -209,7 +209,7 @@ class generic_driver(Component):
 # ------------------------------------------------------------------------------
 
 
-        print ' \n First step - Run torlh only in toric mode and qldce more for Maxwellian'
+        print ' \nZeroth step - Run torlh only in toric mode and qldce mode for Maxwellian'
         if sim_mode == 'NORMAL' :   # i.e. not RESTART do Maxwellian runs
             t = tlist_str[0]
             print (' ')
