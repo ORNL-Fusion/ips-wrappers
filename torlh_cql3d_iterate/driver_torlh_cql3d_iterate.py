@@ -213,7 +213,8 @@ class generic_driver(Component):
         if sim_mode == 'NORMAL' :   # i.e. not RESTART do Maxwellian runs
             t = tlist_str[1]
             try:
-                services.call(rf_lhComp, 'step', float(t), toric_Mode = 'toric', inumin_Mode = 'Maxwell' , isol_Mode = '1')
+#                services.call(rf_lhComp, 'step', float(t), toric_Mode = 'toric', inumin_Mode = 'Maxwell' , isol_Mode = '1')
+                services.call(rf_lhComp, 'step', t, toric_Mode = 'toric', inumin_Mode = 'Maxwell' , isol_Mode = '1')
             except Exception:
                 message = 'RF_LH toric mode step failed'
                 print message
@@ -221,7 +222,8 @@ class generic_driver(Component):
                 raise 
 
             try:
-                services.call(rf_lhComp, 'step', float(t), toric_Mode = 'qldce', \
+#                services.call(rf_lhComp, 'step', float(t), toric_Mode = 'qldce', \
+                services.call(rf_lhComp, 'step', t, toric_Mode = 'qldce', \
                 inumin_Mode = 'Maxwell' , isol_Mode = '1')
             except Exception:
                 message = 'RF_LH qldce mode step failed'
