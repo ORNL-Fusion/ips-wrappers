@@ -256,7 +256,7 @@ class generic_driver(Component):
                 raise 
 
             try:
-                services.call(rf_lhComp, 'step', float(t), toric_Mode = 'toric', \
+                services.call(rf_lhComp, 'step', t, toric_Mode = 'toric', \
                 inumin_Mode = 'nonMaxwell' , isol_Mode = '1')
             except Exception:
                 message = 'RF_LH toric mode step failed'
@@ -265,7 +265,7 @@ class generic_driver(Component):
                 raise 
 
             try:
-                services.call(rf_lhComp, 'step', float(t), toric_Mode = 'qldce', \
+                services.call(rf_lhComp, 'step', t, toric_Mode = 'qldce', \
                 inumin_Mode = 'nonMaxwell' , isol_Mode = '1')
             except Exception:
                 message = 'RF_LH qldce mode step failed'
