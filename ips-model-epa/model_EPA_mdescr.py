@@ -182,7 +182,7 @@ class model_EPA_mdescr(Component):
                     print 't = ', float(timeStamp), ' ', param, ' = ', newValue
 
                     # modify that parameter in namelist file
-                    lines = self.edit_nml_file(inputLines, param, newValue, separator = ',')
+                    lines = self.edit_nml_file(inputLines, param, str(newValue), separator = ',')
         
         # write modified namelist file        
         if params_to_change:
