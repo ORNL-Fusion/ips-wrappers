@@ -131,8 +131,7 @@ class model_EPA_mdescr(Component):
     def step(self, timeStamp):
         services = self.services
         init_only = self.try_get_component_param(services, 'INIT_ONLY', optional = True)
-        if init_only:
-            return
+        if init_only in ['TRUE', 'True', 'true']: return
 
         print 'model_EPA_mdescr.step() called'
         global parameterList
