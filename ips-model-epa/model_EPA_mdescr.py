@@ -33,15 +33,17 @@ the form:
 
 There must also be a line giving the parameters of the evolution model of the form:
 
-<parameter>_DT_param = <space separated list of values of the parameters of the evolution model>
+<parameter>_DT_params = <space separated list of values of the parameters of the evolution model>
 
-(e.g. Te_0_DT_param = <initial temperature>, <final temperature>, <time to start ramp>,
-                      <time to end ramp>)
+(e.g. Te_0_DT_params = <time to start ramp> <time to end ramp> <final temperature>
+N.B. We expect to get the intial value of the parameter from the initial input 
+     namelist file model_EPA_mdescr_input.nml)
 
 Eventually I should make these keyword based, but for now you just have to know what the
 ordered parameter list is for you evolution model.
 
-The list of evolution models implemented so far is very short, one.
+The list of evolution models implemented so far is very short, one -> ramp_initial_to_final
+
 """
 
 # ------------------------------------------------------------------------------
@@ -164,11 +166,16 @@ class model_EPA_mdescr(Component):
         
                 if model_name == 'ramp_initial_to_final':
                     print 'model_EPA_mdescr: ramp_initial_to_final'
-                    DT_paramList = self.try_get_component_param(services, param + '_DT_param').split()
-                    t_initial = float(DT_paramList[0])
-                    t_final = float(DT_paramList[1])
-                    Value_init = float(DT_paramList[2])
-                    Value_final = float(DT_paramList[3])
+                    DT_paramsList = self.try_get_component_param(services, param + '_DT_params').split()
+                    t_initial = float(DT_paramsList[0])
+                    t_final = float(DT_paramsList[1])
+                    
+                    # Get initial value of parameter from the initial namelist file
+                    Value_init = self.read_var_from_nml_lines(initial_nml_Lines, param, separator = ',')
+                    print 'intial '+param, ' = ', Value_init
+                    
+                    #Value_init = float(DT_paramsList[2])
+                    Value_final = float(DT_paramsList[2])
                     print 't_initial = ',t_initial, ' t_final = ', t_final,\
                     '  Value_init =  ', Value_init, '  Value_final =  ', Value_final
                     newValue = self.ramp_initial_to_final(float(timeStamp), t_initial,\
