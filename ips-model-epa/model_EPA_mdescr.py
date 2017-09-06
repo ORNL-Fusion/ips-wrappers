@@ -325,6 +325,7 @@ class model_EPA_mdescr(Component):
         while test == False:
             next_iine_no = var_line_number + var_lines
             next_line = lines[next_iine_no]
+            print 'next line = ', list(next_line)
             if '=' in next_line:   # Could get fooled by = in a quoted string
                 test = True
                 eq_index = next_line.find('=') # so check if quote before =
