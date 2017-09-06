@@ -42,7 +42,10 @@ N.B. We expect to get the intial value of the parameter from the initial input
 Eventually I should make these keyword based, but for now you just have to know what the
 ordered parameter list is for you evolution model.
 
-The list of evolution models implemented so far is very short, one -> ramp_initial_to_final
+The list of evolution models implemented so far is very short, two:
+    ramp_initial_to_final
+    exp_initial_to_final
+
 
 """
 
@@ -59,6 +62,7 @@ import subprocess
 import getopt
 import shutil
 import string
+import math
 from netCDF4 import *
 from  component import Component
 
@@ -179,10 +183,27 @@ class model_EPA_mdescr(Component):
                     '  Value_init =  ', Value_init, '  Value_final =  ', Value_final
                     newValue = self.ramp_initial_to_final(float(timeStamp), t_initial,\
                                t_final, Value_init, Value_final)
-                    print 't = ', float(timeStamp), ' ', param, ' = ', newValue
-
-                    # modify that parameter in namelist file
-                    lines = self.edit_nml_file(inputLines, param, [newValue], separator = ',')
+        
+                if model_name == 'exp_initial_to_final':
+                    print 'model_EPA_mdescr: exp_initial_to_final'
+                    DT_paramsList = self.try_get_component_param(services, param + '_DT_params').split()
+                    t_initial = float(DT_paramsList[0])
+                    tau = float(DT_paramsList[1])
+                    Value_final = float(DT_paramsList[2])
+                    
+                    # Get initial value of parameter from the initial namelist file
+                    Value_init = self.read_var_from_nml_lines(initial_nml_Lines, param, separator = ',')
+                    print 'intial '+param, ' = ', Value_init
+                    
+                    print 't_initial = ',t_initial, ' t_final = ', t_final,\
+                    '  Value_init =  ', Value_init, '  Value_final =  ', Value_final
+                    
+                    newValue = self.exp_initial_to_final(float(timeStamp), t_initial,\
+                               Value_init, Value_final)
+                               
+                print 't = ', float(timeStamp), ' ', param, ' = ', newValue
+                # modify that parameter in namelist file
+                lines = self.edit_nml_file(inputLines, param, [newValue], separator = ',')
         
         # write modified namelist file        
         if params_to_change:
@@ -233,6 +254,12 @@ class model_EPA_mdescr(Component):
         if t <= t0: return f0
         if t <= t1: return f0 + (f1 - f0)*(t - t0)/(t1 - t0)
         if t > t1:  return f1
+
+    # f = f0 for t < t0, f= f1*(1 - exp((t-t0)/tau) ) for t >  t1
+    def exp_initial_to_final(self, t, t0, tau, f0, f1):
+        
+        if t <= t0: return f0
+        if t > t0: return f1*(1.0 - math.exp((t - t0)/tau) )
         
     # Linear time advance f(timestamp) = f(t0) + (timestamp - t0)*DT
     def linear_DT(self, f0, t, t0, DT):
