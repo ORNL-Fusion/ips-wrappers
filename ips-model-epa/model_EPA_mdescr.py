@@ -259,7 +259,7 @@ class model_EPA_mdescr(Component):
     def exp_initial_to_final(self, t, t0, tau, f0, f1):
         
         if t <= t0: return f0
-        if t > t0: return f1*(1.0 - math.exp((t - t0)/tau) )
+        if t > t0: return f1*(1.0 - math.exp(-(t - t0)/tau) )
         
     # Linear time advance f(timestamp) = f(t0) + (timestamp - t0)*DT
     def linear_DT(self, f0, t, t0, DT):
