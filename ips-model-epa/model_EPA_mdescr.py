@@ -195,7 +195,7 @@ class model_EPA_mdescr(Component):
                     Value_init = self.read_var_from_nml_lines(initial_nml_Lines, param, separator = ',')
                     print 'intial '+param, ' = ', Value_init
                     
-                    print 't_initial = ',t_initial, ' t_final = ', t_final,\
+                    print 't_initial = ',t_initial, \
                     '  Value_init =  ', Value_init, '  Value_final =  ', Value_final
                     
                     newValue = self.exp_initial_to_final(float(timeStamp), t_initial,\
