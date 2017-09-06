@@ -325,7 +325,6 @@ class model_EPA_mdescr(Component):
         while test == False:
             next_iine_no = var_line_number + var_lines
             next_line = lines[next_iine_no]
-            print 'next line = ', list(next_line)
             if '=' in next_line:   # Could get fooled by = in a quoted string
                 test = True
                 eq_index = next_line.find('=') # so check if quote before =
@@ -335,7 +334,7 @@ class model_EPA_mdescr(Component):
                 double_quote_index = next_line.find('"')
                 if double_quote_index > -1 and double_quote_index < eq_index:
                     test = False
-            elif next_line[-1] == '/':  # At end of line means end of group
+            elif  '/' in next_line[-2:] :  # At end of line means end of group
                 test = True
             else:
                 var_lines += 1
