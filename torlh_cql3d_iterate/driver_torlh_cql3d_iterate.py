@@ -249,6 +249,9 @@ class generic_driver(Component):
 
             print (' ')
 
+            if 'EPA' in port_names:
+                self.component_call(services, 'EPA', epaComp, 'step', t)
+
             try:
                 services.call(fpComp, 'step', t)
             except Exception:
