@@ -199,7 +199,7 @@ class model_EPA_mdescr(Component):
                     '  Value_init =  ', Value_init, '  Value_final =  ', Value_final
                     
                     newValue = self.exp_initial_to_final(float(timeStamp), t_initial,\
-                               Value_init, Value_final)
+                               tau, Value_init, Value_final)
                                
                 print 't = ', float(timeStamp), ' ', param, ' = ', newValue
                 # modify that parameter in namelist file
