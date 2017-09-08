@@ -73,7 +73,7 @@ def ftridyn_to_xolotl(ftridynOneOutput='He_WDUMPPRJ.dat',
                 n.append(0)
 
         for i in range(len(m)):
-            n[i]+=m[i]*weightAngle[a-1]/numLines[a-1]
+            n[i]+=m[i]*weightAngle[a-1] #/numLines[a-1] ; no need to normalize by number of lines, as that's caused by reflection
             
     ## Fit with polynomials
     fit = poly.polyfit(b, n, 15)
