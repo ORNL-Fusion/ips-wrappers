@@ -18,42 +18,64 @@ import matplotlib.pyplot as plt
 #      b) a distribution of angles; a distribution of energies for each angle
 #            --> run Ftridyn for each angle, with the given Ein
 
-def ftridyn_to_xolotl(ftridynOneOutput='He_WDUMPPRJ.dat',
+def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
+                      ftridynOneOutOutput='He_WOUT.dat',
                       ftridynFolder="angle",                      
+                      fNImpacts=1.0e5,
                       GITRoutput='impactDistribution.dat'
                   ):
     
-    
+    totalSpYieldW=0.0;
+    aveSpYield=0.0
+
     #read GITR output to get weight -- MODIFY WHEN I'VE GOT AN EXAMPLE
     angleIndex, weightAngle = np.loadtxt(GITRoutput, usecols = (0,1) , unpack=True)
+    totalWeight=np.sum(weightAngle)
+
     print "read GITRs output, %s" %(GITRoutput)
     print "number of angles is ", (len(angleIndex))
+    print "the sum of weights is ", totalWeight
     
     for a in np.arange(1,len(angleIndex)+1,1):
-        
-        numLines== sum(1 for line in open('ftridynOneOutput'))
-        num_lines[]
-        num_lines.append = sum(1 for line in open('myfile.txt'))
+
+        angleFolder=ftridynFolder+"_%d" %(a)
 
         print "---------------------"
         print "folder number=", a
         print "value of the angle= ", angleIndex[a-1]
         print "weight of angle ", a , " is ", weightAngle[a-1]
-        print "and the file is of length",
-    
-        ## Open files ("bla1" is not used but I could not figure out how to easily open a file without using two columns)
-        angleFolder=ftridynFolder+"_%d" %(a)
-        ftridynCurrentOutput=angleFolder+"/"+ftridynOneOutput
 
-        nLines = sum(1 for line in open('ftridynCurrentOutput'))
-        numLines[]
-        numLines.append = nLines
-        print "FTridyn's file has " , nLines, " lines"
-        if nLines==0:
-            continue
+        #calculate the sputtering yield for each run and take the average
+        #if this does not work, use method of He_WSPYIELD.OUT (in xolotl's component)
+        ftridynCurrentOutOutput=angleFolder+"/"+ftridynOneOutOutput
+        ftridynCurrentOutFile=open(ftridynCurrentOutOutput,"r")
+        ftridynCurrentOutData=ftridynCurrentOutFile.read().split('\n')
+        searchString='PARTICLES(2)'
+        for line in ftridynCurrentOutData:
+            if searchString in line:
+                break
+        stringWithEmptyFields=line.strip().split(" ")
+        sputteringNparticlesString=[x for x in stringWithEmptyFields if x]
+        sputteringNparticles=sputteringNparticlesString[2]
+        spYieldW=float(sputteringNparticles)/float(fNImpacts)
+        print 'for angle ', a, ' sputtering yield of W on W is = ', spYieldW
+        totalSpYieldW += spYieldW*weightAngle[a-1]/totalWeight
+
+
+        ## Open files ("bla1" is not used but I could not figure out how to easily open a file without using two columns)
+        ftridynCurrentPrjOutput=angleFolder+"/"+ftridynOnePrjOutput
+
+#        nLines = sum(1 for line in open(ftridynCurrentPrjOutput,"r"))
+#        if (a==1):
+#            numLines=[]
+        
+#        numLines.append = nLines
+#        print "FTridyn's file has " , nLines, " lines"
+#        if nLines==0:
+#            continue
             
-        print "reading file: %s" %(ftridynCurrentOutput)
-        depth1, bla1 = np.loadtxt(ftridynCurrentOutput, usecols = (2,3) , unpack=True)
+        print "reading file: %s" %(ftridynCurrentPrjOutput)
+        depth1, bla1 = np.loadtxt(ftridynCurrentPrjOutput, usecols = (2,3) , unpack=True)
         
         ## Put first data into the plot
         m, bins = np.histogram(depth1/10.0, 200,normed=True)
@@ -114,8 +136,18 @@ def ftridyn_to_xolotl(ftridynOneOutput='He_WDUMPPRJ.dat',
     #plt.show()
 
 
-    return
 
+    #due to using the normalized weight, there's no need to take average
+#    if len(angleIndex)>0:
+#        aveSpYield=totalSpYieldW/len(angleIndex)
+#    else:
+#        aveSpYield=0.0
+        
+#    print 'average sputtering yield is', aveSpYield
+#    return aveSpYield
+
+    print "average sputtering yield is ", totalSpYieldW
+    return totalSpYieldW
 
 ################# END OF NEW PYTHON SCRIPT  ####################
 
