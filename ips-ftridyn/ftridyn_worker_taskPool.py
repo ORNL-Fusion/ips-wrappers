@@ -45,6 +45,9 @@ class ftridynWorker(Component):
                         shutil.copyfile(from_file_list[index], pathString+"/"+fileString)
                     
                     shutil.copyfile('surface.surf', pathString+"/"+'surface.surf')
+                    if energy[i] < 0:
+                        #copy energy distribution file
+                        shutil.copyfile(self.INPUT_DIR+"/dist"+str(int(j))+".dat", pathString+"/"+"He_W0001.ED1")#pathString+".ED1") 
     def step(self, timeStamp=0.0,**keywords):
         print('ftridyn_worker: step (task pool version)')
         
@@ -83,15 +86,17 @@ class ftridynWorker(Component):
                 for k in range(len(roughness)):
                     pathString = "FTRIDYN_"+str(energy[i]) + "_"+str(angle[j])+"_" + str(roughness[k])
                     fileString = pathString+".IN"
+                    print('doing analysis on ' , pathString+"/"+spyl_file)
                     fid0 = open(pathString+"/"+spyl_file,'r')
                     lines = fid0.readlines()
                     fid0.close()
-                    print('lines', str(lines[1]))
-                    list1 = re.sub(' +',' ',lines[1]).split()
-                    print('list1', list1)
-                    print(list1[0],list1[1])
+                    if len(lines) > 1:
+                        print('lines', str(lines[1]))
+                        list1 = re.sub(' +',' ',lines[1]).split()
+                        print('list1', list1)
+                        print(list1[0],list1[1])
 
-                    fid.write(" ".join([str(energy[i]),str(angle[j]),str(roughness[k]),'  ',list1[2],'\n']))
+                        fid.write(" ".join([str(energy[i]),str(angle[j]),str(roughness[k]),'  ',list1[2],'\n']))
         fid.close()
         #updates plasma state FTridyn output files
         self.services.update_plasma_state()
