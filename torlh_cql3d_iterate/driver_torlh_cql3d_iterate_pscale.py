@@ -268,8 +268,7 @@ class generic_driver(Component):
             
             # Get power_lh <--> goal_pwr from plasma state
             ps = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
-            goal_pwr = ps.variables['power_lh'].getValue()
-                        
+            goal_pwr = ps.variables['power_lh'][:]
             while running :
                 icount=icount+1
                 hist_pwrscale.append(pwrscale)
