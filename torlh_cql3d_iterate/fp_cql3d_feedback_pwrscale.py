@@ -468,7 +468,7 @@ class cql3d(Component):
 
 # Check if this is a pwrscale iteration such that pwrscale needs to be reset in cqlinput
           if 'pwrscale_arg' in kwargs:
-            pwrscale = kwargs.get(pwrscale_arg)
+            pwrscale = kwargs.get('pwrscale_arg')
             self.change_cql3d_pwrscale(pwrscale)
 
 #     Launch cql3d - N.B: Path to executable is in config parameter CQL3D_BIN
@@ -486,7 +486,7 @@ class cql3d(Component):
 # cql3d.nc, then communicate tot_pwr to the outside world by setting a global config
 # parameter, Pe_LH.
           if 'icount_arg' in kwargs:
-             icount = kwargs.get(icount_arg)
+             icount = kwargs.get('icount_arg')
              shutil.copyfile('cql3d.nc', 'cql3d.nc' + str(icount) + '.nc')
             
              nc_hdl=nc.netcdf_file(self.run_name+".nc",'r')
