@@ -489,7 +489,7 @@ class cql3d(Component):
              icount = kwargs.get('icount_arg')
              shutil.copyfile('cql3d.nc', 'cql3d.nc' + str(icount) + '.nc')
             
-             nc_hdl=nc.netcdf_file('cql3d.nc','r')
+             nc_hdl = NetCDFFile('cql3d.nc','r')
              rfpwr=nc_hdl.variables['rfpwr'].data
              rdim=nc_hdl.dimensions['rdim']
              fivedim=nc_hdl.dimensions['fivedim']
