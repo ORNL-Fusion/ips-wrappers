@@ -667,7 +667,7 @@ class cql3d(Component):
                     %pwrscale       
          os.system(cmd_pwrscale)
          cmd_rm_bak_cql="mv cqlinput.bak cqlinput"
-         os.system(self.cmd_rm_bak_cql)
+         os.system(cmd_rm_bak_cql)
 
          return
 
