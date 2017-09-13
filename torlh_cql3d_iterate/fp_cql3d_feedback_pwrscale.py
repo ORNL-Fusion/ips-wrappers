@@ -666,6 +666,7 @@ class cql3d(Component):
          cmd_pwrscale="sed \"s/^.*pwrscale(1)=.*$/ pwrscale(1)=%.2e ,/\" cqlinput > cqlinput.bak" \
                     %pwrscale       
          os.system(cmd_pwrscale)
+         cmd_rm_bak_cql="mv cqlinput.bak cqlinput"
          os.system(self.cmd_rm_bak_cql)
 
          return
