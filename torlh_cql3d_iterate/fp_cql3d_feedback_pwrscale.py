@@ -491,7 +491,8 @@ class cql3d(Component):
             
              nc_hdl = NetCDFFile('cql3d.nc','r')
              rfpwr=nc_hdl.variables['rfpwr'].data
-             rdim=nc_hdl.dimensions['rdim']
+             rfpwr=nc_hdl.variables['rfpwr']
+#             rdim=nc_hdl.dimensions['rdim']
              fivedim=nc_hdl.dimensions['fivedim']
              tot_pwr=rfpwr[nstop,fivedim-1,rdim-1]
 
