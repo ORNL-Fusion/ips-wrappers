@@ -282,9 +282,8 @@ class generic_driver(Component):
                     services.exception(message)
                     raise 
 
-                pelh = ps.variables['pelh'][:]
+                pelh = ps.variables['pelh']
                 print 'pelh = ', pelh
-                raise
                 tot_pwr = sum(pelh)
                 comment =  'pwrscale iteration, icount = ' + str(icount) + ' pwrscale = '\
                             + str(pwrscale) + ' goal_pwr = ' + str(goal_pwr) + ' tot_pwr = '\
