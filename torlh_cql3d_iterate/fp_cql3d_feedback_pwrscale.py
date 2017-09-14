@@ -494,7 +494,8 @@ class cql3d(Component):
              rfpwr=nc_hdl.variables['rfpwr']
              rdim=nc_hdl.dimensions['rdim']
              fivedim=nc_hdl.dimensions['fivedim']
-             tot_pwr=rfpwr[nstop,fivedim-1,rdim-1]
+             timedim=nc_hdl.dimensions['timedim']
+             tot_pwr=rfpwr[timedim-1,fivedim-1,rdim-1]
 
              self.services.set_config_param('Pe_LH', str(tot_pwr))                      
 
