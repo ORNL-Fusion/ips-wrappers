@@ -481,24 +481,10 @@ class cql3d(Component):
               services.error('Error executing cql3d')
               raise Exception, 'Error executing cql3d'
 
-# If this run is part of a pwrscale iteration skip updating plasma state and staging
-# output.  But copy cql3d.nc to cql3d_<iteration number>.nc and retrieve tot_pwr from 
-# cql3d.nc, then communicate tot_pwr to the outside world by setting a global config
-# parameter, Pe_LH.
+# If this run is part of a pwrscale iteration copy cql3d.nc to cql3d_<iteration number>.nc
           if 'icount_arg' in kwargs:
              icount = kwargs.get('icount_arg')
-             shutil.copyfile('cql3d.nc', 'cql3d.nc' + str(icount) + '.nc')
-            
-             nc_hdl = NetCDFFile('cql3d.nc','r')
-#             rfpwr=nc_hdl.variables['rfpwr'].data
-             rfpwr=nc_hdl.variables['rfpwr']
-             rdim=nc_hdl.dimensions['rdim']
-             fivedim=nc_hdl.dimensions['fivedim']
-             mrfnp3_dim=nc_hdl.dimensions['mrfnp3_dim']
-             tdim=nc_hdl.dimensions['tdim']
-             tot_pwr=rfpwr[tdim-1,mrfnp3_dim-1,rdim-1]
-
-             self.services.set_config_param('Pe_LH', str(tot_pwr))                      
+             shutil.copyfile('cql3d.nc', 'cql3d_' + str(icount) + '.nc')
 
     # Call process_output - step
           print 'fp_cql3d step: calling process_output'          
