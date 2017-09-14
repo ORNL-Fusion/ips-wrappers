@@ -269,6 +269,7 @@ class generic_driver(Component):
             # Get power_lh <--> goal_pwr from plasma state
             ps = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
             goal_pwr = ps.variables['power_lh'][0]
+            ps.close()
             while running :
                 icount=icount+1
                 hist_pwrscale.append(pwrscale)
@@ -282,7 +283,10 @@ class generic_driver(Component):
                     services.exception(message)
                     raise 
 
+                services.stage_plasma_state()
+                ps = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
                 pelh = ps.variables['pelh'][:]
+                ps.close()
                 print 'pelh = ', pelh
                 tot_pwr = sum(pelh)
                 comment =  'pwrscale iteration, icount = ' + str(icount) + ' pwrscale = '\
