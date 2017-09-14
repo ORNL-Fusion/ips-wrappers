@@ -263,7 +263,6 @@ class generic_driver(Component):
             icount=0
             running= True
             pwrscale=1.0
-            tot_pwr = 0.
             hist_pwrscale=[]
             hist_pwr_result=[]
             
