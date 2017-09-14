@@ -273,13 +273,6 @@ class generic_driver(Component):
             while running :
                 icount=icount+1
                 hist_pwrscale.append(pwrscale)
-
-                comment =  'pwrscale iteration, icount = ' + str(icount) + ' pwrscale = '\
-                            + str(pwrscale) + ' goal_pwr = ' + str(goal_pwr) + ' tot_pwr = '\
-                            + str(tot_pwr)
-                print comment
-                services.send_portal_event(event_type = 'COMPONENT_EVENT',\
-                  event_comment =  comment)
                
                 # Run CQL3D
                 try:
@@ -290,7 +283,15 @@ class generic_driver(Component):
                     services.exception(message)
                     raise 
 
-                tot_pwr = self.services.get_config_param('Pe_LH')
+                pelh = ps.variables['pelh'][:]
+                tot_power = sum(pelh)
+                comment =  'pwrscale iteration, icount = ' + str(icount) + ' pwrscale = '\
+                            + str(pwrscale) + ' goal_pwr = ' + str(goal_pwr) + ' tot_pwr = '\
+                            + str(tot_pwr)
+                print comment
+                services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+                  event_comment =  comment)
+
                 hist_pwr_result.append(tot_pwr)
                 print "history of pwrscale"
                 print hist_pwrscale
