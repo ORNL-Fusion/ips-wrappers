@@ -274,12 +274,12 @@ class generic_driver(Component):
                 icount=icount+1
                 hist_pwrscale.append(pwrscale)
 
-				comment =  'pwrscale iteration, icount = ' + str(icount) + ' pwrscale = ',\
-				            + str(pwrscale) + ' goal_pwr = ', str(goal_pwr), ' tot_pwr = ',\
-				            str(tot_pwr)
-				print comment
-				services.send_portal_event(event_type = 'COMPONENT_EVENT',\
-				  event_comment =  comment)
+                comment =  'pwrscale iteration, icount = ' + str(icount) + ' pwrscale = ',\
+                            + str(pwrscale) + ' goal_pwr = ', str(goal_pwr), ' tot_pwr = ',\
+                            str(tot_pwr)
+                print comment
+                services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+                  event_comment =  comment)
                
                 # Run CQL3D
                 try:
