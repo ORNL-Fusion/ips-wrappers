@@ -284,7 +284,7 @@ class generic_driver(Component):
                     raise 
 
                 pelh = ps.variables['pelh'][:]
-                tot_power = sum(pelh)
+                tot_pwr = sum(pelh)
                 comment =  'pwrscale iteration, icount = ' + str(icount) + ' pwrscale = '\
                             + str(pwrscale) + ' goal_pwr = ' + str(goal_pwr) + ' tot_pwr = '\
                             + str(tot_pwr)
