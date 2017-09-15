@@ -469,7 +469,7 @@ class cql3d(Component):
 # Check if this is a pwrscale iteration such that pwrscale needs to be reset in cqlinput
           if 'pwrscale_arg' in kwargs:
             pwrscale = kwargs.get('pwrscale_arg')
-            self.change_cql3d_pwrscale(pwrscale)
+            self.change_cql3d_pwrscale_dbb(pwrscale)
 
 #     Launch cql3d - N.B: Path to executable is in config parameter CQL3D_BIN
           print 'fp_cql3d: launching cql3d'
@@ -660,4 +660,37 @@ class cql3d(Component):
          os.system(cmd_rm_bak_cql)
 
          return
+
+    # A utility to do simple editing of txt files on a line by line basis.
+    #---------------------------------------------------------------------------------------
+    # Open an input file and return the lines
+    def get_lines(self, filename):
+        file = open(filename, 'r')
+        lines = file.readlines()
+        file.close()
+        return lines
+
+    #---------------------------------------------------------------------------------------
+    # Open an output file and write lines into it
+    def put_lines(self, filename, lines):
+        file = open(filename, 'w')
+        file.writelines(lines)
+        file.close()
+
+
+    #---------------------------------------------------------------------------------------
+    # Editing utilities
+    #---------------------------------------------------------------------------------------
+
+    def change_cql3d_pwrscale_dbb(self, pwrscale):
+        print 'change_cql3d_pwrscale: pwrscale = ', pwrscale
+
+        # get lines from namelist file
+        inputLines = get_lines('cqlinput')
+        var = 'PWRSCALE'
+        var_line_number = find_var_line_number(inputLines, var)
+        inputLines[var_line_number] = 'PWRSCALE        = ' + str(pwrscale) + ', 19*1.00000000000000,\n'
+        put_lines('cqlinput', inputLines)
+        return
+
 
