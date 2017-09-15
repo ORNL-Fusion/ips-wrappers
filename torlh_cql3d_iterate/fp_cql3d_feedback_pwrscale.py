@@ -694,3 +694,24 @@ class cql3d(Component):
         return
 
 
+    def find_var_line_number(self, lines, var):
+
+        # Find the line in the namelist containing 'var = ' and get rid of newline if present.
+        var_line_number = -1
+        for i in range(len(lines)):
+            line = lines[i]
+            if '=' in line:
+                split_line = line.split('=')
+                #print 'split_line = ', split_line
+                if (split_line[0].strip()).lower() == var.lower():
+                    var_line_number = i
+
+        if var_line_number == -1:
+            message = 'Could not find variable ', var, ' in namelist lines'
+            print message
+            raise Exception(message)
+        
+        #print 'var_line_number = ', var_line_number
+        #print 'lines[var_line_number] = ', lines[var_line_number]
+        return var_line_number
+
