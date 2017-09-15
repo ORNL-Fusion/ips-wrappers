@@ -686,11 +686,11 @@ class cql3d(Component):
         print 'change_cql3d_pwrscale: pwrscale = ', pwrscale
 
         # get lines from namelist file
-        inputLines = get_lines('cqlinput')
+        inputLines = self.get_lines('cqlinput')
         var = 'PWRSCALE'
-        var_line_number = find_var_line_number(inputLines, var)
+        var_line_number = self.find_var_line_number(inputLines, var)
         inputLines[var_line_number] = 'PWRSCALE        = ' + str(pwrscale) + ', 19*1.00000000000000,\n'
-        put_lines('cqlinput', inputLines)
+        self.put_lines('cqlinput', inputLines)
         return
 
 
