@@ -652,7 +652,8 @@ class cql3d(Component):
 # ------------------------------------------------------------------------------
     def change_cql3d_pwrscale(self, pwrscale):
          print 'change_cql3d_pwrscale: pwrscale = ', pwrscale
-         cmd_pwrscale="sed \"s/^.*pwrscale(1)=.*$/ pwrscale(1)=%.2e ,/\" cqlinput > cqlinput.bak" \
+#         cmd_pwrscale="sed \"s/^.*pwrscale(1)=.*$/ pwrscale(1)=%.2e ,/\" cqlinput > cqlinput.bak" \
+         cmd_pwrscale="sed \"s/^.*PWRSCALE(1)=.*$/ PWRSCALE(1)=%.2e ,/\" cqlinput > cqlinput.bak" \
                     %pwrscale       
          os.system(cmd_pwrscale)
          cmd_rm_bak_cql="mv cqlinput.bak cqlinput"
