@@ -241,10 +241,17 @@ class generic_driver(Component):
                 services.exception(message)
                 raise 
 
-            # Set initial pwrscale = 1.  On subsequent iterations it retains its value
+        # Set initial pwrscale = 1.  On subsequent iterations it retains its value. 
+        # But don't set it if this is a restart run.
+        if sim_mode == 'NORMAL' :
             pwrscale=1.0
-
-
+            pwrscale_file = open('current_pwrscale.dat','w')
+            pwrscale_file.write(str(pwrscale))
+            pwrscale_file.close
+        else:   # Use pwrscale from previous outer iteration
+            pwrscale_file = open('current_pwrscale.dat','r')
+            pwrscale = float(pwrscale_file.read())
+                
         # Iterate through the timeloop, or in this case iteration loop
         for t in tlist_str[1:len(timeloop)]:
             print (' ')
@@ -323,6 +330,11 @@ class generic_driver(Component):
                      pwrscale=new_pwrscale
                      
             # After convergence record pwrscale history
+            
+            pwrscale_file = open('current_pwrscale.dat','w')
+            pwrscale_file.write(str(pwrscale))
+            pwrscale_file.close
+          
             f=open('pwrscale.dat','w')
             str_icount=str(icount)
             f.write("\nnumber of feedback\n") 
