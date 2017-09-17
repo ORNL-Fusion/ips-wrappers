@@ -6,6 +6,10 @@ components.  Adapted from generic_driver.py. Added coding from previous MIT scri
 iterate CQL3D variable pwrscale until CQL3D power matches desired input power.
 """
 
+# Working notes:
+# 9/17/2017 (DBB)
+# Changed to set initial pwrscale = 1 on first outer iteration..  On subsequent outer 
+# iterations it retains its value from the previous pwrscale iteration loop.
 
 import sys
 import os
@@ -237,6 +241,10 @@ class generic_driver(Component):
                 services.exception(message)
                 raise 
 
+            # Set initial pwrscale = 1.  On subsequent iterations it retains its value
+            pwrscale=1.0
+
+
         # Iterate through the timeloop, or in this case iteration loop
         for t in tlist_str[1:len(timeloop)]:
             print (' ')
@@ -262,7 +270,6 @@ class generic_driver(Component):
 
             icount=0
             running= True
-            pwrscale=1.0
             hist_pwrscale=[]
             hist_pwr_result=[]
             
