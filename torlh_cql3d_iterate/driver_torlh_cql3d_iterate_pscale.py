@@ -248,9 +248,12 @@ class generic_driver(Component):
             pwrscale_file = open('current_pwrscale.dat','w')
             pwrscale_file.write(str(pwrscale))
             pwrscale_file.close
+            print 'sim_mode == ', sim_mode, '  wrote current_pwrscale.dat, pwrscale=  ', pwrscale
         else:   # Use pwrscale from previous outer iteration
             pwrscale_file = open('current_pwrscale.dat','r')
             pwrscale = float(pwrscale_file.read())
+            pwrscale_file.close
+            print 'sim_mode == ', sim_mode, '  wrote current_pwrscale.dat, pwrscale=  ', pwrscale
                 
         # Iterate through the timeloop, or in this case iteration loop
         for t in tlist_str[1:len(timeloop)]:
@@ -287,6 +290,7 @@ class generic_driver(Component):
             while running :
                 icount=icount+1
                 hist_pwrscale.append(pwrscale)
+                print 'Running,  icount = ', icount, ' pwrscale = ', pwrscale
                
                 # Run CQL3D
                 try:
