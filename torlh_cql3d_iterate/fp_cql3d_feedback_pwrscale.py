@@ -449,8 +449,8 @@ class cql3d(Component):
                    shutil.copyfile('cql3d.nc','distrfunc.nc')
     # ptb: End of ptb hack
 
-# If this is the first step in a pwrscale iteration, and restart = 'enabled' save the 
-# plasma state version of distrfunc.nc file to initial_distrfunc.nc.   
+# If this is the first step in a pwrscale iteration, and restart = 'enabled' (e.g. this
+# is a restart) save the distrfunc.nc file to initial_distrfunc.nc.   
           if 'icount_arg' in kwargs:
              icount = kwargs.get('icount_arg')
              if (icount == 1) and (restart == 'enabled'):
@@ -492,6 +492,13 @@ class cql3d(Component):
               print 'Error executing command: ', cql3d_bin
               services.error('Error executing cql3d')
               raise Exception, 'Error executing cql3d'
+
+# If this is the first step in a pwrscale iteration, and restart = 'disabled' (i.e. this
+# is first time cql3d has run) save the distrfunc.nc file to initial_distrfunc.nc.   
+          if 'icount_arg' in kwargs:
+             icount = kwargs.get('icount_arg')
+             if (icount == 1) and (restart == 'disabled'):
+             	shutil.copyfile('distrfunc.nc', 'initial_distrfunc.nc')
 
     # Call process_output - step
           print 'fp_cql3d step: calling process_output'          
