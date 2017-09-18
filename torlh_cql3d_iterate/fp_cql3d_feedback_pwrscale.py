@@ -494,11 +494,11 @@ class cql3d(Component):
               raise Exception, 'Error executing cql3d'
 
 # If this is the first step in a pwrscale iteration, and restart = 'disabled' (i.e. this
-# is first time cql3d has run) save the distrfunc.nc file to initial_distrfunc.nc.   
+# is first time cql3d has run) save the cql3d.nc file to initial_distrfunc.nc.   
           if 'icount_arg' in kwargs:
              icount = kwargs.get('icount_arg')
              if (icount == 1) and (restart == 'disabled'):
-             	shutil.copyfile('distrfunc.nc', 'initial_distrfunc.nc')
+             	shutil.copyfile('cql3d.nc', 'initial_distrfunc.nc')
 
     # Call process_output - step
           print 'fp_cql3d step: calling process_output'          
