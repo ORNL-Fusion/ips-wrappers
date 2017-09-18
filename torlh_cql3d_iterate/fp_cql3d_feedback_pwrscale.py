@@ -10,6 +10,9 @@ The actual iteration logic is in the driver -> driver_torlh_iterate_pwrscale.py
 #**********************************************************
 # Working notes
 #**********************************************************
+# Version 0.1 Batchelor 9-17-2017
+# Added coding so that each cql3d run inside a pwrscale iteration starts from the final
+# distribution function of the previous outer iteration
 
 # fp_cql3d_feedback_pwrscale.py, Version 0.0 Batchelor 9-12-2017
 # Added kwargs to step() to allow iteration of pwrscale.  The intention is to make it
@@ -446,6 +449,15 @@ class cql3d(Component):
                    shutil.copyfile('cql3d.nc','distrfunc.nc')
     # ptb: End of ptb hack
 
+# If this is the first step in a pwrscale iteration, and restart = 'enabled' save the 
+# plasma state version of distfunc.nc file to initial_distfunc.nc.   
+          if 'icount_arg' in kwargs:
+             icount = kwargs.get('icount_arg')
+             if (icount == 1) and (restart == 'enabled'):
+             	shutil.copyfile('distfunc.nc', 'initial_distfunc.nc')
+             else:
+             	shutil.copyfile('initial_distfunc.nc', 'distfunc.nc')
+
     # ptb:    command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
     # ptb:    cql3d_output + ' ' + cql3d_nml + ' ' + nsteps_str + ' ' + ps_add_nml
           command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
@@ -485,6 +497,9 @@ class cql3d(Component):
           if 'icount_arg' in kwargs:
              icount = kwargs.get('icount_arg')
              shutil.copyfile('cql3d.nc', 'cql3d_' + str(icount) + '.nc')
+# If this is the first step in a pwrscale iteration save the distfunc.nc file to initial_distfunc.nc
+             if icount == 1:
+             	shutil.copyfile('distfunc.nc', 'initial_distfunc.nc')
 
     # Call process_output - step
           print 'fp_cql3d step: calling process_output'          
@@ -648,18 +663,6 @@ class cql3d(Component):
             raise
 
         return value
-
-# ------------------------------------------------------------------------------
-    def change_cql3d_pwrscale(self, pwrscale):
-         print 'change_cql3d_pwrscale: pwrscale = ', pwrscale
-#         cmd_pwrscale="sed \"s/^.*pwrscale(1)=.*$/ pwrscale(1)=%.2e ,/\" cqlinput > cqlinput.bak" \
-         cmd_pwrscale="sed \"s/^.*PWRSCALE(1)=.*$/ PWRSCALE(1)=%.2e ,/\" cqlinput > cqlinput.bak" \
-                    %pwrscale       
-         os.system(cmd_pwrscale)
-         cmd_rm_bak_cql="mv cqlinput.bak cqlinput"
-         os.system(cmd_rm_bak_cql)
-
-         return
 
     # A utility to do simple editing of txt files on a line by line basis.
     #---------------------------------------------------------------------------------------
