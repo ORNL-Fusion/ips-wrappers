@@ -450,13 +450,13 @@ class cql3d(Component):
     # ptb: End of ptb hack
 
 # If this is the first step in a pwrscale iteration, and restart = 'enabled' save the 
-# plasma state version of distfunc.nc file to initial_distfunc.nc.   
+# plasma state version of distrfunc.nc file to initial_distrfunc.nc.   
           if 'icount_arg' in kwargs:
              icount = kwargs.get('icount_arg')
              if (icount == 1) and (restart == 'enabled'):
-             	shutil.copyfile('distfunc.nc', 'initial_distfunc.nc')
+             	shutil.copyfile('distrfunc.nc', 'initial_distrfunc.nc')
              elif (icount > 1) and (restart == 'enabled'):
-             	shutil.copyfile('initial_distfunc.nc', 'distfunc.nc')
+             	shutil.copyfile('initial_distrfunc.nc', 'distrfunc.nc')
 
     # ptb:    command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
     # ptb:    cql3d_output + ' ' + cql3d_nml + ' ' + nsteps_str + ' ' + ps_add_nml
@@ -492,14 +492,6 @@ class cql3d(Component):
               print 'Error executing command: ', cql3d_bin
               services.error('Error executing cql3d')
               raise Exception, 'Error executing cql3d'
-
-# If this run is part of a pwrscale iteration copy cql3d.nc to cql3d_<iteration number>.nc
-          if 'icount_arg' in kwargs:
-             icount = kwargs.get('icount_arg')
-             shutil.copyfile('cql3d.nc', 'cql3d_' + str(icount) + '.nc')
-# If this is the first step in a pwrscale iteration save the distfunc.nc file to initial_distfunc.nc
-             if icount == 1:
-             	shutil.copyfile('distfunc.nc', 'initial_distfunc.nc')
 
     # Call process_output - step
           print 'fp_cql3d step: calling process_output'          
