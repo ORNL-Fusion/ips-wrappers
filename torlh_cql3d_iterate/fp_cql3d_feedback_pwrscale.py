@@ -455,7 +455,7 @@ class cql3d(Component):
              icount = kwargs.get('icount_arg')
              if (icount == 1) and (restart == 'enabled'):
              	shutil.copyfile('distfunc.nc', 'initial_distfunc.nc')
-             else:
+             elif (icount > 1) and (restart == 'enabled'):
              	shutil.copyfile('initial_distfunc.nc', 'distfunc.nc')
 
     # ptb:    command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
