@@ -19,7 +19,7 @@ class xolotlFtridynDriver(Component):
         plasma_state_list = plasma_state_file.split()
         for index in range(len(plasma_state_list)):
             open(plasma_state_list[index], 'a').close()
-
+        
         #A MORE ELEGANT WAY --  FOR THE FUTURE
         #for file in plasma_state_list:
         #    open(file, 'a').close()
@@ -41,7 +41,7 @@ class xolotlFtridynDriver(Component):
 
         self.initTime=0.0
         self.endTime=0.2
-        self.timeStep=0.02
+        self.timeStep=0.1
 
         print 'running IPS from t = %f to t=%f, in steps of dt=%f' % (self.initTime, self.endTime, self.timeStep)
 
@@ -58,6 +58,9 @@ class xolotlFtridynDriver(Component):
         elif self.startMode=='RESTART':
             self.xolotlNetworkFile='networkRestart.h5'
 
+        #CHANGE TO GET FROM FILE 
+        self.gFluxFractionW=0.01 #relative flux of W/He [from GITR!] 
+
         #ftridyn parameters:
         #TotalDepth: total substrate depth in [A]; set to 0.0 to use what Xolotl passes to ftridyn (as deep as He exists)
         #InitialTotalDepth: if TotalDepth=0.0, choose an appropriate depth for the irradiation energy in the 1st loop
@@ -67,11 +70,46 @@ class xolotlFtridynDriver(Component):
             
         self.ftridynTotalDepth=0.0
         self.ftridynInitialTotalDepth=300.0
-        self.ftridynNImpacts=1e5
-        self.ftridynInEnergy=250.0
-        self.ftridynSpYieldW=-1.0
+        self.ftridynNImpacts=1.0e5
 
-        if self.ftridynSpYieldW<0:
+        #E or A < 0 -> use distribution(s)
+        self.ftridynInEnergyHe=250.0
+        self.ftridynInAngleHe=0.0 #wrt surface normal
+        self.ftridynInEnergyW=-1
+        self.ftridynInAngleW=-1  #wrt surface normal  
+
+        #just have one spYeld to control mode and initialize others to zero
+        self.ftridynSpYield=-1.0
+        self.ftridynSpYieldW=0.0
+        self.ftridynSpYieldHe=0.0
+
+        if self.ftridynInAngleHe < 0 :
+            angleDistrFileHe = self.GITR_OUTPUT_DIR_He +'/'+self.ANGLE_DISTRIB_FILE
+            print '\t angle distribution file for He found; ', angleDistrFileHe #test angles are assigned correctly  
+            self.angleInHe, self.weightAngleHe = numpy.loadtxt(angleDistrFileHe, usecols = (0,1) , unpack=True)
+        else:
+            self.angleInHe=[self.ftridynInAngleHe] 
+            self.weightAngleHe = [1.0]
+            print '\t He angle value as defined by user' #test angles are assigned correctly  
+
+        if self.ftridynInAngleW < 0 :
+            angleDistrFileW = self.GITR_OUTPUT_DIR_W +'/'+self.ANGLE_DISTRIB_FILE
+            print '\t angle distribution file for W found; ', angleDistrFileW #test angles are assigned correctly
+            self.angleInW, self.weightAngleW = numpy.loadtxt(angleDistrFileW, usecols = (0,1) , unpack=True)
+        else:
+            self.angleInW=[self.ftridynInAngleW]
+            self.weightAngleW = [1.0]
+            print '\t W angle value as defined by user' #test angles are assigned correctly
+
+        #AND MAYBE SOMETHING SIMILAR WITH ENERGIES?
+
+        #test angles are assigned correctly:
+#        print 'using angles:'
+#        print '      for He ', self.angleInHe
+#        print '      for W ', self.angleInW
+
+
+        if self.ftridynSpYield<0:
             self.ftridynSpYieldMode='calculate'
         else:
             self.ftridynSpYieldMode='fixed'
@@ -92,7 +130,7 @@ class xolotlFtridynDriver(Component):
 
         ftridyn = self.services.get_port('WORKER')
         xolotl = self.services.get_port('XWORKER')
-
+        
         self.services.stage_plasma_state() 
 
         for time in numpy.arange(self.initTime,self.endTime,self.timeStep):
@@ -100,12 +138,13 @@ class xolotlFtridynDriver(Component):
             self.services.stage_plasma_state()
             print 'driver time (in loop)  %f' %(time)
             self.services.update_plasma_state()
-            
-            #component/method calls now include arguments (variables)
-            self.services.call(ftridyn, 'init', timeStamp, dMode=self.driverMode, dTime=time, fInitialTotalDepth=self.ftridynInitialTotalDepth, fTotalDepth=self.ftridynTotalDepth, fNImpacts=self.ftridynNImpacts, fEnergyIn=self.ftridynInEnergy)
-            self.services.call(ftridyn, 'step', timeStamp, dTime=time, fNImpacts=self.ftridynNImpacts)#, fSpYieldW=self.ftridynSpYieldW)
 
-            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xNetworkFile=self.xolotlNetworkFile, xStartStop=self.xolotlStartStop, xFlux=self.xolotlFlux, xInitialV=self.initialV, xNGrid=self.nGrid, fNImpacts=self.ftridynNImpacts, fSpYieldMode=self.ftridynSpYieldMode, fSpYieldW=self.ftridynSpYieldW)
+            #component/method calls now include arguments (variables)
+            self.services.call(ftridyn, 'init', timeStamp, dMode=self.driverMode, dTime=time, fInitialTotalDepth=self.ftridynInitialTotalDepth, fTotalDepth=self.ftridynTotalDepth, fNImpacts=self.ftridynNImpacts, fEnergyInHe=self.ftridynInEnergyHe, fAngleInHe=self.angleInHe, fWeightAngleHe=self.weightAngleHe, fEnergyInW=self.ftridynInEnergyW, fAngleInW=self.angleInW, fWeightAngleW=self.weightAngleW, gOutputFolderHe=self.GITR_OUTPUT_DIR_He, gOutputFolderW=self.GITR_OUTPUT_DIR_W, gAngleInFile=self.ANGLE_DISTRIB_FILE, gFractionW=self.gFluxFractionW)
+            self.services.call(ftridyn, 'step', timeStamp, gAngleInFile=self.ANGLE_DISTRIB_FILE, spYieldsFile_temp=self.SPUT_YIELDS_FILE_TEMP, spYieldsFile_final=self.SPUT_YIELDS_FILE_FINAL)
+            
+            #if spMode=calculate, then provide spYield File; if spMode=fixed, provide spYW and spYHe values
+            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xNetworkFile=self.xolotlNetworkFile, xStartStop=self.xolotlStartStop, xFlux=self.xolotlFlux, xInitialV=self.initialV, xNGrid=self.nGrid, fNImpacts=self.ftridynNImpacts, gFractionW=self.gFluxFractionW, fSpYieldMode=self.ftridynSpYieldMode, fSpYieldW=self.ftridynSpYieldW, fSpYieldHe=self.ftridynSpYieldHe, spYieldsFile_temp=self.SPUT_YIELDS_FILE_TEMP)
             self.services.call(xolotl, 'step', timeStamp, dTime=time)
 
             self.services.stage_plasma_state()

@@ -9,6 +9,7 @@ import glob
 import binTRIDYN
 import write_xolotl_paramfile
 import sys
+import numpy as np
 
 class xolotlWorker(Component):
     def __init__(self, services, config):
@@ -31,37 +32,38 @@ class xolotlWorker(Component):
         networkFile=keywords['xNetworkFile']
 #        spYieldW=keywords['fSpYieldW']
         flux=keywords['xFlux']
-
         runEndTime=driverTime+keywords['dTimeStep']
 
+        fluxFractionW=keywords['gFractionW']
+
+        cwd = self.services.get_working_dir()
+
         print 'xolotl-init:'
-        print '\t \t driver mode is', driverMode
-        print '\t \t running starts at time',driverTime
-        print '\t \t \t  ends at time', runEndTime
-        print '\t \t driver step is', keywords['dTimeStep']
+        print '\t driver mode is', driverMode
+        print '\t running starts at time',driverTime
+        print '\t \t  ends at time', runEndTime
+        print '\t driver step is', keywords['dTimeStep']
+        print '\n'
 
-
-        #if fSpYield in driver < 0, fSpYieldMode = calculate -> get sputtering yield FROM He_WOUT.DAT
+        #if fSpYield in driver < 0, fSpYieldMode = calculate -> get sputtering yield FROM spYield.out
         if keywords['fSpYieldMode']=='calculate':
-            ftridynOutFile=open('He_WOUT.DAT',"r")
-            ftridynOutData=ftridynOutFile.read().split('\n')
-            searchString='PARTICLES(2)'
-            for line in ftridynOutData:
-                if searchString in line:
-                    break
-            stringWithEmptyFields=line.strip().split(" ")
-            sputteringNparticlesString=[x for x in stringWithEmptyFields if x]
-            sputteringNparticles=sputteringNparticlesString[2]
-            spYieldW=float(sputteringNparticles)/float(keywords['fNImpacts'])
-            print 'calculated in Xolotl-component: W sputtering yield is =', spYieldW
+            spYieldsTemp=keywords['spYieldsFile_temp']
+            spYieldHe, spYieldW=angleValue, weightAngle = np.loadtxt(cwd+'/'+spYieldsTemp, usecols = (1,2) , unpack=True)
+            print '\t W sputtering yields calculated by FTridyn, read from file: spY (by He) = ', spYieldHe, ' spY (by W) = ', spYieldW
         #if fSpYield in driver >= 0, fSpYieldMode = fixed 
         elif keywords['fSpYieldMode']=='fixed':
             spYieldW=keywords['fSpYieldW']
-            print 'Fixed value of W sputtering yield is =', spYieldW
+            spYieldHe=keywords['fSpYieldHe']
+            print '\t Fixed value of W sputtering yields are: spY (by He) = ', spYieldHe, ' spY (by W) = ', spYieldW
         else:
-            print 'Invalid value of fSpYieldMode, ', keywords['fSpYieldMode'] 
-            print 'set yield to zero!'
+            print '\t Invalid value of fSpYieldMode, ', keywords['fSpYieldMode'] 
+            print '\t set yield to zero!'
             spYieldW=0.0;
+            spYieldHe=0.0;
+        
+        #WEIGHTED SUM OF SPUTTERING YIELDS!
+        totalSpYield=spYieldHe+fluxFractionW*spYieldW
+        print "\t the effective (weighted by relative flux) sputtering yield in Xolotl is: ", totalSpYield
 
         if keywords['dStartMode']=='RESTART':
             restartNetworkFile = networkFile
@@ -75,11 +77,12 @@ class xolotlWorker(Component):
             #since java is handled a little differently accross machines, 
             #a JAVA-XOLOTL environment variables are defined in the machine environment file
             #os.system('$JAVA_XOLOTL_EXE -Djava.library.path=$JAVA_XOLOTL_LIBRARY -cp .:$JAVA_XOLOTL_LIBRARY/*::$XOLOTL_PREPROCESSOR_DIR gov.ornl.xolotl.preprocessor.Main --perfHandler dummy --nxGrid 160 --maxVSize 250 --phaseCut')
-            print 'run parameter file without preprocessor'
-            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=startStop,ts_final_time=runEndTime,sputtering=spYieldW,flux=flux,initialV=keywords['xInitialV'],nxGrid=keywords['xNGrid'])
+            print 'init mode: run parameter file without preprocessor'
+            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=startStop,ts_final_time=runEndTime,sputtering=totalSpYield,flux=flux,initialV=keywords['xInitialV'],nxGrid=keywords['xNGrid'])
                 
         else:
-            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=startStop,ts_final_time=runEndTime,useNetFile=True,networkFile=networkFile,sputtering=spYieldW,flux=flux, initialV=keywords['xInitialV'],nxGrid=keywords['xNGrid'])
+            print 'restart mode: run parameter file without preprocessor'
+            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=startStop,ts_final_time=runEndTime,useNetFile=True,networkFile=networkFile,sputtering=totalSpYield,flux=flux, initialV=keywords['xInitialV'],nxGrid=keywords['xNGrid'])
         
         #store xolotls parameter and network files for each loop 
         currentXolotlParamFile='params_%f.txt' %driverTime
