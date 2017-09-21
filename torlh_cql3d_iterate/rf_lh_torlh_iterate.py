@@ -437,6 +437,7 @@ class torlh (Component):
             run_nproc = self.NPROC
             if arg_toric_Mode == 'qldce':
                 run_nproc = self.NPROC_QLDCE
+            print 'arg_toric_Mode = ', arg_toric_Mode, '   torlh processors = ', run_nproc
             task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
             retcode = services.wait_task(task_id)
             if (retcode != 0):
