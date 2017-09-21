@@ -4,6 +4,10 @@
 TORLH component.  Adapted from rf_lh_torlh.py. (7-24-2015)
 
 """
+#Working notes:  DBB 9-21-2017
+# Added config parameter NPROC_QLDCE so that torlh can run in qldce mode with different
+# number of processors than in toric mode
+#
 # Working notes: DBB 7-28-2017
 # TORLH runs in either of two modes.  
 # toric_Mode = 'toric' -> normal torlh run that solves wave equation
@@ -124,6 +128,7 @@ class torlh (Component):
         BIN_PATH = self.try_get_component_param(services,'BIN_PATH')
         RESTART_FILES = self.try_get_component_param(services,'RESTART_FILES')
         NPROC = self.try_get_component_param(services,'NPROC')
+        NPROC_QLDCE = self.try_get_component_param(services,'NPROC_QLDCE')
         global CQL_COUPLE_MODE
         CQL_COUPLE_MODE = self.try_get_component_param(services,'CQL_COUPLE_MODE', \
                                 optional = True)
@@ -428,7 +433,11 @@ class torlh (Component):
             # Launch torlh executable
             print 'torlh processors = ', self.NPROC
             cwd = services.get_working_dir()
-            task_id = services.launch_task(self.NPROC, cwd, torlh_bin, logfile=torlh_log)
+            # Set number of processors depending on toric_mode
+            run_nproc = self.NPROC
+            if arg_toric_Mode == 'qldce':
+                run_nproc = self.NPROC_QLDCE
+            task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
             retcode = services.wait_task(task_id)
             if (retcode != 0):
                 logMsg = 'Error executing command: ' + torlh_bin
