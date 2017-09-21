@@ -431,7 +431,6 @@ class torlh (Component):
 
 
             # Launch torlh executable
-            print 'torlh processors = ', self.NPROC
             cwd = services.get_working_dir()
             # Set number of processors depending on toric_mode
             run_nproc = self.NPROC
