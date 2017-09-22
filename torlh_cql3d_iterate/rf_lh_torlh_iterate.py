@@ -4,9 +4,11 @@
 TORLH component.  Adapted from rf_lh_torlh.py. (7-24-2015)
 
 """
-#Working notes:  DBB 9-21-2017
+#Working notes:  DBB 9-22-2017
 # Added config parameter NPROC_QLDCE so that torlh can run in qldce mode with different
-# number of processors than in toric mode
+# number of processors than in toric mode.  Added config parameter TORLH_TIME_LIMIT to set
+# a time limit for an individual run of TORLH using Wael's new optional arguments to 
+# services.wait_task()
 #
 # Working notes: DBB 7-28-2017
 # TORLH runs in either of two modes.  
@@ -128,9 +130,9 @@ class torlh (Component):
         BIN_PATH = self.try_get_component_param(services,'BIN_PATH')
         RESTART_FILES = self.try_get_component_param(services,'RESTART_FILES')
         NPROC = self.try_get_component_param(services,'NPROC')
-        NPROC_QLDCE = self.try_get_component_param(services,'NPROC_QLDCE')
-        global CQL_COUPLE_MODE
-        CQL_COUPLE_MODE = self.try_get_component_param(services,'CQL_COUPLE_MODE', \
+        NPROC_QLDCE = self.try_get_component_param(services,'NPROC_QLDCE', \
+                                optional = True)
+        TORLH_TIME_LIMIT = self.try_get_component_param(services,'TORLH_TIME_LIMIT', \
                                 optional = True)
 
         torlh_log = os.path.join(workdir, 'log.torlh')
@@ -438,7 +440,7 @@ class torlh (Component):
                 run_nproc = self.NPROC_QLDCE
             print 'arg_toric_Mode = ', arg_toric_Mode, '   torlh processors = ', run_nproc
             task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
-            retcode = services.wait_task(task_id)
+            retcode = services.wait_task(task_id, self.TORLH_TIME_LIMIT, 60)
             if (retcode != 0):
                 logMsg = 'Error executing command: ' + torlh_bin
                 self.services.error(logMsg)
