@@ -134,6 +134,7 @@ class torlh (Component):
                                 optional = True)
         TORLH_TIME_LIMIT = self.try_get_component_param(services,'TORLH_TIME_LIMIT', \
                                 optional = True)
+        print 'TORLH_TIME_LIMIT = ', TORLH_TIME_LIMIT
         if TORLH_TIME_LIMIT == None: 
             TORLH_TIME_LIMIT = -1
         
