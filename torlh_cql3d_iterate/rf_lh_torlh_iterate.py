@@ -132,7 +132,7 @@ class torlh (Component):
         NPROC = self.try_get_component_param(services,'NPROC')
         NPROC_QLDCE = self.try_get_component_param(services,'NPROC_QLDCE', \
                                 optional = True)
-        TORLH_TIME_LIMIT = self.try_get_component_param(services,'TORLH_TIME_LIMIT', \
+        self.TORLH_TIME_LIMIT = self.try_get_component_param(services,'TORLH_TIME_LIMIT', \
                                 optional = True)
         if TORLH_TIME_LIMIT == None: 
             TORLH_TIME_LIMIT = -1
