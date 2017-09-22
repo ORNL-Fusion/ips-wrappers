@@ -440,8 +440,8 @@ class torlh (Component):
                 run_nproc = self.NPROC_QLDCE
             print 'arg_toric_Mode = ', arg_toric_Mode, '   torlh processors = ', run_nproc
             task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
-            retcode = services.wait_task(task_id, timeout = self.TORLH_TIME_LIMIT,\
-                       delay = 60)
+            retcode = services.wait_task(task_id, timeout = float(self.TORLH_TIME_LIMIT),\
+                       delay = 60.)
             if (retcode != 0):
                 logMsg = 'Error executing command: ' + torlh_bin
                 self.services.error(logMsg)
