@@ -134,8 +134,8 @@ class torlh (Component):
                                 optional = True)
         self.TORLH_TIME_LIMIT = self.try_get_component_param(services,'TORLH_TIME_LIMIT', \
                                 optional = True)
-        if TORLH_TIME_LIMIT == None: 
-            TORLH_TIME_LIMIT = -1
+        if self.TORLH_TIME_LIMIT == None: 
+            self.TORLH_TIME_LIMIT = -1
         
         torlh_log = os.path.join(workdir, 'log.torlh')
 
