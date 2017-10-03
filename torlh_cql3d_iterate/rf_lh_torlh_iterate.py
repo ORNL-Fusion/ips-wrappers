@@ -446,8 +446,7 @@ class torlh (Component):
             num_tries = 3
             for i in range(num_tries):
                 print ' try number ', i
- #               task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
-                task_id = services.launch_task(run_nproc, cwd, 'dummy', logfile=torlh_log)
+                task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
                 retcode = services.wait_task(task_id, timeout = time_limit, delay = 60.)
                 if (ret_val == 0):
                     break
