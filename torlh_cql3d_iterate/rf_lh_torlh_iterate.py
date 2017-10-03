@@ -440,14 +440,30 @@ class torlh (Component):
             run_nproc = self.NPROC
             if arg_toric_Mode == 'qldce':
                 run_nproc = self.NPROC_QLDCE
+
             print 'arg_toric_Mode = ', arg_toric_Mode, '   torlh processors = ', run_nproc
-            task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
             time_limit = float(self.TORLH_TIME_LIMIT)
-            retcode = services.wait_task(task_id, timeout = time_limit, delay = 60.)
-            if (retcode != 0):
-                logMsg = 'Error executing command: ' + torlh_bin
-                self.services.error(logMsg)
-                raise Exception(logMsg)
+            num_tries = 3
+            for i in range(num_tries):
+                print ' try number ', i
+ #               task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
+                task_id = services.launch_task(run_nproc, cwd, 'dummy', logfile=torlh_log)
+                retcode = services.wait_task(task_id, timeout = time_limit, delay = 60.)
+                if (ret_val == 0):
+                    break
+            else:
+                services.exception("Task failed after %d trials" % num_tries)
+                raise Exception("Task failed after %d trials" % num_tries)
+
+
+#             print 'arg_toric_Mode = ', arg_toric_Mode, '   torlh processors = ', run_nproc
+#             task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
+#             time_limit = float(self.TORLH_TIME_LIMIT)
+#             retcode = services.wait_task(task_id, timeout = time_limit, delay = 60.)
+#             if (retcode != 0):
+#                 logMsg = 'Error executing command: ' + torlh_bin
+#                 self.services.error(logMsg)
+#                 raise Exception(logMsg)
                 
             # Preserve torica.out from run to distinguish toric mode = 'toric' from 'qldce'
             new_file_name = 'torica_' + arg_toric_Mode + '.out'
