@@ -77,24 +77,27 @@ class ftridynWorker(Component):
             
             #run generateInput for W->W: 
             #for W redep, W energy distr given by GITR -> energyInW=-1 -> no loop in energy needed
-            for j in range(len(self.angleInW)):
-                if (self.weightAngleW[j] == 0.0):
-                    print '\t weight of angle ',  self.angleInW[j], ' is ' , self.weightAngleW[j] , ', so skip generateInput'
-                elif (self.weightAngleW[j] > 0.0):
-                    generate_ftridyn_input.Prj_Tg_xolotl(depth=nTT,number_histories=self.nImpacts,incident_energy=self.energyInW,incident_angle=self.angleInW[j],projectile_name='W',target_name='W')
-                    pathFolderW = cwd+'/'+self.FOLDER_W+str(self.angleInW[j])# + "_"+str(energyInW[j])
-                    if not os.path.exists(pathFolderW):
-                        os.makedirs(pathFolderW)
+            if self.fluxFractionW>0.0 :
+                for j in range(len(self.angleInW)):
+                    if (self.weightAngleW[j] == 0.0):
+                        print '\t weight of angle ',  self.angleInW[j], ' is ' , self.weightAngleW[j] , ', so skip generateInput'
+                    elif (self.weightAngleW[j] > 0.0):
+                        generate_ftridyn_input.Prj_Tg_xolotl(depth=nTT,number_histories=self.nImpacts,incident_energy=self.energyInW,incident_angle=self.angleInW[j],projectile_name='W',target_name='W')
+                        pathFolderW = cwd+'/'+self.FOLDER_W+str(self.angleInW[j])# + "_"+str(energyInW[j])
+                        if not os.path.exists(pathFolderW):
+                            os.makedirs(pathFolderW)
                 
-                    #copy the input file Prj_Tg0001.IN to its folder
-                    shutil.copyfile(cwd+'/'+self.INPUT_FILE_W, pathFolderW+"/"+self.INPUT_FILE_W) 
-                    shutil.copyfile(self.SURFACE_FILE, pathFolderW+"/"+self.SURFACE_FILE)
-                    if self.energyInW < 0:
-                        #copy energy distribution file
-                        shutil.copyfile(self.gitrOuputFolder_W+"/dist"+str(int(j))+".dat", pathFolderW+"/"+self.ENERGY_INPUT_FILE_W)#"W_W0001.ED1"
+                        #copy the input file Prj_Tg0001.IN to its folder
+                        shutil.copyfile(cwd+'/'+self.INPUT_FILE_W, pathFolderW+"/"+self.INPUT_FILE_W) 
+                        shutil.copyfile(self.SURFACE_FILE, pathFolderW+"/"+self.SURFACE_FILE)
+                        if self.energyInW < 0:
+                            #copy energy distribution file
+                            shutil.copyfile(self.gitrOuputFolder_W+"/dist"+str(int(j))+".dat", pathFolderW+"/"+self.ENERGY_INPUT_FILE_W)#"W_W0001.ED1"
 
-            print '\t DONE with GenerateInput (init) W->W \n'
+                print '\t DONE with GenerateInput (init) W->W \n'
 
+            else:
+                print 'Skip running generateInput for W; as W fraction in plasma is ',  self.fluxFractionW
 
         else:
             print('\n init mode no')
@@ -137,26 +140,29 @@ class ftridynWorker(Component):
 
             #run generateInput for W->W
             #for W redep, W energy distr given by GITR -> energyInW=-1 -> no loop in energy needed
-            for j in range(len(self.angleInW)):
-                if (self.weightAngleW[j] == 0.0):
-                    print '\t weight of angle ',  self.angleInW[j], ' is ' , self.weightAngleW[j] , ', so skip generateInput'
-                elif (self.weightAngleW[j] > 0.0):
-                    generate_ftridyn_input.Prj_Tg_xolotl(IQ0=-1,number_layers=nDataPts,depth=nTT,number_histories=self.nImpacts,incident_energy=self.energyInW,incident_angle=self.angleInW[j],projectile_name='W',target_name='W')
-                    pathFolderW = cwd+'/'+self.FOLDER_W+str(self.angleInW[j])# + "_"+str(energyInW[j])
-                    if not os.path.exists(pathFolderW):
-                        os.makedirs(pathFolderW)
+            if self.fluxFractionW>0.0:            
+                for j in range(len(self.angleInW)):
+                    if (self.weightAngleW[j] == 0.0):
+                        print '\t weight of angle ',  self.angleInW[j], ' is ' , self.weightAngleW[j] , ', so skip generateInput'
+                    elif (self.weightAngleW[j] > 0.0):
+                        generate_ftridyn_input.Prj_Tg_xolotl(IQ0=-1,number_layers=nDataPts,depth=nTT,number_histories=self.nImpacts,incident_energy=self.energyInW,incident_angle=self.angleInW[j],projectile_name='W',target_name='W')
+                        pathFolderW = cwd+'/'+self.FOLDER_W+str(self.angleInW[j])# + "_"+str(energyInW[j])
+                        if not os.path.exists(pathFolderW):
+                            os.makedirs(pathFolderW)
                 
-                    #copy the input file Prj_Tg0001.IN to its folder
-                    shutil.copyfile(cwd+'/'+self.INPUT_FILE_W, pathFolderW+"/"+self.INPUT_FILE_W)
-                    #shutil.copyfile('surface.surf', pathFolderW+"/"+'surface.surf')
-                    shutil.copyfile(self.SURFACE_FILE, pathFolderW+"/"+self.SURFACE_FILE)
-                    shutil.copyfile(self.LAY_FILE_He, pathFolderW+"/"+self.LAY_FILE_W)
+                        #copy the input file Prj_Tg0001.IN to its folder
+                        shutil.copyfile(cwd+'/'+self.INPUT_FILE_W, pathFolderW+"/"+self.INPUT_FILE_W)
+                        #shutil.copyfile('surface.surf', pathFolderW+"/"+'surface.surf')
+                        shutil.copyfile(self.SURFACE_FILE, pathFolderW+"/"+self.SURFACE_FILE)
+                        shutil.copyfile(self.LAY_FILE_He, pathFolderW+"/"+self.LAY_FILE_W)
 
-                    if self.energyInW < 0:
-                        #copy energy distribution file              
-                        shutil.copyfile(self.gitrOuputFolder_W+"/dist"+str(int(j))+".dat", pathFolderW+"/"+self.ENERGY_INPUT_FILE_W)#"W_W0001.ED1"
+                        if self.energyInW < 0:
+                            #copy energy distribution file              
+                            shutil.copyfile(self.gitrOuputFolder_W+"/dist"+str(int(j))+".dat", pathFolderW+"/"+self.ENERGY_INPUT_FILE_W)#"W_W0001.ED1"
                     
-            print '\t DONE with GenerateInput (restart) W->W \n'
+                print '\t DONE with GenerateInput (restart) W->W \n'
+            else:
+                print 'Skip running generateInput for W; as W fraction in plasma is ',  self.fluxFractionW
 
         ##TO DO: DO WE NEED THIS?!? IT IS FOR UPDATING THE PLASMA STATE -> MOVE IT TO TOP OR TO DRIVER?
         ##get name of FTridyn input file from config file to copy newly generated files to           
@@ -212,7 +218,7 @@ class ftridynWorker(Component):
                     print '\t weight of angle ',  self.angleInHe[j], ' is ' , self.weightAngleHe[j] , ', so skip running F-Tridyn'
             elif (self.weightAngleHe[j] > 0.0):
                 pathFolderHe = cwd+'/'+self.FOLDER_He+str(self.angleInHe[j])# + "_"+str(energyInW[j])
-                poolInputFile=self.INPUT_FILE_W+'_angle'+str(self.angleInHe[j])
+                poolInputFile=self.INPUT_FILE_He+'_angle'+str(self.angleInHe[j])
                 shutil.copyfile(self.INPUT_FILE_He, pathFolderHe+'/'+'FTridyn.IN')
                 self.services.add_task('poolHe', 'task'+str(self.angleInHe[j]), 1, pathFolderHe, self.FTRIDYN_EXE, poolInputFile,logfile=pathFolderHe+'/task.log' )
             
@@ -232,13 +238,13 @@ class ftridynWorker(Component):
         for j in range(len(self.angleInHe)):
             if (self.weightAngleHe[j] > 0.0):
                 filePrjHe=cwd+'/'+self.FOLDER_He+str(self.angleInHe[j])+'/'+self.OUTPUT_PRJ_FILE_He
-                #print 'loading file ', filePrjHe, 'to find maximum projectile depth'
+#                print 'loading file ', filePrjHe, 'to find maximum projectile depth'
                 depth, bla=np.loadtxt(filePrjHe, usecols = (2,3) , unpack=True)
                 #get maximum projectile range to ensure bins are added correctly in 'translate_ftridyn_to_xolotl'
                 maxDepthHe.append(max(depth))
                 
         print '\t maximum projectile range for He is ', max(maxDepthHe) , ' [A]'
-        spYieldHe=translate_ftridyn_to_xolotl.ftridyn_to_xolotl(ftridynOnePrjOutput=self.OUTPUT_PRJ_FILE_He, ftridynOneOutOutput=self.OUTPUT_FILE_He, ftridynFolder=folderHe, fNImpacts=self.nImpacts, gAngleDistrib=pathAngleFile_He, angle=self.angleInHe, prjRange=max(maxDepthHe))
+        spYieldHe=translate_ftridyn_to_xolotl.ftridyn_to_xolotl(ftridynOnePrjOutput=self.OUTPUT_PRJ_FILE_He, ftridynOneOutOutput=self.OUTPUT_FILE_He, ftridynFolder=folderHe, fNImpacts=self.nImpacts, gAngleDistrib=pathAngleFile_He, angle=self.angleInHe, prjRange=max(maxDepthHe),nBins=keywords['xNGrid'])
         
 
         #append output and save to folder 
@@ -265,61 +271,69 @@ class ftridynWorker(Component):
 
 
         #RUN FTRIDYN for W->W
-        poolW = self.services.create_task_pool('poolW')
-        #for i in range(len(energy)):
-        for j in range(len(self.angleInW)):
-            if (self.weightAngleW[j] == 0.0):
+
+        if self.fluxFractionW>0.0:
+            poolW = self.services.create_task_pool('poolW')
+            for j in range(len(self.angleInW)): #for i in range(len(energy)):
+                if (self.weightAngleW[j] == 0.0):
                     print '\t weight of angle ',  self.angleInW[j], ' is ' , self.weightAngleW[j] , ', so skip running F-Tridyn'
-            elif (self.weightAngleW[j] > 0.0):
-                pathFolderW = cwd+'/'+self.FOLDER_W+str(self.angleInW[j])# + "_"+str(energyInW[j])
-                poolInputFile=self.INPUT_FILE_W+'_angle'+str(self.angleInW[j])
-                shutil.copyfile(self.INPUT_FILE_W, pathFolderW+'/'+'FTridyn.IN')
-                self.services.add_task('poolW', 'task'+str(self.angleInW[j]), 1, pathFolderW, self.FTRIDYN_EXE,poolInputFile,logfile=pathFolderW+'/task.log' )
+                elif (self.weightAngleW[j] > 0.0):
+                    pathFolderW = cwd+'/'+self.FOLDER_W+str(self.angleInW[j])# + "_"+str(energyInW[j])
+                    poolInputFile=self.INPUT_FILE_W+'_angle'+str(self.angleInW[j])
+                    shutil.copyfile(self.INPUT_FILE_W, pathFolderW+'/'+'FTridyn.IN')
+                    self.services.add_task('poolW', 'task'+str(self.angleInW[j]), 1, pathFolderW, self.FTRIDYN_EXE,poolInputFile,logfile=pathFolderW+'/task.log' )
             
-        ret_val = self.services.submit_tasks('poolW')
-        print '\t ret_val = ', ret_val
-        exit_status = self.services.get_finished_tasks('poolW')
-        print exit_status
-        self.services.remove_task_pool('poolW')
+            ret_val = self.services.submit_tasks('poolW')
+            print '\t ret_val = ', ret_val
+            exit_status = self.services.get_finished_tasks('poolW')
+            print exit_status
+            self.services.remove_task_pool('poolW')
         
 
-        #post-processing: re-format output (fit function to profile) for Xolotl 
-        #ftridynFolderPath='task'#+str(energy[i]) + "_"
-        folderW=cwd+'/'+self.FOLDER_W
-        pathAngleFile_W=self.gitrOuputFolder_W+'/'+angleInputFile
-        maxDepthW=[]
-        for j in range(len(self.angleInW)):
-            if (self.weightAngleW[j] > 0.0):
-                filePrjW=cwd+'/'+self.FOLDER_W+str(self.angleInW[j])+'/'+self.OUTPUT_PRJ_FILE_W
-                #print 'loading file ', filePrjW, 'to find maximum projectile depth'
-                depth, bla=np.loadtxt(filePrjW, usecols = (2,3) , unpack=True)
-                #get maximum projectile range to ensure bins are added correctly in 'translate_ftridyn_to_xolotl'
-                maxDepthW.append(max(depth))
+            #post-processing: re-format output (fit function to profile) for Xolotl 
+            #ftridynFolderPath='task'#+str(energy[i]) + "_"
+            folderW=cwd+'/'+self.FOLDER_W
+            pathAngleFile_W=self.gitrOuputFolder_W+'/'+angleInputFile
+            maxDepthW=[]
+            for j in range(len(self.angleInW)):
+                if (self.weightAngleW[j] > 0.0):
+                    filePrjW=cwd+'/'+self.FOLDER_W+str(self.angleInW[j])+'/'+self.OUTPUT_PRJ_FILE_W
+                    #                print 'loading file ', filePrjW, 'to find maximum projectile depth'
+                    depth, bla=np.loadtxt(filePrjW, usecols = (2,3) , unpack=True)
+                    #get maximum projectile range to ensure bins are added correctly in 'translate_ftridyn_to_xolotl'
+                    maxDepthW.append(max(depth))
 
-        print '\t maximum projectile range for W is ', max(maxDepthW), ' [A]'
-        spYieldW= translate_ftridyn_to_xolotl.ftridyn_to_xolotl(ftridynOnePrjOutput=self.OUTPUT_PRJ_FILE_W, ftridynOneOutOutput=self.OUTPUT_FILE_W, ftridynFolder=folderW, fNImpacts=self.nImpacts, gAngleDistrib=pathAngleFile_W, angle=self.angleInW, prjRange=max(maxDepthW))
+            print '\t maximum projectile range for W is ', max(maxDepthW), ' [A]'
+            spYieldW= translate_ftridyn_to_xolotl.ftridyn_to_xolotl(ftridynOnePrjOutput=self.OUTPUT_PRJ_FILE_W, ftridynOneOutOutput=self.OUTPUT_FILE_W, ftridynFolder=folderW, fNImpacts=self.nImpacts, gAngleDistrib=pathAngleFile_W, angle=self.angleInW, prjRange=max(maxDepthW), nBins=keywords['xNGrid'])
 
-        #append output (and save to what folder?)
-        tempfile = open(ftOutputTempFile,"r")
-        f = open(self.OUTPUT_FTRIDYN_FINAL_W, "a")
-        f.write(tempfile.read())
-        f.close()
-        tempfile.close()
+            #append output (and save to what folder?)
+            tempfile = open(ftOutputTempFile,"r")
+            f = open(self.OUTPUT_FTRIDYN_FINAL_W, "a")
+            f.write(tempfile.read())
+            f.close()
+            tempfile.close()
 
-        #keep copies of tridyn.dat
-        shutil.copyfile(ftOutputTempFile, cwd+'/'+self.OUTPUT_FTRIDYN_TEMP_W)
-        shutil.copyfile(ftOutputTempFile, timeFolder+'/'+self.OUTPUT_FTRIDYN_TEMP_W)
+            #keep copies of tridyn.dat
+            shutil.copyfile(ftOutputTempFile, cwd+'/'+self.OUTPUT_FTRIDYN_TEMP_W)
+            shutil.copyfile(ftOutputTempFile, timeFolder+'/'+self.OUTPUT_FTRIDYN_TEMP_W)
         
 
-        #COPY FOLDERS WITH TIME-STAMP
-        #shutil.copyfile(pathFolderHe,pathFolderHe+timeStamp)
-        for j in range(len(self.angleInW)):
-            if (self.weightAngleW[j] > 0.0):
-                pathFolderW = folderW+str(self.angleInW[j])# + "_"+str(energyInW[j])
-                shutil.copytree(pathFolderW,timeFolder+'/'+self.FOLDER_W+str(self.angleInW[j]))
+            #COPY FOLDERS WITH TIME-STAMP
+            #shutil.copyfile(pathFolderHe,pathFolderHe+timeStamp)
+            for j in range(len(self.angleInW)):
+                if (self.weightAngleW[j] > 0.0):
+                    pathFolderW = folderW+str(self.angleInW[j])# + "_"+str(energyInW[j])
+                    shutil.copytree(pathFolderW,timeFolder+'/'+self.FOLDER_W+str(self.angleInW[j]))
 
-        print '\t DONE with FTridyn  W->W \n'
-
+            print '\t DONE with FTridyn  W->W \n'
+            
+        else:
+            print 'Skip running FTridyn for W, as fraction of W in plasma is', self.fluxFractionW
+            spYieldW=0.0
+            outputFTFileW=open(cwd+'/'+self.OUTPUT_FTRIDYN_TEMP_W, "w")
+            outputFTFileW.write(" 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0")
+            outputFTFileW.close()
+        
         #write sputtering yields to file so they can be used by Xolotl
         print 'sputtering Yield due to He is ', spYieldHe
         print 'sputtering Yield due to W redeposition is ', spYieldW        
@@ -349,10 +363,11 @@ class ftridynWorker(Component):
             os.remove(ftOutputTempFile)
         combinedFile = open(ftOutputTempFile, 'a')
         outputFTFileHe=open(cwd+'/'+self.OUTPUT_FTRIDYN_TEMP_He, "r")
-        outputFTFileW=open(cwd+'/'+self.OUTPUT_FTRIDYN_TEMP_W, "r")
         combinedFile.write(outputFTFileHe.read())
         combinedFile.write("%s \n" %(str(self.fluxFractionW)))
+        outputFTFileW=open(cwd+'/'+self.OUTPUT_FTRIDYN_TEMP_W, "r")
         combinedFile.write(outputFTFileW.read())
+
         combinedFile.close()
         outputFTFileHe.close()
         outputFTFileW.close()

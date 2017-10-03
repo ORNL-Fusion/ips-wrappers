@@ -26,21 +26,30 @@ class xolotlWorker(Component):
             print '\t', k, " = ", v
 
         #asign a local variable to arguments used multiple times 
-        driverTime=keywords['dTime']
+        self.driverTime=keywords['dTime']
         driverMode=keywords['dMode']
         startStop=keywords['xStartStop']
         networkFile=keywords['xNetworkFile']
+        paramTemplateFile=keywords['xParamTemplate']
 #        spYieldW=keywords['fSpYieldW']
         flux=keywords['xFlux']
-        runEndTime=driverTime+keywords['dTimeStep']
+        runEndTime=self.driverTime+keywords['dTimeStep']
 
         fluxFractionW=keywords['gFractionW']
+        self.xNxGrid=keywords['xNxGrid']
+        self.xNyGrid=str(keywords['xNyGrid']) 
+        self.xDxGrid=keywords['xDxGrid']
+        self.xDyGrid=str(keywords['xDyGrid'])
+
+
+        self.petscHeConc=keywords['xHe_conc']
+        self.processes=keywords['xProcess']
 
         cwd = self.services.get_working_dir()
 
         print 'xolotl-init:'
         print '\t driver mode is', driverMode
-        print '\t running starts at time',driverTime
+        print '\t running starts at time',self.driverTime
         print '\t \t  ends at time', runEndTime
         print '\t driver step is', keywords['dTimeStep']
         print '\n'
@@ -78,14 +87,14 @@ class xolotlWorker(Component):
             #a JAVA-XOLOTL environment variables are defined in the machine environment file
             #os.system('$JAVA_XOLOTL_EXE -Djava.library.path=$JAVA_XOLOTL_LIBRARY -cp .:$JAVA_XOLOTL_LIBRARY/*::$XOLOTL_PREPROCESSOR_DIR gov.ornl.xolotl.preprocessor.Main --perfHandler dummy --nxGrid 160 --maxVSize 250 --phaseCut')
             print 'init mode: run parameter file without preprocessor'
-            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=startStop,ts_final_time=runEndTime,sputtering=totalSpYield,flux=flux,initialV=keywords['xInitialV'],nxGrid=keywords['xNGrid'])
+            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(dimensions=keywords['xDimensions'], infile=paramTemplateFile, fieldsplit_1_pc_type=keywords['xFieldsplit_1_pc_type'],start_stop=startStop,ts_final_time=runEndTime,sputtering=totalSpYield,flux=flux,initialV=keywords['xInitialV'],nxGrid=self.xNxGrid,nyGrid=self.xNyGrid,dxGrid=self.xDxGrid,dyGrid=self.xDyGrid, he_conc=self.petscHeConc, process=self.processes, voidPortion=keywords['xVoidPortion'])
                 
         else:
             print 'restart mode: run parameter file without preprocessor'
-            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=startStop,ts_final_time=runEndTime,useNetFile=True,networkFile=networkFile,sputtering=totalSpYield,flux=flux, initialV=keywords['xInitialV'],nxGrid=keywords['xNGrid'])
+            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(dimensions=keywords['xDimensions'], infile=paramTemplateFile, fieldsplit_1_pc_type=keywords['xFieldsplit_1_pc_type'],start_stop=startStop,ts_final_time=runEndTime,useNetFile=True,networkFile=networkFile,sputtering=totalSpYield,flux=flux, initialV=keywords['xInitialV'],nxGrid=self.xNxGrid,nyGrid=self.xNyGrid,dxGrid=self.xDxGrid,dyGrid=self.xDyGrid,he_conc=self.petscHeConc, process=self.processes, voidPortion=keywords['xVoidPortion'])
         
         #store xolotls parameter and network files for each loop 
-        currentXolotlParamFile='params_%f.txt' %driverTime
+        currentXolotlParamFile='params_%f.txt' %self.driverTime
         shutil.copyfile('params.txt',currentXolotlParamFile) 
         
         self.services.update_plasma_state()
@@ -96,7 +105,7 @@ class xolotlWorker(Component):
         self.services.stage_plasma_state()
 
         #asign a local variable to arguments used multiple times
-        driverTime=keywords['dTime']
+        #driverTime=keywords['dTime']
 
         print 'check that all arguments are read well by xolotl-step'
         for (k, v) in keywords.iteritems():
@@ -118,23 +127,45 @@ class xolotlWorker(Component):
         binTRIDYN.binTridyn()
 
         #store xolotls profile output for each loop (not plasma state)
-        currentXolotlOutputFileToBin='last_TRIDYN_toBin_%f.dat' %driverTime
+        currentXolotlOutputFileToBin='last_TRIDYN_toBin_%f.dat' %self.driverTime
         shutil.copyfile('last_TRIDYN_toBin.dat', currentXolotlOutputFileToBin)
-        currentXolotlOutputFile='last_TRIDYN_%f.dat' %driverTime
+        currentXolotlOutputFile='last_TRIDYN_%f.dat' %self.driverTime
         shutil.copyfile('last_TRIDYN.dat', currentXolotlOutputFile)
 
+        #save surface file for every loop -> now it's appended
+        #currentSurfaceFile='surface_%f.txt' %self.driverTime
+        #shutil.copyfile(self.SURFACE_XOLOTL_TEMP,currentSurfaceFile)
 
-        #append output
-        tempfile = open(self.OUTPUT_XOLOTL_TEMP,"r")
-        f = open(self.OUTPUT_XOLOTL_FINAL, "a")
-        f.write(tempfile.read())
-        f.close()
-        tempfile.close()
+        #append output:
+        #retention
+        tempfileRet = open(self.RETENTION_XOLOTL_TEMP,"r")
+        fRet = open(self.RETENTION_XOLOTL_FINAL, "a")
+        fRet.write(tempfileRet.read())
+        fRet.close()
+        tempfileRet.close()
 
+        #surface
+        tempfileSurf = open(self.SURFACE_XOLOTL_TEMP,"r")
+        fSurf = open(self.SURFACE_XOLOTL_FINAL, "a")
+        fSurf.write(tempfileSurf.read())
+        fSurf.close()
+        tempfileSurf.close()
+
+
+        if (self.petscHeConc):#=='True'):
+            #save all helium concentration file, zipped 
+            heConcFiles='heliumConc_*.dat'
+            heConcZipped='allHeliumConc_t%f.zip' %self.driverTime
+            zipString='zip ' + heConcZipped + ' ' + heConcFiles
+            subprocess.call([zipString], shell=True)
+            #not needed really, they'd be overwritten by next loop 
+            rmString='rm '+heConcFiles
+            subprocess.call([rmString], shell=True)
+            
         #save network file with a different name to use in the next time step
-        currentXolotlNetworkFile='xolotlStop_%f.h5' %driverTime
+        currentXolotlNetworkFile='xolotlStop_%f.h5' %self.driverTime
         shutil.copyfile('xolotlStop.h5',currentXolotlNetworkFile)
-
+            
         #updates plasma state Xolotl output files
         self.services.update_plasma_state()
   

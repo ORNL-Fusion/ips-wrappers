@@ -25,9 +25,11 @@ class xolotlFtridynDriver(Component):
         #    open(file, 'a').close()
 
         #copy the Xolotl paramter template file
-        xolotlTemplateFile='paramXolotlTemplate.txt'
-        print 'copy xolotl template file from ',self.XOLOTL_PARAM_TEMPLATE, ' to ', xolotlTemplateFile 
-        shutil.copyfile(self.XOLOTL_PARAM_TEMPLATE,xolotlTemplateFile)
+        #xolotlTemplateFile='paramXolotlTemplate.txt'
+        #print 'copy xolotl template file from ',self.XOLOTL_PARAM_TEMPLATE, ' to ', xolotlTemplateFile 
+        #shutil.copyfile(self.XOLOTL_PARAM_TEMPLATE,xolotlTemplateFile)
+        
+        print 'using the parameter template file', self.XOLOTL_PARAM_TEMPLATE
 
         self.services.update_plasma_state()
         self.services.stage_plasma_state()
@@ -36,12 +38,12 @@ class xolotlFtridynDriver(Component):
         #RESTART mode requires providing a list of input files:
         #for FTridyn: last_TRIDYN.dat; for Xolotl: params.txt (of the last run), networkfile (networkRestart.h5)
         #and placing them in the 'restart_files' folder. The mode is changed to NEUTRAL after the 1st loop
-        self.startMode = 'INIT'
+        self.startMode = 'INIT' # 'RESTART' or 'INIT'
         self.driverMode=self.startMode
 
         self.initTime=0.0
         self.endTime=0.2
-        self.timeStep=0.1
+        self.timeStep=0.02
 
         print 'running IPS from t = %f to t=%f, in steps of dt=%f' % (self.initTime, self.endTime, self.timeStep)
 
@@ -49,14 +51,30 @@ class xolotlFtridynDriver(Component):
         #write every parameter that will be used as argumennts in write_xolotl_paramfile function(s) 
         #i.e., anything different from default values (those set to reproduce email-coupling of FTridyn-Xolotl)
 
-        self.xolotlStartStop='True'
+        self.xDimensions=2
+        if self.xDimensions==1:
+            self.fieldsplit_1_pc_type='redundant'
+        elif self.xDimensions==2:
+            self.fieldsplit_1_pc_type='gamg -fieldsplit_1_ksp_type gmres -ksp_type fgmres -fieldsplit_1_pc_gamg_threshold -1.0'
+
+        print 'running Xolotl in ' , self.xDimensions, 'D'
+
+
+        self.xolotlStartStop=True
         self.xolotlFlux=4.0e4 #ion/nm2
         self.initialV=3.15e-4 #V/nm3 ; e.g., 3.15e-4 V/nm3 = 5ppm
-        self.nGrid=200
+        self.nxGrid=200
+        self.dxGrid=0.5
+        self.nyGrid='10' #string, so that it can be replaced by an empty space for 1D paramter file
+        self.dyGrid='0.5'
+        self.voidPortion=40 #[%]; std=40%
         if self.startMode=='INIT':
             self.xolotlNetworkFile='notInUse'
         elif self.startMode=='RESTART':
             self.xolotlNetworkFile='networkRestart.h5'
+        #True: print at every loop ; False: don't print ; 'Last' (string): print only during the last loop
+        self.heConc='Last' 
+        self.process='reaction advec modifiedTM diff movingSurface attenuation'
 
         #CHANGE TO GET FROM FILE 
         self.gFluxFractionW=0.01 #relative flux of W/He [from GITR!] 
@@ -139,12 +157,21 @@ class xolotlFtridynDriver(Component):
             print 'driver time (in loop)  %f' %(time)
             self.services.update_plasma_state()
 
+            if self.heConc=='Last':
+                #*1.5, to give marging of error
+                if time+1.5*self.timeStep>self.endTime:
+                    self.petsc_heConc=True
+                    print 'printing He concentrations in the last loop'
+                elif time<(self.endTime-self.timeStep):
+                    self.petsc_heConc=False                    
+            #print 'at time', time, 'and last loop starts at (end-step)=', self.endTime-self.timeStep , ' whether He concentration to be printed', str(self.petsc_heConc)
+
             #component/method calls now include arguments (variables)
             self.services.call(ftridyn, 'init', timeStamp, dMode=self.driverMode, dTime=time, fInitialTotalDepth=self.ftridynInitialTotalDepth, fTotalDepth=self.ftridynTotalDepth, fNImpacts=self.ftridynNImpacts, fEnergyInHe=self.ftridynInEnergyHe, fAngleInHe=self.angleInHe, fWeightAngleHe=self.weightAngleHe, fEnergyInW=self.ftridynInEnergyW, fAngleInW=self.angleInW, fWeightAngleW=self.weightAngleW, gOutputFolderHe=self.GITR_OUTPUT_DIR_He, gOutputFolderW=self.GITR_OUTPUT_DIR_W, gAngleInFile=self.ANGLE_DISTRIB_FILE, gFractionW=self.gFluxFractionW)
-            self.services.call(ftridyn, 'step', timeStamp, gAngleInFile=self.ANGLE_DISTRIB_FILE, spYieldsFile_temp=self.SPUT_YIELDS_FILE_TEMP, spYieldsFile_final=self.SPUT_YIELDS_FILE_FINAL)
+            self.services.call(ftridyn, 'step', timeStamp, gAngleInFile=self.ANGLE_DISTRIB_FILE, spYieldsFile_temp=self.SPUT_YIELDS_FILE_TEMP, spYieldsFile_final=self.SPUT_YIELDS_FILE_FINAL,xNGrid=self.nxGrid)
             
             #if spMode=calculate, then provide spYield File; if spMode=fixed, provide spYW and spYHe values
-            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xNetworkFile=self.xolotlNetworkFile, xStartStop=self.xolotlStartStop, xFlux=self.xolotlFlux, xInitialV=self.initialV, xNGrid=self.nGrid, fNImpacts=self.ftridynNImpacts, gFractionW=self.gFluxFractionW, fSpYieldMode=self.ftridynSpYieldMode, fSpYieldW=self.ftridynSpYieldW, fSpYieldHe=self.ftridynSpYieldHe, spYieldsFile_temp=self.SPUT_YIELDS_FILE_TEMP)
+            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xParamTemplate=self.XOLOTL_PARAM_TEMPLATE, xNetworkFile=self.xolotlNetworkFile, xDimensions=self.xDimensions, xFieldsplit_1_pc_type=self.fieldsplit_1_pc_type, xStartStop=self.xolotlStartStop, xFlux=self.xolotlFlux, xInitialV=self.initialV, xNxGrid=self.nxGrid, xNyGrid=self.nyGrid, xDxGrid=self.dxGrid, xDyGrid=self.dyGrid, fNImpacts=self.ftridynNImpacts, gFractionW=self.gFluxFractionW, fSpYieldMode=self.ftridynSpYieldMode, fSpYieldW=self.ftridynSpYieldW, fSpYieldHe=self.ftridynSpYieldHe, spYieldsFile_temp=self.SPUT_YIELDS_FILE_TEMP, xHe_conc=self.petsc_heConc, xProcess=self.process, xVoidPortion=self.voidPortion)
             self.services.call(xolotl, 'step', timeStamp, dTime=time)
 
             self.services.stage_plasma_state()

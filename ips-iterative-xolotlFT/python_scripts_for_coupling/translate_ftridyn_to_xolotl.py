@@ -24,6 +24,7 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
                       fNImpacts=1.0e5,
                       gAngleDistrib='angularDistribution.dat',
                       angle=[0.0],
+                      nBins=200,
                       prjRange=50.0 #in [A]
 ):
     totalSpYield=0.0;
@@ -31,13 +32,14 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
 
     if len(angle)>1:
         angleValue, weightAngle = np.loadtxt(gAngleDistrib, usecols = (0,1) , unpack=True)
+        print '\n reading the impact energy distribution for ', (len(angleValue)), ' angles, from %s' %(gAngleDistrib)
     else:
         angleValue=angle
         weightAngle=[1.0]
+        print '\n single, fixed angle used'
 
     totalWeight=np.sum(weightAngle)
     
-    print '\n reading the impact energy distribution for ', (len(angleValue)), ' angles, from %s' %(gAngleDistrib)
     print ' the sum of weights is ', totalWeight, ' and projectile range', prjRange , ' [A]'
     
     for a in np.arange(0,len(angleValue),1):
@@ -90,7 +92,7 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
             
             ## Put first data into the plot; '/10.0' is to convert A -> nm
             #print 'in translate script: using range', prjRange , ' [A]'
-            m, bins = np.histogram(depth1/10.0, 200,(0.0,prjRange/10.0),normed=True)
+            m, bins = np.histogram(depth1/10.0, nBins,(0.0,prjRange/10.0),normed=True)
             
             ## "bins" is actually the edges on the histogram bins so it needs to be formated to give the center of each bin in "b"
             b = np.delete(bins, len(bins) - 1)

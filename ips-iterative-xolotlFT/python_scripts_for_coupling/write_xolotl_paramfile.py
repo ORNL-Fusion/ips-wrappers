@@ -32,7 +32,8 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
                                           startTemp=773,
                                           process="reaction advec modifiedTM attenuation diff movingSurface",
                                           sputtering=0.000129,
-                                          
+                                          voidPortion=40,
+
                                           #   netParam=nHe maxVSize  nInterstitials phaseCut
                                           #   grid=nxGrid dxGrid
                                           useNetFile=False,
@@ -43,8 +44,12 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
                                           phaseCut='true',
                                           nxGrid=160,
                                           dxGrid=0.5,
+                                          nyGrid=' ',
+                                          dyGrid=' ',
 
-                                          initialV=0.0
+                                          initialV=0.0,
+                                          
+                                          he_conc=True
                                           ):
    tmp="temp.txt"
 #   ftmp=open("temp.txt", "w")                                                                                                                                                                
@@ -58,15 +63,19 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
    petscArgString=" -e 's/-ts_final_time [^ ]*/-ts_final_time %f/'   -e 's/-ts_max_snes_failures [^ ]*/-ts_max_snes_failures %d/'   -e 's/-ts_max_steps [^ ]*/-ts_max_steps %d/'   -e 's/-ts_exact_final_time [^ ]*/-ts_exact_final_time %s/'   -e 's/-ts_adapt_dt_max [^ ]*/-ts_adapt_dt_max %e/'   -e 's/-fieldsplit_0_pc_type [^ ]*/-fieldsplit_0_pc_type %s/'   -e 's/-fieldsplit_1_pc_type [^ ]*/-fieldsplit_1_pc_type %s/'   -e 's/-pc_type [^ ]*/-pc_type %s/' "  % (ts_final_time, ts_max_snes_failures, ts_max_steps, ts_exact_final_time, ts_adapt_dt_max, fieldsplit_0_pc_type, fieldsplit_1_pc_type, pc_type)
 
    #include (or not) parameters without values that exist in template file
-   if (start_stop==False):
+   if not start_stop: #(start_stop==False):
       petscArgString=petscArgString+"   -e 's/-start_stop [^ ]*/ /'"
    else:
       petscArgString=petscArgString+"   -e 's/-start_stop [^ ]*/-start_stop %f/'" %(ts_final_time)
       
-   if (start_stop==False):
+   if not start_stop: #(start_stop==False):
       petscArgString=petscArgString+"   -e 's/-ts_dt [^ ]*/ /'"
    else:
       petscArgString=petscArgString+"   -e 's/-ts_dt [^ ]*/-start_stop %f/'" %(ts_final_time)
+
+   if not he_conc:# (he_conc==False):
+      #print 'he conc False; not included in param file'
+      petscArgString=petscArgString+"   -e 's/-helium_conc/ %s/'" %( ' ' )
 
 #TO BE FIXED WHEN 'True' CAN BE READ PROPERLY
 #   if (start_stop==True):
@@ -82,13 +91,14 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
 
    #prepare sed line                                                                                                                                                                          
    petscArgSedString="sed "+ petscArgString + "< %s > %s" %(infile , outfile)
+   #print 'TEST:  running Sed String: ',petscArgSedString
 
    #run sed line for Petsc                                                                                                                                                                    
    subprocess.call([petscArgSedString], shell=True)
 
    #other input parameters
    os.rename(outfile, tmp)
-   paramSedString="sed    -e 's/vizHandler=[^ ]*/vizHandler=%s/'    -e 's/flux=[^ ]*/flux=%e/'    -e 's/netParam=.*$/netParam=%g %g %g %s/'   -e 's/grid=.*$/grid=%g %g/'    -e 's/material=[^ ]*/material=%s/'    -e 's/dimensions=[^ ]*/dimensions=%d/'    -e 's/perfHandler=[^ ]*/perfHandler=%s/'    -e 's/startTemp=[^ ]*/startTemp=%f/'   -e 's/sputtering=[^ ]*/sputtering=%f/'   -e 's/initialV=[^ ]*/initialV=%g/' -e 's/process=.*$/process=%s/' < %s > %s"   % (vizHandler, flux, nHe, maxVSize, nInterstitials, phaseCut, nxGrid, dxGrid , material, dimensions, perfHandler, startTemp, sputtering, initialV, process, tmp, outfile)
+   paramSedString="sed    -e 's/vizHandler=[^ ]*/vizHandler=%s/'    -e 's/flux=[^ ]*/flux=%e/'    -e 's/netParam=.*$/netParam=%g %g %g %s/'   -e 's/grid=.*$/grid=%g %g %s %s/'    -e 's/material=[^ ]*/material=%s/'    -e 's/dimensions=[^ ]*/dimensions=%d/'    -e 's/perfHandler=[^ ]*/perfHandler=%s/'    -e 's/startTemp=[^ ]*/startTemp=%f/'   -e 's/sputtering=[^ ]*/sputtering=%f/'  -e 's/voidPortion=[^ ]*/voidPortion=%f/'   -e 's/initialV=[^ ]*/initialV=%g/' -e 's/process=.*$/process=%s/' < %s > %s"   % (vizHandler, flux, nHe, maxVSize, nInterstitials, phaseCut, nxGrid, dxGrid , nyGrid, dyGrid, material, dimensions, perfHandler, startTemp, sputtering, voidPortion, initialV, process, tmp, outfile)
 
    #print " sedline call parameters: %s " %(paramSedString)                                                                                                                                   
    subprocess.call([paramSedString], shell=True)
