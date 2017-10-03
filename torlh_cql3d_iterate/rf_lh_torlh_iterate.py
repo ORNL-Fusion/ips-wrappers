@@ -452,7 +452,7 @@ class torlh (Component):
                 if (ret_val == 0):
                     break
             else:
-                services.exception("Task failed after %d trials" % num_tries)
+                services.error("Task failed after %d trials" % num_tries)
                 raise Exception("Task failed after %d trials" % num_tries)
 
 
