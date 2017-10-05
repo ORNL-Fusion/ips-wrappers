@@ -464,8 +464,8 @@ class torlh (Component):
                 if (retcode == 0):
                     break
             else:
-                services.error("Task failed after %d trials" % self.NUM_TORLH_TRIES)
-                raise Exception("Task failed after %d trials" % self.NUM_TORLH_TRIES)
+                services.error("Task failed after %d trials" % int(self.NUM_TORLH_TRIES))
+                raise Exception("Task failed after %d trials" % int(self.NUM_TORLH_TRIES))
 
 
 #             print 'arg_toric_Mode = ', arg_toric_Mode, '   torlh processors = ', run_nproc
