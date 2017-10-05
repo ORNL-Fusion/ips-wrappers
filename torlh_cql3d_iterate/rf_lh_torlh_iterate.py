@@ -448,7 +448,7 @@ class torlh (Component):
                 print ' try number ', i
                 task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
                 retcode = services.wait_task(task_id, timeout = time_limit, delay = 60.)
-                if (ret_val == 0):
+                if (retcode == 0):
                     break
             else:
                 services.error("Task failed after %d trials" % num_tries)
