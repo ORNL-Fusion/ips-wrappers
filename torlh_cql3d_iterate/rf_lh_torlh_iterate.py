@@ -456,9 +456,8 @@ class torlh (Component):
 
             print 'arg_toric_Mode = ', arg_toric_Mode, '   torlh processors = ', run_nproc
             time_limit = float(self.TORLH_TIME_LIMIT)
-            # Try to launch lorlh multiple times if TORLH_TRIES > 1 in config file
-            num_tries = 1
-            for i in range(num_tries):
+            # Try to launch TORLH multiple times if TORLH_TRIES > 1 in config file
+            for i in range(self.NUM_TORLH_TRIES):
                 print ' TORLH try number ', i + 1
                 task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
                 retcode = services.wait_task(task_id, timeout = time_limit, delay = 60.)
