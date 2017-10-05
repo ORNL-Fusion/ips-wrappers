@@ -5,7 +5,7 @@ TORLH component.  Adapted from rf_lh_torlh.py. (7-24-2015)
 
 """
 # Working notes:  DBB 10-5-2017 
-# Because of random crashes on EDISON had previously introduced config parameter 
+# Because of random crashes on EDISON, we had previously introduced config parameter 
 # TORLH_TIME_LIMIT so that if TORLH does crash it won't just sit there and burn up the 
 # whole allocation.  Now making that an optional config parameter.
 # Also now adding capability to do multiple tries of TORLH if it crashes or times out.
@@ -464,8 +464,8 @@ class torlh (Component):
                 if (retcode == 0):
                     break
             else:
-                services.error("Task failed after %d trials" % num_tries)
-                raise Exception("Task failed after %d trials" % num_tries)
+                services.error("Task failed after %d trials" % self.NUM_TORLH_TRIES)
+                raise Exception("Task failed after %d trials" % self.NUM_TORLH_TRIES)
 
 
 #             print 'arg_toric_Mode = ', arg_toric_Mode, '   torlh processors = ', run_nproc
