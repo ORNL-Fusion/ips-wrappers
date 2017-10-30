@@ -191,6 +191,9 @@ class ftridynWorker(Component):
         spYieldsTemp=keywords['spYieldsFile_temp']
         spYieldsFinal=keywords['spYieldsFile_final']
        
+        spYieldModeHe=keywords['fSpYieldModeHe']
+        spYieldModeW=keywords['fSpYieldModeW']
+
         #RUN FTRIDYN for He->W
         #call shell script that runs FTridyn and pipes input file
         #task_id = self.services.launch_task(self.NPROC,
@@ -244,8 +247,12 @@ class ftridynWorker(Component):
                 maxDepthHe.append(max(depth))
                 
         print '\t maximum projectile range for He is ', max(maxDepthHe) , ' [A]'
+
         spYieldHe=translate_ftridyn_to_xolotl.ftridyn_to_xolotl(ftridynOnePrjOutput=self.OUTPUT_PRJ_FILE_He, ftridynOneOutOutput=self.OUTPUT_FILE_He, ftridynFolder=folderHe, fNImpacts=self.nImpacts, gAngleDistrib=pathAngleFile_He, angle=self.angleInHe, prjRange=max(maxDepthHe),nBins=keywords['xNGrid'])
-        
+        #overwrite spY value is mode is fixed
+        if spYieldModeHe=='fixed':
+            spYieldHe=keywords['fSpYieldHe']
+
 
         #append output and save to folder 
         tempfile = open(ftOutputTempFile,"r")
@@ -304,7 +311,12 @@ class ftridynWorker(Component):
                     maxDepthW.append(max(depth))
 
             print '\t maximum projectile range for W is ', max(maxDepthW), ' [A]'
-            spYieldW= translate_ftridyn_to_xolotl.ftridyn_to_xolotl(ftridynOnePrjOutput=self.OUTPUT_PRJ_FILE_W, ftridynOneOutOutput=self.OUTPUT_FILE_W, ftridynFolder=folderW, fNImpacts=self.nImpacts, gAngleDistrib=pathAngleFile_W, angle=self.angleInW, prjRange=max(maxDepthW), nBins=keywords['xNGrid'])
+
+            spYieldW=translate_ftridyn_to_xolotl.ftridyn_to_xolotl(ftridynOnePrjOutput=self.OUTPUT_PRJ_FILE_W, ftridynOneOutOutput=self.OUTPUT_FILE_W, ftridynFolder=folderW, fNImpacts=self.nImpacts, gAngleDistrib=pathAngleFile_W, angle=self.angleInW, prjRange=max(maxDepthW), nBins=keywords['xNGrid'])
+            #overwrite spY value is mode is fixed
+            if spYieldModeW=='fixed':
+                spYieldW=keywords['fSpYieldW']
+
 
             #append output (and save to what folder?)
             tempfile = open(ftOutputTempFile,"r")

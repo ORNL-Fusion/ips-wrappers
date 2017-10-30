@@ -31,7 +31,6 @@ class xolotlWorker(Component):
         startStop=keywords['xStartStop']
         networkFile=keywords['xNetworkFile']
         paramTemplateFile=keywords['xParamTemplate']
-#        spYieldW=keywords['fSpYieldW']
         flux=keywords['xFlux']
         runEndTime=self.driverTime+keywords['dTimeStep']
 
@@ -54,22 +53,29 @@ class xolotlWorker(Component):
         print '\t driver step is', keywords['dTimeStep']
         print '\n'
 
-        #if fSpYield in driver < 0, fSpYieldMode = calculate -> get sputtering yield FROM spYield.out
-        if keywords['fSpYieldMode']=='calculate':
-            spYieldsTemp=keywords['spYieldsFile_temp']
-            spYieldHe, spYieldW=angleValue, weightAngle = np.loadtxt(cwd+'/'+spYieldsTemp, usecols = (1,2) , unpack=True)
-            print '\t W sputtering yields calculated by FTridyn, read from file: spY (by He) = ', spYieldHe, ' spY (by W) = ', spYieldW
-        #if fSpYield in driver >= 0, fSpYieldMode = fixed 
-        elif keywords['fSpYieldMode']=='fixed':
-            spYieldW=keywords['fSpYieldW']
-            spYieldHe=keywords['fSpYieldHe']
-            print '\t Fixed value of W sputtering yields are: spY (by He) = ', spYieldHe, ' spY (by W) = ', spYieldW
-        else:
-            print '\t Invalid value of fSpYieldMode, ', keywords['fSpYieldMode'] 
-            print '\t set yield to zero!'
-            spYieldW=0.0;
-            spYieldHe=0.0;
         
+        #spYield's saved to spYield.out, regardless of SpYieldMode -> always read from file
+        spYieldsTemp=keywords['spYieldsFile_temp'] 
+        spYieldHe, spYieldW=np.loadtxt(cwd+'/'+spYieldsTemp, usecols = (1,2) , unpack=True) 
+        print '\t regardless of sputtering yields calculated by FTridyn or fixed, read from file: spY (by He) = ', spYieldHe, ' spY (by W) = ', spYieldW
+
+        #if fSpYield in driver < 0, fSpYieldMode = calculate -> get sputtering yield FROM spYield.out        
+        #if keywords['fSpYieldMode']=='calculate':
+        #    spYieldsTemp=keywords['spYieldsFile_temp']
+        #    spYieldHe, spYieldW=np.loadtxt(cwd+'/'+spYieldsTemp, usecols = (1,2) , unpack=True)
+        #    print '\t W sputtering yields calculated by FTridyn, read from file: spY (by He) = ', spYieldHe, ' spY (by W) = ', spYieldW
+        #if fSpYield in driver >= 0, fSpYieldMode = fixed 
+        #elif keywords['fSpYieldMode']=='fixed':
+        #    spYieldW=keywords['fSpYieldW']
+        #    spYieldHe=keywords['fSpYieldHe']
+        #    print '\t Fixed value of W sputtering yields are: spY (by He) = ', spYieldHe, ' spY (by W) = ', spYieldW
+        #else:
+        #    print '\t Invalid value of fSpYieldMode, ', keywords['fSpYieldMode'] 
+        #    print '\t set yield to zero!'
+        #    spYieldW=0.0;
+        #    spYieldHe=0.0;
+        
+
         #WEIGHTED SUM OF SPUTTERING YIELDS!
         totalSpYield=spYieldHe+fluxFractionW*spYieldW
         print "\t the effective (weighted by relative flux) sputtering yield in Xolotl is: ", totalSpYield

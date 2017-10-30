@@ -51,7 +51,7 @@ class xolotlFtridynDriver(Component):
         #write every parameter that will be used as argumennts in write_xolotl_paramfile function(s) 
         #i.e., anything different from default values (those set to reproduce email-coupling of FTridyn-Xolotl)
 
-        self.xDimensions=2
+        self.xDimensions=1
         if self.xDimensions==1:
             self.fieldsplit_1_pc_type='redundant'
         elif self.xDimensions==2:
@@ -65,8 +65,8 @@ class xolotlFtridynDriver(Component):
         self.initialV=3.15e-4 #V/nm3 ; e.g., 3.15e-4 V/nm3 = 5ppm
         self.nxGrid=200
         self.dxGrid=0.5
-        self.nyGrid='10' #string, so that it can be replaced by an empty space for 1D paramter file
-        self.dyGrid='0.5'
+        self.nyGrid=' ' #string, so that it can be replaced by an empty space for 1D paramter file
+        self.dyGrid=' '
         self.voidPortion=40 #[%]; std=40%
         if self.startMode=='INIT':
             self.xolotlNetworkFile='notInUse'
@@ -77,7 +77,7 @@ class xolotlFtridynDriver(Component):
         self.process='reaction advec modifiedTM diff movingSurface attenuation'
 
         #CHANGE TO GET FROM FILE 
-        self.gFluxFractionW=0.01 #relative flux of W/He [from GITR!] 
+        self.gFluxFractionW=0.00034 #relative flux of W/He [from GITR!] 
 
         #ftridyn parameters:
         #TotalDepth: total substrate depth in [A]; set to 0.0 to use what Xolotl passes to ftridyn (as deep as He exists)
@@ -97,9 +97,9 @@ class xolotlFtridynDriver(Component):
         self.ftridynInAngleW=-1  #wrt surface normal  
 
         #just have one spYeld to control mode and initialize others to zero
-        self.ftridynSpYield=-1.0
-        self.ftridynSpYieldW=0.0
-        self.ftridynSpYieldHe=0.0
+        #self.ftridynSpYield=-1.0
+        self.ftridynSpYieldW=-1.0
+        self.ftridynSpYieldHe=-1.0
 
         if self.ftridynInAngleHe < 0 :
             angleDistrFileHe = self.GITR_OUTPUT_DIR_He +'/'+self.ANGLE_DISTRIB_FILE
@@ -127,10 +127,16 @@ class xolotlFtridynDriver(Component):
 #        print '      for W ', self.angleInW
 
 
-        if self.ftridynSpYield<0:
-            self.ftridynSpYieldMode='calculate'
+        if self.ftridynSpYieldHe<0:
+            self.ftridynSpYieldModeHe='calculate'
         else:
-            self.ftridynSpYieldMode='fixed'
+            self.ftridynSpYieldModeHe='fixed'
+
+        if self.ftridynSpYieldW<0:
+            self.ftridynSpYieldModeW='calculate'
+        else:
+            self.ftridynSpYieldModeW='fixed'
+
 
         #if driver start mode is in Restart, copy files to plasma_state
         #MAYBE THIS CAN ALSO BE WRITTEN MORE ELEGANTLY
@@ -168,10 +174,12 @@ class xolotlFtridynDriver(Component):
 
             #component/method calls now include arguments (variables)
             self.services.call(ftridyn, 'init', timeStamp, dMode=self.driverMode, dTime=time, fInitialTotalDepth=self.ftridynInitialTotalDepth, fTotalDepth=self.ftridynTotalDepth, fNImpacts=self.ftridynNImpacts, fEnergyInHe=self.ftridynInEnergyHe, fAngleInHe=self.angleInHe, fWeightAngleHe=self.weightAngleHe, fEnergyInW=self.ftridynInEnergyW, fAngleInW=self.angleInW, fWeightAngleW=self.weightAngleW, gOutputFolderHe=self.GITR_OUTPUT_DIR_He, gOutputFolderW=self.GITR_OUTPUT_DIR_W, gAngleInFile=self.ANGLE_DISTRIB_FILE, gFractionW=self.gFluxFractionW)
-            self.services.call(ftridyn, 'step', timeStamp, gAngleInFile=self.ANGLE_DISTRIB_FILE, spYieldsFile_temp=self.SPUT_YIELDS_FILE_TEMP, spYieldsFile_final=self.SPUT_YIELDS_FILE_FINAL,xNGrid=self.nxGrid)
+            self.services.call(ftridyn, 'step', timeStamp, gAngleInFile=self.ANGLE_DISTRIB_FILE, spYieldsFile_temp=self.SPUT_YIELDS_FILE_TEMP, spYieldsFile_final=self.SPUT_YIELDS_FILE_FINAL,xNGrid=self.nxGrid,  fSpYieldModeHe=self.ftridynSpYieldModeHe, fSpYieldModeW=self.ftridynSpYieldModeW, fSpYieldW=self.ftridynSpYieldW, fSpYieldHe=self.ftridynSpYieldHe)
             
             #if spMode=calculate, then provide spYield File; if spMode=fixed, provide spYW and spYHe values
-            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xParamTemplate=self.XOLOTL_PARAM_TEMPLATE, xNetworkFile=self.xolotlNetworkFile, xDimensions=self.xDimensions, xFieldsplit_1_pc_type=self.fieldsplit_1_pc_type, xStartStop=self.xolotlStartStop, xFlux=self.xolotlFlux, xInitialV=self.initialV, xNxGrid=self.nxGrid, xNyGrid=self.nyGrid, xDxGrid=self.dxGrid, xDyGrid=self.dyGrid, fNImpacts=self.ftridynNImpacts, gFractionW=self.gFluxFractionW, fSpYieldMode=self.ftridynSpYieldMode, fSpYieldW=self.ftridynSpYieldW, fSpYieldHe=self.ftridynSpYieldHe, spYieldsFile_temp=self.SPUT_YIELDS_FILE_TEMP, xHe_conc=self.petsc_heConc, xProcess=self.process, xVoidPortion=self.voidPortion)
+            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xParamTemplate=self.XOLOTL_PARAM_TEMPLATE, xNetworkFile=self.xolotlNetworkFile, xDimensions=self.xDimensions, xFieldsplit_1_pc_type=self.fieldsplit_1_pc_type, xStartStop=self.xolotlStartStop, xFlux=self.xolotlFlux, xInitialV=self.initialV, xNxGrid=self.nxGrid, xNyGrid=self.nyGrid, xDxGrid=self.dxGrid, xDyGrid=self.dyGrid, fNImpacts=self.ftridynNImpacts, gFractionW=self.gFluxFractionW, xHe_conc=self.petsc_heConc, xProcess=self.process, xVoidPortion=self.voidPortion, spYieldsFile_temp=self.SPUT_YIELDS_FILE_TEMP)
+            #fSpYieldModeHe=self.ftridynSpYieldModeHe, fSpYieldModeW=self.ftridynSpYieldModeW, fSpYieldW=self.ftridynSpYieldW, fSpYieldHe=self.ftridynSpYieldHe)
+
             self.services.call(xolotl, 'step', timeStamp, dTime=time)
 
             self.services.stage_plasma_state()
