@@ -7,7 +7,7 @@ cd /project/projectdirs/atom/users
 mkdir $USER
 cd $USER
 module load git
-git clone https://github.com/ORNL-Fusion/ips-atom.git ips-wrappers
+git clone https://github.com/ORNL-Fusion/ips-wrappers.git ips-wrappers
 cd ips-wrappers
 git checkout dlg-devel
 git submodule update --init --recursive
@@ -19,7 +19,7 @@ You also will want to create your own branch, i.e.,
 git checkout -b my-branch-name
 ```
 
-then in your [batchscript.ips.edison](https://github.com/ORNL-Fusion/ips-atom/blob/dlg-devel/template.batchscript.ips.edison), comment out the default, and add the following
+then in your [batchscript.ips.edison](https://github.com/ORNL-Fusion/ips-wrappers/blob/dlg-devel/template.batchscript.ips.edison), comment out the default, and add the following
 
 ```
 # Production
