@@ -8,6 +8,7 @@ import numpy
 import shutil
 import translate_xolotl_to_ftridyn
 import translate_ftridyn_to_xolotl
+import binTRIDYN
 
 class xolotlFtridynDriver(Component):
     def __init__(self, services, config):
@@ -65,7 +66,7 @@ class xolotlFtridynDriver(Component):
 
         print 'running Xolotl in ' , self.xDimensions, 'D'
 
-
+        self.xolotlCoupling=True
         self.xolotlStartStop=True
         self.xolotlFlux=4.0e4 #ion/nm2
         self.initialV=0.0 #V/nm3 ; e.g., 3.15e-4 V/nm3 = 5ppm
@@ -84,7 +85,7 @@ class xolotlFtridynDriver(Component):
 
         #CHANGE TO GET FROM FILE 
         self.gFluxFractionW=0.00034 #relative flux of W/He [from GITR!] 
-
+        
 
 
         #### FTRIDYN PARAMETERS ##### 
@@ -420,13 +421,48 @@ class xolotlFtridynDriver(Component):
                     print 'printing He concentrations in the last loop'
                 elif time<(self.endTime-self.timeStep):
                     self.petsc_heConc=False
-            
-            #if spMode=calculate, then provide spYield File; if spMode=fixed, provide spYW and spYHe values
-            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xParamTemplate=self.XOLOTL_PARAM_TEMPLATE, xNetworkFile=self.xolotlNetworkFile, xDimensions=self.xDimensions, xFieldsplit_1_pc_type=self.fieldsplit_1_pc_type, xStartStop=self.xolotlStartStop, xFlux=self.xolotlFlux, xInitialV=self.initialV, xNxGrid=self.nxGrid, xNyGrid=self.nyGrid, xDxGrid=self.dxGrid, xDyGrid=self.dyGrid, fNImpacts=self.ftridynNImpacts, gFractionW=self.gFluxFractionW, xHe_conc=self.petsc_heConc, xProcess=self.process, xVoidPortion=self.voidPortion, spYieldsFile_temp=self.SPUT_YIELDS_FILE_TEMP)
+
+
+            #calculate effective sputtering yield; i.e., weighted by relative flux of W-to-He
+            totalSpYield=self.ftridynSpYieldHe+self.gFluxFractionW*self.ftridynSpYieldW
+
+            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xFtCoupling=self.xolotlCoupling, xParamTemplate=self.XOLOTL_PARAM_TEMPLATE, xNetworkFile=self.xolotlNetworkFile, xDimensions=self.xDimensions, xFieldsplit_1_pc_type=self.fieldsplit_1_pc_type, xStartStop=self.xolotlStartStop, xFlux=self.xolotlFlux, xInitialV=self.initialV, xNxGrid=self.nxGrid, xNyGrid=self.nyGrid, xDxGrid=self.dxGrid, xDyGrid=self.dyGrid, fNImpacts=self.ftridynNImpacts, gFractionW=self.gFluxFractionW, xHe_conc=self.petsc_heConc, xProcess=self.process, xVoidPortion=self.voidPortion, weightedSpYield=totalSpYield)#spYieldsFile_temp=self.SPUT_YIELDS_FILE_TEMP)
 
             self.services.call(xolotl, 'step', timeStamp, dTime=time)
 
             self.services.stage_plasma_state()
+
+
+            shutil.copyfile('last_TRIDYN.dat', 'last_TRIDYN_toBin.dat')
+
+            #re-bin last_TRIDYN file                                     
+            binTRIDYN.binTridyn()
+
+            #store xolotls profile output for each loop (not plasma state)          
+            currentXolotlOutputFileToBin='last_TRIDYN_toBin_%f.dat' %time
+            shutil.copyfile('last_TRIDYN_toBin.dat', currentXolotlOutputFileToBin)
+            currentXolotlOutputFile='last_TRIDYN_%f.dat' %time
+            shutil.copyfile('last_TRIDYN.dat', currentXolotlOutputFile)
+
+
+            #append output:
+            #retention
+            tempfileRet = open(self.RETENTION_XOLOTL_TEMP,"r")
+            fRet = open(self.RETENTION_XOLOTL_FINAL, "a")
+            fRet.write(tempfileRet.read())
+            fRet.close()
+            tempfileRet.close()
+            
+            #surface
+            tempfileSurf = open(self.SURFACE_XOLOTL_TEMP,"r")
+            fSurf = open(self.SURFACE_XOLOTL_FINAL, "a")
+            fSurf.write(tempfileSurf.read())
+            fSurf.close()
+            tempfileSurf.close()
+
+            #save network file with a different name to use in the next time step
+            currentXolotlNetworkFile='xolotlStop_%f.h5' %time
+            shutil.copyfile('xolotlStop.h5',currentXolotlNetworkFile)
 
             #update driver mode after the 1st loop, from INIT to RESTART
             if self.driverMode == 'INIT':

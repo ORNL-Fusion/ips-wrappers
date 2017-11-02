@@ -5,8 +5,6 @@ import os
 import shutil
 import subprocess
 import glob
-#import translate_xolotl_to_ftridyn
-import binTRIDYN
 import write_xolotl_paramfile
 import sys
 import numpy as np
@@ -33,14 +31,13 @@ class xolotlWorker(Component):
         paramTemplateFile=keywords['xParamTemplate']
         flux=keywords['xFlux']
         runEndTime=self.driverTime+keywords['dTimeStep']
-
-        fluxFractionW=keywords['gFractionW']
+        self.coupling=keywords['xFtCoupling']
+        totalSpYield=keywords['weightedSpYield']
         self.xNxGrid=keywords['xNxGrid']
         self.xNyGrid=str(keywords['xNyGrid']) 
         self.xDxGrid=keywords['xDxGrid']
         self.xDyGrid=str(keywords['xDyGrid'])
-
-
+        
         self.petscHeConc=keywords['xHe_conc']
         self.processes=keywords['xProcess']
 
@@ -54,44 +51,12 @@ class xolotlWorker(Component):
         print '\n'
 
         
-        #spYield's saved to spYield.out, regardless of SpYieldMode -> always read from file
-        spYieldsTemp=keywords['spYieldsFile_temp'] 
-        spYieldHe, spYieldW=np.loadtxt(cwd+'/'+spYieldsTemp, usecols = (1,2) , unpack=True) 
-        print '\t regardless of sputtering yields calculated by FTridyn or fixed, read from file: spY (by He) = ', spYieldHe, ' spY (by W) = ', spYieldW
-
-        #if fSpYield in driver < 0, fSpYieldMode = calculate -> get sputtering yield FROM spYield.out        
-        #if keywords['fSpYieldMode']=='calculate':
-        #    spYieldsTemp=keywords['spYieldsFile_temp']
-        #    spYieldHe, spYieldW=np.loadtxt(cwd+'/'+spYieldsTemp, usecols = (1,2) , unpack=True)
-        #    print '\t W sputtering yields calculated by FTridyn, read from file: spY (by He) = ', spYieldHe, ' spY (by W) = ', spYieldW
-        #if fSpYield in driver >= 0, fSpYieldMode = fixed 
-        #elif keywords['fSpYieldMode']=='fixed':
-        #    spYieldW=keywords['fSpYieldW']
-        #    spYieldHe=keywords['fSpYieldHe']
-        #    print '\t Fixed value of W sputtering yields are: spY (by He) = ', spYieldHe, ' spY (by W) = ', spYieldW
-        #else:
-        #    print '\t Invalid value of fSpYieldMode, ', keywords['fSpYieldMode'] 
-        #    print '\t set yield to zero!'
-        #    spYieldW=0.0;
-        #    spYieldHe=0.0;
-        
-
-        #WEIGHTED SUM OF SPUTTERING YIELDS!
-        totalSpYield=spYieldHe+fluxFractionW*spYieldW
-        print "\t the effective (weighted by relative flux) sputtering yield in Xolotl is: ", totalSpYield
-
         if keywords['dStartMode']=='RESTART':
             restartNetworkFile = networkFile
             filepath='../../restart_files/'+restartNetworkFile
             shutil.copyfile(filepath,restartNetworkFile)
 
         if driverMode == 'INIT':
-            #print ('run xolotl preprocessor')
-            #print 'with java', os.system('echo $JAVA_EXE')
-            #run prepocessor and copy params.txt input file to plasma state
-            #since java is handled a little differently accross machines, 
-            #a JAVA-XOLOTL environment variables are defined in the machine environment file
-            #os.system('$JAVA_XOLOTL_EXE -Djava.library.path=$JAVA_XOLOTL_LIBRARY -cp .:$JAVA_XOLOTL_LIBRARY/*::$XOLOTL_PREPROCESSOR_DIR gov.ornl.xolotl.preprocessor.Main --perfHandler dummy --nxGrid 160 --maxVSize 250 --phaseCut')
             print 'init mode: run parameter file without preprocessor'
             write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(dimensions=keywords['xDimensions'], infile=paramTemplateFile, fieldsplit_1_pc_type=keywords['xFieldsplit_1_pc_type'],start_stop=startStop,ts_final_time=runEndTime,sputtering=totalSpYield,flux=flux,initialV=keywords['xInitialV'],nxGrid=self.xNxGrid,nyGrid=self.xNyGrid,dxGrid=self.xDxGrid,dyGrid=self.xDyGrid, he_conc=self.petscHeConc, process=self.processes, voidPortion=keywords['xVoidPortion'])
                 
@@ -111,7 +76,6 @@ class xolotlWorker(Component):
         self.services.stage_plasma_state()
 
         #asign a local variable to arguments used multiple times
-        #driverTime=keywords['dTime']
 
         print 'check that all arguments are read well by xolotl-step'
         for (k, v) in keywords.iteritems():
@@ -127,42 +91,27 @@ class xolotlWorker(Component):
 
         newest = max(glob.iglob('TRIDYN_*.dat'), key=os.path.getctime)
         print('newest file ' , newest)
-        shutil.copyfile(newest, 'last_TRIDYN_toBin.dat')
+        shutil.copyfile(newest, 'last_TRIDYN.dat')
+
+
+        if (self.coupling):#=='True'):              
+            #save TRIDYN_*.dat files, zipped
+            TRIDYNFiles='tridyn_*.dat'
+            TRIDYNZipped='allTRIDYN_t%f.zip' %self.driverTime
+            zipOuput='zipTridynDatOuput.txt'
+            zipString='zip %s %s >> %s ' %(TRIDYNZipped, TRIDYNFiles, zipOuput)
+            subprocess.call([zipString], shell=True)
+
+            rmString='rm '+ TRIDYNFiles
+            subprocess.call([rmString], shell=True)
+
         
-        #re-bin last_TRIDYN file
-        binTRIDYN.binTridyn()
-
-        #store xolotls profile output for each loop (not plasma state)
-        currentXolotlOutputFileToBin='last_TRIDYN_toBin_%f.dat' %self.driverTime
-        shutil.copyfile('last_TRIDYN_toBin.dat', currentXolotlOutputFileToBin)
-        currentXolotlOutputFile='last_TRIDYN_%f.dat' %self.driverTime
-        shutil.copyfile('last_TRIDYN.dat', currentXolotlOutputFile)
-
-        #save surface file for every loop -> now it's appended
-        #currentSurfaceFile='surface_%f.txt' %self.driverTime
-        #shutil.copyfile(self.SURFACE_XOLOTL_TEMP,currentSurfaceFile)
-
-        #append output:
-        #retention
-        tempfileRet = open(self.RETENTION_XOLOTL_TEMP,"r")
-        fRet = open(self.RETENTION_XOLOTL_FINAL, "a")
-        fRet.write(tempfileRet.read())
-        fRet.close()
-        tempfileRet.close()
-
-        #surface
-        tempfileSurf = open(self.SURFACE_XOLOTL_TEMP,"r")
-        fSurf = open(self.SURFACE_XOLOTL_FINAL, "a")
-        fSurf.write(tempfileSurf.read())
-        fSurf.close()
-        tempfileSurf.close()
-
-
         if (self.petscHeConc):#=='True'):
             #save all helium concentration file, zipped 
             heConcFiles='heliumConc_*.dat'
             heConcZipped='allHeliumConc_t%f.zip' %self.driverTime
-            zipString='zip ' + heConcZipped + ' ' + heConcFiles
+            zipOuput='zipHeConcOuput.txt'
+            zipString='zip %s %s >> %s ' %(heConcZipped, heConcFiles, zipOuput)
             subprocess.call([zipString], shell=True)
             #not needed really, they'd be overwritten by next loop 
             rmString='rm '+heConcFiles
