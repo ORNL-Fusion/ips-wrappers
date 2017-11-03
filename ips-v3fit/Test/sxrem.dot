@@ -1,0 +1,21 @@
+sxr_chord_XYZ
+sxr001
+1.0 0.0 0.0
+0.5 0.0 0.0
+
+sxr_chord_RPhiDegZ
+sxr002
+1.0 0.0 0.0
+0.5 0.0 0.0
+
+sxr_chord_XYZ
+sxr003
+0.0 1.0 0.0
+0.0 0.5 0.0
+
+sxr_chord_RPhiDegZ
+sxr004
+1.0 90.0 0.0
+0.5 90.0 0.0
+
+end_of_file
