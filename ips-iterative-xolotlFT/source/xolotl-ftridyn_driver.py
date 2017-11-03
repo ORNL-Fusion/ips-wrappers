@@ -43,9 +43,13 @@ class xolotlFtridynDriver(Component):
         #start first loop from the beginning (INIT) or from a previous run (RESTART)
         #RESTART mode requires providing a list of input files:
         #for FTridyn: last_TRIDYN.dat; for Xolotl: params.txt (of the last run), networkfile (networkRestart.h5)
-        #and placing them in the 'restart_files' folder. The mode is changed to NEUTRAL after the 1st loop
+        #place them in the 'restart_files' folder. The mode is changed to NEUTRAL after the 1st loop
+
         self.startMode = 'INIT' # 'RESTART' or 'INIT'
         self.driverMode=self.startMode
+
+        #True=compress output: time folder for FTridyn's output, TRIDYN and heConc for Xolotl's output
+        self.zipOutput=True
 
         self.initTime=0.0
         self.endTime=0.2
@@ -249,6 +253,7 @@ class xolotlFtridynDriver(Component):
             # C) POSTPROCESSING OF He -> W
 
             # 1) uncompress zipped file (do not remane yet)
+            #FTRIDYN folder is compressed to be added to plasma state; regardless of 'zipOutput' parameter's value
 
             zippedFile=self.FT_OUTPUT_FOLDER+'.zip'
             unzip_output='unzipOutputHe.txt'
@@ -294,7 +299,6 @@ class xolotlFtridynDriver(Component):
             #5) COPY FOLDERS WITH TIME-STAMP & RENAME FOR (Tg,Prj) SPECIES  
 
             shutil.move(self.FT_OUTPUT_FOLDER,timeFolder+'/'+self.FT_OUTPUT_FOLDER+'_HeW')
-
 
             self.services.update_plasma_state()
 
@@ -408,6 +412,21 @@ class xolotlFtridynDriver(Component):
             profileHe.close()
             profileW.close()
             
+
+            #compress output
+            if self.zipOutput:
+                print 'zip output: ', timeFolder
+                zippedTimeFolder=timeFolder+'.zip'
+                zip_output='zipOutputTimeFolder.txt'
+                zipString='zip -r %s %s >> %s ' %(zippedTimeFolder, timeFolder, zip_output)
+                subprocess.call([zipString], shell=True)
+
+                shutil.rmtree(timeFolder)
+
+            else:
+                print 'leaving ', timeFolder , 'uncompressed'
+
+
             self.services.update_plasma_state()
 
             ######################################
@@ -426,7 +445,7 @@ class xolotlFtridynDriver(Component):
             #calculate effective sputtering yield; i.e., weighted by relative flux of W-to-He
             totalSpYield=self.ftridynSpYieldHe+self.gFluxFractionW*self.ftridynSpYieldW
 
-            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xFtCoupling=self.xolotlCoupling, xParamTemplate=self.XOLOTL_PARAM_TEMPLATE, xNetworkFile=self.xolotlNetworkFile, xDimensions=self.xDimensions, xFieldsplit_1_pc_type=self.fieldsplit_1_pc_type, xStartStop=self.xolotlStartStop, xFlux=self.xolotlFlux, xInitialV=self.initialV, xNxGrid=self.nxGrid, xNyGrid=self.nyGrid, xDxGrid=self.dxGrid, xDyGrid=self.dyGrid, fNImpacts=self.ftridynNImpacts, gFractionW=self.gFluxFractionW, xHe_conc=self.petsc_heConc, xProcess=self.process, xVoidPortion=self.voidPortion, weightedSpYield=totalSpYield)#spYieldsFile_temp=self.SPUT_YIELDS_FILE_TEMP)
+            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xFtCoupling=self.xolotlCoupling, dZipOutput=self.zipOutput, xParamTemplate=self.XOLOTL_PARAM_TEMPLATE, xNetworkFile=self.xolotlNetworkFile, xDimensions=self.xDimensions, xFieldsplit_1_pc_type=self.fieldsplit_1_pc_type, xStartStop=self.xolotlStartStop, xFlux=self.xolotlFlux, xInitialV=self.initialV, xNxGrid=self.nxGrid, xNyGrid=self.nyGrid, xDxGrid=self.dxGrid, xDyGrid=self.dyGrid, fNImpacts=self.ftridynNImpacts, gFractionW=self.gFluxFractionW, xHe_conc=self.petsc_heConc, xProcess=self.process, xVoidPortion=self.voidPortion, weightedSpYield=totalSpYield)
 
             self.services.call(xolotl, 'step', timeStamp, dTime=time)
 
@@ -479,6 +498,10 @@ class xolotlFtridynDriver(Component):
 
     def finalize(self, timeStamp=0.0):
         print('xolotl-ftridyn_driver: finalize')
+
+        #can we add compressing output here? e.g., last_TRIDYN, xolotlStop...
+        #and remove large output files? e.g., FTRIDYN.zip
+
         ftridyn = self.services.get_port('WORKER')
         xolotl = self.services.get_port('XWORKER')
         self.services.call(ftridyn, 'finalize', timeStamp)

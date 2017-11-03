@@ -26,20 +26,24 @@ class xolotlWorker(Component):
         #asign a local variable to arguments used multiple times 
         self.driverTime=keywords['dTime']
         driverMode=keywords['dMode']
+
+        flux=keywords['xFlux']
+        totalSpYield=keywords['weightedSpYield']
+        runEndTime=self.driverTime+keywords['dTimeStep']
+
         startStop=keywords['xStartStop']
         networkFile=keywords['xNetworkFile']
         paramTemplateFile=keywords['xParamTemplate']
-        flux=keywords['xFlux']
-        runEndTime=self.driverTime+keywords['dTimeStep']
+
         self.coupling=keywords['xFtCoupling']
-        totalSpYield=keywords['weightedSpYield']
+        self.zipOutput=keywords['dZipOutput']
+        self.petscHeConc=keywords['xHe_conc']
+        self.processes=keywords['xProcess']
+
         self.xNxGrid=keywords['xNxGrid']
         self.xNyGrid=str(keywords['xNyGrid']) 
         self.xDxGrid=keywords['xDxGrid']
         self.xDyGrid=str(keywords['xDyGrid'])
-        
-        self.petscHeConc=keywords['xHe_conc']
-        self.processes=keywords['xProcess']
 
         cwd = self.services.get_working_dir()
 
@@ -85,6 +89,7 @@ class xolotlWorker(Component):
         task_id = self.services.launch_task(self.NPROC,
                                             self.services.get_working_dir(),
                                             self.XOLOTL_EXE, 'params.txt')
+
         #monitor task until complete
         if (self.services.wait_task(task_id)):
             self.services.error('xolotl_worker: step failed.')
@@ -94,29 +99,47 @@ class xolotlWorker(Component):
         shutil.copyfile(newest, 'last_TRIDYN.dat')
 
 
-        if (self.coupling):#=='True'):              
-            #save TRIDYN_*.dat files, zipped
-            TRIDYNFiles='tridyn_*.dat'
+        #save TRIDYN_*.dat files, zipped
+        TRIDYNFiles='TRIDYN_*.dat'
+
+        if self.coupling and self.zipOutput:#=='True'):              
             TRIDYNZipped='allTRIDYN_t%f.zip' %self.driverTime
-            zipOuput='zipTridynDatOuput.txt'
-            zipString='zip %s %s >> %s ' %(TRIDYNZipped, TRIDYNFiles, zipOuput)
+            zip_ouput='zipTridynDatOuput.txt'
+
+            print 'save and zip output: ', TRIDYNFiles
+            zipString='zip %s %s >> %s ' %(TRIDYNZipped, TRIDYNFiles, zip_ouput)
             subprocess.call([zipString], shell=True)
 
             rmString='rm '+ TRIDYNFiles
             subprocess.call([rmString], shell=True)
 
-        
-        if (self.petscHeConc):#=='True'):
-            #save all helium concentration file, zipped 
-            heConcFiles='heliumConc_*.dat'
+        elif self.coupling:
+            print 'leaving ',  TRIDYNFiles , 'uncompressed'
+
+        else:
+             print 'no ', TRIDYNFiles , 'used in this simulation'
+
+
+        #save helium concentration files, zipped
+        heConcFiles='heliumConc_*.dat'
+
+        if self.petscHeConc and self.zipOutput:#=='True'):
             heConcZipped='allHeliumConc_t%f.zip' %self.driverTime
-            zipOuput='zipHeConcOuput.txt'
-            zipString='zip %s %s >> %s ' %(heConcZipped, heConcFiles, zipOuput)
+            zip_ouput='zipHeConcOuput.txt'
+            
+            print 'save and zip output: ', heConcFiles
+            zipString='zip %s %s >> %s ' %(heConcZipped, heConcFiles, zip_ouput)
             subprocess.call([zipString], shell=True)
-            #not needed really, they'd be overwritten by next loop 
+
             rmString='rm '+heConcFiles
             subprocess.call([rmString], shell=True)
             
+        elif self.petscHeConc :
+            print 'leaving ', heConcFiles ,'uncompressed'
+
+        else:
+            print 'no ', heConcFiles , ' in this loops output'
+
         #save network file with a different name to use in the next time step
         currentXolotlNetworkFile='xolotlStop_%f.h5' %self.driverTime
         shutil.copyfile('xolotlStop.h5',currentXolotlNetworkFile)
