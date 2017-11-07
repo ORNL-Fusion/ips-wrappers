@@ -27,23 +27,36 @@ class xolotlWorker(Component):
         self.driverTime=keywords['dTime']
         driverMode=keywords['dMode']
 
+        self.coupling=keywords['xFtCoupling']
+        self.zipOutput=keywords['dZipOutput']
+
         flux=keywords['xFlux']
         totalSpYield=keywords['weightedSpYield']
-        runEndTime=self.driverTime+keywords['dTimeStep']
+        tStep=keywords['dTimeStep']
+        runEndTime=self.driverTime+tStep
 
         startStop=keywords['xStartStop']
+        fieldSplit=keywords['xFieldsplit_1_pc_type']
+        phaseCut=keywords['xPhaseCut']
+        maxVSize=keywords['xMaxVSize']
         networkFile=keywords['xNetworkFile']
         paramTemplateFile=keywords['xParamTemplate']
 
-        self.coupling=keywords['xFtCoupling']
-        self.zipOutput=keywords['dZipOutput']
         self.petscHeConc=keywords['xHe_conc']
-        self.processes=keywords['xProcess']
+        processes=keywords['xProcess']
+        voidPortion=keywords['xVoidPortion']
+        initV=keywords['xInitialV']
+        
+        dim=keywords['xDimensions']
+        nxGrid=keywords['xNxGrid']
+        nyGrid=str(keywords['xNyGrid']) 
+        dxGrid=keywords['xDxGrid']
+        dyGrid=str(keywords['xDyGrid'])
 
-        self.xNxGrid=keywords['xNxGrid']
-        self.xNyGrid=str(keywords['xNyGrid']) 
-        self.xDxGrid=keywords['xDxGrid']
-        self.xDyGrid=str(keywords['xDyGrid'])
+        grouping=keywords['xGrouping']
+        groupHeV=keywords['xGroupHeV'] 
+        groupHe=keywords['xGroupHe'] 
+        groupV=keywords['xGroupV']
 
         cwd = self.services.get_working_dir()
 
@@ -51,7 +64,7 @@ class xolotlWorker(Component):
         print '\t driver mode is', driverMode
         print '\t running starts at time',self.driverTime
         print '\t \t  ends at time', runEndTime
-        print '\t driver step is', keywords['dTimeStep']
+        print '\t driver step is', tStep
         print '\n'
 
         
@@ -62,11 +75,11 @@ class xolotlWorker(Component):
 
         if driverMode == 'INIT':
             print 'init mode: run parameter file without preprocessor'
-            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(dimensions=keywords['xDimensions'], infile=paramTemplateFile, fieldsplit_1_pc_type=keywords['xFieldsplit_1_pc_type'],start_stop=startStop,ts_final_time=runEndTime,sputtering=totalSpYield,flux=flux,initialV=keywords['xInitialV'],nxGrid=self.xNxGrid,nyGrid=self.xNyGrid,dxGrid=self.xDxGrid,dyGrid=self.xDyGrid, he_conc=self.petscHeConc, process=self.processes, voidPortion=keywords['xVoidPortion'])
+            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(dimensions=dim, infile=paramTemplateFile, fieldsplit_1_pc_type=fieldSplit, start_stop=startStop, phase_cut=phaseCut, maxVSize=maxVSize, grouping=grouping, groupHeV=groupHeV, groupHe=groupHe, groupV=groupV, ts_final_time=runEndTime,sputtering=totalSpYield,flux=flux, initialV=initV,nxGrid=nxGrid,nyGrid=nyGrid,dxGrid=dxGrid,dyGrid=dyGrid, he_conc=self.petscHeConc, process=processes, voidPortion=voidPortion)
                 
         else:
             print 'restart mode: run parameter file without preprocessor'
-            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(dimensions=keywords['xDimensions'], infile=paramTemplateFile, fieldsplit_1_pc_type=keywords['xFieldsplit_1_pc_type'],start_stop=startStop,ts_final_time=runEndTime,useNetFile=True,networkFile=networkFile,sputtering=totalSpYield,flux=flux, initialV=keywords['xInitialV'],nxGrid=self.xNxGrid,nyGrid=self.xNyGrid,dxGrid=self.xDxGrid,dyGrid=self.xDyGrid,he_conc=self.petscHeConc, process=self.processes, voidPortion=keywords['xVoidPortion'])
+            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(dimensions=dim, infile=paramTemplateFile, fieldsplit_1_pc_type=fieldSplit, start_stop=startStop,phase_cut=phaseCut, maxVSize=maxVSize, grouping=grouping, groupHeV=groupHeV, groupHe=groupHe, groupV=groupV, ts_final_time=runEndTime,useNetFile=True,networkFile=networkFile,sputtering=totalSpYield,flux=flux, initialV=initV, nxGrid=nxGrid,nyGrid=nyGrid,dxGrid=dxGrid,dyGrid=dyGrid,he_conc=self.petscHeConc, process=processes, voidPortion=voidPortion)
         
         #store xolotls parameter and network files for each loop 
         currentXolotlParamFile='params_%f.txt' %self.driverTime

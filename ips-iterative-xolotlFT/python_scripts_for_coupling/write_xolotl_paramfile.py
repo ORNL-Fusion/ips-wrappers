@@ -41,11 +41,17 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
                                           nHe=8,
                                           maxVSize=250, 
                                           nInterstitials=6, 
-                                          phaseCut='true',
+                                          phase_cut='true',
                                           nxGrid=160,
                                           dxGrid=0.5,
                                           nyGrid=' ',
                                           dyGrid=' ',
+
+                                          #bursting=False,
+                                          grouping=False,
+                                          groupHeV=0,
+                                          groupHe=0,
+                                          groupV=0,
 
                                           initialV=0.0,
                                           
@@ -98,7 +104,7 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
 
    #other input parameters
    os.rename(outfile, tmp)
-   paramSedString="sed    -e 's/vizHandler=[^ ]*/vizHandler=%s/'    -e 's/flux=[^ ]*/flux=%e/'    -e 's/netParam=.*$/netParam=%g %g %g %s/'   -e 's/grid=.*$/grid=%g %g %s %s/'    -e 's/material=[^ ]*/material=%s/'    -e 's/dimensions=[^ ]*/dimensions=%d/'    -e 's/perfHandler=[^ ]*/perfHandler=%s/'    -e 's/startTemp=[^ ]*/startTemp=%f/'   -e 's/sputtering=[^ ]*/sputtering=%f/'  -e 's/voidPortion=[^ ]*/voidPortion=%f/'   -e 's/initialV=[^ ]*/initialV=%g/' -e 's/process=.*$/process=%s/' < %s > %s"   % (vizHandler, flux, nHe, maxVSize, nInterstitials, phaseCut, nxGrid, dxGrid , nyGrid, dyGrid, material, dimensions, perfHandler, startTemp, sputtering, voidPortion, initialV, process, tmp, outfile)
+   paramSedString="sed    -e 's/vizHandler=[^ ]*/vizHandler=%s/'    -e 's/flux=[^ ]*/flux=%e/'    -e 's/netParam=.*$/netParam=%g %g %g %s/'   -e 's/grid=.*$/grid=%g %g %s %s/'    -e 's/material=[^ ]*/material=%s/'    -e 's/dimensions=[^ ]*/dimensions=%d/'    -e 's/perfHandler=[^ ]*/perfHandler=%s/'    -e 's/startTemp=[^ ]*/startTemp=%f/'   -e 's/sputtering=[^ ]*/sputtering=%f/'  -e 's/voidPortion=[^ ]*/voidPortion=%f/'   -e 's/initialV=[^ ]*/initialV=%g/' -e 's/process=.*$/process=%s/' < %s > %s"   % (vizHandler, flux, nHe, maxVSize, nInterstitials, phase_cut, nxGrid, dxGrid , nyGrid, dyGrid, material, dimensions, perfHandler, startTemp, sputtering, voidPortion, initialV, process, tmp, outfile)
 
    #print " sedline call parameters: %s " %(paramSedString)                                                                                                                                   
    subprocess.call([paramSedString], shell=True)
@@ -106,10 +112,13 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
 #append other input parameters that do not exist in preprocessors param file
    f = open(outfile, "a")
 
-
-   if (useNetFile==True):
+   if useNetFile:
       networkFileLine="networkFile=%s\n" %(networkFile)
       f.write(networkFileLine)
+
+   if grouping:
+      groupingFileLine="grouping=%g %g %g\n" %(groupHeV, groupHe, groupV)
+      f.write(groupingFileLine)
 
    f.close
 

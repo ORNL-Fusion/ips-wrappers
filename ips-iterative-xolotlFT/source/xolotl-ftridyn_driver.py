@@ -72,6 +72,8 @@ class xolotlFtridynDriver(Component):
 
         self.xolotlCoupling=True
         self.xolotlStartStop=True
+        self.xolotlPhaseCut='true'
+        self.xolotlMaxVSize=250
         self.xolotlFlux=4.0e4 #ion/nm2
         self.initialV=0.0 #V/nm3 ; e.g., 3.15e-4 V/nm3 = 5ppm
         self.nxGrid=200
@@ -86,6 +88,18 @@ class xolotlFtridynDriver(Component):
         #True: print at every loop ; False: don't print ; 'Last' (string): print only during the last loop
         self.heConc='Last' 
         self.process='reaction advec modifiedTM diff movingSurface attenuation'
+
+        #bursting: then grouping should happen, phaseCut set to 'false' and smaller maxVSize, e.g., ~50
+        self.xolotlBursting=True
+        self.xolotlGrouping=False
+        self.xolotlGroupHeV=31
+        self.xolotlgroupHe=4
+        self.xolotlgroupV=4
+        
+        if self.xolotlBursting:
+            self.xolotlGrouping=True
+            self.xolotlPhaseCut='false'
+            self.xolotlMaxVSize=50
 
         #CHANGE TO GET FROM FILE 
         self.gFluxFractionW=0.00034 #relative flux of W/He [from GITR!] 
@@ -445,7 +459,7 @@ class xolotlFtridynDriver(Component):
             #calculate effective sputtering yield; i.e., weighted by relative flux of W-to-He
             totalSpYield=self.ftridynSpYieldHe+self.gFluxFractionW*self.ftridynSpYieldW
 
-            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xFtCoupling=self.xolotlCoupling, dZipOutput=self.zipOutput, xParamTemplate=self.XOLOTL_PARAM_TEMPLATE, xNetworkFile=self.xolotlNetworkFile, xDimensions=self.xDimensions, xFieldsplit_1_pc_type=self.fieldsplit_1_pc_type, xStartStop=self.xolotlStartStop, xFlux=self.xolotlFlux, xInitialV=self.initialV, xNxGrid=self.nxGrid, xNyGrid=self.nyGrid, xDxGrid=self.dxGrid, xDyGrid=self.dyGrid, fNImpacts=self.ftridynNImpacts, gFractionW=self.gFluxFractionW, xHe_conc=self.petsc_heConc, xProcess=self.process, xVoidPortion=self.voidPortion, weightedSpYield=totalSpYield)
+            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xFtCoupling=self.xolotlCoupling, dZipOutput=self.zipOutput, xParamTemplate=self.XOLOTL_PARAM_TEMPLATE, xNetworkFile=self.xolotlNetworkFile, xDimensions=self.xDimensions, xFieldsplit_1_pc_type=self.fieldsplit_1_pc_type, xStartStop=self.xolotlStartStop, xPhaseCut=self.xolotlPhaseCut, xMaxVSize=self.xolotlMaxVSize,  xFlux=self.xolotlFlux, xInitialV=self.initialV, xNxGrid=self.nxGrid, xNyGrid=self.nyGrid, xDxGrid=self.dxGrid, xDyGrid=self.dyGrid, xGrouping=self.xolotlGrouping, xGroupHeV=self.xolotlGroupHeV, xGroupHe=self.xolotlgroupHe, xGroupV=self.xolotlgroupV, fNImpacts=self.ftridynNImpacts, gFractionW=self.gFluxFractionW, xHe_conc=self.petsc_heConc, xProcess=self.process, xVoidPortion=self.voidPortion, weightedSpYield=totalSpYield)
 
             self.services.call(xolotl, 'step', timeStamp, dTime=time)
 
