@@ -52,8 +52,8 @@ class xolotlFtridynDriver(Component):
         self.zipOutput=True
 
         self.initTime=0.0
-        self.endTime=0.2
-        self.timeStep=0.02
+        self.endTime=0.0002
+        self.timeStep=0.0001
 
         print 'running IPS from t = %f to t=%f, in steps of dt=%f' % (self.initTime, self.endTime, self.timeStep)
 
@@ -116,7 +116,7 @@ class xolotlFtridynDriver(Component):
             
         self.ftridynTotalDepth=0.0
         self.ftridynInitialTotalDepth=300.0
-        self.ftridynNImpacts=1.0e5
+        self.ftridynNImpacts=1.0e3
 
         #E or A < 0 -> use distribution(s)
         self.ftridynInEnergyHe=250.0
@@ -459,7 +459,7 @@ class xolotlFtridynDriver(Component):
             #calculate effective sputtering yield; i.e., weighted by relative flux of W-to-He
             totalSpYield=self.ftridynSpYieldHe+self.gFluxFractionW*self.ftridynSpYieldW
 
-            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xFtCoupling=self.xolotlCoupling, dZipOutput=self.zipOutput, xParamTemplate=self.XOLOTL_PARAM_TEMPLATE, xNetworkFile=self.xolotlNetworkFile, xDimensions=self.xDimensions, xFieldsplit_1_pc_type=self.fieldsplit_1_pc_type, xStartStop=self.xolotlStartStop, xPhaseCut=self.xolotlPhaseCut, xMaxVSize=self.xolotlMaxVSize,  xFlux=self.xolotlFlux, xInitialV=self.initialV, xNxGrid=self.nxGrid, xNyGrid=self.nyGrid, xDxGrid=self.dxGrid, xDyGrid=self.dyGrid, xGrouping=self.xolotlGrouping, xGroupHeV=self.xolotlGroupHeV, xGroupHe=self.xolotlgroupHe, xGroupV=self.xolotlgroupV, fNImpacts=self.ftridynNImpacts, gFractionW=self.gFluxFractionW, xHe_conc=self.petsc_heConc, xProcess=self.process, xVoidPortion=self.voidPortion, weightedSpYield=totalSpYield)
+            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xFtCoupling=self.xolotlCoupling, dZipOutput=self.zipOutput, xParamTemplate=self.XOLOTL_PARAM_TEMPLATE, xNetworkFile=self.xolotlNetworkFile, xDimensions=self.xDimensions, xFieldsplit_1_pc_type=self.fieldsplit_1_pc_type, xStartStop=self.xolotlStartStop, xPhaseCut=self.xolotlPhaseCut, xMaxVSize=self.xolotlMaxVSize,  xFlux=self.xolotlFlux, xInitialV=self.initialV, xNxGrid=self.nxGrid, xNyGrid=self.nyGrid, xDxGrid=self.dxGrid, xDyGrid=self.dyGrid, xBursting=self.xolotlBursting, xGrouping=self.xolotlGrouping, xGroupHeV=self.xolotlGroupHeV, xGroupHe=self.xolotlgroupHe, xGroupV=self.xolotlgroupV, fNImpacts=self.ftridynNImpacts, gFractionW=self.gFluxFractionW, xHe_conc=self.petsc_heConc, xProcess=self.process, xVoidPortion=self.voidPortion, weightedSpYield=totalSpYield)
 
             self.services.call(xolotl, 'step', timeStamp, dTime=time)
 
