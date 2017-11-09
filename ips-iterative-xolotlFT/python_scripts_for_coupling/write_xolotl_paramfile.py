@@ -47,7 +47,7 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
                                           nyGrid=' ',
                                           dyGrid=' ',
 
-                                          bursting=False,
+                                          #bursting=False,
                                           grouping=False,
                                           groupHeV=0,
                                           groupHe=0,
@@ -83,9 +83,9 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
       #print 'he conc False; not included in param file'
       petscArgString=petscArgString+"   -e 's/-helium_conc/ %s/'" %( ' ' )
 
-   if not bursting:# (bursting==False): remove bursting from param template
-      #print 'bursting False; not included in param file'
-      petscArgString=petscArgString+"   -e 's/-bursting/ %s/'" %( ' ' ) 
+  # if not bursting:# (bursting==False): remove bursting from param template
+  #   print 'bursting False; not included in param file'
+  #   petscArgString=petscArgString+"   -e 's/-bursting/ %s/'" %( ' ' ) 
 
 #TO BE FIXED WHEN 'True' CAN BE READ PROPERLY
 #   if (start_stop==True):
