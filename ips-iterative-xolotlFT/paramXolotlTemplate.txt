@@ -13,3 +13,4 @@ regularGrid=no
 voidPortion=40.000000
 sputtering=0.004070
 initialV=0.0
+boundary=1 0

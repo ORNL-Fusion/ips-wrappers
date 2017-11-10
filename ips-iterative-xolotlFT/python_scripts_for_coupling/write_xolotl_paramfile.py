@@ -33,7 +33,9 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
                                           process="reaction advec modifiedTM attenuation diff movingSurface",
                                           sputtering=0.000129,
                                           voidPortion=40,
-
+                                          boundarySurf=1, #1=free
+                                          boundaryBulk=0, #0=reflective
+                                          
                                           #   netParam=nHe maxVSize  nInterstitials phaseCut
                                           #   grid=nxGrid dxGrid
                                           useNetFile=False,
@@ -108,7 +110,7 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
 
    #other input parameters
    os.rename(outfile, tmp)
-   paramSedString="sed    -e 's/vizHandler=[^ ]*/vizHandler=%s/'    -e 's/flux=[^ ]*/flux=%e/'    -e 's/netParam=.*$/netParam=%g %g %g %s/'   -e 's/grid=.*$/grid=%g %g %s %s/'    -e 's/material=[^ ]*/material=%s/'    -e 's/dimensions=[^ ]*/dimensions=%d/'    -e 's/perfHandler=[^ ]*/perfHandler=%s/'    -e 's/startTemp=[^ ]*/startTemp=%f/'   -e 's/sputtering=[^ ]*/sputtering=%f/'  -e 's/voidPortion=[^ ]*/voidPortion=%f/'   -e 's/initialV=[^ ]*/initialV=%g/' -e 's/process=.*$/process=%s/' < %s > %s"   % (vizHandler, flux, nHe, maxVSize, nInterstitials, phase_cut, nxGrid, dxGrid , nyGrid, dyGrid, material, dimensions, perfHandler, startTemp, sputtering, voidPortion, initialV, process, tmp, outfile)
+   paramSedString="sed    -e 's/vizHandler=[^ ]*/vizHandler=%s/'    -e 's/flux=[^ ]*/flux=%e/'    -e 's/netParam=.*$/netParam=%g %g %g %s/'   -e 's/grid=.*$/grid=%g %g %s %s/'    -e 's/material=[^ ]*/material=%s/'    -e 's/dimensions=[^ ]*/dimensions=%d/'    -e 's/perfHandler=[^ ]*/perfHandler=%s/'    -e 's/startTemp=[^ ]*/startTemp=%f/'   -e 's/sputtering=[^ ]*/sputtering=%f/'  -e 's/voidPortion=[^ ]*/voidPortion=%f/'   -e 's/initialV=[^ ]*/initialV=%g/' -e 's/boundary=[^ ]*/boundary=%d %d/' -e 's/process=.*$/process=%s/' < %s > %s"   % (vizHandler, flux, nHe, maxVSize, nInterstitials, phase_cut, nxGrid, dxGrid , nyGrid, dyGrid, material, dimensions, perfHandler, startTemp, sputtering, voidPortion, initialV, boundarySurf, boundaryBulk, process, tmp, outfile)
 
    #print " sedline call parameters: %s " %(paramSedString)                                                                                                                                   
    subprocess.call([paramSedString], shell=True)
