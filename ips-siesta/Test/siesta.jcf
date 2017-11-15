@@ -1,0 +1,18 @@
+&SIESTA_INFO
+
+  LADD_PERT     = F
+  LRESISTIVE    = F
+  LRESTART      = F
+
+  NSIN          = 10
+  MPOLIN        = 5
+  NTORIN        = 0
+
+  NITER         = 100
+  FTOL          = 1.0E-20
+  LEVMARQ_PARAM = 1.0E-3
+
+  WOUT_FILE     = 'wout_test.vmec.nc'
+  RESTART_EXT   = 'restart'
+
+/
