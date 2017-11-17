@@ -36,6 +36,7 @@ class xolotlWorker(Component):
         runEndTime=self.driverTime+tStep
 
         startStop=keywords['xStartStop']
+        petscForceIteration=keywords['xForceIteration']
         fieldSplit=keywords['xFieldsplit_1_pc_type']
         phaseCut=keywords['xPhaseCut']
         maxVSize=keywords['xMaxVSize']
@@ -78,11 +79,11 @@ class xolotlWorker(Component):
 
         if driverMode == 'INIT':
             print 'init mode: run parameter file without preprocessor'
-            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(dimensions=dim, infile=paramTemplateFile, fieldsplit_1_pc_type=fieldSplit, start_stop=startStop, phase_cut=phaseCut, maxVSize=maxVSize, grouping=grouping, groupHeV=groupHeV, groupHe=groupHe, groupV=groupV, ts_final_time=runEndTime,sputtering=totalSpYield,flux=flux, initialV=initV, boundarySurf=boundarySurf, boundaryBulk=boundaryBulk, nxGrid=nxGrid,nyGrid=nyGrid,dxGrid=dxGrid,dyGrid=dyGrid, he_conc=self.petscHeConc, process=processes, voidPortion=voidPortion) #bursting=burst,
+            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(dimensions=dim, infile=paramTemplateFile, fieldsplit_1_pc_type=fieldSplit, start_stop=startStop, force_iteration=petscForceIteration, phase_cut=phaseCut, maxVSize=maxVSize, grouping=grouping, groupHeV=groupHeV, groupHe=groupHe, groupV=groupV, ts_final_time=runEndTime,sputtering=totalSpYield,flux=flux, initialV=initV, boundarySurf=boundarySurf, boundaryBulk=boundaryBulk, nxGrid=nxGrid,nyGrid=nyGrid,dxGrid=dxGrid,dyGrid=dyGrid, he_conc=self.petscHeConc, process=processes, voidPortion=voidPortion) #bursting=burst,
                 
         else:
             print 'restart mode: run parameter file without preprocessor'
-            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(dimensions=dim, infile=paramTemplateFile, fieldsplit_1_pc_type=fieldSplit, start_stop=startStop,phase_cut=phaseCut, maxVSize=maxVSize, grouping=grouping, groupHeV=groupHeV, groupHe=groupHe, groupV=groupV, ts_final_time=runEndTime,useNetFile=True,networkFile=networkFile,sputtering=totalSpYield,flux=flux, initialV=initV, boundarySurf=boundarySurf, boundaryBulk=boundaryBulk, nxGrid=nxGrid,nyGrid=nyGrid,dxGrid=dxGrid,dyGrid=dyGrid,he_conc=self.petscHeConc, process=processes, voidPortion=voidPortion) #bursting=burst,
+            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(dimensions=dim, infile=paramTemplateFile, fieldsplit_1_pc_type=fieldSplit, start_stop=startStop, force_iteration=petscForceIteration, phase_cut=phaseCut, maxVSize=maxVSize, grouping=grouping, groupHeV=groupHeV, groupHe=groupHe, groupV=groupV, ts_final_time=runEndTime,useNetFile=True,networkFile=networkFile,sputtering=totalSpYield,flux=flux, initialV=initV, boundarySurf=boundarySurf, boundaryBulk=boundaryBulk, nxGrid=nxGrid,nyGrid=nyGrid,dxGrid=dxGrid,dyGrid=dyGrid,he_conc=self.petscHeConc, process=processes, voidPortion=voidPortion) #bursting=burst,
         
         #store xolotls parameter and network files for each loop 
         currentXolotlParamFile='params_%f.txt' %self.driverTime

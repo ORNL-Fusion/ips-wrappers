@@ -11,6 +11,7 @@ import subprocess
 def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outfile="params.txt",
 
                                           start_stop=True,
+                                          force_iteration=False,
                                           ts_final_time=0.2,
                                           ts_max_snes_failures=-1,
                                           ts_max_steps=1000000,
@@ -73,33 +74,20 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
    #include (or not) parameters without values that exist in template file
    if not start_stop: #(start_stop==False):
       petscArgString=petscArgString+"   -e 's/-start_stop [^ ]*/ /'"
-   else:
-      petscArgString=petscArgString+"   -e 's/-start_stop [^ ]*/-start_stop %f/'" %(ts_final_time)
-      
-   if not start_stop: #(start_stop==False):
       petscArgString=petscArgString+"   -e 's/-ts_dt [^ ]*/ /'"
    else:
-      petscArgString=petscArgString+"   -e 's/-ts_dt [^ ]*/-start_stop %f/'" %(ts_final_time)
+      petscArgString=petscArgString+"   -e 's/-start_stop [^ ]*/-start_stop %f/'" %(ts_final_time)
+      petscArgString=petscArgString+"   -e 's/-ts_dt [^ ]*/-ts_dt %f/'" %(ts_final_time)
+
+
+   if not force_iteration: #(force_iteration==False): remove from petsc arguments            
+      petscArgString=petscArgString+"   -e 's/-snes_force_iteration [^ ]*/ /'"
+   #else:
+      #petscArgString=petscArgString+"   -e 's/-snes_force_iteration /-snes_force_iteration /'"
 
    if not he_conc:# (he_conc==False):
       #print 'he conc False; not included in param file'
       petscArgString=petscArgString+"   -e 's/-helium_conc/ %s/'" %( ' ' )
-
-  # if not bursting:# (bursting==False): remove bursting from param template
-  #   print 'bursting False; not included in param file'
-  #   petscArgString=petscArgString+"   -e 's/-bursting/ %s/'" %( ' ' ) 
-
-#TO BE FIXED WHEN 'True' CAN BE READ PROPERLY
-#   if (start_stop==True):
-#      petscArgString=petscArgString+"   -e 's/-start_stop [^ ]*/-start_stop %f/'" %(ts_final_time)
-#   else:
-#      petscArgString=petscArgString+"   -e 's/-start_stop [^ ]*/ /'"
-
-#   if (start_stop==True):
-#      petscArgString=petscArgString+"   -e 's/-ts_dt [^ ]*/-start_stop %f/'" %(ts_final_time)
-#   else:
-#      petscArgString=petscArgString+"   -e 's/-ts_dt [^ ]*/ /'"
-      
 
    #prepare sed line                                                                                                                                                                          
    petscArgSedString="sed "+ petscArgString + "< %s > %s" %(infile , outfile)
@@ -110,7 +98,7 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
 
    #other input parameters
    os.rename(outfile, tmp)
-   paramSedString="sed    -e 's/vizHandler=[^ ]*/vizHandler=%s/'    -e 's/flux=[^ ]*/flux=%e/'    -e 's/netParam=.*$/netParam=%g %g %g %s/'   -e 's/grid=.*$/grid=%g %g %s %s/'    -e 's/material=[^ ]*/material=%s/'    -e 's/dimensions=[^ ]*/dimensions=%d/'    -e 's/perfHandler=[^ ]*/perfHandler=%s/'    -e 's/startTemp=[^ ]*/startTemp=%f/'   -e 's/sputtering=[^ ]*/sputtering=%f/'  -e 's/voidPortion=[^ ]*/voidPortion=%f/'   -e 's/initialV=[^ ]*/initialV=%g/' -e 's/boundary=[^ ]*/boundary=%d %d/' -e 's/process=.*$/process=%s/' < %s > %s"   % (vizHandler, flux, nHe, maxVSize, nInterstitials, phase_cut, nxGrid, dxGrid , nyGrid, dyGrid, material, dimensions, perfHandler, startTemp, sputtering, voidPortion, initialV, boundarySurf, boundaryBulk, process, tmp, outfile)
+   paramSedString="sed    -e 's/vizHandler=[^ ]*/vizHandler=%s/'    -e 's/flux=[^ ]*/flux=%e/'    -e 's/netParam=.*$/netParam=%g %g %g %s/'   -e 's/grid=.*$/grid=%g %g %s %s/'    -e 's/material=[^ ]*/material=%s/'    -e 's/dimensions=[^ ]*/dimensions=%d/'    -e 's/perfHandler=[^ ]*/perfHandler=%s/'    -e 's/startTemp=[^ ]*/startTemp=%f/'   -e 's/sputtering=[^ ]*/sputtering=%f/'  -e 's/voidPortion=[^ ]*/voidPortion=%f/'   -e 's/initialV=[^ ]*/initialV=%g/' -e 's/boundary=.*$/boundary=%d %d/' -e 's/process=.*$/process=%s/' < %s > %s"   % (vizHandler, flux, nHe, maxVSize, nInterstitials, phase_cut, nxGrid, dxGrid , nyGrid, dyGrid, material, dimensions, perfHandler, startTemp, sputtering, voidPortion, initialV, boundarySurf, boundaryBulk, process, tmp, outfile)
 
    #print " sedline call parameters: %s " %(paramSedString)                                                                                                                                   
    subprocess.call([paramSedString], shell=True)
