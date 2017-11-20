@@ -665,8 +665,6 @@ CONTAINS
 
 ! +--------------------------------------------------------------------+
 
-         input_file = TRIM(equidt_file)
-
          OPEN(lun22,file=TRIM(equidt_file),status='old',iostat=ierr)
          if (ierr/=0) then
             write(*,*) "Error opening file: ", equidt_file
