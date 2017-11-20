@@ -272,9 +272,9 @@ PROGRAM model_EPA_mdescr
     !---------------------------------------------------------------------------------
 
         
-	If (TRIM(ne_profile_model_name) == 'read_equidt_file') THEN
-		
+	If (TRIM(ne_profile_model_name) == 'read_equidt_file') THEN		
 		CALL read_equidt(TRIM(equidt_file_name), 'INIT')
+	END IF
       
     !------------------------------------------------------------------------------------
     !  Get current plasma state 
