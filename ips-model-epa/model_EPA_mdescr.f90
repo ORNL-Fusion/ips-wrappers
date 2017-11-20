@@ -299,7 +299,6 @@ IF (TRIM(mode) == 'INIT') THEN
     !   Initialize and allocate species arrays and thermal profile grids
     !--------------------------------------------------------------------------
     
-        IF 
         ps%nrho = nrho
            
         WRITE (*,*) 'model_EPA_mdescr: About to allocate thermal profile arrays'
