@@ -650,7 +650,7 @@ CONTAINS
       character(len=*) :: equidt_file, mode
       integer, parameter :: lun22 = 22
       character(80) :: var_name
-      integer, public, parameter :: nspmx = 8
+      integer, parameter :: nspmx = 8
                              ! A maximum of 8 ion species allowed
 
       integer ::   idprof, nspec,  mainsp, nprodt
@@ -667,9 +667,9 @@ CONTAINS
 
          input_file = TRIM(equidt_file)
 
-         OPEN(lun22,file=input_file,status='old',iostat=ierr)
+         OPEN(lun22,file=TRIM(equidt_file),status='old',iostat=ierr)
          if (ierr/=0) then
-            write(*,*) "Error opening file: "//input_file
+            write(*,*) "Error opening file: ", equidt_file
             ierr=0
          endif
 !
@@ -679,7 +679,7 @@ CONTAINS
 !
 ! On INIT just set nrho to nprodt and return (DBB)
 !
-		If TRIM(mode) == 'INIT' THEN  
+		If (TRIM(mode) == 'INIT') THEN  
 			nrho = nprodt
 			close(lun22)
 			return
@@ -725,7 +725,7 @@ CONTAINS
 !  Reading the ion temperature
 !
          read(lun22,'(A10,i4)')  var_name, nprodt
-	     read(lun22,'(5E16.9)')  tbti(1:nprodt,isp)
+	     read(lun22,'(5E16.9)')  tbti(1:nprodt)
          ps%Ts(:,1) = zone_centered_profile(nprodt, tbti)
 
          write(*,*) 'finished reading profiles'
