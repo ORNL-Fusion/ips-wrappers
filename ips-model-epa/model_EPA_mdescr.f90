@@ -1,6 +1,7 @@
 PROGRAM model_EPA_mdescr
 
-! version 1.0 4/10/2016 (Batchelor)  
+! version 1.1 11/20/2017 (Batchelor)
+! Reads cut down version of TORIC equidt.data file for thermal profiles
 
 !--------------------------------------------------------------------------
 !
@@ -15,10 +16,10 @@ PROGRAM model_EPA_mdescr
 !
 !   These models could become arbitrarily complex but for right now (4/2016) things are
 !   very simple.  Ion density and temperature profiles are taken as fractions of the 
-!   electron profile.  If you want more call me (DBB).
+!   electron profile.  If you want more, call me (DBB).
 !
 !   NB: The only models implemented now (4/2016) for thermal ion and minority ion profiles
-!       are: "fraction_of_electron"
+!       are: "fraction_of_electron" and "read_equidt_file"
 !
 !   NB: For now assume only one ICRF source and one minority species.  Easy to
 !       generalize. Also for now the minority is assumed to be thermalized.
@@ -92,7 +93,19 @@ PROGRAM model_EPA_mdescr
 !       
 !--------------------------------------------------------------------------
 
-! Working notes
+! Working notes:
+
+! 11/20/2017 DBB
+! Added coding to specify profiles from numerical data.  This is tailored to get data from
+! a cut down version of the TORIC/TORLH equidt.data file.
+! Note assumptions for now (these are easily generalized): 
+! 1) Number of data values = dimension of rho grid (i.e. grid based, not zone based as  
+!     in PS parlance)
+! 2) Data is on sqrt(poloidal flux) grid (i.e. no re-gridding here)
+! 3) To get data in zone_center form for PS (ns, Ts) I take the average of the bounding 
+!    grid points
+! 4) There is only one thermal ion species
+
 ! 10-10-2016 DBB
 ! Added coding for Zeff and V_loop
 
@@ -167,6 +180,10 @@ PROGRAM model_EPA_mdescr
     REAL(KIND=rspec) :: ne_ratio, alpha_ne
     REAL(KIND=rspec) :: T_min_0, T_min_ratio, alpha_Tmin
     
+    ! namelist parameters for Numerical_Data model:
+    REAL(KIND=rspec), ALLOCATABLE :: numerical_rho, numerical_ne, numerical_Te, numerical_Ti
+    CHARACTER(len = 80) :: equidt_file_name
+
     !------------------------------------------------------------------------------------
     !   Model input namelists
     !------------------------------------------------------------------------------------
@@ -187,7 +204,8 @@ PROGRAM model_EPA_mdescr
           T_min_0, T_min_ratio, alpha_Tmin, &
           Zeff_profile_model_name, V_loop_profile_model_name, &
           Zeff_0, Zeff_edge, alpha_Zeff_1, alpha_Zeff_2, &
-          V_loop_0, V_loop_edge, alpha_V_loop_1, alpha_V_loop_2
+          V_loop_0, V_loop_edge, alpha_V_loop_1, alpha_V_loop_2, &
+          equidt_file_name
     
     
 !------------------------------------------------------------------------------------
@@ -246,12 +264,17 @@ PROGRAM model_EPA_mdescr
 		WRITE (*, nml = evolving_model_data)
 		WRITE (*,*)
 	END IF
-      
-    WRITE (*,*)
-    WRITE (*,*) 'model_EPA_mdescr'      
-    print*, 'cur_state_file = ', trim(cur_state_file)
-    print*, 'mode = ', trim(mode)
-    print*, 'time_stamp = ', trim(time_stamp)
+
+    !---------------------------------------------------------------------------------
+    !  If getting thermal profile data from equidta.dat file (signaled by 
+    !  ne_profile_model_name = 'equidt_profile' in evolving_model_data) read equidt.data file
+    !  N.B. nrho from equidt.data overrides nrho from state_data namelist
+    !---------------------------------------------------------------------------------
+
+        
+	If (TRIM(ne_profile_model_name) == 'read_equidt_file') THEN
+		
+		CALL read_equidt(TRIM(equidt_file_name), 'INIT')
       
     !------------------------------------------------------------------------------------
     !  Get current plasma state 
@@ -276,6 +299,7 @@ IF (TRIM(mode) == 'INIT') THEN
     !   Initialize and allocate species arrays and thermal profile grids
     !--------------------------------------------------------------------------
     
+        IF 
         ps%nrho = nrho
            
         WRITE (*,*) 'model_EPA_mdescr: About to allocate thermal profile arrays'
@@ -305,7 +329,7 @@ END IF  ! End INIT function
 !  STEP function - Change state data and store plasma state.  Time dependence is now
 !                   implemented in the python
 !
-! N.B. This section is also executed for the init function
+! N.B. This section is also executed during INIT
 !------------------------------------------------------------------------------------
 
     WRITE(*,*)
@@ -408,6 +432,14 @@ END IF  ! End INIT function
         ! Load single Ti profile from multi-species Ts()
         ps%Ti = ps%Ts(:, 1)
         
+        ! read_equidt_file model
+        
+		If (TRIM(ne_profile_model_name) == 'read_equidt_file') THEN
+			CALL read_equidt(TRIM(equidt_file_name), 'STEP')
+		END IF
+        
+        ! Load single Ti profile from multi-species Ts()
+        ps%Ti = ps%Ts(:, 1)
 
     !--------------------------------------------------------------------------    !
     ! Source powers
@@ -601,6 +633,119 @@ CONTAINS
     
     END SUBROUTINE Lorentz_Linear_norm
 
+
+      SUBROUTINE equidt_to_PS(equidt_file, mode)
+!
+! 11/20/2017 (DBB)
+! Reads a reduced version of equidt.data file, four variables - psi(rho), ne(rho) = ni(rho),
+! Te(rho), and Ti(rho).  Loads these into plasma state by host association.  Note, equidt
+! data is node based, PS data is zone centered.
+! 
+! +--------------------------------------------------------------------+
+!  Density and temperature profiles
+! +--------------------------------------------------------------------+
+!
+      implicit none
+      
+      character(len=*) :: equidt_file, mode
+      integer, parameter :: lun22 = 22
+      character(80) :: var_name
+      integer, public, parameter :: nspmx = 8
+                             ! A maximum of 8 ion species allowed
+
+      integer ::   idprof, nspec,  mainsp, nprodt
+      integer :: kdiff_idens, kdiff_itemp, nsptmp, iatm, iazi
+
+      REAL(KIND=rspec), dimension(:), allocatable :: psipro
+      REAL(KIND=rspec), dimension(:), allocatable :: tbne, tbte
+      REAL(KIND=rspec), dimension(:), allocatable :: tbti
+      REAL(KIND=rspec), dimension(:), allocatable :: tbni !JPL for ATOM project
+      REAL(KIND=rspec), dimension(:), allocatable :: tbpsi
+
+
+! +--------------------------------------------------------------------+
+
+         input_file = TRIM(equidt_file)
+
+         OPEN(lun22,file=input_file,status='old',iostat=ierr)
+         if (ierr/=0) then
+            write(*,*) "Error opening file: "//input_file
+            ierr=0
+         endif
+!
+!  Reading the first variable name and the number of radial mesh points
+!
+         read(lun22,'(A10,i4)')  var_name, nprodt
+!
+! On INIT just set nrho to nprodt and return (DBB)
+!
+		If TRIM(mode) == 'INIT' THEN  
+			nrho = nprodt
+			close(lun22)
+			return
+		ENDIF
+!
+! Allocations
+!
+         write(*,*) 'before allocations nprodt = ',nprodt
+         allocate(tbpsi(nprodt))
+         allocate(psipro(nprodt))
+         allocate(tbne(nprodt),stat=ierr)
+         allocate(tbte(nprodt),stat=ierr)
+         allocate(tbti(nprodt),stat=ierr)
+         allocate(tbni(nprodt),stat=ierr)
+         write(*,*) 'after allocations'
+
+!  Reading the radial mesh
+!  NOTE: psi is 0 at the magnetic axis and 1 at the plasma
+!  edge, and is linear in SQRT(Psi_poloidal). An equidistant
+!  mesh is required for the interpolation in toric.
+!
+         read(lun22,'(5E16.9)')  tbpsi
+
+         if(tbpsi(nprodt) .ne. 1._rspec)  then
+            write(*,*) "warning profnt radial mesh does not end at 1"
+            tbpsi(1:nprodt) = tbpsi(1:nprodt)/tbpsi(nprodt)
+         endif
+         ps%rho = tbpsi(1:nprodt)         
+!
+!  Reading the particle densities (hardwired ni = ne and one ion species)
+!
+         read(lun22,'(A10,i4)')  var_name, nprodt
+         read(lun22,'(5E16.9)')  tbne
+         ps%ns(:,0) = zone_centered_profile(nprodt, tbne)
+         ps%ns(:,1) = ps%ns(:,0)
+!
+!  Reading the electron temperature (units: keV)
+!
+         read(lun22,'(A10,i4)')  var_name, nprodt
+         read(lun22,'(5E16.9)')  tbte
+         ps%Ts(:,0) = zone_centered_profile(nprodt, tbte)
+!
+!  Reading the ion temperature
+!
+         read(lun22,'(A10,i4)')  var_name, nprodt
+	     read(lun22,'(5E16.9)')  tbti(1:nprodt,isp)
+         ps%Ts(:,1) = zone_centered_profile(nprodt, tbti)
+
+         write(*,*) 'finished reading profiles'
+         close(lun22)
+
+      return
+      end subroutine equidt_to_PS
+
+! ----------------------------------------------------------------------------------------      
+      function zone_centered_profile(n, profile)      
+		  implicit none
+	! Argument declarations
+		  INTEGER, INTENT(in) :: n
+		  REAL(KIND=rspec), INTENT(in), dimension(n) :: profile
+		  REAL(KIND=rspec), dimension(n-1) :: zone_centered_profile
+			
+		  zone_centered_profile(:) = 0.5*(profile(1:n-1) + profile(2:n))
+		  RETURN
+	  END function zone_centered_profile
+      
 
 END PROGRAM model_EPA_mdescr
 
