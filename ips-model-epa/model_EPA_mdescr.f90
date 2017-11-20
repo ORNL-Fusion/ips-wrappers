@@ -273,7 +273,7 @@ PROGRAM model_EPA_mdescr
 
         
 	If (TRIM(ne_profile_model_name) == 'read_equidt_file') THEN		
-		CALL read_equidt(TRIM(equidt_file_name), 'INIT')
+		CALL equidt_to_PS(TRIM(equidt_file_name), 'INIT')
 	END IF
       
     !------------------------------------------------------------------------------------
@@ -434,7 +434,7 @@ END IF  ! End INIT function
         ! read_equidt_file model
         
 		If (TRIM(ne_profile_model_name) == 'read_equidt_file') THEN
-			CALL read_equidt(TRIM(equidt_file_name), 'STEP')
+			CALL equidt_to_PS(TRIM(equidt_file_name), 'STEP')
 		END IF
         
         ! Load single Ti profile from multi-species Ts()
