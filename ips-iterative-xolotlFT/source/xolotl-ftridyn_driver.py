@@ -53,7 +53,20 @@ class xolotlFtridynDriver(Component):
 
         self.initTime=0.0
         self.endTime=0.2
-        self.timeStep=0.02
+        self.timeStep=0.02 #initial value ; can be change to increase over time
+
+        self.loopN=0 #if restarting from t>0, it could be loop>0
+
+        #option to optimize driver's time step (lower coupling frequency)
+        #increase time step by factor 'optimizeFactor' every 'optimizeNloops'
+        self.dOptimizeFreq=True
+        self.dOptimizeFactor=2
+        self.dOptimizeNloops=2
+
+        #idem for maximum time step in Xolotl
+        self.xOptimizeMaxDt=True
+        self.xOptimizeFactor=2
+        self.xOptimizeNloops=2
 
         print 'running IPS from t = %f to t=%f, in steps of dt=%f' % (self.initTime, self.endTime, self.timeStep)
 
@@ -70,9 +83,12 @@ class xolotlFtridynDriver(Component):
 
         print 'running Xolotl in ' , self.xDimensions, 'D'
 
+        self.xolotlDtMax=1.0e-5 #initial value ; can be change to increase over time
+
         self.xolotlCoupling=True
         self.xolotlStartStop=True
         self.xolotlForceIteration=True
+        self.xolotlTsAdaptMonitor=True
         self.xolotlPhaseCut='true' #'true' or 'false', as string; std value is: 'true'
         self.xolotlMaxVSize=250
         self.xolotlFlux=4.0e4 #ion/nm2
@@ -131,7 +147,6 @@ class xolotlFtridynDriver(Component):
         self.ftridynInEnergyW=-1
         self.ftridynInAngleW=-1  #wrt surface normal  
 
-        #just have one spYeld to control mode and initialize others to zero
         self.ftridynSpYieldW=-1.0
         self.ftridynSpYieldHe=-1.0
 
@@ -214,7 +229,10 @@ class xolotlFtridynDriver(Component):
         
         self.services.stage_plasma_state() 
 
-        for time in numpy.arange(self.initTime,self.endTime,self.timeStep):
+        time=self.initTime
+
+        #for time in numpy.arange(self.initTime,self.endTime,self.timeStep):
+        while time<self.endTime:
 
             self.services.stage_plasma_state()
             print 'driver time (in loop)  %f' %(time)
@@ -225,6 +243,8 @@ class xolotlFtridynDriver(Component):
             if not os.path.exists(timeFolder):
                 os.makedirs(timeFolder)
             print '\n output of this time-loop will be saved in ', timeFolder
+
+            self.loopN+=1
 
             ###################################### 
             ############## run FTridyn ############
@@ -466,7 +486,7 @@ class xolotlFtridynDriver(Component):
             #calculate effective sputtering yield; i.e., weighted by relative flux of W-to-He
             totalSpYield=self.ftridynSpYieldHe+self.gFluxFractionW*self.ftridynSpYieldW
 
-            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xFtCoupling=self.xolotlCoupling, dZipOutput=self.zipOutput, xParamTemplate=self.XOLOTL_PARAM_TEMPLATE, xNetworkFile=self.xolotlNetworkFile, xDimensions=self.xDimensions, xFieldsplit_1_pc_type=self.fieldsplit_1_pc_type, xStartStop=self.xolotlStartStop, xForceIteration=self.xolotlForceIteration, xPhaseCut=self.xolotlPhaseCut, xMaxVSize=self.xolotlMaxVSize,  xFlux=self.xolotlFlux, xInitialV=self.initialV, xBoundarySurf=self.xolotlBoundarySurf, xBoundaryBulk=self.xolotlBoundaryBulk, xNxGrid=self.nxGrid, xNyGrid=self.nyGrid, xDxGrid=self.dxGrid, xDyGrid=self.dyGrid, xGrouping=self.xolotlGrouping, xGroupHeV=self.xolotlGroupHeV, xGroupHe=self.xolotlgroupHe, xGroupV=self.xolotlgroupV, fNImpacts=self.ftridynNImpacts, gFractionW=self.gFluxFractionW, xHe_conc=self.petsc_heConc, xProcess=self.process, xVoidPortion=self.voidPortion, weightedSpYield=totalSpYield) # xBursting=self.xolotlBursting,
+            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xDtMax=self.xolotlDtMax , xFtCoupling=self.xolotlCoupling, dZipOutput=self.zipOutput, xParamTemplate=self.XOLOTL_PARAM_TEMPLATE, xNetworkFile=self.xolotlNetworkFile, xDimensions=self.xDimensions, xFieldsplit_1_pc_type=self.fieldsplit_1_pc_type, xStartStop=self.xolotlStartStop, xTsAdaptMonitor=self.xolotlTsAdaptMonitor, xForceIteration=self.xolotlForceIteration, xPhaseCut=self.xolotlPhaseCut, xMaxVSize=self.xolotlMaxVSize,  xFlux=self.xolotlFlux, xInitialV=self.initialV, xBoundarySurf=self.xolotlBoundarySurf, xBoundaryBulk=self.xolotlBoundaryBulk, xNxGrid=self.nxGrid, xNyGrid=self.nyGrid, xDxGrid=self.dxGrid, xDyGrid=self.dyGrid, xGrouping=self.xolotlGrouping, xGroupHeV=self.xolotlGroupHeV, xGroupHe=self.xolotlgroupHe, xGroupV=self.xolotlgroupV, fNImpacts=self.ftridynNImpacts, gFractionW=self.gFluxFractionW, xHe_conc=self.petsc_heConc, xProcess=self.process, xVoidPortion=self.voidPortion, weightedSpYield=totalSpYield) # xBursting=self.xolotlBursting,
 
             self.services.call(xolotl, 'step', timeStamp, dTime=time)
 
@@ -514,6 +534,35 @@ class xolotlFtridynDriver(Component):
                 print 'switched startMode to ',  self.startMode 
 
             self.xolotlNetworkFile='xolotlStop_%f.h5' %(time)
+
+            #using while instead of loop to accomodate variable drive time step 
+            #--> update time explicitely before (possibly) increasing time step
+            time+=self.timeStep
+
+            #update Xolotl and driver time steps if needed
+
+            if self.xOptimizeMaxDt:
+                if (self.loopN%self.xOptimizeNloops==0):
+                    print '\n',"change in Xolotl's maximum time step after loop ", self.loopN
+                    self.xolotlDtMax*=self.xOptimizeFactor
+                    print 'multiply time step by ', self.xOptimizeFactor , ' for a new time step = ', self.xolotlDtMax
+                else:
+                    print '\n', 'in loop ', self.loopN , ' continue with xolotl dt max ', self.xolotlDtMax
+
+
+            if self.dOptimizeFreq:
+                if (self.loopN%self.dOptimizeNloops==0):
+                    print '\n',"change in driver's time step after loop ", self.loopN
+                    self.timeStep*=self.dOptimizeFactor
+
+                    if time+self.timeStep>self.endTime:
+                        self.timeStep=self.endTime-time
+                        print 'updated time step longer than needed for last loop '
+                        print 'adapting driver time step to ', self.timeStep ,' to reach exactly endTime'
+                    else:
+                        print 'multiply time step by ', self.dOptimizeFactor , ' for a new time step = ', self.timeStep
+                else:
+                    print '\n', 'in loop ', self.loopN ,' continue with driver time step ', self.timeStep
 
             self.services.update_plasma_state()
 

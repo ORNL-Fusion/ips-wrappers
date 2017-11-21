@@ -12,6 +12,7 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
 
                                           start_stop=True,
                                           force_iteration=False,
+                                          ts_adapt_monitor=False,
                                           ts_final_time=0.2,
                                           ts_max_snes_failures=-1,
                                           ts_max_steps=1000000,
@@ -82,8 +83,12 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
 
    if not force_iteration: #(force_iteration==False): remove from petsc arguments            
       petscArgString=petscArgString+"   -e 's/-snes_force_iteration [^ ]*/ /'"
-   #else:
-      #petscArgString=petscArgString+"   -e 's/-snes_force_iteration /-snes_force_iteration /'"
+
+   if not ts_adapt_monitor: #(ts_adapt_monitor==false) remove from petsc arguments
+      petscArgString=petscArgString+"   -e 's/-ts_adapt_monitor [^ ]*/ /'"
+      print 'ts_adapt not monitored'
+   else:
+      print 'ts_adapt IS MONITORED'
 
    if not he_conc:# (he_conc==False):
       #print 'he conc False; not included in param file'
