@@ -95,16 +95,26 @@ PROGRAM model_EPA_mdescr
 
 ! Working notes:
 
-! 11/20/2017 DBB
+! 11/20/2017 DBB: Notes on "read_equidt_file" model for thermal profiles
 ! Added coding to specify profiles from numerical data.  This is tailored to get data from
 ! a cut down version of the TORIC/TORLH equidt.data file.
+!
 ! Note assumptions for now (these are easily generalized): 
 ! 1) Number of data values = dimension of rho grid (i.e. grid based, not zone based as  
 !     in PS parlance)
-! 2) Data is on sqrt(poloidal flux) grid (i.e. no re-gridding here)
+! 2) Data is on sqrt(toroidal flux) grid (i.e. no re-gridding here)
 ! 3) To get data in zone_center form for PS (ns, Ts) I take the average of the bounding 
 !    grid points
 ! 4) There is only one thermal ion species
+!
+! To use this model must have ne_profile_model_name set to 'read_equidt_file' and the input
+! equidt input file must be defined in model_EPA_mdescr_input.nml. Nothing need be 
+! specified about the Te, ni or Ti models.  The input equidt file name is arbitrary. e.g.
+!
+! ne_profile_model_name = 'read_equidt_file'
+! equidt_file_name = equidt_test.data
+!
+! Both of these files must be specified as input files in the simulation config file.
 
 ! 10-10-2016 DBB
 ! Added coding for Zeff and V_loop
