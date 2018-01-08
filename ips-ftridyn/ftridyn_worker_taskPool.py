@@ -8,6 +8,8 @@ import sys
 import time
 import generate_ftridyn_input
 import analyze_ftridyn_simulations
+import numpy as np
+import netCDF4
 
 class ftridynWorker(Component):
     def __init__(self, services, config):
@@ -55,7 +57,10 @@ class ftridynWorker(Component):
         energy = keywords["eArg"]
         angle = keywords["aArg"]
         roughness = keywords["dArg"]
-       
+
+        sputt = np.zeros(shape=(len(energy),len(angle)))
+        cosDistribution = np.zeros(shape=(len(energy),len(angle),50)) 
+        eDistribution = np.zeros(shape=(len(energy),len(angle),50)) 
         cwd = self.services.get_working_dir()
         pool = self.services.create_task_pool('pool')
         for i in range(len(energy)):
@@ -81,11 +86,30 @@ class ftridynWorker(Component):
                     WW=analyze_ftridyn_simulations.ftridyn_output_data(pathString+"/"+ffilename,'0001')
                     thisSpyl = WW.calculate_total_sputtering_yield()
                     print('sputtering yield', thisSpyl)
-                    nP = analyze_ftridyn_simulations.plot_sputtered_angular_distributions(pathString+"/"+ffilename)
+                    sputt[i,j] = thisSpyl
+                    nP, n, bins = analyze_ftridyn_simulations.plot_sputtered_angular_distributions(pathString+"/"+ffilename)
+                    cosDistribution[i,j,:] = n
+                    nPenergy, nenergy, binsenergy = analyze_ftridyn_simulations.plot_sputtered_energy_distributions(pathString+"/"+ffilename)
+                    eDistribution[i,j,:] = nenergy
                     analyze_ftridyn_simulations.plot_implantation_profile(pathString+"/"+ffilename)
 
                     fid.write(" ".join([str(energy[i]),str(angle[j]),str(roughness[k]),'  ',str(thisSpyl),'\n']))
         fid.close()
+        rootgrp = netCDF4.Dataset("ftridyn.nc", "w", format="NETCDF4")
+        ne = rootgrp.createDimension("nE", len(energy))
+        na = rootgrp.createDimension("nA", len(angle))
+        nbins = rootgrp.createDimension("nBins", 50)
+        spyld = rootgrp.createVariable("spyld","f8",("nE","nA"))
+        ee = rootgrp.createVariable("E","f8",("nE"))
+        aa = rootgrp.createVariable("A","f8",("nA"))
+        cosdist = rootgrp.createVariable("cosDist","f8",("nE","nA","nBins"))
+        edist = rootgrp.createVariable("energyDist","f8",("nE","nA","nBins"))
+        ee[:] = energy
+        aa[:] = angle
+        spyld[:] = sputt
+        cosdist[:] = cosDistribution
+        edist[:] = eDistribution
+        rootgrp.close()
         #updates plasma state FTridyn output files
         self.services.update_plasma_state()
   
