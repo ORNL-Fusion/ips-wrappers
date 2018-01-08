@@ -5,10 +5,9 @@ import os
 import shutil
 import subprocess
 import glob
-#import translate_xolotl_to_ftridyn
-import binTRIDYN
 import write_xolotl_paramfile
 import sys
+import numpy as np
 
 class xolotlWorker(Component):
     def __init__(self, services, config):
@@ -25,64 +24,69 @@ class xolotlWorker(Component):
             print '\t', k, " = ", v
 
         #asign a local variable to arguments used multiple times 
-        driverTime=keywords['dTime']
+        self.driverTime=keywords['dTime']
         driverMode=keywords['dMode']
-        startStop=keywords['xStartStop']
-        networkFile=keywords['xNetworkFile']
-#        spYieldW=keywords['fSpYieldW']
-        flux=keywords['xFlux']
 
-        runEndTime=driverTime+keywords['dTimeStep']
+        self.coupling=keywords['xFtCoupling']
+        self.zipOutput=keywords['dZipOutput']
+
+        flux=keywords['xFlux']
+        totalSpYield=keywords['weightedSpYield']
+        tStep=keywords['dTimeStep']
+        runEndTime=self.driverTime+tStep
+
+        startStop=keywords['xStartStop']
+        petscForceIteration=keywords['xForceIteration']
+        fieldSplit=keywords['xFieldsplit_1_pc_type']
+        phaseCut=keywords['xPhaseCut']
+        maxVSize=keywords['xMaxVSize']
+        networkFile=keywords['xNetworkFile']
+        paramTemplateFile=keywords['xParamTemplate']
+
+        self.petscHeConc=keywords['xHe_conc']
+        processes=keywords['xProcess']
+        voidPortion=keywords['xVoidPortion']
+        initV=keywords['xInitialV']
+        boundarySurf=keywords['xBoundarySurf']
+        boundaryBulk=keywords['xBoundaryBulk']
+        
+        dim=keywords['xDimensions']
+        nxGrid=keywords['xNxGrid']
+        nyGrid=str(keywords['xNyGrid']) 
+        dxGrid=keywords['xDxGrid']
+        dyGrid=str(keywords['xDyGrid'])
+
+#        burst=keywords['xBursting']
+        grouping=keywords['xGrouping']
+        groupHeV=keywords['xGroupHeV'] 
+        groupHe=keywords['xGroupHe'] 
+        groupV=keywords['xGroupV']
+
+        cwd = self.services.get_working_dir()
 
         print 'xolotl-init:'
-        print '\t \t driver mode is', driverMode
-        print '\t \t running starts at time',driverTime
-        print '\t \t \t  ends at time', runEndTime
-        print '\t \t driver step is', keywords['dTimeStep']
+        print '\t driver mode is', driverMode
+        print '\t running starts at time',self.driverTime
+        print '\t \t  ends at time', runEndTime
+        print '\t driver step is', tStep
+        print '\n'
 
-
-        #if fSpYield in driver < 0, fSpYieldMode = calculate -> get sputtering yield FROM He_WOUT.DAT
-        if keywords['fSpYieldMode']=='calculate':
-            ftridynOutFile=open('He_WOUT.DAT',"r")
-            ftridynOutData=ftridynOutFile.read().split('\n')
-            searchString='PARTICLES(2)'
-            for line in ftridynOutData:
-                if searchString in line:
-                    break
-            stringWithEmptyFields=line.strip().split(" ")
-            sputteringNparticlesString=[x for x in stringWithEmptyFields if x]
-            sputteringNparticles=sputteringNparticlesString[2]
-            spYieldW=float(sputteringNparticles)/float(keywords['fNImpacts'])
-            print 'calculated in Xolotl-component: W sputtering yield is =', spYieldW
-        #if fSpYield in driver >= 0, fSpYieldMode = fixed 
-        elif keywords['fSpYieldMode']=='fixed':
-            spYieldW=keywords['fSpYieldW']
-            print 'Fixed value of W sputtering yield is =', spYieldW
-        else:
-            print 'Invalid value of fSpYieldMode, ', keywords['fSpYieldMode'] 
-            print 'set yield to zero!'
-            spYieldW=0.0;
-
+        
         if keywords['dStartMode']=='RESTART':
             restartNetworkFile = networkFile
             filepath='../../restart_files/'+restartNetworkFile
             shutil.copyfile(filepath,restartNetworkFile)
 
         if driverMode == 'INIT':
-            #print ('run xolotl preprocessor')
-            #print 'with java', os.system('echo $JAVA_EXE')
-            #run prepocessor and copy params.txt input file to plasma state
-            #since java is handled a little differently accross machines, 
-            #a JAVA-XOLOTL environment variables are defined in the machine environment file
-            #os.system('$JAVA_XOLOTL_EXE -Djava.library.path=$JAVA_XOLOTL_LIBRARY -cp .:$JAVA_XOLOTL_LIBRARY/*::$XOLOTL_PREPROCESSOR_DIR gov.ornl.xolotl.preprocessor.Main --perfHandler dummy --nxGrid 160 --maxVSize 250 --phaseCut')
-            print 'run parameter file without preprocessor'
-            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=startStop,ts_final_time=runEndTime,sputtering=spYieldW,flux=flux,initialV=keywords['xInitialV'],nxGrid=keywords['xNGrid'])
+            print 'init mode: run parameter file without preprocessor'
+            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(dimensions=dim, infile=paramTemplateFile, fieldsplit_1_pc_type=fieldSplit, start_stop=startStop, force_iteration=petscForceIteration, phase_cut=phaseCut, maxVSize=maxVSize, grouping=grouping, groupHeV=groupHeV, groupHe=groupHe, groupV=groupV, ts_final_time=runEndTime,sputtering=totalSpYield,flux=flux, initialV=initV, boundarySurf=boundarySurf, boundaryBulk=boundaryBulk, nxGrid=nxGrid,nyGrid=nyGrid,dxGrid=dxGrid,dyGrid=dyGrid, he_conc=self.petscHeConc, process=processes, voidPortion=voidPortion) #bursting=burst,
                 
         else:
-            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=startStop,ts_final_time=runEndTime,useNetFile=True,networkFile=networkFile,sputtering=spYieldW,flux=flux, initialV=keywords['xInitialV'],nxGrid=keywords['xNGrid'])
+            print 'restart mode: run parameter file without preprocessor'
+            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(dimensions=dim, infile=paramTemplateFile, fieldsplit_1_pc_type=fieldSplit, start_stop=startStop, force_iteration=petscForceIteration, phase_cut=phaseCut, maxVSize=maxVSize, grouping=grouping, groupHeV=groupHeV, groupHe=groupHe, groupV=groupV, ts_final_time=runEndTime,useNetFile=True,networkFile=networkFile,sputtering=totalSpYield,flux=flux, initialV=initV, boundarySurf=boundarySurf, boundaryBulk=boundaryBulk, nxGrid=nxGrid,nyGrid=nyGrid,dxGrid=dxGrid,dyGrid=dyGrid,he_conc=self.petscHeConc, process=processes, voidPortion=voidPortion) #bursting=burst,
         
         #store xolotls parameter and network files for each loop 
-        currentXolotlParamFile='params_%f.txt' %driverTime
+        currentXolotlParamFile='params_%f.txt' %self.driverTime
         shutil.copyfile('params.txt',currentXolotlParamFile) 
         
         self.services.update_plasma_state()
@@ -93,7 +97,6 @@ class xolotlWorker(Component):
         self.services.stage_plasma_state()
 
         #asign a local variable to arguments used multiple times
-        driverTime=keywords['dTime']
 
         print 'check that all arguments are read well by xolotl-step'
         for (k, v) in keywords.iteritems():
@@ -103,35 +106,61 @@ class xolotlWorker(Component):
         task_id = self.services.launch_task(self.NPROC,
                                             self.services.get_working_dir(),
                                             self.XOLOTL_EXE, 'params.txt')
+
         #monitor task until complete
         if (self.services.wait_task(task_id)):
             self.services.error('xolotl_worker: step failed.')
 
         newest = max(glob.iglob('TRIDYN_*.dat'), key=os.path.getctime)
         print('newest file ' , newest)
-        shutil.copyfile(newest, 'last_TRIDYN_toBin.dat')
-        
-        #re-bin last_TRIDYN file
-        binTRIDYN.binTridyn()
-
-        #store xolotls profile output for each loop (not plasma state)
-        currentXolotlOutputFileToBin='last_TRIDYN_toBin_%f.dat' %driverTime
-        shutil.copyfile('last_TRIDYN_toBin.dat', currentXolotlOutputFileToBin)
-        currentXolotlOutputFile='last_TRIDYN_%f.dat' %driverTime
-        shutil.copyfile('last_TRIDYN.dat', currentXolotlOutputFile)
+        shutil.copyfile(newest, 'last_TRIDYN.dat')
 
 
-        #append output
-        tempfile = open(self.OUTPUT_XOLOTL_TEMP,"r")
-        f = open(self.OUTPUT_XOLOTL_FINAL, "a")
-        f.write(tempfile.read())
-        f.close()
-        tempfile.close()
+        #save TRIDYN_*.dat files, zipped
+        TRIDYNFiles='TRIDYN_*.dat'
+
+        if self.coupling and self.zipOutput:#=='True'):              
+            TRIDYNZipped='allTRIDYN_t%f.zip' %self.driverTime
+            zip_ouput='zipTridynDatOuput.txt'
+
+            print 'save and zip output: ', TRIDYNFiles
+            zipString='zip %s %s >> %s ' %(TRIDYNZipped, TRIDYNFiles, zip_ouput)
+            subprocess.call([zipString], shell=True)
+
+            rmString='rm '+ TRIDYNFiles
+            subprocess.call([rmString], shell=True)
+
+        elif self.coupling:
+            print 'leaving ',  TRIDYNFiles , 'uncompressed'
+
+        else:
+             print 'no ', TRIDYNFiles , 'used in this simulation'
+
+
+        #save helium concentration files, zipped
+        heConcFiles='heliumConc_*.dat'
+
+        if self.petscHeConc and self.zipOutput:#=='True'):
+            heConcZipped='allHeliumConc_t%f.zip' %self.driverTime
+            zip_ouput='zipHeConcOuput.txt'
+            
+            print 'save and zip output: ', heConcFiles
+            zipString='zip %s %s >> %s ' %(heConcZipped, heConcFiles, zip_ouput)
+            subprocess.call([zipString], shell=True)
+
+            rmString='rm '+heConcFiles
+            subprocess.call([rmString], shell=True)
+            
+        elif self.petscHeConc :
+            print 'leaving ', heConcFiles ,'uncompressed'
+
+        else:
+            print 'no ', heConcFiles , ' in this loops output'
 
         #save network file with a different name to use in the next time step
-        currentXolotlNetworkFile='xolotlStop_%f.h5' %driverTime
+        currentXolotlNetworkFile='xolotlStop_%f.h5' %self.driverTime
         shutil.copyfile('xolotlStop.h5',currentXolotlNetworkFile)
-
+            
         #updates plasma state Xolotl output files
         self.services.update_plasma_state()
   

@@ -1,5 +1,5 @@
 HOST = edison
-MPIRUN = srun 
+MPIRUN = srun #mpirun
 #MPIRUN = aprun
 PHYS_BIN_ROOT = /project/projectdirs/m876/phys-bin/phys-hopper/
 DATA_TREE_ROOT = /project/projectdirs/m876/data

@@ -24,7 +24,10 @@ def binTridyn(inFile='last_TRIDYN_toBin.dat', outFile='last_TRIDYN.dat'):
     heBin = []
     vBin = []
     iBin = []
-    for k in range (0, 200):
+
+    nBins=int(math.floor(depth[len(depth)-1] * 2.0)+1)
+
+    for k in range (0, nBins):#200):
         depthBin.append(k/2.0)
         heBin.append(0.0)
         vBin.append(0.0)
@@ -32,6 +35,7 @@ def binTridyn(inFile='last_TRIDYN_toBin.dat', outFile='last_TRIDYN.dat'):
 
     oldIndice = -10
     i = 0
+
     for k in range(0, len(depth)):
         indice = int(math.floor(depth[k] * 2.0))
         if (indice != oldIndice):
