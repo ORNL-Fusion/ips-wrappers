@@ -11,6 +11,8 @@ import subprocess
 def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outfile="params.txt",
 
                                           start_stop=True,
+                                          start_stop_time=0.2,
+                                          #ts_dt_time=0.2, #obsolete
                                           force_iteration=False,
                                           ts_adapt_monitor=False,
                                           ts_final_time=0.2,
@@ -25,7 +27,10 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
 
                                           pc_fieldsplit_detect_coupling=True,
                                           pc_type="fieldsplit",
-                                          
+
+                                          check_collapse=True,
+                                          exit_threshold=1.0e-16,
+
                                           vizHandler="dummy",
                                           flux=4.0e4,
                                           material="TRIDYN",
@@ -75,10 +80,10 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
    #include (or not) parameters without values that exist in template file
    if not start_stop: #(start_stop==False):
       petscArgString=petscArgString+"   -e 's/-start_stop [^ ]*/ /'"
-      petscArgString=petscArgString+"   -e 's/-ts_dt [^ ]*/ /'"
+      #petscArgString=petscArgString+"   -e 's/-ts_dt [^ ]*/ /'" #obsolete
    else:
-      petscArgString=petscArgString+"   -e 's/-start_stop [^ ]*/-start_stop %f/'" %(ts_final_time)
-      petscArgString=petscArgString+"   -e 's/-ts_dt [^ ]*/-ts_dt %f/'" %(ts_final_time)
+      petscArgString=petscArgString+"   -e 's/-start_stop [^ ]*/-start_stop %f/'" %(start_stop_time)
+      #petscArgString=petscArgString+"   -e 's/-ts_dt [^ ]*/-ts_dt %f/'" %(ts_dt_time) #obsolete
 
 
    if not force_iteration: #(force_iteration==False): remove from petsc arguments            
@@ -90,9 +95,15 @@ def writeXolotlParameterFile_fromTemplate(infile="paramXolotlTemplate.txt", outf
    else:
       print 'ts_adapt IS MONITORED'
 
+   if not check_collapse:
+      petscArgString=petscArgString+"   -e 's/-check_collapse [^ ]*/ /'"
+   else:
+      petscArgString=petscArgString+"   -e 's/-check_collapse [^ ]*/-check_collapse %e/'" %(exit_threshold)
+
    if not he_conc:# (he_conc==False):
       #print 'he conc False; not included in param file'
       petscArgString=petscArgString+"   -e 's/-helium_conc/ %s/'" %( ' ' )
+
 
    #prepare sed line                                                                                                                                                                          
    petscArgSedString="sed "+ petscArgString + "< %s > %s" %(infile , outfile)

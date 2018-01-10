@@ -84,11 +84,20 @@ class xolotlFtridynDriver(Component):
         print 'running Xolotl in ' , self.xDimensions, 'D'
 
         self.xolotlDtMax=1.0e-5 #initial value ; can be change to increase over time
+        self.xolotlStartStopTime=0.02
+        
+        #if -check_collapse (threshold -- optional) incl. in petcs args, exit status is printed to solverStatus.txt 
+        #good for successfully run simulations; collapsed if ts below threshold ; diverged otherwise
+        #Xolotl is launched again (with same input parameters) until run successfully, up to maxCollapseLoop number of tries,
+        #whichever happens first ; self.xolotlExitStatus is set to collapsed in the beginning of every loop
+        self.xolotlCheckCollapse=True #print file with status
+        self.xolotlExitThreshold=1.0e-15
+        self.maxCollapseLoops=3
 
         self.xolotlCoupling=True
         self.xolotlStartStop=True
         self.xolotlForceIteration=True
-        self.xolotlTsAdaptMonitor=True
+        self.xolotlTsAdaptMonitor=False
         self.xolotlPhaseCut='true' #'true' or 'false', as string; std value is: 'true'
         self.xolotlMaxVSize=250
         self.xolotlFlux=4.0e4 #ion/nm2
@@ -112,8 +121,8 @@ class xolotlFtridynDriver(Component):
         self.dyGrid=' '
 
         #bursting: then grouping should happen, phaseCut set to 'false' and smaller maxVSize, e.g., ~50
-        self.xolotlBursting=False
-        self.xolotlGrouping=False
+        self.xolotlBursting=True
+        self.xolotlGrouping=True
         self.xolotlGroupHeV=31
         self.xolotlgroupHe=4
         self.xolotlgroupV=4
@@ -245,6 +254,10 @@ class xolotlFtridynDriver(Component):
             print '\n output of this time-loop will be saved in ', timeFolder
 
             self.loopN+=1
+            self.collapsedLoops=0 #reset 
+            self.xolotlExitStatus='collapsed'
+
+            print '\n set xolotl exit status back to collapsed'
 
             ###################################### 
             ############## run FTridyn ############
@@ -311,8 +324,9 @@ class xolotlFtridynDriver(Component):
                     filePrjHe=angleFolder+str(self.angleInHe[j])+'/'+self.FT_OUTPUT_PRJ_FILE_He
                     depth, bla=numpy.loadtxt(filePrjHe, usecols = (2,3) , unpack=True)
                     maxDepth.append(max(depth))
-
-            print '\t maximum projectile range for He is ', max(maxDepth), ' [A]'
+                    
+            maxRange=max(maxDepth)
+            print '\t maximum projectile range for He is ', maxRange, ' [A]'
 
             #3) get the sputtering yield (or use fixed value)                   
 
@@ -328,7 +342,8 @@ class xolotlFtridynDriver(Component):
             #append output to allTridynNN.dat for each species (and save to what folder?)        
             tempfile = open(self.FT_OUTPUT_PROFILE_TEMP,"r")
             f = open(self.FT_OUTPUT_PROFILE_FINAL_He, "a")
-            f.write(tempfile.read())
+            maxRangeXolotlHe=maxRange/10.0 #range in nm for Xolotl
+            f.write('%s %s \n' %(tempfile.read().rstrip('\n'),maxRangeXolotlHe))
             f.close()
             tempfile.close()
             
@@ -376,7 +391,8 @@ class xolotlFtridynDriver(Component):
                         depth, bla=numpy.loadtxt(filePrjW, usecols = (2,3) , unpack=True)
                         maxDepth.append(max(depth))
 
-                print '\t maximum projectile range for W is ', max(maxDepth), ' [A]'
+                maxRange=max(maxDepth)
+                print '\t maximum projectile range for W is ', maxRange, ' [A]'
 
 
                 #3) get the sputtering yield (or use fixed value)
@@ -394,7 +410,8 @@ class xolotlFtridynDriver(Component):
                 #append output to allTridynNN.dat for each species (and save to what folder?)
                 tempfile = open(self.FT_OUTPUT_PROFILE_TEMP,"r")
                 f = open(self.FT_OUTPUT_PROFILE_FINAL_W, "a")
-                f.write(tempfile.read())
+                maxRangeXolotlW=maxRange/10.0 #range in nm for Xolotl
+                f.write('%s %s \n' %(tempfile.read().rstrip('\n'),maxRangeXolotlW))
                 f.close()
                 tempfile.close()
 
@@ -411,8 +428,9 @@ class xolotlFtridynDriver(Component):
             else:
                 print 'Skip running FTridyn for W, as fraction of W in plasma is', self.gFluxFractionW
                 self.ftridynSpYieldW=0.0
+                maxRangeXolotlW=0.0
                 outputFTFileW=open(self.FT_OUTPUT_PROFILE_TEMP, "w")
-                outputFTFileW.write(" 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0")
+                outputFTFileW.write(" 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0")
                 outputFTFileW.close()
 
                 #keep copies of tridyn.dat                                                  
@@ -444,10 +462,10 @@ class xolotlFtridynDriver(Component):
                 os.remove(self.FT_OUTPUT_PROFILE_TEMP)
             combinedFile = open(self.FT_OUTPUT_PROFILE_TEMP, 'a')
             profileHe=open(self.FT_OUTPUT_PROFILE_TEMP_He, "r")
-            combinedFile.write(profileHe.read())
+            combinedFile.write('%s%s \n' %(profileHe.read().rstrip('\n'),maxRangeXolotlHe))
             combinedFile.write("%s \n" %(str(self.gFluxFractionW)))
             profileW=open(self.FT_OUTPUT_PROFILE_TEMP_W, "r")
-            combinedFile.write(profileW.read())
+            combinedFile.write('%s%s ' %(profileW.read().rstrip('\n'),maxRangeXolotlW))
             
             combinedFile.close()
             profileHe.close()
@@ -485,12 +503,46 @@ class xolotlFtridynDriver(Component):
 
             #calculate effective sputtering yield; i.e., weighted by relative flux of W-to-He
             totalSpYield=self.ftridynSpYieldHe+self.gFluxFractionW*self.ftridynSpYieldW
+            
+            while self.xolotlExitStatus=='collapsed':
+                
+                self.collapsedLoops+=1
 
-            self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xDtMax=self.xolotlDtMax , xFtCoupling=self.xolotlCoupling, dZipOutput=self.zipOutput, xParamTemplate=self.XOLOTL_PARAM_TEMPLATE, xNetworkFile=self.xolotlNetworkFile, xDimensions=self.xDimensions, xFieldsplit_1_pc_type=self.fieldsplit_1_pc_type, xStartStop=self.xolotlStartStop, xTsAdaptMonitor=self.xolotlTsAdaptMonitor, xForceIteration=self.xolotlForceIteration, xPhaseCut=self.xolotlPhaseCut, xMaxVSize=self.xolotlMaxVSize,  xFlux=self.xolotlFlux, xInitialV=self.initialV, xBoundarySurf=self.xolotlBoundarySurf, xBoundaryBulk=self.xolotlBoundaryBulk, xNxGrid=self.nxGrid, xNyGrid=self.nyGrid, xDxGrid=self.dxGrid, xDyGrid=self.dyGrid, xGrouping=self.xolotlGrouping, xGroupHeV=self.xolotlGroupHeV, xGroupHe=self.xolotlgroupHe, xGroupV=self.xolotlgroupV, fNImpacts=self.ftridynNImpacts, gFractionW=self.gFluxFractionW, xHe_conc=self.petsc_heConc, xProcess=self.process, xVoidPortion=self.voidPortion, weightedSpYield=totalSpYield) # xBursting=self.xolotlBursting,
+                #set a maximum number of tries
+                if self.collapsedLoops<=self.maxCollapseLoops:
 
-            self.services.call(xolotl, 'step', timeStamp, dTime=time)
+                    self.services.call(xolotl, 'init', timeStamp, dStartMode=self.startMode, dMode=self.driverMode, dTime=time, dTimeStep=self.timeStep, xDtMax=self.xolotlDtMax , xFtCoupling=self.xolotlCoupling, dZipOutput=self.zipOutput, xParamTemplate=self.XOLOTL_PARAM_TEMPLATE, xNetworkFile=self.xolotlNetworkFile, xDimensions=self.xDimensions, xFieldsplit_1_pc_type=self.fieldsplit_1_pc_type, xStartStop=self.xolotlStartStop, xStartStopTime=self.xolotlStartStopTime, xTsAdaptMonitor=self.xolotlTsAdaptMonitor, xCheckCollapse=self.xolotlCheckCollapse , xExitThreshold=self.xolotlExitThreshold , xForceIteration=self.xolotlForceIteration, xPhaseCut=self.xolotlPhaseCut, xMaxVSize=self.xolotlMaxVSize,  xFlux=self.xolotlFlux, xInitialV=self.initialV, xBoundarySurf=self.xolotlBoundarySurf, xBoundaryBulk=self.xolotlBoundaryBulk, xNxGrid=self.nxGrid, xNyGrid=self.nyGrid, xDxGrid=self.dxGrid, xDyGrid=self.dyGrid, xGrouping=self.xolotlGrouping, xGroupHeV=self.xolotlGroupHeV, xGroupHe=self.xolotlgroupHe, xGroupV=self.xolotlgroupV, fNImpacts=self.ftridynNImpacts, gFractionW=self.gFluxFractionW, xHe_conc=self.petsc_heConc, xProcess=self.process, xVoidPortion=self.voidPortion, weightedSpYield=totalSpYield) # xBursting=self.xolotlBursting, #xTsDtTime=self.xolotlTsDtTime ,
 
-            self.services.stage_plasma_state()
+                    self.services.call(xolotl, 'step', timeStamp, dTime=time)
+
+                    self.services.stage_plasma_state()
+
+                    #print 'reading status from ', str(self.EXIT_STATUS_XOLOTL)
+                    statusFile=open(self.EXIT_STATUS_XOLOTL, "r")
+                    self.xolotlExitStatus=statusFile.read().rstrip('\n')
+                
+                    print '\n xolotl ended simulation with status', self.xolotlExitStatus
+
+                    if self.xolotlExitStatus=='good':
+                        print 'Xolotl successfully executed after ', self.collapsedLoops, ' tries'
+                        print 'continue with IPS simulation \n'
+
+                    elif self.xolotlExitStatus=='diverged':
+                        print 'ERROR: XOLOTL SOLVER DIVERGED'
+                        print 'END IPS SIMULATION \n'
+                        quit()
+
+                    elif self.xolotlExitStatus=='collapsed':
+                        print 'WARNING: simulation exited loop with status collapse'
+                        print 'try number ', self.collapsedLoops, ' out of ', self.maxCollapseLoops, '\n'
+
+                    else:
+                        print 'WARNING: Xolotl exit status UNKOWN -- IPS simulation continues \n'
+                
+                else: #reached maximum number of tries for collapsing time steps
+                    print 'ERROR: reached maximum number of tries for collapsing time steps without a successful run'
+                    print 'END IPS SIMULATION \n'
+                    quit()
 
 
             shutil.copyfile('last_TRIDYN.dat', 'last_TRIDYN_toBin.dat')
@@ -561,9 +613,16 @@ class xolotlFtridynDriver(Component):
                         print 'adapting driver time step to ', self.timeStep ,' to reach exactly endTime'
                     else:
                         print 'multiply time step by ', self.dOptimizeFactor , ' for a new time step = ', self.timeStep
-                else:
-                    print '\n', 'in loop ', self.loopN ,' continue with driver time step ', self.timeStep
 
+                else:
+                    if time+self.timeStep>self.endTime:
+                        self.timeStep=self.endTime-time
+                        print 'previous time step longer than needed for last loop '
+                        print 'adapting driver time step to ', self.timeStep ,' to reach exactly endTime'
+
+                    else:
+                        print '\n', 'in loop ', self.loopN ,' continue with driver time step ', self.timeStep
+                    
             self.services.update_plasma_state()
 
     def finalize(self, timeStamp=0.0):

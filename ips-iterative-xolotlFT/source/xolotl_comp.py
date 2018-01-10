@@ -37,7 +37,12 @@ class xolotlWorker(Component):
 
         dtMax=keywords['xDtMax']
 
+        checkCollapse=keywords['xCheckCollapse']
+        exitThreshold=keywords['xExitThreshold'] 
+
         startStop=keywords['xStartStop']
+        startStopTime=keywords['xStartStopTime']
+        #tsDtTime=keywords['xTsDtTime'] #obsolete
         petscForceIteration=keywords['xForceIteration']
         petscTsAdaptMonitor=keywords['xTsAdaptMonitor']
         fieldSplit=keywords['xFieldsplit_1_pc_type']
@@ -82,11 +87,11 @@ class xolotlWorker(Component):
 
         if driverMode == 'INIT':
             print 'init mode: run parameter file without preprocessor'
-            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(dimensions=dim, infile=paramTemplateFile, fieldsplit_1_pc_type=fieldSplit, start_stop=startStop, ts_adapt_monitor=petscTsAdaptMonitor, force_iteration=petscForceIteration, phase_cut=phaseCut, maxVSize=maxVSize, grouping=grouping, groupHeV=groupHeV, groupHe=groupHe, groupV=groupV, ts_final_time=runEndTime, ts_adapt_dt_max=dtMax, sputtering=totalSpYield,flux=flux, initialV=initV, boundarySurf=boundarySurf, boundaryBulk=boundaryBulk, nxGrid=nxGrid,nyGrid=nyGrid,dxGrid=dxGrid,dyGrid=dyGrid, he_conc=self.petscHeConc, process=processes, voidPortion=voidPortion) #bursting=burst,
+            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(dimensions=dim, infile=paramTemplateFile, fieldsplit_1_pc_type=fieldSplit, start_stop=startStop, start_stop_time=startStopTime, ts_adapt_monitor=petscTsAdaptMonitor, force_iteration=petscForceIteration, check_collapse=checkCollapse, exit_threshold=exitThreshold, phase_cut=phaseCut, maxVSize=maxVSize, grouping=grouping, groupHeV=groupHeV, groupHe=groupHe, groupV=groupV, ts_final_time=runEndTime, ts_adapt_dt_max=dtMax, sputtering=totalSpYield,flux=flux, initialV=initV, boundarySurf=boundarySurf, boundaryBulk=boundaryBulk, nxGrid=nxGrid,nyGrid=nyGrid,dxGrid=dxGrid,dyGrid=dyGrid, he_conc=self.petscHeConc, process=processes, voidPortion=voidPortion) #bursting=burst, #ts_dt_time=tsDtTime, 
                 
         else:
             print 'restart mode: run parameter file without preprocessor'
-            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(dimensions=dim, infile=paramTemplateFile, fieldsplit_1_pc_type=fieldSplit, start_stop=startStop, ts_adapt_monitor=petscTsAdaptMonitor, force_iteration=petscForceIteration, phase_cut=phaseCut, maxVSize=maxVSize, grouping=grouping, groupHeV=groupHeV, groupHe=groupHe, groupV=groupV, ts_final_time=runEndTime, ts_adapt_dt_max=dtMax, useNetFile=True,networkFile=networkFile,sputtering=totalSpYield,flux=flux, initialV=initV, boundarySurf=boundarySurf, boundaryBulk=boundaryBulk, nxGrid=nxGrid,nyGrid=nyGrid,dxGrid=dxGrid,dyGrid=dyGrid,he_conc=self.petscHeConc, process=processes, voidPortion=voidPortion) #bursting=burst,
+            write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(dimensions=dim, infile=paramTemplateFile, fieldsplit_1_pc_type=fieldSplit, start_stop=startStop, start_stop_time=startStopTime, ts_adapt_monitor=petscTsAdaptMonitor, force_iteration=petscForceIteration, check_collapse=checkCollapse, exit_threshold=exitThreshold, phase_cut=phaseCut, maxVSize=maxVSize, grouping=grouping, groupHeV=groupHeV, groupHe=groupHe, groupV=groupV, ts_final_time=runEndTime, ts_adapt_dt_max=dtMax, useNetFile=True,networkFile=networkFile,sputtering=totalSpYield,flux=flux, initialV=initV, boundarySurf=boundarySurf, boundaryBulk=boundaryBulk, nxGrid=nxGrid,nyGrid=nyGrid,dxGrid=dxGrid,dyGrid=dyGrid,he_conc=self.petscHeConc, process=processes, voidPortion=voidPortion) #bursting=burst, #ts_dt_time=tsDtTime, 
         
         #store xolotls parameter and network files for each loop 
         currentXolotlParamFile='params_%f.txt' %self.driverTime
@@ -163,6 +168,34 @@ class xolotlWorker(Component):
         #save network file with a different name to use in the next time step
         currentXolotlNetworkFile='xolotlStop_%f.h5' %self.driverTime
         shutil.copyfile('xolotlStop.h5',currentXolotlNetworkFile)
+
+        statusFile=open(self.EXIT_STATUS, "r")
+        exitStatus=statusFile.read().rstrip('\n')
+
+        if exitStatus=='collapsed':
+            print 'simulation exited loop with status collapse'
+            print 'rename output files as _collapsed before trying again'
+
+            currentXolotlNetworkFile='xolotlStop_%f.h5' %self.driverTime
+            networkFile_unfinished='xolotlStop_%f_collapsed.h5' %self.driverTime
+            os.rename(currentXolotlNetworkFile,networkFile_unfinished)
+
+            retentionFile = self.RET_FILE
+            rententionUnfinished = 'retention_t%f_collapsed.out' %self.driverTime
+            shutil.copyfile(retentionFile,rententionUnfinished)
+            
+            surfaceFile=self.SURFACE_FILE
+            surfaceUnfinished='surface_t%f_collapsed.txt' %self.driverTime
+            shutil.copyfile(surfaceFile,surfaceUnfinished)
+
+            if self.zipOutput:
+                TRIDYNZipped='allTRIDYN_t%f.zip' %self.driverTime
+                TRIDYNUnfinished='allTRIDYN_t%f_collapsed.zip' %self.driverTime
+                os.rename(TRIDYNZipped,TRIDYNUnfinished)
+                if self.petscHeConc:
+                    heConcZipped='allHeliumConc_t%f.zip' %self.driverTime
+                    heConcUnfinished='allHeliumConc_t%f_collapsed.zip' %self.driverTime
+                    os.rename(heConcZipped,heConcUnfinished)
             
         #updates plasma state Xolotl output files
         self.services.update_plasma_state()
