@@ -12,10 +12,6 @@ class gitr_comp(Component):
 
     def init(self, timeStamp=0.0):
         #get plasma state files
-        gitrDictFile = self.DICTIONARY
-        gitrDict = {"gitrWorkDir" : "notAssigned"}
-        gitrDict['gitrWorkDir'] = os.getcwd()
-        pickle.dump(gitrDict, open(gitrDictFile,"wb"))
         self.services.update_plasma_state()         
         #Set up input deck
         gitr.copy_folder(self.INPUT_DIR,os.getcwd())

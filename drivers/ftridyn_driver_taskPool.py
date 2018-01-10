@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 from  component import Component
+import os
 
 class ftridynDriver(Component):
     def __init__(self, services, config):
@@ -10,17 +11,17 @@ class ftridynDriver(Component):
     def init(self, timeStamp=0.0):
         print('ftridyn_driver: init')
 
-        current_ftridyn_namelist = self.services.get_config_param('FTRIDYN_INPUT_FILE')
-        #split filenames into a list of strings
-        file_list = current_ftridyn_namelist.split()
-        #loop over file names and create dummy files in ftridynInit work area
-        for index in range(len(file_list)):
-            open(file_list[index], 'a').close()
-
+        current_ftridyn_namelist = self.services.get_config_param('PLASMA_STATE_FILES')
         driver_out = self.services.get_config_param('EA_OUTPUT')
         fid = open(driver_out,'w')
         fid.write('Energy   Angle   Roughness   Sputtering Yield\n')
         fid.close()
+        ##split filenames into a list of strings
+        file_list = current_ftridyn_namelist.split()
+        ##loop over file names and create dummy files in ftridynInit work area
+        for index in range(len(file_list)):
+            if os.path.isfile(file_list[index]) == 0 :
+                open(file_list[index], 'a').close()
 
         #update plasma state from relevant files in ftridynInit work area
         self.services.update_plasma_state()        
@@ -32,14 +33,14 @@ class ftridynDriver(Component):
         print('ftridyn_driver: step')
         energy = [float(i) for i in self.ENERGY.split()]
         angle = [float(i) for i in self.ANGLE.split()]
-	roughness = [float(i) for i in self.ROUGHNESS.split()]
+        roughness = [float(i) for i in self.ROUGHNESS.split()]
         
 
         #call init method of WORKER ('ftridyn_worker.py')
-        self.services.call(self.ftridyn_comp, 'init', timeStamp, eArg =energy,aArg = angle,dArg = roughness)
+        self.services.call(self.ftridyn_comp, 'init', timeStamp,ffilename = self.FILENAME, beam = self.BEAM,target = self.TARGET,nH = int(self.NH), eArg =energy,aArg = angle,dArg = roughness)
                     
         #call step method of WORKER ('ftridyn_worker.py')
-        self.services.call(self.ftridyn_comp, 'step', timeStamp,eArg =energy,aArg = angle,dArg = roughness )
+        self.services.call(self.ftridyn_comp, 'step', timeStamp,ffilename = self.FILENAME, beam = self.BEAM,target = self.TARGET,nH = int(self.NH),eArg =energy,aArg = angle,dArg = roughness )
     
     def finalize(self, timeStamp=0.0):
         print('ftridyn_driver: finalize')
