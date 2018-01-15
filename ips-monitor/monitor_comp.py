@@ -149,6 +149,8 @@ change log:
             directory.  The portal run_id is prepended to the file name, like with the
             monitor file.  Also cleaned up a few bogus references to monitor_comp_4 in
             print statements.
+            
+1/4/2018    Commented out reference to PORTAL run_id due to demise of SWIM PORTAL
 """
 
 # Note (4/2/12)
@@ -936,13 +938,15 @@ class monitor(Component):
 
         workdir = services.get_working_dir()
         time.sleep(3)
-        run_id = services.get_config_param('PORTAL_RUNID')
+        #run_id = services.get_config_param('PORTAL_RUNID')
         monitor_file = 'monitor_file.nc'
     #      print 'monitor file = ', monitor_file
 
-        self.cdfFile = run_id+'_monitor_file.nc'
+        #self.cdfFile = run_id+'_monitor_file.nc'
+        self.cdfFile = monitor_file.nc
         services.log('w3 monitor file = ' + self.cdfFile)
-        htmlFile = run_id +'.html'
+        #htmlFile = run_id +'.html'
+        htmlFile = 'run_id' +'.html'
 
     # Copy current state over to working directory
         services.stage_plasma_state()
@@ -1011,13 +1015,15 @@ class monitor(Component):
         global monitorVars, ps_VarsList, monitorDefinition
         
         workdir = services.get_working_dir()
-        run_id = services.get_config_param('PORTAL_RUNID')
+        #run_id = services.get_config_param('PORTAL_RUNID')
         monitor_file = 'monitor_file.nc'
     #      print 'monitor file = ', monitor_file
 
-        self.cdfFile = run_id+'_monitor_file.nc'
+        #self.cdfFile = run_id+'_monitor_file.nc'
+        self.cdfFile = monitor_file.nc
         services.log('w3 monitor file = ' + self.cdfFile)
-        htmlFile = run_id +'.html'
+        #htmlFile = run_id +'.html'
+        htmlFile = 'run' +'.html'
         
     # Get restart files listed in config file.        
         try:
