@@ -985,7 +985,8 @@ class monitor(Component):
         conf_file = services.get_config_param('SIMULATION_CONFIG_FILE')
         print 'conf_file = ', conf_file
         conf_file_name = os.path.split(conf_file)[1]
-        new_file_name = run_id + '_' + conf_file_name
+        #new_file_name = run_id + '_' + conf_file_name
+        new_file_name = 'run' + '_' + conf_file_name
         new_full_path = os.path.join(self.W3_DIR, new_file_name)
         try:
             shutil.copyfile(conf_file, new_full_path)
