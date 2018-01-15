@@ -943,7 +943,7 @@ class monitor(Component):
     #      print 'monitor file = ', monitor_file
 
         #self.cdfFile = run_id+'_monitor_file.nc'
-        self.cdfFile = monitor_file.nc
+        self.cdfFile = monitor_file
         services.log('w3 monitor file = ' + self.cdfFile)
         #htmlFile = run_id +'.html'
         htmlFile = 'run_id' +'.html'
@@ -1020,7 +1020,7 @@ class monitor(Component):
     #      print 'monitor file = ', monitor_file
 
         #self.cdfFile = run_id+'_monitor_file.nc'
-        self.cdfFile = monitor_file.nc
+        self.cdfFile = monitor_file
         services.log('w3 monitor file = ' + self.cdfFile)
         #htmlFile = run_id +'.html'
         htmlFile = 'run' +'.html'
