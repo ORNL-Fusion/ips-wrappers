@@ -152,7 +152,7 @@ change log:
             
 1/4/2018    Commented out reference to PORTAL run_id due to demise of SWIM PORTAL
 
-1/30/2018   Replacing defunct PORTAL run_id with datetime() to distinguiosh between runs
+1/30/2018   Replacing defunct PORTAL run_id with datetime() to distinguish between runs
 """
 
 # Note (4/2/12)
@@ -942,12 +942,12 @@ class monitor(Component):
         workdir = services.get_working_dir()
         time.sleep(3)
         #run_id = services.get_config_param('PORTAL_RUNID')
-        print 'dir(datetime) = ', dir(datetime)
+        #print 'dir(datetime) = ', dir(datetime)
         self.run_id = datetime.now().strftime("%y-%m-%d-%H-%M")
-        monitor_file = self.run_id + '_monitor_file.nc'
+        monitor_file = 'monitor_file.nc'
     	print 'monitor file = ', monitor_file
 
-        self.cdfFile = self.run_id+'_monitor_file.nc'
+        self.cdfFile = self.run_id+'_' + monitor_file
         #self.cdfFile = monitor_file
         services.log('w3 monitor file = ' + self.cdfFile)
         htmlFile = self.run_id +'.html'
@@ -990,7 +990,7 @@ class monitor(Component):
         conf_file = services.get_config_param('SIMULATION_CONFIG_FILE')
         print 'conf_file = ', conf_file
         conf_file_name = os.path.split(conf_file)[1]
-        new_file_name = run_id + '_' + conf_file_name
+        new_file_name = self.run_id + '_' + conf_file_name
         #new_file_name = 'run' + '_' + conf_file_name
         new_full_path = os.path.join(self.W3_DIR, new_file_name)
         try:
@@ -1025,7 +1025,7 @@ class monitor(Component):
         monitor_file = 'monitor_file.nc'
     #      print 'monitor file = ', monitor_file
 
-        self.cdfFile = self.run_id+'_monitor_file.nc'
+        self.cdfFile = self.run_id+'_' + monitor_file.nc
         #self.cdfFile = monitor_file
         services.log('w3 monitor file = ' + self.cdfFile)
         htmlFile = self.run_id +'.html'
