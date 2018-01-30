@@ -942,7 +942,7 @@ class monitor(Component):
         workdir = services.get_working_dir()
         time.sleep(3)
         #run_id = services.get_config_param('PORTAL_RUNID')
-        print 'dir(datetime) = ' dir(datetime)
+        print 'dir(datetime) = ', dir(datetime)
         self.run_id = datetime.datetime.now().strftime("%y-%m-%d-%H-%M")
         monitor_file = self.run_id + '_monitor_file.nc'
     	print 'monitor file = ', monitor_file
