@@ -151,6 +151,8 @@ change log:
             print statements.
             
 1/4/2018    Commented out reference to PORTAL run_id due to demise of SWIM PORTAL
+
+1/30/2018   Replacing defunct PORTAL run_id with datetime() to distinguiosh between runs
 """
 
 # Note (4/2/12)
@@ -186,6 +188,7 @@ import subprocess
 import shutil
 import pickle
 import time
+import datetime
 
 from  component import Component
 
@@ -939,14 +942,15 @@ class monitor(Component):
         workdir = services.get_working_dir()
         time.sleep(3)
         #run_id = services.get_config_param('PORTAL_RUNID')
-        monitor_file = 'monitor_file.nc'
-    #      print 'monitor file = ', monitor_file
+        self.run_id = datetime.datetime.now().strftime("%y-%m-%d-%H-%M")
+        monitor_file = self.run_id + '_monitor_file.nc'
+    	print 'monitor file = ', monitor_file
 
-        #self.cdfFile = run_id+'_monitor_file.nc'
-        self.cdfFile = monitor_file
+        self.cdfFile = self.run_id+'_monitor_file.nc'
+        #self.cdfFile = monitor_file
         services.log('w3 monitor file = ' + self.cdfFile)
-        #htmlFile = run_id +'.html'
-        htmlFile = 'run_id' +'.html'
+        htmlFile = self.run_id +'.html'
+        #htmlFile = 'run_id' +'.html'
 
     # Copy current state over to working directory
         services.stage_plasma_state()
@@ -985,8 +989,8 @@ class monitor(Component):
         conf_file = services.get_config_param('SIMULATION_CONFIG_FILE')
         print 'conf_file = ', conf_file
         conf_file_name = os.path.split(conf_file)[1]
-        #new_file_name = run_id + '_' + conf_file_name
-        new_file_name = 'run' + '_' + conf_file_name
+        new_file_name = run_id + '_' + conf_file_name
+        #new_file_name = 'run' + '_' + conf_file_name
         new_full_path = os.path.join(self.W3_DIR, new_file_name)
         try:
             shutil.copyfile(conf_file, new_full_path)
@@ -1020,11 +1024,11 @@ class monitor(Component):
         monitor_file = 'monitor_file.nc'
     #      print 'monitor file = ', monitor_file
 
-        #self.cdfFile = run_id+'_monitor_file.nc'
-        self.cdfFile = monitor_file
+        self.cdfFile = self.run_id+'_monitor_file.nc'
+        #self.cdfFile = monitor_file
         services.log('w3 monitor file = ' + self.cdfFile)
-        #htmlFile = run_id +'.html'
-        htmlFile = 'run' +'.html'
+        htmlFile = self.run_id +'.html'
+        #htmlFile = 'run' +'.html'
         
     # Get restart files listed in config file.        
         try:
