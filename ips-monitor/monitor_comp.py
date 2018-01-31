@@ -973,18 +973,18 @@ class monitor(Component):
             print 'Error copying file %s to %s: %s' % \
                 (monitor_file, self.cdfFile, strerror)
 
-        htmlText = self.htmlText.replace('@CDF_FILE@',
-                           os.path.join(self.W3_BASEURL, self.cdfFile))
-        try:
-            f = open(os.path.join(self.W3_DIR, htmlFile), 'w')
-            f.write(htmlText)
-            f.close()
-        except IOError, (errno, strerror):
-            print 'Error writing to file %s : %s' % \
-                (htmlFile, strerror)
-            return
-        monitorURL = os.path.join(self.W3_BASEURL , htmlFile)
-        services.setMonitorURL(monitorURL)
+#         htmlText = self.htmlText.replace('@CDF_FILE@',
+#                            os.path.join(self.W3_BASEURL, self.cdfFile))
+#         try:
+#             f = open(os.path.join(self.W3_DIR, htmlFile), 'w')
+#             f.write(htmlText)
+#             f.close()
+#         except IOError, (errno, strerror):
+#             print 'Error writing to file %s : %s' % \
+#                 (htmlFile, strerror)
+#             return
+#         monitorURL = os.path.join(self.W3_BASEURL , htmlFile)
+#         services.setMonitorURL(monitorURL)
 
     # Copy config file to w3 directory
         conf_file = services.get_config_param('SIMULATION_CONFIG_FILE')
@@ -1048,17 +1048,17 @@ class monitor(Component):
             print 'Error copying file %s to %s: %s' % \
                 (monitor_file, self.cdfFile, strerror)
 
-        htmlText = self.htmlText.replace('@CDF_FILE@',
-                           os.path.join(self.W3_BASEURL, self.cdfFile))
-        try:
-            f = open(os.path.join(self.W3_DIR, htmlFile), 'w')
-            f.write(htmlText)
-            f.close()
-        except IOError, (errno, strerror):
-            print 'Error writing to file %s : %s' % \
-                (htmlFile, strerror)
-        monitorURL = os.path.join(self.W3_BASEURL , htmlFile)
-        self.services.setMonitorURL(monitorURL)
+#         htmlText = self.htmlText.replace('@CDF_FILE@',
+#                            os.path.join(self.W3_BASEURL, self.cdfFile))
+#         try:
+#             f = open(os.path.join(self.W3_DIR, htmlFile), 'w')
+#             f.write(htmlText)
+#             f.close()
+#         except IOError, (errno, strerror):
+#             print 'Error writing to file %s : %s' % \
+#                 (htmlFile, strerror)
+#         monitorURL = os.path.join(self.W3_BASEURL , htmlFile)
+#         self.services.setMonitorURL(monitorURL)
     
         # Load monitorVars and ps_VarsList from pickle file "monitor_restart".
 
