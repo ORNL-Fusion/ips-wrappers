@@ -109,11 +109,15 @@ class xolotlWorker(Component):
         print 'check that all arguments are read well by xolotl-step'
         for (k, v) in keywords.iteritems():
             print '\t', k, " = ", v
+            
+        xolotlLogFile='xolotl_t%f.log' %self.driverTime
+        print ('Xolotl log file ', xolotlLogFile)
 
         #call shell script that runs Xolotl and pipes input file
         task_id = self.services.launch_task(self.NPROC,
                                             self.services.get_working_dir(),
-                                            self.XOLOTL_EXE, 'params.txt')
+                                            self.XOLOTL_EXE, 'params.txt', 
+                                            logfile=xolotlLogFile)
 
         #monitor task until complete
         if (self.services.wait_task(task_id)):

@@ -499,7 +499,8 @@ class xolotlFtridynDriver(Component):
                     print 'printing He concentrations in the last loop'
                 elif time<(self.endTime-self.timeStep):
                     self.petsc_heConc=False
-
+            else:
+                self.petsc_heConc=self.heConc
 
             #calculate effective sputtering yield; i.e., weighted by relative flux of W-to-He
             totalSpYield=self.ftridynSpYieldHe+self.gFluxFractionW*self.ftridynSpYieldW
