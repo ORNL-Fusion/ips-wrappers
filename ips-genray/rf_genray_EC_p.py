@@ -652,6 +652,10 @@ class genray_EC(Component):
         log_file = open('log_process_genray_output', 'w')
         mode = 'step'
         command = process_output_bin + ' ' +  rfmode + ' ' + isource_string
+
+        print 'running', command
+        services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+            event_comment =  command)
         
         retcode = subprocess.call(command.split(), stdout = log_file,\
                                   stderr = subprocess.STDOUT)                                  
