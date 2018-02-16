@@ -577,7 +577,8 @@ class genray_EC(Component):
         global programming, times_parameters_list
 
         prepare_input_bin = os.path.join(self.BIN_PATH, 'prepare_genray_input')
-        process_output_bin  = os.path.join(self.BIN_PATH, 'process_genray_output_mcmd')
+#        process_output_bin  = os.path.join(self.BIN_PATH, 'process_genray_output_mcmd')
+        process_output_bin  = os.path.join(self.BIN_PATH, 'process_genray_output')
         genray_bin = os.path.join(self.BIN_PATH, 'genray')
 
     # Copy plasma state files over to working directory
