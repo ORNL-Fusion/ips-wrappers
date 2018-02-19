@@ -27,26 +27,29 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
                       nBins=200,
                       prjRange=50.0 #in [A]
 ):
+
+    print 'tridynPlotting:'
+
     totalSpYield=0.0;
     aveSpYield=0.0
 
     if len(angle)>1:
         angleValue, weightAngle = np.loadtxt(gAngleDistrib, usecols = (0,1) , unpack=True)
-        print '\n reading the impact energy distribution for ', (len(angleValue)), ' angles, from %s' %(gAngleDistrib)
+        print '\t reading the impact energy distribution for ', (len(angleValue)), ' angles, from %s' %(gAngleDistrib)
     else:
         angleValue=angle
         weightAngle=[1.0]
-        print '\n single, fixed angle used'
+        print '\t single, fixed angle used'
 
     totalWeight=np.sum(weightAngle)
     
-    print ' the sum of weights is ', totalWeight, ' and projectile range', prjRange , ' [A]'
+    print '\t the sum of weights is ', totalWeight, ' and projectile range', prjRange , ' [A]'
     
     for a in np.arange(0,len(angleValue),1):
 
         if weightAngle[a]==0.0:
-            print 'for angle ', angleValue[a], '(index ', a ,'), found Weight = ', weightAngle[a]
-            print '\t skipping all analysis for this angle, with no contribution to spYield'
+            print '\t for angle ', angleValue[a], '(index ', a ,'), found Weight = ', weightAngle[a]
+            print '\t \t skipping all analysis for this angle, with no contribution to spYield'
 
         elif weightAngle[a] >0.0:
 
@@ -160,7 +163,7 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
 #    print 'average sputtering yield is', aveSpYield
 #    return aveSpYield
 
-    print "average sputtering yield is ", totalSpYield
+    print "\t average sputtering yield is ", totalSpYield, '\n'
     return totalSpYield
 
 ################# END OF NEW PYTHON SCRIPT  ####################

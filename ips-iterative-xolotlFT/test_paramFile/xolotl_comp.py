@@ -19,7 +19,7 @@ class xolotlWorker(Component):
         print('xolotl_worker: init')
         self.services.stage_plasma_state()
 
-        print 'check that all arguments are read well by xolotl-init' 
+        print 'check that all arguments are read well by xolotl-init and write Xolotl input file (from dictionary)' 
         for (k, v) in keywords.iteritems():
             print '\t', k, " = ", v
 
@@ -32,11 +32,10 @@ class xolotlWorker(Component):
         xp = xolotl_param_handler.xolotl_params()
         xp.parameters=keywords['xParameters'] 
 
-        print 'this is a test: the parameter dictionary is \n', xp.parameters
-
-        print 'this is a test: the type of petsc arguments'
-        for k,v in xp.parameters['petscArgs'].iteritems():
-            print 'argument and type of', k , ' are ', v , ' and ', type(v)
+        #print 'this is a test: write Xolotl input file (from dictionary) with parameters \n', xp.parameters
+        #print 'this is a test: the type of petsc arguments'
+        #for k,v in xp.parameters['petscArgs'].iteritems():
+        #    print 'argument and type of', k , ' are ', v , ' and ', type(v)
 
         #test accessing xParamters
         #print 'this is a test: running Xolotl in ', xp.parameters['dimensions'], 'D' #input_parameters['dimensions'], 'D'
@@ -68,7 +67,7 @@ class xolotlWorker(Component):
         petscHeConc=keywords['xHe_conc']
 
         xolotlLogFile='xolotl_t%f.log' %self.driverTime
-        print ('Xolotl log file ', xolotlLogFile)
+        print '\t Xolotl log file ', xolotlLogFile
 
         #call shell script that runs Xolotl and pipes input file
         task_id = self.services.launch_task(self.NPROC,
@@ -81,7 +80,7 @@ class xolotlWorker(Component):
             self.services.error('xolotl_worker: step failed.')
 
         newest = max(glob.iglob('TRIDYN_*.dat'), key=os.path.getctime)
-        print('newest file ' , newest)
+        print '\t newest file ' , newest
         shutil.copyfile(newest, 'last_TRIDYN.dat')
 
 
@@ -89,11 +88,10 @@ class xolotlWorker(Component):
         TRIDYNFiles='TRIDYN_*.dat'
 
         if self.coupling=='True' and zipOutput=='True':
-            print 'this is a test: coupling and zipOutput are identified as boolean True and True'
             TRIDYNZipped='allTRIDYN_t%f.zip' %self.driverTime
             zip_ouput='zipTridynDatOuput.txt'
 
-            print 'save and zip output: ', TRIDYNFiles
+            print '\t save and zip output: ', TRIDYNFiles
             zipString='zip %s %s >> %s ' %(TRIDYNZipped, TRIDYNFiles, zip_ouput)
             subprocess.call([zipString], shell=True)
 
@@ -101,22 +99,19 @@ class xolotlWorker(Component):
             subprocess.call([rmString], shell=True)
 
         elif self.coupling=='True':
-            print 'this is a test: coupling and zipOutput are identified as boolean True and False'
-            print 'leaving ',  TRIDYNFiles , 'uncompressed'
+            print '\t leaving ',  TRIDYNFiles , 'uncompressed'
 
         else:
-            print 'this is a test: coupling and zipOutput are identified as boolean False and False'
-            print 'no ', TRIDYNFiles , ' generated in this simulation'
+            print '\t no ', TRIDYNFiles , ' generated in this simulation'
 
         #save helium concentration files, zipped
         heConcFiles='heliumConc_*.dat'
 
         if petscHeConc and zipOutput=='True':
-            print 'this is a test: heConc and zipOutput are identified as boolean True and True'
             heConcZipped='allHeliumConc_t%f.zip' %self.driverTime
             zip_ouput='zipHeConcOuput.txt'
             
-            print 'save and zip output: ', heConcFiles
+            print '\t save and zip output: ', heConcFiles
             zipString='zip %s %s >> %s ' %(heConcZipped, heConcFiles, zip_ouput)
             subprocess.call([zipString], shell=True)
 
@@ -124,12 +119,10 @@ class xolotlWorker(Component):
             subprocess.call([rmString], shell=True)
             
         elif petscHeConc:
-            print 'this is a test: heConc and zipOutput are identified as boolean True and False'
-            print 'leaving ', heConcFiles ,'uncompressed'
+            print '\t leaving ', heConcFiles ,'uncompressed'
 
         else:
-            print 'this is a test: heConc and zipOutput are identified as boolean False and False'
-            print 'no ', heConcFiles , ' in this loops output'
+            print '\t no ', heConcFiles , ' in this loops output'
 
         #save network file with a different name to use in the next time step
         currentXolotlNetworkFile='xolotlStop_%f.h5' %self.driverTime
@@ -137,10 +130,12 @@ class xolotlWorker(Component):
 
         statusFile=open(self.EXIT_STATUS, "r")
         exitStatus=statusFile.read().rstrip('\n')
+        
+        print '\n'
 
         if exitStatus=='collapsed':
-            print 'simulation exited loop with status collapse'
-            print 'rename output files as _collapsed before trying again'
+            print '\t simulation exited loop with status collapse'
+            print '\t rename output files as _collapsed before trying again'
 
             currentXolotlNetworkFile='xolotlStop_%f.h5' %self.driverTime
             networkFile_unfinished='xolotlStop_%f_collapsed.h5' %self.driverTime

@@ -21,7 +21,8 @@ class ftridynWorker(Component):
         self.ftridyn_exe = self.FTRIDYN_EXE
 
     def init(self, timeStamp=0.0,**keywords):
-        print('\n fridyn_worker: init')
+        print '\n'
+        print('fridyn_worker: init')
         #stage plasma state files for use on execution of FTridyn
         self.services.stage_plasma_state()
 
@@ -29,16 +30,20 @@ class ftridynWorker(Component):
         for (k, v) in keywords.iteritems():
             print '\t', k, " = ", v
 
+        ftParameters=keywords['ftParameters']
+        
         #asign a local variable to arguments used multiple times
         driverTime=keywords['dTime']
+
+        ftridyn=keywords['ftParameters']
 
         energyIn=keywords['fEnergyIn']
         angleIn = keywords['fAngleIn']
         weightAngle=keywords['fWeightAngle']
-        nImpacts=keywords['fNImpacts']
-        nTT=keywords['fNTT']
-        nDataPts=keywords['fNDataPts']
-        iQ0=keywords['fIQ0']
+        #nImpacts=keywords['fNImpacts']
+        #nTT=keywords['fNTT']
+        #nDataPts=keywords['fNDataPts']
+        #iQ0=keywords['fIQ0']
         tg=keywords['fTg']
         prj=keywords['fPrj']
         
@@ -63,7 +68,7 @@ class ftridynWorker(Component):
             if (weightAngle[j] == 0.0):
                 print '\t weight of angle ',  angleIn[j], ' is ' , weightAngle[j] , ', so skip generateInput'
             elif (weightAngle[j] > 0.0):
-                generate_ftridyn_input.Prj_Tg_xolotl(IQ0=iQ0,number_layers=nDataPts,depth=nTT,number_histories=nImpacts,incident_energy=energyIn,incident_angle=angleIn[j],projectile_name=str(prj),target_name=str(tg))
+                generate_ftridyn_input.Prj_Tg_xolotl(IQ0=ftridyn['iQ0'],number_layers=ftridyn['nDataPts'],depth=ftridyn['nTT'],number_histories=ftridyn['nImpacts'],incident_energy=energyIn,incident_angle=angleIn[j],projectile_name=str(prj),target_name=str(tg))
             pathFolder = self.ft_folder+'/ANGLE'+str(angleIn[j])# + "_"+str(energyInW[j])
             #if not os.path.exists(pathFolder):
             os.makedirs(pathFolder)
