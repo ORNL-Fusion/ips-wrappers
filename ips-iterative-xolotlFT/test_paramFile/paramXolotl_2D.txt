@@ -1,0 +1,16 @@
+dimensions=1
+process=reaction advec modifiedTM diff movingSurface attenuation bursting
+netParam=8 50 6 false
+grid=200 10 0.5 0.5    
+vizHandler=dummy
+perfHandler=dummy
+material=TRIDYN
+startTemp=773.000000
+flux=4.000000e+04
+petscArgs=-start_stop 0.00100 -ts_adapt_dt_max 1.000000e-05 -fieldsplit_1_pc_type gamg -fieldsplit_1_ksp_type gmres -ksp_type fgmres -fieldsplit_1_pc_gamg_threshold -1.0 -fieldsplit_0_pc_type sor -ts_max_steps 1000000 -pc_type fieldsplit -pc_fieldsplit_detect_coupling -ts_exact_final_time matchstep -ts_adapt_wnormtype INFINITY -ts_final_time 0.00200 -ts_max_snes_failures -1 -ts_monitor -tridyn -helium_retention -check_collapse 1.000000e-15   
+regularGrid=no
+voidPortion=40.000000
+sputtering=0.000936
+initialV=1e-18
+boundary=1 0
+grouping=31 4 4
