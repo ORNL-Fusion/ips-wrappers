@@ -134,6 +134,8 @@ class generic_ps_init (Component):
         services = self.services
         run_id = datetime.now().strftime("%y-%m-%d-%H-%M")
         services.set_config_param('DATE_TIME_ID', run_id)
+        print 'DATE_TIME_ID = 'run_id
+        cur_state_file = self.get_config_param(services,'DATE_TIME_ID')
         return
 
 # ------------------------------------------------------------------------------
@@ -158,7 +160,7 @@ class generic_ps_init (Component):
         tfinal  = tlist_str[-1]
 
 # Check if this is a restart simulation
-        simulation_mode = self.try_get_config_param(services, 'SIMULATION_MODE')
+        simulation_mode = self.get_config_param(services, 'SIMULATION_MODE')
 
         if simulation_mode == 'RESTART':
             print 'generic_ps_init: RESTART'
@@ -175,8 +177,8 @@ class generic_ps_init (Component):
             
         if simulation_mode == 'RESTART':
             # Get restart files listed in config file. Here just the plasma state files.
-            restart_root = self.try_get_config_param(services, 'RESTART_ROOT')
-            restart_time = self.try_get_config_param(services, 'RESTART_TIME')
+            restart_root = self.get_config_param(services, 'RESTART_ROOT')
+            restart_time = self.get_config_param(services, 'RESTART_TIME')
             try:
                  services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
             except:
@@ -207,10 +209,10 @@ class generic_ps_init (Component):
 
             print 'generic_ps_init: simulation mode NORMAL'
             nml_lines = ['&ps_init_nml\n']
-            ps_file_list = self.try_get_config_param(services, 'PLASMA_STATE_FILES').split(' ')
+            ps_file_list = self.get_config_param(services, 'PLASMA_STATE_FILES').split(' ')
 
 
-            init_mode = self.try_get_component_param(services, 'INIT_MODE')
+            init_mode = self.get_component_param(services, 'INIT_MODE')
             nml_lines.append(' init_mode = ' + init_mode + '\n')
 
         # Generate state files as dummies so framework will have a complete set
@@ -237,12 +239,12 @@ class generic_ps_init (Component):
                 services.exception(message)
                 raise
 
-            cur_state_file = self.try_get_config_param(services, 'CURRENT_STATE')
-            cur_eqdsk_file = self.try_get_config_param(services, 'CURRENT_EQDSK')
+            cur_state_file = self.get_config_param(services, 'CURRENT_STATE')
+            cur_eqdsk_file = self.get_config_param(services, 'CURRENT_EQDSK')
             nml_lines.append(' cur_state_file = ' + cur_state_file + '\n')
             nml_lines.append(' cur_eqdsk_file = ' + cur_eqdsk_file + '\n')
 
-            INPUT_EQDSK_FILE = self.try_get_component_param(services, 'INPUT_EQDSK_FILE', \
+            INPUT_EQDSK_FILE = self.get_component_param(services, 'INPUT_EQDSK_FILE', \
             optional = True)
             if (INPUT_EQDSK_FILE is None) or (len(INPUT_EQDSK_FILE) == 0):
                 INPUT_EQDSK_FILE = ' '
@@ -263,7 +265,7 @@ class generic_ps_init (Component):
 # ------------------------------------------------------------------------------
             # init from existing plasma state file
             if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE'] :    
-                INPUT_STATE_FILE = self.try_get_component_param(services, 'INPUT_STATE_FILE')
+                INPUT_STATE_FILE = self.get_component_param(services, 'INPUT_STATE_FILE')
 
                 # Copy INPUT_STATE_FILE to current state file
                 try:
@@ -276,7 +278,7 @@ class generic_ps_init (Component):
                     raise
                     
                 # Generate cur_eqdsk_file from cur_state_file if GENERATE_EQDSK is True
-                GENERATE_EQDSK = self.try_get_component_param(services, 'GENERATE_EQDSK', \
+                GENERATE_EQDSK = self.get_component_param(services, 'GENERATE_EQDSK', \
                 optional = True)
                 if GENERATE_EQDSK in ['true', 'TRUE', 'True']:
                     nml_lines.append(' generate_eqdsk = True')
@@ -305,9 +307,9 @@ class generic_ps_init (Component):
 # ------------------------------------------------------------------------------
             # init from machine description file
             if init_mode in ['mdescr', 'MDESCR'] :
-                MDESCR_FILE = self.try_get_component_param(services, 'MDESCR_FILE')
+                MDESCR_FILE = self.get_component_param(services, 'MDESCR_FILE')
                 nml_lines.append(' mdescr_file = ' + MDESCR_FILE + '\n')
-                SCONFIG_FILE = self.try_get_component_param(services, 'SCONFIG_FILE', \
+                SCONFIG_FILE = self.get_component_param(services, 'SCONFIG_FILE', \
                 optional = 'TRUE')
                 
                 if (SCONFIG_FILE is None) or (len(SCONFIG_FILE) == 0):
@@ -315,7 +317,7 @@ class generic_ps_init (Component):
                 else:
                     nml_lines.append(' sconfig_file = ' + SCONFIG_FILE + '\n')
                     
-                INPUT_EQDSK_FILE = self.try_get_component_param(services, 'INPUT_EQDSK_FILE', \
+                INPUT_EQDSK_FILE = self.get_component_param(services, 'INPUT_EQDSK_FILE', \
                 optional = True)
                 if (INPUT_EQDSK_FILE is None) or (len(INPUT_EQDSK_FILE) == 0):
                    INPUT_EQDSK_FILE = ' '
@@ -340,9 +342,9 @@ class generic_ps_init (Component):
             # For all init init modes insert run identifiers and time data 
             # (do it here in python instead of in minimal_state_init.f90 as before)
             # For minimal mode this is the only data in initial state
-            tokamak = self.try_get_config_param(services, 'TOKAMAK_ID')
-            shot_number = self.try_get_config_param(services, 'SHOT_NUMBER')
-            run_id = self.try_get_config_param(services, 'RUN_ID')
+            tokamak = self.get_config_param(services, 'TOKAMAK_ID')
+            shot_number = self.get_config_param(services, 'SHOT_NUMBER')
+            run_id = self.get_config_param(services, 'RUN_ID')
 
             timeloop = services.get_time_loop()
             t0 = timeloop[0]
@@ -422,7 +424,7 @@ class generic_ps_init (Component):
 
 
     # Try to get config parameter - wraps the exception handling for get_config_parameter()
-    def try_get_config_param(self, services, param_name, optional=False):
+    def get_config_param(self, services, param_name, optional=False):
 
         try:
             value = services.get_config_param(param_name)
@@ -440,7 +442,7 @@ class generic_ps_init (Component):
         return value
 
     # Try to get component specific config parameter - wraps the exception handling
-    def try_get_component_param(self, services, param_name, optional=False):
+    def get_component_param(self, services, param_name, optional=False):
 
         if hasattr(self, param_name):
             value = getattr(self, param_name)
