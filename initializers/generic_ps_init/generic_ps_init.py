@@ -134,7 +134,7 @@ class generic_ps_init (Component):
         services = self.services
         run_id = datetime.now().strftime("%y-%m-%d-%H-%M")
         services.set_config_param('DATE_TIME_ID', run_id)
-        print 'DATE_TIME_ID = 'run_id
+        print 'DATE_TIME_ID = ', run_id
         cur_state_file = self.get_config_param(services,'DATE_TIME_ID')
         return
 
