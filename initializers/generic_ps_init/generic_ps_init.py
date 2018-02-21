@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 
 """
-generic_init.py  Batchelor (2-15-2016)
+generic_init.py  Batchelor (2-21-2018)
+
+See working notes below
 
 The Swiss army knife of Plasma State initializers.  It produces the intial CURRENT_STATE
 and optionally the initial CURRENT_EQDSK.
@@ -45,7 +47,14 @@ generic_ps_file_init.f90 to interact with the Plasma State. The fortran code is 
 in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true.
 
 """
+# Working notes for generic_ps_init.py 2/21/2018 (Batchelor)
+# Adding code in init function to get TIME_DATE_ID from timedate.now() and set a config 
+# parameter to it.
 
+
+#--------------------------------------------------------------------------
+# Notes below are for the previous version, minimal_state_init.py
+#--------------------------------------------------------------------------
 # version 4.0 5/21/2010 (Batchelor)
 #--------------------------------------------------------------------------
 #
@@ -102,6 +111,7 @@ import subprocess
 import getopt
 import shutil
 import string
+import datetime
 from  component import Component
 from netCDF4 import *
 
@@ -121,6 +131,9 @@ class generic_ps_init (Component):
     def init(self, timestamp=0.0):
         print (' ')
         print ('generic_ps_init.init() called')
+        services = self.services
+        run_id = datetime.now().strftime("%y-%m-%d-%H-%M")
+        services.set_config_param('DATE_TIME_ID', run_id)
         return
 
 # ------------------------------------------------------------------------------
