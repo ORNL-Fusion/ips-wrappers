@@ -30,8 +30,6 @@ class ftridynWorker(Component):
         for (k, v) in keywords.iteritems():
             print '\t', k, " = ", v
 
-        ftParameters=keywords['ftParameters']
-        
         #asign a local variable to arguments used multiple times
         driverTime=keywords['dTime']
 

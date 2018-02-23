@@ -281,7 +281,7 @@ class xolotlFtridynDriver(Component):
             #eventually think about dictionary with entries for He and W --> loop over, and have it all written once (not doubled)
             self.services.call(ftridyn, 'init', timeStamp, dTime=time, fPrj='He', fTg='W', ftParameters=self.ftridyn , fEnergyIn=self.ftridyn['inEnergyHe'], fAngleIn=self.angleInHe, fWeightAngle=self.weightAngleHe, ft_folder=self.FT_OUTPUT_FOLDER, input_file=self.FT_INPUT_FILE_He, otherInFiles=self.other_ft_input_files_He, ft_energy_file_name=self.FT_energy_file_name_He, orig_energy_files_path=self.GITR_energy_output_path_He, orig_energy_files_pattern=self.GITR_energy_output_file_He)
 
-            self.services.call(ftridyn, 'step', timeStamp, fPrj='He', fTg='W', fEnergyIn=self.ftridyn['inEnergyHe'], fAngleIn=self.angleInHe, fWeightAngle=self.weightAngleHe,)
+            self.services.call(ftridyn, 'step', timeStamp, fPrj='He', fTg='W', fEnergyIn=self.ftridyn['inEnergyHe'], fAngleIn=self.angleInHe, fWeightAngle=self.weightAngleHe)
 
             self.services.stage_plasma_state()
 
@@ -345,7 +345,7 @@ class xolotlFtridynDriver(Component):
             #component/method calls now include arguments (variables)              
             if self.wRedepFluxFraction>0.0:
 
-                self.services.call(ftridyn, 'init', timeStamp, dTime=time, fPrj='He', fTg='W', ftParameters=self.ftridyn , fEnergyIn=self.ftridyn['inEnergyW'], fAngleIn=self.angleInW, fWeightAngle=self.weightAngleW, ft_folder=self.FT_OUTPUT_FOLDER, input_file=self.FT_INPUT_FILE_W , otherInFiles=self.other_ft_input_files_W, ft_energy_file_name=self.FT_energy_file_name_W, orig_energy_files_path=self.GITR_energy_output_path_W, orig_energy_files_pattern=self.GITR_energy_output_file_W)
+                self.services.call(ftridyn, 'init', timeStamp, dTime=time, fPrj='W', fTg='W', ftParameters=self.ftridyn , fEnergyIn=self.ftridyn['inEnergyW'], fAngleIn=self.angleInW, fWeightAngle=self.weightAngleW, ft_folder=self.FT_OUTPUT_FOLDER, input_file=self.FT_INPUT_FILE_W , otherInFiles=self.other_ft_input_files_W, ft_energy_file_name=self.FT_energy_file_name_W, orig_energy_files_path=self.GITR_energy_output_path_W, orig_energy_files_pattern=self.GITR_energy_output_file_W)
 
                 self.services.call(ftridyn, 'step', timeStamp, fPrj='W', fTg='W', fEnergyIn=self.ftridyn['inEnergyW'], fAngleIn=self.angleInW, fWeightAngle=self.weightAngleW,)
 

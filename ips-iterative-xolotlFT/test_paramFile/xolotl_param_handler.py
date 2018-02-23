@@ -65,10 +65,12 @@ def write(file_handle, key, value):
                 if isinstance(v, int):                  
                     file_handle.write('{0:s} {1:d} '.format(k, v))
                 elif isinstance(v, float):
-                    file_handle.write('{0:s} {1:g} '.format(k, v))
+                    #inf != INFINITY in petscArg
                     if math.isinf(v):
                         v='INFINITY'
                         file_handle.write('{0:s} {1:s} '.format(k, v))                    
+                    else:
+                        file_handle.write('{0:s} {1:g} '.format(k, v))
                 else:
                     file_handle.write('{0:s} {1:s} '.format(k, v))
             else:
