@@ -74,7 +74,6 @@ def write(file_handle, key, value):
                 else:
                     file_handle.write('{0:s} {1:s} '.format(k, v))
             else:
-                #print 'this is a test: identified petsc arg without value', k
                 file_handle.write('{0:s} '.format(k))
         file_handle.write('\n')
 
@@ -183,11 +182,12 @@ class xolotl_params:
 
         file_handle.close()
 
-        print 'this is a test: stripping end of line spaces from file ', file_handle
+        #strip end of line space
         file_handle = open(file_name, 'r')
+
         for line in file_handle:
             line.strip()
-        
+
         file_handle.close()
 
 if __name__ == '__main__':

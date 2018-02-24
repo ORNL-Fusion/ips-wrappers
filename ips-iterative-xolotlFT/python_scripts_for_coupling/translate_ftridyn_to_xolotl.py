@@ -35,7 +35,8 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
 
     if len(angle)>1:
         angleValue, weightAngle = np.loadtxt(gAngleDistrib, usecols = (0,1) , unpack=True)
-        print '\t reading the impact energy distribution for ', (len(angleValue)), ' angles, from %s' %(gAngleDistrib)
+        print '\t reading the impact energy distribution for ', (len(angleValue)), ' angles' 
+        print'\t from %s' %(gAngleDistrib)
     else:
         angleValue=angle
         weightAngle=[1.0]
@@ -75,7 +76,7 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
             sputteringNparticles=sputteringNparticlesString[2]
             spYield=float(sputteringNparticles)/float(fNImpacts)
             totalSpYield += spYield*weightAngle[a]/totalWeight
-            print '\t for angle ', angleValue[a], ' and weight = ', weightAngle[a], ': sputtering yield = ', spYield, ' and the weighted contribution = ', spYield*weightAngle[a]/totalWeight 
+            print '\t for angle ', angleValue[a], ', weight = ', weightAngle[a], ': sp. yield = ', spYield, ' and the weighted spY = ', spYield*weightAngle[a]/totalWeight 
 
 
             ## Open files ("bla1" is not used but I could not figure out how to easily open a file without using two columns)
@@ -159,11 +160,9 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
 #        aveSpYield=totalSpYield/len(angleIndex)
 #    else:
 #        aveSpYield=0.0
-        
-#    print 'average sputtering yield is', aveSpYield
-#    return aveSpYield
 
-    print "\t average sputtering yield is ", totalSpYield, '\n'
+    print ' '
+    print "\t average sputtering yield is ", totalSpYield
     return totalSpYield
 
 ################# END OF NEW PYTHON SCRIPT  ####################
