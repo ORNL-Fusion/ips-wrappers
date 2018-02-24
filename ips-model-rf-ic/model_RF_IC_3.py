@@ -85,21 +85,32 @@ class model_RF_IC_3 (Component):
 
         RF_IC_bin = os.path.join(BIN_PATH, 'model_RF_IC_3')
 
-        print 'Executing ', [RF_IC_bin, cur_state_file, 'INIT', timeStamp]
-        try:
-            retcode = subprocess.call([RF_IC_bin, cur_state_file, cur_eqdsk_file,
-                cur_cql_file, cur_dql_file, 'INIT', timeStamp])     
-        except Exception: 
-            message = "Error executing " +  RF_IC_bin
-            print message
-            self.services.error(message)  
-            raise
-        else: 
-            if (retcode != 0):
-                message = "Abnormal termination of " + RF_IC_bin
-                print message
-                self.services.error(message)
-                raise Exception(message)
+    # Run model_RF_IC_3 fortran
+        cmd = [RF_IC_bin, cur_state_file, 'INIT', timeStamp]
+        print 'Executing = ', cmd
+        services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+          event_comment =  cmd)
+        retcode = subprocess.call(cmd)
+        if (retcode != 0):
+            logMsg = 'Error executing ' + cmd
+            self.services.error(logMsg)
+            raise Exception(logMsg)
+
+#         print ' ', [RF_IC_bin, cur_state_file, 'INIT', timeStamp]
+#         try:
+#             retcode = subprocess.call([RF_IC_bin, cur_state_file, cur_eqdsk_file,
+#                 cur_cql_file, cur_dql_file, 'INIT', timeStamp])     
+#         except Exception: 
+#             message = "Error executing " +  RF_IC_bin
+#             print message
+#             self.services.error(message)  
+#             raise
+#         else: 
+#             if (retcode != 0):
+#                 message = "Abnormal termination of " + RF_IC_bin
+#                 print message
+#                 self.services.error(message)
+#                 raise Exception(message)
 
 # Update plasma state files in plasma_state work directory
         try:
