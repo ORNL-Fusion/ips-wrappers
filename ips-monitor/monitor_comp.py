@@ -941,14 +941,12 @@ class monitor(Component):
 
         workdir = services.get_working_dir()
         time.sleep(3)
-        run_id = services.get_config_param('PORTAL_RUNID')
-        #print 'run_id = ', run_id
-        #self.run_id = datetime.now().strftime("%y-%m-%d-%H-%M")
+        self.run_id = services.get_config_param('PORTAL_RUNID')
+        print 'run_id = ', self.run_id
         monitor_file = 'monitor_file.nc'
     	print 'monitor file = ', monitor_file
 
         self.cdfFile = self.run_id+'_' + monitor_file
-        #self.cdfFile = monitor_file
         services.log('w3 monitor file = ' + self.cdfFile)
 
     # Copy current state over to working directory
@@ -1005,7 +1003,7 @@ class monitor(Component):
         global monitorVars, ps_VarsList, monitorDefinition
         
         workdir = services.get_working_dir()
-        run_id = services.get_config_param('PORTAL_RUNID')
+        self.run_id = services.get_config_param('PORTAL_RUNID')
         monitor_file = 'monitor_file.nc'
     #      print 'monitor file = ', monitor_file
 
