@@ -66,5 +66,10 @@ class template_driver(Component):
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
         print('template_driver: finalize')
+        
+#  Call finalize on all components. The INIT component automatically calls the
+#  finalize method.
+        self.running_components['template:finalize'] = self.services.call_nonblocking(self.template, 'finalize', timeStamp)
+        
 #  Wait until all the components are finished.
         self.services.wait_call_list(self.running_components.values(), True)

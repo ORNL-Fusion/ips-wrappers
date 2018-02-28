@@ -42,12 +42,12 @@ class template(Component):
 
 #  Unzip files from the plasma state.
         zip_ref = zipfile.ZipFile(self.services.get_config_param('CURRENT_TEMPLATE_STATE'), 'r')
-        zip_ref.extract(self.services.get_config_param('INPUT_1'))
-        zip_ref.extract(self.services.get_config_param('INPUT_2'))
+        zip_ref.extract(self.services.get_config_param('TEMPLATE_NAMELIST_INPUT'))
+        zip_ref.extract(self.services.get_config_param('TEMPLATE_DAT_INPUT'))
         zip_ref.close()
 
-#  Replace parameters in the extracted state files.
-        namelist_example_file = OMFITnamelist(self.services.get_config_param('INPUT_1'))
+#  Modify entries of a namelist input file using OMFIT.
+        namelist_example_file = OMFITnamelist(self.services.get_config_param('TEMPLATE_NAMELIST_INPUT'))
 
 #  Modify with constant.
         namelist_example_file['example_namelist']['array'][1] = 2.0
@@ -63,24 +63,34 @@ class template(Component):
         
         namelist_example_file.save()
 
-#  Some codes need symbolic links.
-        os.symlink(self.services.get_config_param('INPUT_2'), 'link_name')
-
+#  Some codes need symbolic links. This will throw an expection if the link
+#  allready exists.
+        if os.path.isfile('link_name'):
+            os.remove('link_name')
+        os.symlink(self.services.get_config_param('TEMPLATE_DAT_INPUT'), 'link_name')
+            
 #-------------------------------------------------------------------------------
 #
 #  template Component step method. This runs code the component is wrapped
 #  around.
 #
 #-------------------------------------------------------------------------------
-    def step(self, timeStamp=0.0):
+    def step(self, timeStamp=0.0, **keywords):
         print('template: step')
 
-#  Launch a task. Task launches are non blocking so save the task id. Arguments
-#  can be passed in from the config file or passed in the call to the method.
+#  Arguments can be passed in from the config file or passed in the call to the
+#  step method. All definitions from the config file come in as a string.
+#  Keywords maynot not exist so check if the key exists first.
+        template_args = [ self.TEMPLATE_ARGS ]
+        if 'TEMPLATE_ARGS' in keywords:
+            template_args.extend(keywords['TEMPLATE_ARGS'])
+
+#  Launch a task. Task launches are non blocking so save the task id. Depending
+#  on the system, install locations and binary names can be different
         self.running_tasks['task1'] = self.services.launch_task(self.NPROC,
                                                                 self.services.get_working_dir(),
                                                                 self.TEMPLATE_EXE,
-                                                                *self.TEMPLATE_ARGS.split(' '),
+                                                                *template_args,
                                                                 logfile = 'template.log')
                                                                 
 #  Wait for the task to complete.
@@ -94,3 +104,6 @@ class template(Component):
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
         print('template: finalize')
+        for value in self.running_tasks:
+            self.services.wait_task(value)
+

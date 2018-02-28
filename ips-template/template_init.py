@@ -38,20 +38,19 @@ class template_init(Component):
     
 #  Stage input files.
         self.services.stage_input_files(self.INPUT_FILES)
-        input_files = self.INPUT_FILES.split(' ')
 
 #  Some times codes expect input files with a specific names. In these cases
 #  rename those files.
-        os.rename(self.services.get_config_param('INPUT_3'), 'rename.nc')
-        input_files = ['rename.nc' if x == self.services.get_config_param('INPUT_3') else x for x in input_files]
+        os.rename(self.services.get_config_param('TEMPLATE_NETCDF_INPUT'), 'rename.nc')
 
 #  Create plasma state from files.
         zip_ref = zipfile.ZipFile(self.services.get_config_param('CURRENT_TEMPLATE_STATE'), 'w')
 
 #  Add files to the zip file.
-        for file in input_files:
-            zip_ref.write(file)
-
+        zip_ref.write(self.services.get_config_param('TEMPLATE_NAMELIST_INPUT'))
+        zip_ref.write(self.services.get_config_param('TEMPLATE_DAT_INPUT'))
+        zip_ref.write('rename.nc')
+        
 #  Close the file.
         zip_ref.close()
 
