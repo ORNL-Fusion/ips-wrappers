@@ -941,17 +941,15 @@ class monitor(Component):
 
         workdir = services.get_working_dir()
         time.sleep(3)
-        #run_id = services.get_config_param('PORTAL_RUNID')
-        #print 'dir(datetime) = ', dir(datetime)
-        self.run_id = datetime.now().strftime("%y-%m-%d-%H-%M")
+        run_id = services.get_config_param('PORTAL_RUNID')
+        #print 'run_id = ', run_id
+        #self.run_id = datetime.now().strftime("%y-%m-%d-%H-%M")
         monitor_file = 'monitor_file.nc'
     	print 'monitor file = ', monitor_file
 
         self.cdfFile = self.run_id+'_' + monitor_file
         #self.cdfFile = monitor_file
         services.log('w3 monitor file = ' + self.cdfFile)
-        htmlFile = self.run_id +'.html'
-        #htmlFile = 'run_id' +'.html'
 
     # Copy current state over to working directory
         services.stage_plasma_state()
@@ -973,25 +971,11 @@ class monitor(Component):
             print 'Error copying file %s to %s: %s' % \
                 (monitor_file, self.cdfFile, strerror)
 
-#         htmlText = self.htmlText.replace('@CDF_FILE@',
-#                            os.path.join(self.W3_BASEURL, self.cdfFile))
-#         try:
-#             f = open(os.path.join(self.W3_DIR, htmlFile), 'w')
-#             f.write(htmlText)
-#             f.close()
-#         except IOError, (errno, strerror):
-#             print 'Error writing to file %s : %s' % \
-#                 (htmlFile, strerror)
-#             return
-#         monitorURL = os.path.join(self.W3_BASEURL , htmlFile)
-#         services.setMonitorURL(monitorURL)
-
     # Copy config file to w3 directory
         conf_file = services.get_config_param('SIMULATION_CONFIG_FILE')
         print 'conf_file = ', conf_file
         conf_file_name = os.path.split(conf_file)[1]
         new_file_name = self.run_id + '_' + conf_file_name
-        #new_file_name = 'run' + '_' + conf_file_name
         new_full_path = os.path.join(self.W3_DIR, new_file_name)
         try:
             shutil.copyfile(conf_file, new_full_path)
@@ -1021,15 +1005,12 @@ class monitor(Component):
         global monitorVars, ps_VarsList, monitorDefinition
         
         workdir = services.get_working_dir()
-        #run_id = services.get_config_param('PORTAL_RUNID')
+        run_id = services.get_config_param('PORTAL_RUNID')
         monitor_file = 'monitor_file.nc'
     #      print 'monitor file = ', monitor_file
 
         self.cdfFile = self.run_id+'_' + monitor_file.nc
-        #self.cdfFile = monitor_file
         services.log('w3 monitor file = ' + self.cdfFile)
-        htmlFile = self.run_id +'.html'
-        #htmlFile = 'run' +'.html'
         
     # Get restart files listed in config file.        
         try:
@@ -1047,18 +1028,6 @@ class monitor(Component):
         except IOError, (errno, strerror):
             print 'Error copying file %s to %s: %s' % \
                 (monitor_file, self.cdfFile, strerror)
-
-#         htmlText = self.htmlText.replace('@CDF_FILE@',
-#                            os.path.join(self.W3_BASEURL, self.cdfFile))
-#         try:
-#             f = open(os.path.join(self.W3_DIR, htmlFile), 'w')
-#             f.write(htmlText)
-#             f.close()
-#         except IOError, (errno, strerror):
-#             print 'Error writing to file %s : %s' % \
-#                 (htmlFile, strerror)
-#         monitorURL = os.path.join(self.W3_BASEURL , htmlFile)
-#         self.services.setMonitorURL(monitorURL)
     
         # Load monitorVars and ps_VarsList from pickle file "monitor_restart".
 
