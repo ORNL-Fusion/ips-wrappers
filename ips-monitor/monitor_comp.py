@@ -941,7 +941,8 @@ class monitor(Component):
 
         workdir = services.get_working_dir()
         time.sleep(3)
-        self.run_id = services.get_config_param('PORTAL_RUNID')
+        #self.run_id = services.get_config_param('PORTAL_RUNID')
+        self.run_id = self.get_config_param(services,'PORTAL_RUNID')
         print 'run_id = ', self.run_id
         monitor_file = 'monitor_file.nc'
     	print 'monitor file = ', monitor_file
@@ -1003,7 +1004,8 @@ class monitor(Component):
         global monitorVars, ps_VarsList, monitorDefinition
         
         workdir = services.get_working_dir()
-        self.run_id = services.get_config_param('PORTAL_RUNID')
+        #self.run_id = services.get_config_param('PORTAL_RUNID')
+        self.run_id = self.get_config_param(services,'PORTAL_RUNID')
         monitor_file = 'monitor_file.nc'
     #      print 'monitor file = ', monitor_file
 
@@ -2355,3 +2357,46 @@ class monitor(Component):
             print var, ' = ', value
     
         return value
+        
+        
+# ------------------------------------------------------------------------------
+#
+# "Private"  methods
+#
+# ------------------------------------------------------------------------------
+
+    # Try to get config parameter - wraps the exception handling for get_config_parameter()
+    def get_config_param(self, services, param_name, optional=False):
+
+        try:
+            value = services.get_config_param(param_name)
+            print param_name, ' = ', value
+        except Exception :
+            if optional: 
+                print 'config parameter ', param_name, ' not found'
+                value = None
+            else:
+                message = 'required config parameter ', param_name, ' not found'
+                print message
+                services.exception(message)
+                raise
+        
+        return value
+
+    # Try to get component specific config parameter - wraps the exception handling
+    def get_component_param(self, services, param_name, optional=False):
+
+        if hasattr(self, param_name):
+            value = getattr(self, param_name)
+            print param_name, ' = ', value
+        elif optional:
+            print 'optional config parameter ', param_name, ' not found'
+            value = None
+        else:
+            message = 'required component config parameter ', param_name, ' not found'
+            print message
+            services.exception(message)
+            raise
+        
+        return value
+
