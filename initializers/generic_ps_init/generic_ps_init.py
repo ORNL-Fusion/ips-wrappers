@@ -131,11 +131,6 @@ class generic_ps_init (Component):
     def init(self, timestamp=0.0):
         print (' ')
         print ('generic_ps_init.init() called')
-        services = self.services
-        run_id = datetime.now().strftime("%y-%m-%d-%H-%M")
-        services.set_config_param('DATE_TIME_ID', run_id)
-        print 'DATE_TIME_ID = ', run_id
-        cur_state_file = self.get_config_param(services,'DATE_TIME_ID')
         return
 
 # ------------------------------------------------------------------------------
