@@ -940,9 +940,9 @@ class monitor(Component):
         services = self.services
 
         workdir = services.get_working_dir()
-        time.sleep(3)
-        #self.run_id = services.get_config_param('PORTAL_RUNID')
-        self.run_id = self.get_config_param(services,'PORTAL_RUNID')
+        time.sleep(5)
+        self.run_id = services.get_config_param('PORTAL_RUNID')
+        #self.run_id = self.get_config_param(services,'PORTAL_RUNID')
         print 'run_id = ', self.run_id
         monitor_file = 'monitor_file.nc'
     	print 'monitor file = ', monitor_file
