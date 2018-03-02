@@ -13,7 +13,7 @@ This version combines several previous initializer routines and extends them.  T
 
 INIT_MODE = touch_only
 This mode only does a touch on all of the files listed as plasma state files so the 
-framework will have a complete set.  It does not 
+framework will have a complete set.  It does not actually put data in the plasma state file.
 
 INIT_MODE = minimal
 This is exactly the same as the previous minimal_state_init.py. It produces a CURRENT_STATE 
@@ -225,6 +225,7 @@ class generic_ps_init (Component):
                     print 'Error in call to updatePlasmaState()', e
                     raise
                 return
+            return
 
             try:       
                 services.stage_input_files(self.INPUT_FILES)
