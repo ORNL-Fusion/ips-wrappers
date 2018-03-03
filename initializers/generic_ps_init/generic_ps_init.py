@@ -225,7 +225,6 @@ class generic_ps_init (Component):
                     print 'Error in call to updatePlasmaState()', e
                     raise
                 return
-            return
 
             try:       
                 services.stage_input_files(self.INPUT_FILES)
