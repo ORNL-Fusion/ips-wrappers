@@ -356,6 +356,8 @@ class generic_ps_init (Component):
             plasma_state.variables['tinit'] = t0
             plasma_state.variables['tfinal'] = tfinal
             plasma_state.close()
+            
+            raise
                
         # For benefit of framework file handling generate dummy dakota.out file
         subprocess.call(['touch', 'dakota.out'])
