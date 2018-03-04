@@ -11,10 +11,9 @@ class gitr_comp(Component):
         print 'Created %s' % (self.__class__)
 
     def init(self, timeStamp=0.0):
-        #get plasma state files
-        self.services.update_plasma_state()         
         #Set up input deck
         gitr.copy_folder(self.INPUT_DIR,os.getcwd())
+        gitr.modifyInputParam(nT=self.NT)
         return
 
     def step(self, timeStamp=0.0):
@@ -25,6 +24,10 @@ class gitr_comp(Component):
         #monitor task until complete
         if (self.services.wait_task(task_id)):
             self.services.error('gitr_comp: step failed.')
+        
+        gitr.piscesProcessing()
+        self.services.update_plasma_state()         
+        
         return
     
     def finalize(self, timeStamp=0.0):

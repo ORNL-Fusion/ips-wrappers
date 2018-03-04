@@ -2,6 +2,7 @@
 
 from  component import Component
 import os
+import numpy as np
 
 class ftridynDriver(Component):
     def __init__(self, services, config):
@@ -31,7 +32,14 @@ class ftridynDriver(Component):
 
     def step(self, timeStamp=0.0):
         print('ftridyn_driver: step')
-        energy = [float(i) for i in self.ENERGY.split()]
+        energies = self.ENERGY.split()
+        if energies[0] == 'log' :
+            en1 = float(energies[1])
+            en2 = float(energies[2])
+            nEnergies = int(energies[3])
+            energy = np.logspace(en1, en2, num=nEnergies, base=10.0)
+        else :
+            energy = [float(i) for i in self.ENERGY.split()]
         angle = [float(i) for i in self.ANGLE.split()]
         roughness = [float(i) for i in self.ROUGHNESS.split()]
         
