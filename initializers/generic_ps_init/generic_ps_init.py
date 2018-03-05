@@ -359,8 +359,6 @@ class generic_ps_init (Component):
             plasma_state.variables['tfinal'] = tfinal
             plasma_state.close()
             print 'closed cur_state_file ', cur_state_file
-            
-            raise
               
         # For benefit of framework file handling generate dummy dakota.out file
         subprocess.call(['touch', 'dakota.out'])
@@ -385,6 +383,8 @@ class generic_ps_init (Component):
         except Exception, e:
             print 'Error in call to updatePlasmaState()', e
             raise
+            
+        raise
 
 # "Archive" output files in history directory
         services.stage_output_files(timeStamp, self.OUTPUT_FILES)
