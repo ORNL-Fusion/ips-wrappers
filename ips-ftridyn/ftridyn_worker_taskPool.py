@@ -88,8 +88,8 @@ class ftridynWorker(Component):
 
 
         spyl_file = ffilename+'SPYL.DAT'
-        driver_out = self.services.get_config_param('EA_OUTPUT')
-        fid = open(driver_out,'a')
+        #driver_out = self.services.get_config_param('EA_OUTPUT')
+        #fid = open(driver_out,'a')
         for i in range(len(energy)):
             for j in range(len(angle)):
                 for k in range(len(roughness)):
@@ -116,8 +116,8 @@ class ftridynWorker(Component):
                     nPenergyRef, nenergyRef, binsenergyRef = analyze_ftridyn_simulations.plot_reflected_energy_distributions(pathString+"/"+ffilename,nEgrid)
                     eDistributionRef[i,j,:] = nenergyRef
 
-                    fid.write(" ".join([str(energy[i]),str(angle[j]),str(roughness[k]),'  ',str(thisSpyl),'\n']))
-        fid.close()
+                    #fid.write(" ".join([str(energy[i]),str(angle[j]),str(roughness[k]),'  ',str(thisSpyl),'\n']))
+        #fid.close()
         rootgrp = netCDF4.Dataset("ftridyn.nc", "w", format="NETCDF4")
         ne = rootgrp.createDimension("nE", len(energy))
         na = rootgrp.createDimension("nA", len(angle))
