@@ -9,7 +9,7 @@ import math
 def binTridyn(inFile='last_TRIDYN_toBin.dat', outFile='last_TRIDYN.dat'):
 
 ## Open the files
-    depth, He, V, I = np.loadtxt(inFile, usecols = (0,1,2,3) , unpack=True)
+    depth, He, D, T, V, I = np.loadtxt(inFile, usecols = (0,1,2,3,4,5) , unpack=True)
 
 ## Look for indiceCut
     indiceCut = -1
@@ -22,6 +22,8 @@ def binTridyn(inFile='last_TRIDYN_toBin.dat', outFile='last_TRIDYN.dat'):
 ## Bin the concentrations
     depthBin = []
     heBin = []
+    dBin = []
+    tBin = []
     vBin = []
     iBin = []
 
@@ -30,6 +32,8 @@ def binTridyn(inFile='last_TRIDYN_toBin.dat', outFile='last_TRIDYN.dat'):
     for k in range (0, nBins):#200):
         depthBin.append(k/2.0)
         heBin.append(0.0)
+        dBin.append(0.0)
+        tBin.append(0.0)
         vBin.append(0.0)
         iBin.append(0.0)
 
@@ -41,6 +45,8 @@ def binTridyn(inFile='last_TRIDYN_toBin.dat', outFile='last_TRIDYN.dat'):
         if (indice != oldIndice):
             if (oldIndice >= 0):
                 heBin[oldIndice] = heBin[oldIndice] / float(i)
+                dBin[oldIndice] = dBin[oldIndice] / float(i)
+                tBin[oldIndice] = tBin[oldIndice] / float(i)
                 vBin[oldIndice] = vBin[oldIndice] / float(i)
                 iBin[oldIndice] = iBin[oldIndice] / float(i)
             i = 0
@@ -49,11 +55,17 @@ def binTridyn(inFile='last_TRIDYN_toBin.dat', outFile='last_TRIDYN.dat'):
         i = i + 1
         if (indice < indiceCut):
             heBin[indice] = heBin[indice] + He[k]
+            dBin[indice] = dBin[indice] + D[k]
+            tBin[indice] = tBin[indice] + T[k]
             vBin[indice] = vBin[indice] + V[k]
             iBin[indice] = iBin[indice] + I[k]
         else:
             heBin[indice] = heBin[indice] + He[k]
             heBin[indice-1] = heBin[indice-1] + He[k]
+            dBin[indice] = dBin[indice] + D[k]
+            dBin[indice-1] = dBin[indice-1] + D[k]
+            tBin[indice] = tBin[indice] + T[k]
+            tBin[indice-1] = tBin[indice-1] + T[k]
             vBin[indice] = vBin[indice] + V[k]
             vBin[indice-1] = vBin[indice-1] + V[k]
             iBin[indice] = iBin[indice] + I[k]
@@ -66,8 +78,8 @@ def binTridyn(inFile='last_TRIDYN_toBin.dat', outFile='last_TRIDYN.dat'):
     for i in range(0, len(depthBin)):
     
     ## Write in the output file
-        if (heBin[i] > 0.0):
-            outputFile.write("%s %s %s %s\n" %(depthBin[i], heBin[i], vBin[i], iBin[i]))
+        if (heBin[i] > 0.0 or dBin[i] > 0.0 or tBin[i] > 0.0):
+            outputFile.write("%s %s %s %s %s %s\n" %(depthBin[i], heBin[i], dBin[i], tBin[i], vBin[i], iBin[i]))
 
 ## Close the output file
     outputFile.close()

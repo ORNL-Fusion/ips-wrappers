@@ -9,7 +9,7 @@ import shutil
 import translate_xolotl_to_ftridyn
 import translate_ftridyn_to_xolotl
 import binTRIDYN
-import xolotl_param_handler
+import param_handler
 
 class xolotlFtridynDriver(Component):
     def __init__(self, services, config):
@@ -39,10 +39,10 @@ class xolotlFtridynDriver(Component):
 
         self.driver={}
         for k,v in self.DRIVER_INPUT_PARAMETERS.iteritems():
-            if xolotl_param_handler.is_int(v):
+            if param_handler.is_int(v):
                 print '\t integer input parameter ', k, ' = ', v
                 self.driver[k]=int(v)
-            elif xolotl_param_handler.is_float(v):
+            elif param_handler.is_float(v):
                 print '\t float input parameter ', k, ' = ' , v
                 self.driver[k]=float(v)
             else:
@@ -62,7 +62,7 @@ class xolotlFtridynDriver(Component):
         dim=int(self.XOLOTL_INPUT_PARAMETERS['dimensions'])
         xolotl_param_template=self.XOLOTL_PARAM_TEMPLATE_PATH+'/paramXolotl_'+str(dim)+'D.txt'
         print '\t reading Xolotl default parameters from', xolotl_param_template
-        self.xp = xolotl_param_handler.xolotl_params()
+        self.xp = param_handler.xolotl_params()
         self.xp.read(xolotl_param_template)
         print '\t running Xolotl in ' , dim, 'D'
         print ' '
@@ -72,10 +72,10 @@ class xolotlFtridynDriver(Component):
         print 'reading XOLOTL parameters from ips config file:' #this is a test:
 
         for k,v in self.XOLOTL_INPUT_PARAMETERS.iteritems():
-            if xolotl_param_handler.is_int(v):
+            if param_handler.is_int(v):
                 print '\t integer input parameter ', k, ' = ' , self.xp.parameters[k] , ' with ' , v
                 self.xp.parameters[k]=int(v)
-            elif xolotl_param_handler.is_float(v):                
+            elif param_handler.is_float(v):                
                 print '\t float input parameter ', k, ' = ' , self.xp.parameters[k] , ' with ' , v
                 self.xp.parameters[k]=float(v)
             else:
@@ -85,10 +85,10 @@ class xolotlFtridynDriver(Component):
         print ' '
         print 'replacing PETSC arguments from ips config file:' #this is a test:
         for k,v in self.XOLOTL_INPUT_PETSCARGS.iteritems():
-            if xolotl_param_handler.is_int(v):
+            if param_handler.is_int(v):
                 print '\t integer ', k, ' = ' , self.xp.parameters['petscArgs'][k] , ' with ' , v
                 self.xp.parameters['petscArgs'][k]=int(v)
-            elif xolotl_param_handler.is_float(v):
+            elif param_handler.is_float(v):
                 print '\t float ', k, ' = ' , self.xp.parameters['petscArgs'][k] , ' with ' , v
                 self.xp.parameters['petscArgs'][k]=float(v)
             else:
@@ -99,35 +99,86 @@ class xolotlFtridynDriver(Component):
         if self.driver['FTX_COUPLING']=='False':
             del self.xp.parameters['petscArgs']['-tridyn']
 
-        ### YET TO FIGURE OUT ###
-        #delete Xolotl 'process'es that are specified as False in ips.config
-        #xolotl_processes=xp.parameters['process']
-        #for i in range(len(xolotl_processes)):            
-        #    if not self.xolotl_processes[i]:
-        #        xp.parameters['process'].replace(xProcess,'')        
-        #        del xp.parameters['process'].
+        #CONTROL WHICH PROCESSES ARE ON:
+        #delete Xolotl processes that are specified as false in ips.config
+        print ' '
+        xp_processes={}
+        for k,v in self.XOLOTL_INPUT_PROCESSES.iteritems(): #specified in ips.config
+            xp_processes[k]=v
+
+        processList=self.xp.parameters['process'] #all processes, specified in param template
+        processString=''
+
+        for p in range(len(processList)):
+            key=processList[p]
+            if (key in xp_processes) and (xp_processes[key]=='false'):
+                print 'delete ', key, ' from Xolotl params, as it was set to false in ips.config' #this is a test
+            else:
+                processString+=key+' '
+        print 'processes included in Xolotl are: ', processString.strip() #this is a test
+        self.xp.parameters['process']=processString.strip()
+
+
+        #INCLUDE IF NEEDED (already debugged)
+        #explicitly delete 'grouping' from xolotl params if grouping is OFF (groupHeV > MaxVSize)
+
+        #if 'grouping' in self.xp.parameters:
+        #    print 'this is a test: check if we should keep grouping'
+
+        #    netParamList=self.xp.parameters['netParam'].split()      #maxVSize=netParamList[3]
+        #    print 'this is test: netParamList is ', netParamList        
+        #    groupingList=self.xp.parameters['grouping'].split()      #groupHeV=groupingList[0]
+        #    print 'this is test: groupingList is ', groupingList
+
+        #    if float(groupingList[0]) > float(netParamList[3]):
+        #        del self.xp.parameters['grouping']
+        #        print 'this is a test: grouping deleted as groupHeV=', groupingList[0], ' and maxVSize=', netParamList[3]
+        #else:
+        #    print 'this is a test: no grouping exists in xp.parameters dictionary'
+
 
 
         ### GITR RELATED PARAMETERS ###
-        #turn this into for
-        #for k,v in self.GITR_INPUT_PARAMETERS.iteritems():
-            #if xolotl_param_handler.is_int(v):
-            #    print '\t this is a test: replacing integer GITR input parameter ', k, ' = ' , self.xp.parameters[k] , ' with ' , v
-            #    self.gitr.parameters[k]=int(v)
-            #elif xolotl_param_handler.is_float(v):
-            #    print '\t this is a test: replacing float GITR input parameter ', k, ' = ' , self.xp.parameters[k] , ' with ' , v
-            #    self.gitr.parameters[k]=float(v)
-            #else:
-            #    print '\t this is a test: replacing other ', type(v), ' GITR input parameter ', k, ' = ' , self.xp.parameters[k] , ' with ' , v
-            #    self.gitr.parameters[k]=v                
-
-
-        print '\n'
-        print 'read from ips.config GITR_INPUT_PARAMETERS' #this is a test:
-        print '\t plasmaSpecies =', self.GITR_INPUT_PARAMETERS['inputFluxFraction']
-        print '\t plasmaSpecies =', self.GITR_INPUT_PARAMETERS['plasmaSpecies']
         
-        self.plasmaSpecies=self.GITR_INPUT_PARAMETERS['plasmaSpecies']
+        self.gitr = {} #xolotl_param_handler.xolotl_params()
+        #self.gitr.parameters=
+        self.gitr=param_handler.read('../../'+self.GITR_OUTPUT_FILE)
+
+        #print 'this is a test: GITR PARAMETERS READ FROM ', self.GITR_OUTPUT_FILE , 'are: '
+        #print '\t', self.gitr
+
+        for k,v in self.GITR_INPUT_PARAMETERS.iteritems(): #self.gitr.parameters.iteritems():
+            if param_handler.is_int(v):
+                print '\t reading integer GITR input parameter ', k, ' = ' , v #this is a test
+                self.gitr[k]=int(v)
+            elif param_handler.is_float(v):
+                print '\t reading float GITR input parameter ', k, ' = '  , v #this is a test
+                self.gitr[k]=float(v)
+            elif param_handler.is_list(v):
+                values = []
+                for val in v.split(' '):
+                    if param_handler.is_int(val):
+                        values.append(int(val))
+                    elif param_handler.is_float(val):
+                        values.append(float(val))
+                    else:
+                        values.append(val)
+                print '\t reading list GITR input parameter ', k, ' = ' , values  #this is a test
+                self.gitr[k]=values                
+            else:
+                print '\t reading string GITR input parameter ', k, ' = ' , v  #this is a test
+                self.gitr[k]=v
+        print ' '
+
+        print '\t GITR output will be read from ' , self.gitr['gitrOutputDir']  #this is a test
+
+        ##NOT SURE IF THERE ARE MORE XOLOTL OR FT PARAMETERS THAT NEED TO OVERWRITTEN
+        if 'flux' in self.gitr:
+            self.xp.parameters['flux']=self.gitr['flux']
+            print 'replaced flux in Xolotl by value given by GITR, ', self.gitr['flux']  #this is a test
+        else:
+            print 'no flux specified in GITR, so using values in Xolotl, ', self.xp.parameters['flux'] #this is a test
+
 
         #### FTRIDYN PARAMETERS ##### 
         ##LOOP OVER LIST OF PLASMA SPECIES SPECIES #########
@@ -136,10 +187,10 @@ class xolotlFtridynDriver(Component):
 
         self.ftridyn={}
         for k,v in self.FTRIDYN_INPUT_PARAMETERS.iteritems():
-            if xolotl_param_handler.is_int(v):
+            if param_handler.is_int(v):
                 print '\t integer input parameter ', k, ' = ', v
                 self.ftridyn[k]=int(v)
-            elif xolotl_param_handler.is_float(v):
+            elif param_handler.is_float(v):
                 print '\t float input parameter ', k, ' = ' , v
                 self.ftridyn[k]=float(v)
             else:
@@ -153,7 +204,7 @@ class xolotlFtridynDriver(Component):
         self.inAngle=[] #values in input file
         self.angleIn=[] #values used in simulation: read from ips.config or from angular distrib file
         self.weightAngle=[]
-        self.fluxFraction=[]
+        #self.fluxFraction=[]
         #other parameters
         self.spYield=[]
         self.spYieldMode=[]        
@@ -167,21 +218,21 @@ class xolotlFtridynDriver(Component):
         inputEnergy=self.ftridyn['inputEnergy'].split(' ')
         inputAngle=self.ftridyn['inputAngle'].split(' ')
         inputSpYield=self.ftridyn['inputSpYield'].split(' ')
-        inputFluxFraction=self.GITR_INPUT_PARAMETERS['inputFluxFraction'].split(' ')        
+        #inputFluxFraction=self.GITR_INPUT_PARAMETERS['inputFluxFraction'].split(' ')        
 
-        i=0
-        for prj in self.plasmaSpecies: 
+        for i in range(len(self.gitr['plasmaSpecies'])): #self.plasmaSpecies.iteritems():
+            prj=self.gitr['plasmaSpecies'][i]
 
             self.energyIn.append(float(inputEnergy[i]))
             self.inAngle.append(float(inputAngle[i]))
             self.spYield.append(float(inputSpYield[i]))
-            self.fluxFraction.append(float(inputFluxFraction[i]))
-            print '\t index ',i, 'species ', self.plasmaSpecies[i]
+            #self.fluxFraction.append(float(inputFluxFraction[i]))
+            print '\t index ',i, 'species ',  self.gitr['plasmaSpecies'][i] #self.plasmaSpecies[i]
             print '\t energy ' , self.energyIn[i] , ' angle ' , self.inAngle[i] 
-            print '\t spYield ' , self.spYield[i] , ' fluxFraction ', self.fluxFraction[i]  
+            print '\t spYield ' , self.spYield[i] , ' fluxFraction ', self.gitr['fluxFraction'][i] #self.fluxFraction[i]  
 
             if self.inAngle[i] < 0 :
-                self.angleDistrFile.append(self.GITR_OUTPUT_DIR+'_'+prj +'/'+self.GITR_ANGLE_DISTRIB_FILE)
+                self.angleDistrFile.append(self.gitr['gitrOutputDir'].strip()+'_'+prj +'/'+self.GITR_ANGLE_DISTRIB_FILE.strip()) #gitr['angleDistribFile'])
                 print '\t angle distribution file for ', prj , ' found; ', self.angleDistrFile[i] #test angles are assigned correctly
                 a , w = numpy.loadtxt(self.angleDistrFile[i], usecols = (0,1) , unpack=True)
                 self.angleIn.append(a)
@@ -206,8 +257,9 @@ class xolotlFtridynDriver(Component):
             #leave 'others' empty for a pure FT run
 
             if self.energyIn[i] < 0:
+                print 'get information about energy and angle from: ',self.gitr['gitrOutputDir'].strip()+'_'+prj  #this is a test
                 self.FT_energy_file_name.append(self.FT_ENERGY_INPUT_FILE[i]) #"He_W0001.ED1"                              
-                self.GITR_energy_output_path.append(self.GITR_OUTPUT_DIR+'_'+prj) #where all the energy distribution files are located
+                self.GITR_energy_output_path.append(self.gitr['gitrOutputDir'].strip()+'_'+prj) #where all the energy distribution files are located
                 self.GITR_energy_output_file.append(['dist','.dat'])
             else:
                 self.FT_energy_file_name.append(' ')
@@ -216,8 +268,6 @@ class xolotlFtridynDriver(Component):
             
             #initialize maxRangeXolotl list
             self.maxRangeXolotl.append(0.0)
-
-            i+=1
 
 
         #MAYBE THIS CAN ALSO BE WRITTEN MORE ELEGANTLY
@@ -275,24 +325,43 @@ class xolotlFtridynDriver(Component):
             if (self.driverMode == 'INIT'):
                 print('\t init mode yes')
                 self.ftridyn['iQ0']=0
+
+                targetList=[]
+                targetList.append(self.gitr['plasmaSpecies'][0]) #only W in the first loop
+                for i in range(1,4):
+                    targetList.append('') #leave empty
+
                 self.ftridyn['nDataPts'] = 100 #same as default value in generate_ftridyn_input
                 if (self.ftridyn['totalDepth']==0.0):
                     self.ftridyn['nTT']=self.ftridyn['initialTotalDepth']
                 else:
                     self.ftridyn['nTT']=self.ftridyn['totalDepth']
-
+                
             else:
                 print('\t init mode no')
                 self.ftridyn['iQ0']=-1
                 self.ftridyn['nDataPts'] = translate_xolotl_to_ftridyn.xolotlToLay(totalDepth=self.ftridyn['totalDepth'])
+                #prepare target strings for F-Tridyn:
+                #we always have W in the substrate  (tg1); others are optional; mixed material composition given by LAY file
+                targetList=[]
+                targetList.append(self.gitr['plasmaSpecies'][0])
+                for i in range(1,4): #generate_ftridyn_input expects max 4 target species; declare all, even if empty
+                    if self.gitr['plasmaSpecies'][i] and self.gitr['fluxFraction'][i]: #species exists and fraction > 0
+                        targetList.append(self.gitr['plasmaSpecies'][i])
+                        #print 'this is a test: adding ', targetList[i], ' as target number ' , i+1 ,' of F-Tridyn'
+                    else:
+                        targetList.append('') #leave empty
+                        #print 'this is a test: target number ' , i+1 ,' of F-Tridyn empty, as fraction =0.0 or does not exist'
+                print 'this is a test: passing to F-Tridyn the list of targets ' , targetList
+
 
                 #Xolotl only outputs He_W0001.LAY; but it's same substrate composition for running all projectiles
-                i=0
-                for prj in self.plasmaSpecies:
+                iHe=self.gitr['plasmaSpecies'].index('He')
+                for i in range(len(self.gitr['plasmaSpecies'])): #self.plasmaSpecies.iteritems():
+                    prj=self.gitr['plasmaSpecies'][i]
                     if prj!='He': #do not self-copy
-                        print '\t copy ', self.FTX_LAY_FILE[0], ' as ', self.FTX_LAY_FILE[i] #this is a test:
-                        shutil.copyfile(self.FTX_LAY_FILE[0],self.FTX_LAY_FILE[i])
-                    i+=1
+                        print '\t copy ', self.FTX_LAY_FILE[iHe], ' as ', self.FTX_LAY_FILE[i] #this is a test:
+                        shutil.copyfile(self.FTX_LAY_FILE[iHe],self.FTX_LAY_FILE[i])
                 
                 if (self.ftridyn['totalDepth']==0.0):
                     print '\t Totaldepth from last_TRIDYN.dat'
@@ -304,19 +373,21 @@ class xolotlFtridynDriver(Component):
 
             self.services.update_plasma_state()
 
-            # B) RUN FTRIDYN FOR He-> W
+            # B) RUN FTRIDYN
 
-            i=0 ; #keep track of which projectile, as energy, angle, etc. as given as list, e.g.: [E(He), E(W), E(D), E(T)]
-            for prj in self.plasmaSpecies:
-                
-                if self.fluxFraction[i]>0.0: 
-                    
+            for i in range(len(self.gitr['plasmaSpecies'])): #self.plasmaSpecies.iteritems():
+                prj=self.gitr['plasmaSpecies'][i]
+
+                if self.gitr['fluxFraction'][i] > 0.0: #self.fluxFraction[i]>0.0:                     
+                    print 'running F-Tridyn for ', prj  , ' with flux fraction = ', self.gitr['fluxFraction'][i], ' > 0.0' #this is a test
+
                     #component/method calls now include arguments (variables)
-                    self.services.call(ftridyn, 'init', timeStamp, dTime=time, fPrj=prj, fTg='W', ftParameters=self.ftridyn , fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], ft_folder=self.FT_OUTPUT_FOLDER, input_file=self.FT_INPUT_FILE[i], otherInFiles=[self.FT_SURFACE_FILE,self.FTX_LAY_FILE[i]], energy_file_name=self.FT_energy_file_name[i], orig_energy_files_path=self.GITR_energy_output_path[i], orig_energy_files_pattern=self.GITR_energy_output_file[i])
+                    self.services.call(ftridyn, 'init', timeStamp, dTime=time, fPrj=prj, fTargetList=targetList, ftParameters=self.ftridyn , fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], ft_folder=self.FT_OUTPUT_FOLDER, input_file=self.FT_INPUT_FILE[i], otherInFiles=[self.FT_SURFACE_FILE,self.FTX_LAY_FILE[i]], energy_file_name=self.FT_energy_file_name[i], orig_energy_files_path=self.GITR_energy_output_path[i], orig_energy_files_pattern=self.GITR_energy_output_file[i])
 
-                    self.services.call(ftridyn, 'step', timeStamp, fPrj=prj, fTg='W', fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i])
+                    self.services.call(ftridyn, 'step', timeStamp, fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i])
 
                     self.services.stage_plasma_state()
+
 
                     # C) POSTPROCESSING OF prj -> W
 
@@ -385,31 +456,30 @@ class xolotlFtridynDriver(Component):
                 #if flux fraction == 0:
                 else:
 
-                    print 'Skip running FTridyn for ' , prj , ' as fraction in plasma is', self.fluxFraction[i] , '\n'
+                    print 'Skip running FTridyn for ' , prj , ' as fraction in plasma is', self.gitr['fluxFraction'][i] , '\n' #self.fluxFraction[i] , '\n'
                     self.spYield[i]=0.0
                     self.maxRangeXolotl[i]=0.0
                     outputFTFile=open(self.FT_OUTPUT_PROFILE_TEMP, "w")
-                    outputFTFile.write("0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0")
+                    outputFTFile.write("0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 ")
                     outputFTFile.close()
 
                     #keep copies of tridyn.dat    
                     ft_output_profile_temp_prj=self.FT_OUTPUT_PROFILE_TEMP+'_'+prj #for each species
                     shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP,ft_output_profile_temp_prj)
                     shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP, timeFolder+'/'+ft_output_profile_temp_prj)
-                    
-                i+=1
+
                     
             #end of for loop:
             ######species independent ############
 
             #6) write sputtering yields to file so they can be used by Xolotl
-            i=0
+
             spYString=str(time)
             print 'Sputtering Yield due to '
-            for prj in self.plasmaSpecies:                
+            for i in range(len(self.gitr['plasmaSpecies'])): #self.plasmaSpecies.iteritems():  
+                prj=self.gitr['plasmaSpecies'][i]
                 print '\t ', prj , ' = ', self.spYield[i]
                 spYString+=' ' +str(self.spYield[i])
-                i+=1
             
             #write sp Yields to file (temp) and append to spYield output (final)
             spTempfile = open(self.FTX_SPUT_YIELDS_FILE_TEMP,"w+")
@@ -429,19 +499,19 @@ class xolotlFtridynDriver(Component):
                 os.remove(self.FT_OUTPUT_PROFILE_TEMP)
             combinedFile = open(self.FT_OUTPUT_PROFILE_TEMP, 'a')
             
-            i=0
-            for prj in self.plasmaSpecies:
+            #tridyn.dat always in order: He, W, D, T --> maintain that here, regardless of order in plasmaSpecies
+            for prj in ['He', 'W', 'D', 'T']:
+                i=self.gitr['plasmaSpecies'].index(prj)
                 ft_output_profile_temp_prj=timeFolder+'/'+self.FT_OUTPUT_PROFILE_TEMP+'_'+prj
                 profile=open(ft_output_profile_temp_prj, "r")
                 tridynString=profile.read().rstrip('\n')
                 combinedTridynString=str(tridynString)+str(self.maxRangeXolotl[i])
-                if prj=='He': #no fraction needed for He 
-                    combinedFile.write("%s" %(combinedTridynString))
-                else: #prj!='He' #include plasma fraction
-                    combinedFile.write("\n%s" %(str(self.fluxFraction[i])))
-                    combinedFile.write("\n%s" %(combinedTridynString))
+                #if prj=='He': #no fraction needed for He 
+                #    combinedFile.write("%s" %(combinedTridynString))
+                #else: #prj!='He' #include plasma fraction
+                combinedFile.write("%s\n" %(str(self.gitr['fluxFraction'][i]))) #self.fluxFraction[i]
+                combinedFile.write("%s\n" %(combinedTridynString))
                 profile.close()
-                i+=1            
             combinedFile.close()
 
             #compress output
@@ -466,11 +536,12 @@ class xolotlFtridynDriver(Component):
             #Xolotl paramter modifications that need to be done at every loop
 
             #calculate effective sputtering yield; i.e., weighted by relative flux of W-to-He
-            i=0
             totalSpYield=0
-            for prj in self.plasmaSpecies:
-                totalSpYield+=(float(self.fluxFraction[i])*self.spYield[i])
-                i+=1
+
+            for i in range(len(self.gitr['plasmaSpecies'])): #self.plasmaSpecies.iteritems():
+                prj=self.gitr['plasmaSpecies'][i]
+                totalSpYield+=(float(self.gitr['fluxFraction'][i])*self.spYield[i]) #self.fluxFraction[i]
+
 
             self.xp.parameters['sputtering'] = totalSpYield            
             self.xp.parameters['petscArgs']['-ts_final_time']=time+self.driver['LOOP_TIME_STEP']
@@ -517,10 +588,8 @@ class xolotlFtridynDriver(Component):
                 #set a maximum number of tries
                 if self.collapsedLoops<=int(self.driver['MAX_COLLAPSE_LOOPS']):
 
-                    #print 'this is a test: passing xolotl dictionary \n', self.xp.parameters
-
                     self.services.call(xolotl, 'init', timeStamp, dTime=time, xFtCoupling=self.driver['FTX_COUPLING'], xParameters=self.xp.parameters)
-                    self.services.call(xolotl, 'step', timeStamp, dTime=time, dZipOutput=self.driver['ZIP_OUTPUT'], xHe_conc=self.petsc_heConc)
+                    self.services.call(xolotl, 'step', timeStamp, dTime=time, dZipOutput=self.driver['ZIP_OUTPUT'], xHe_conc=self.petsc_heConc, xParameters=self.xp.parameters)
 
                     self.services.stage_plasma_state()
 
@@ -619,7 +688,6 @@ class xolotlFtridynDriver(Component):
             if self.driver['XOLOTL_MAXTS_FACTOR'] != 1:
                 if (self.driver['LOOP_N']%self.driver['XOLOTL_MAXTS_NLOOPS']==0):
                     print '\n',"change in Xolotl's maximum time step after loop ", self.driver['LOOP_N']
-                    print 'type of petscArg -ts_adapt_dt_max is ', type(self.xp.parameters['petscArgs']['-ts_adapt_dt_max'])
                     self.xp.parameters['petscArgs']['-ts_adapt_dt_max']*=self.driver['XOLOTL_MAXTS_FACTOR']
                     print 'multiply time step by ', self.driver['XOLOTL_MAXTS_FACTOR'] , ' for a new time step = ', self.xp.parameters['petscArgs']['-ts_adapt_dt_max']
                 else:
