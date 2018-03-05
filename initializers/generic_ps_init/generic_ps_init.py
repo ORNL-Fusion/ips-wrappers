@@ -383,8 +383,6 @@ class generic_ps_init (Component):
 
 # "Archive" output files in history directory
         services.stage_output_files(timeStamp, self.OUTPUT_FILES)
-        
-        raise
 
 # ------------------------------------------------------------------------------
 #
