@@ -347,9 +347,7 @@ class generic_ps_init (Component):
             tfinal = timeloop[-1]
 
             # Put into current plasma state
-            print 'opening cur_state_file ', cur_state_file
             plasma_state = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
-            print 'opened cur_state_file ', cur_state_file
             plasma_state.variables['tokamak_id'] = tokamak
             plasma_state.variables['shot_number'] = shot_number
             plasma_state.variables['run_id'] = run_id
@@ -358,7 +356,6 @@ class generic_ps_init (Component):
             plasma_state.variables['tinit'] = t0
             plasma_state.variables['tfinal'] = tfinal
             plasma_state.close()
-            print 'closed cur_state_file ', cur_state_file
               
         # For benefit of framework file handling generate dummy dakota.out file
         subprocess.call(['touch', 'dakota.out'])
