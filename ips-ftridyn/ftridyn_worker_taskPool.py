@@ -58,9 +58,21 @@ class ftridynWorker(Component):
         angle = keywords["aArg"]
         roughness = keywords["dArg"]
 
+        nEgrid = 100
+        maxE = 100.0
+        nAgrid = 50
         sputt = np.zeros(shape=(len(energy),len(angle)))
-        cosDistribution = np.zeros(shape=(len(energy),len(angle),50)) 
-        eDistribution = np.zeros(shape=(len(energy),len(angle),50)) 
+        refl = np.zeros(shape=(len(energy),len(angle)))
+        eDistEgrid = np.linspace(0.0,maxE-maxE/nEgrid,nEgrid) 
+        cosDistAgrid = np.linspace(0.0,90.0-90.0/nAgrid,nAgrid) 
+        cosXDistribution = np.zeros(shape=(len(energy),len(angle),nAgrid)) 
+        cosYDistribution = np.zeros(shape=(len(energy),len(angle),nAgrid)) 
+        cosZDistribution = np.zeros(shape=(len(energy),len(angle),nAgrid)) 
+        cosXDistributionRef = np.zeros(shape=(len(energy),len(angle),nAgrid)) 
+        cosYDistributionRef = np.zeros(shape=(len(energy),len(angle),nAgrid)) 
+        cosZDistributionRef = np.zeros(shape=(len(energy),len(angle),nAgrid)) 
+        eDistribution = np.zeros(shape=(len(energy),len(angle),nEgrid)) 
+        eDistributionRef = np.zeros(shape=(len(energy),len(angle),nEgrid)) 
         cwd = self.services.get_working_dir()
         pool = self.services.create_task_pool('pool')
         for i in range(len(energy)):
@@ -76,8 +88,8 @@ class ftridynWorker(Component):
 
 
         spyl_file = ffilename+'SPYL.DAT'
-        driver_out = self.services.get_config_param('EA_OUTPUT')
-        fid = open(driver_out,'a')
+        #driver_out = self.services.get_config_param('EA_OUTPUT')
+        #fid = open(driver_out,'a')
         for i in range(len(energy)):
             for j in range(len(angle)):
                 for k in range(len(roughness)):
@@ -87,28 +99,58 @@ class ftridynWorker(Component):
                     thisSpyl = WW.calculate_total_sputtering_yield()
                     print('sputtering yield', thisSpyl)
                     sputt[i,j] = thisSpyl
-                    nP, n, bins = analyze_ftridyn_simulations.plot_sputtered_angular_distributions(pathString+"/"+ffilename)
-                    cosDistribution[i,j,:] = n
-                    nPenergy, nenergy, binsenergy = analyze_ftridyn_simulations.plot_sputtered_energy_distributions(pathString+"/"+ffilename)
+                    thisRefyl = WW.calculate_total_reflection_yield()
+                    print('reflection yield', thisRefyl)
+                    refl[i,j] = thisRefyl
+                    nP, nX, binsX,nY,binsY,nZ, binsZ = analyze_ftridyn_simulations.plot_sputtered_angular_distributions(pathString+"/"+ffilename,nAgrid)
+                    cosXDistribution[i,j,:] = nX
+                    cosYDistribution[i,j,:] = nY
+                    cosZDistribution[i,j,:] = nZ
+                    nP, nX, binsX,nY,binsY,nZ, binsZ = analyze_ftridyn_simulations.plot_reflected_angular_distributions(pathString+"/"+ffilename,nAgrid)
+                    cosXDistributionRef[i,j,:] = nX
+                    cosYDistributionRef[i,j,:] = nY
+                    cosZDistributionRef[i,j,:] = nZ
+                    nPenergy, nenergy, binsenergy = analyze_ftridyn_simulations.plot_sputtered_energy_distributions(pathString+"/"+ffilename,nEgrid)
                     eDistribution[i,j,:] = nenergy
                     analyze_ftridyn_simulations.plot_implantation_profile(pathString+"/"+ffilename)
+                    nPenergyRef, nenergyRef, binsenergyRef = analyze_ftridyn_simulations.plot_reflected_energy_distributions(pathString+"/"+ffilename,nEgrid)
+                    eDistributionRef[i,j,:] = nenergyRef
 
-                    fid.write(" ".join([str(energy[i]),str(angle[j]),str(roughness[k]),'  ',str(thisSpyl),'\n']))
-        fid.close()
+                    #fid.write(" ".join([str(energy[i]),str(angle[j]),str(roughness[k]),'  ',str(thisSpyl),'\n']))
+        #fid.close()
         rootgrp = netCDF4.Dataset("ftridyn.nc", "w", format="NETCDF4")
         ne = rootgrp.createDimension("nE", len(energy))
         na = rootgrp.createDimension("nA", len(angle))
-        nbins = rootgrp.createDimension("nBins", 50)
+        nedistgrid = rootgrp.createDimension("nEdistBins", nEgrid)
+        nadistgrid = rootgrp.createDimension("nAdistBins", nAgrid)
         spyld = rootgrp.createVariable("spyld","f8",("nE","nA"))
+        rfyld = rootgrp.createVariable("rfyld","f8",("nE","nA"))
         ee = rootgrp.createVariable("E","f8",("nE"))
         aa = rootgrp.createVariable("A","f8",("nA"))
-        cosdist = rootgrp.createVariable("cosDist","f8",("nE","nA","nBins"))
-        edist = rootgrp.createVariable("energyDist","f8",("nE","nA","nBins"))
+        cosxdist = rootgrp.createVariable("cosXDist","f8",("nE","nA","nAdistBins"))
+        cosydist = rootgrp.createVariable("cosYDist","f8",("nE","nA","nAdistBins"))
+        coszdist = rootgrp.createVariable("cosZDist","f8",("nE","nA","nAdistBins"))
+        cosxdistref = rootgrp.createVariable("cosXDistRef","f8",("nE","nA","nAdistBins"))
+        cosydistref = rootgrp.createVariable("cosYDistRef","f8",("nE","nA","nAdistBins"))
+        coszdistref = rootgrp.createVariable("cosZDistRef","f8",("nE","nA","nAdistBins"))
+        edist = rootgrp.createVariable("energyDist","f8",("nE","nA","nEdistBins"))
+        edistref = rootgrp.createVariable("energyDistRef","f8",("nE","nA","nEdistBins"))
+        edistegrid = rootgrp.createVariable("eDistEgrid","f8",("nEdistBins")) 
+        cosdistagrid = rootgrp.createVariable("cosDistAgrid","f8",("nAdistBins")) 
         ee[:] = energy
         aa[:] = angle
+        edistegrid[:] = eDistEgrid
+        cosdistagrid[:] = cosDistAgrid
         spyld[:] = sputt
-        cosdist[:] = cosDistribution
+        rfyld[:] = refl
+        cosxdist[:] = cosXDistribution
+        cosydist[:] = cosYDistribution
+        coszdist[:] = cosZDistribution
+        cosxdistref[:] = cosXDistributionRef
+        cosydistref[:] = cosYDistributionRef
+        coszdistref[:] = cosZDistributionRef
         edist[:] = eDistribution
+        edistref[:] = eDistributionRef
         rootgrp.close()
         #updates plasma state FTridyn output files
         self.services.update_plasma_state()
