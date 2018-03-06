@@ -1,5 +1,15 @@
 #! /usr/bin/env python
 
+# Version 4.0 3/6/2018 (Batchelor)
+# Eliminated reference to cur_cql_file and cur_dql_file since they are not used here.
+# Also generally cleaned up.  Now the fortran executable model_RF_IC_3 requires 4
+# commandline arguments:
+#       1) path to the current plasma state file
+#       2) path to the current plasma eqdsk file
+#       3) action mode, i.e. one of: "INIT", "STEP", or "FINALIZE"
+#       4) time stamp the time set by the driver component to which the simulation is 
+#          supposed to advance.
+
 # version 3.0 2/28/2015 (Batchelor)
 # Worked on the exception handling
 
@@ -13,7 +23,8 @@
 
 # version 0.0 3/28/08 (Batchelor)
 # ------------------------------------------------------------------------------
-# RF_IC component script to drive change_ICRF_profiles executable. The executable requires 3
+# RF_IC component script to drive change_ICRF_profiles executable. The fortran executable
+# model_RF_IC_3 requires 6
 # commandline arguments:
 #       1) path to the current plasma state file
 #       2) path to the current plasma eqdsk file
@@ -93,22 +104,6 @@ class model_RF_IC_3 (Component):
             logMsg = 'Error executing '.join(map(str, cmd))
             self.services.error(logMsg)
             raise Exception(logMsg)
-
-#         print ' ', [RF_IC_bin, cur_state_file, 'INIT', timeStamp]
-#         try:
-#             retcode = subprocess.call([RF_IC_bin, cur_state_file, cur_eqdsk_file,
-#                 cur_cql_file, cur_dql_file, 'INIT', timeStamp])     
-#         except Exception: 
-#             message = "Error executing " +  RF_IC_bin
-#             print message
-#             self.services.error(message)  
-#             raise
-#         else: 
-#             if (retcode != 0):
-#                 message = "Abnormal termination of " + RF_IC_bin
-#                 print message
-#                 self.services.error(message)
-#                 raise Exception(message)
 
 # Update plasma state files in plasma_state work directory
         try:
