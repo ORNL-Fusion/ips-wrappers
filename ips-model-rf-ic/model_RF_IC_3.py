@@ -212,7 +212,7 @@ class model_RF_IC_3 (Component):
         print 'Executing ', [RF_IC_bin, cur_state_file, 'STEP', timeStamp]
         cwd = services.get_working_dir()
         task_id  = services.launch_task(NPROC, cwd, RF_IC_bin, cur_state_file, cur_eqdsk_file,
-        cur_cql_file, cur_dql_file, 'STEP', timeStamp)
+        'STEP', timeStamp)
         retcode = services.wait_task(task_id)
         if (retcode != 0):
             message = 'Error executing ', RF_IC_bin
