@@ -90,7 +90,7 @@ class model_RF_IC_3 (Component):
           event_comment =  cmd)
         retcode = subprocess.call(cmd)
         if (retcode != 0):
-            logMsg = 'Error executing ' + cmd
+            logMsg = 'Error executing '.join(map(str, cmd))
             self.services.error(logMsg)
             raise Exception(logMsg)
 
