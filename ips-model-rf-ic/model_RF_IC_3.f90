@@ -14,13 +14,11 @@ PROGRAM model_RF_IC
 !
 !   Simple mock RF_IC code for testing.
 !
-!       The code requires 6 command-line arguments
+!       The code requires 4 command-line arguments
 !       1) path to the current plasma state file
 !       2) path to the current plasma eqdsk file
-!       3) path to current cql distribution function file - cur_cql_file
-!       4) path to current quasilinear operator file - cur_dql_file
-!       5) action mode, i.e. one of: "INIT", "STEP", or "FINALIZE"
-!       6) time stamp the time set by the driver component to which the simulation is 
+!       3) action mode, i.e. one of: "INIT", "STEP", or "FINALIZE"
+!       4) time stamp the time set by the driver component to which the simulation is 
 !          supposed to advance.
 !   
 !
@@ -138,7 +136,7 @@ PROGRAM model_RF_IC
     
     INTEGER :: cclist(ps_ccount)   ! component activation list 
 
-    CHARACTER (len=256) :: cur_state_file, cur_eqdsk_file, cur_cql_file, cur_dql_file
+    CHARACTER (len=256) :: cur_state_file, cur_eqdsk_file
     CHARACTER(len=32) :: mode
     CHARACTER(len=32) :: time_stamp
     
@@ -233,26 +231,21 @@ PROGRAM model_RF_IC
     !------------------------------------------------------------------------------------
 
       call get_arg_count(iarg)
-      if (iarg .ne. 6) then
+      if (iarg .ne. 4) then
          print*, 'model_RF_IC usage: '
-         print*, ' command line args = cur_state_file cur_eqdsk_file cur_cql_file, &
-             &         cur_dql_file mode time_stamp'
+         print*, ' command line args = cur_state_file cur_eqdsk_file mode time_stamp'
          call exit(1)
       end if
       
       call getarg(1,cur_state_file)
       call getarg(2,cur_eqdsk_file)
-      call getarg(3, cur_cql_file)
-      call getarg(4, cur_dql_file)
-      call getarg(5,mode)
-      call getarg(6,time_stamp)
+      call getarg(3,mode)
+      call getarg(4,time_stamp)
       
      WRITE (*,*)
      WRITE (*,*) 'model_RF_IC'      
      print*, 'cur_state_file = ', trim(cur_state_file)
      print*, 'cur_eqdsk_file = ', trim(cur_eqdsk_file)
-     print*, 'cur_cql_file = ', trim(cur_cql_file)
-     print*, 'cur_dql_file = ', trim(cur_dql_file)
      print*, 'mode = ', trim(mode)
      print*, 'time_stamp = ', trim(time_stamp)
       
