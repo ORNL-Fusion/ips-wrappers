@@ -618,15 +618,7 @@ class monitor(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
         print 'Created %s' % (self.__class__)
-        self.htmlText = """
-<applet code="sv/graph/ElVis.class"
-        codebase="http://w3.pppl.gov/swim/elvis/classes/"
-        archive="elvistru1.6.jar"
-        width="100%" height="100%">
-<param name="type" value="application/x-java-applet;version=1.5">
-<param name=netCDFMonitor value="@CDF_FILE@">
-</applet>
-"""
+
 
 #----------------------------------------------------------------------------------------------
 #
