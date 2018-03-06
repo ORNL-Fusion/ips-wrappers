@@ -8,8 +8,8 @@ OBJS = $(F90_SRC:%.f90=%.o)
 
 F90_MOD_INCLUDE =  $(F90_MOD_INCLUDE_PREFIX). $(F90_MOD_INCLUDE_PREFIX)$(IPS_ROOT)/include
 
-EXECUTABLES = model_RF_IC model_RF_IC_2 model_RF_IC_2_mcmd py_model_RF_IC_2_mcmd model_RF_IC_3 load_mdescr_sconfig
-SCRIPTS = model_RF_IC.py model_RF_IC_2.py model_RF_IC_2_mcmd.py py_model_RF_IC_2_mcmd.py model_RF_IC_3.py
+EXECUTABLES = model_RF_IC_3
+SCRIPTS =  model_RF_IC_3.py
 
 TARGETS =  $(EXECUTABLES)
 
@@ -23,17 +23,7 @@ all: .depend
         fi;\
 	done;
 
-model_RF_IC: model_RF_IC.o
-	$(F90) -o $@  $@.o $(LIBS)
-model_RF_IC_2: model_RF_IC_2.o
-	$(F90) -o $@  $@.o $(LIBS)
-model_RF_IC_2_mcmd: model_RF_IC_2_mcmd.o
-	$(F90) -o $@  $@.o $(LIBS)
 model_RF_IC_3: model_RF_IC_3.o
-	$(F90) -o $@  $@.o $(LIBS)
-py_model_RF_IC_2_mcmd: py_model_RF_IC_2_mcmd.o
-	$(F90) -o $@  $@.o
-load_mdescr_sconfig: load_mdescr_sconfig.o
 	$(F90) -o $@  $@.o $(LIBS)
 
 install:
