@@ -130,12 +130,6 @@ PROGRAM generic_ps_init
         call ps_mdescr_read(trim(mdescr_file), ierr, state=ps)
     END IF
 
-! Temporary debuggery
-    WRITE (*,*) "generic_ps_init.f90: Temporary debuggery"
-    CALL PS_STORE_PLASMA_STATE(ierr, 'temp_state_file.nc')    
-    WRITE (*,*) "generic_ps_init.f90: Stored temp_state_file.nc"
-!     call exit(1)          
-
 !------------------------------------------------------------------------------------
 !     
 !   Load shot configuration data from sconfig file
@@ -153,12 +147,6 @@ PROGRAM generic_ps_init
         write(*,*) 'generic_ps_init: sconfig_file = ', trim(sconfig_file)
         call ps_sconfig_read(trim(sconfig_file), ierr, state=ps)
     END IF
-
-! Temporary debuggery
-    WRITE (*,*) "generic_ps_init.f90: Temporary debuggery"
-    CALL PS_STORE_PLASMA_STATE(ierr, 'temp_state_file_2.nc')    
-    WRITE (*,*) "generic_ps_init.f90: Stored temp_state_file_2.nc"
-!    call exit(1)          
 
 !--------------------------------------------------------------------------
 ! 
@@ -211,11 +199,6 @@ PROGRAM generic_ps_init
 
     CALL PS_STORE_PLASMA_STATE(ierr, trim(cur_state_file))    
     WRITE (*,*) "generic_ps_init.f90: Stored initial Plasma State"          
-
-! Temporary debuggery
-    WRITE (*,*) "generic_ps_init.f90: Temporary debuggery"
-    CALL PS_STORE_PLASMA_STATE(ierr, 'temp_state_file_3.nc')    
-    WRITE (*,*) "generic_ps_init.f90: Stored temp_state_file_3.nc"
 
 END PROGRAM generic_ps_init
 

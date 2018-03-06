@@ -52,6 +52,9 @@ in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true
 # This is done because the call to services.checkpoint_components(port_id_list, t) in the
 # generic_driver.py overwrites the initial plasma state in the INIT work directory with
 # the then current plasma state.
+#
+# Since nobody is using PRIOR_STATE and NEXT_STATE anymore I made it easier not to have
+# them but maintained the capability to have them is somebody needs them.
 
 
 #--------------------------------------------------------------------------
@@ -218,7 +221,7 @@ class generic_ps_init (Component):
                 except Exception:
                     print 'No file ', file
             if init_mode in ['touch_only', 'TOUCH_ONLY'] :
-        # Update plasma state
+                # Update plasma state
                 try:
                     services.update_plasma_state()
                 except Exception, e:
