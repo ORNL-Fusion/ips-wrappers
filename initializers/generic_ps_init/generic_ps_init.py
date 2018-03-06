@@ -47,9 +47,11 @@ generic_ps_file_init.f90 to interact with the Plasma State. The fortran code is 
 in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true.
 
 """
-# Working notes for generic_ps_init.py 2/21/2018 (Batchelor)
-# Adding code in init function to get TIME_DATE_ID from timedate.now() and set a config 
-# parameter to it.
+# Working notes for generic_ps_init.py 3/5/2018 (Batchelor)
+# Added code to preserve the initial plasma state file generated during the init phase.
+# This is done because the call to services.checkpoint_components(port_id_list, t) in the
+# generic_driver.py overwrites the initial plasma state in the INIT work directory with
+# the then current plasma state.
 
 
 #--------------------------------------------------------------------------
@@ -199,8 +201,6 @@ class generic_ps_init (Component):
 # ------------------------------------------------------------------------------
         
         else:
-
-
 
             print 'generic_ps_init: simulation mode NORMAL'
             nml_lines = ['&ps_init_nml\n']
@@ -356,6 +356,12 @@ class generic_ps_init (Component):
             plasma_state.variables['tinit'] = t0
             plasma_state.variables['tfinal'] = tfinal
             plasma_state.close()
+
+        # Preserve initial plasma state file
+        try:
+            shutil.copyfile(cur_state_file, 'initial_PLASMA_STATE')
+        except Exception, e:
+            print 'Copy to initial_PLASMA_STATE file failed ', e
               
         # For benefit of framework file handling generate dummy dakota.out file
         subprocess.call(['touch', 'dakota.out'])
@@ -365,13 +371,13 @@ class generic_ps_init (Component):
             prior_state_file = services.get_config_param('PRIOR_STATE')
             shutil.copyfile(cur_state_file, prior_state_file)
         except Exception, e:
-            print 'No PRIOR_STATE file ', e
+            print 'Copy to PRIOR_STATE file failed ', e
 
         try:
             next_state_file = services.get_config_param('NEXT_STATE')
             shutil.copyfile(cur_state_file, next_state_file)
         except Exception, e:
-            print 'No NEXT_STATE file ', e
+            print 'Copy to NEXT_STATE file failed ', e
 
 
 # Update plasma state
