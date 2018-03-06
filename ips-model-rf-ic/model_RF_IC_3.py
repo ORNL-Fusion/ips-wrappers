@@ -84,8 +84,7 @@ class model_RF_IC_3 (Component):
         RF_IC_bin = os.path.join(BIN_PATH, 'model_RF_IC_3')
 
     # Run model_RF_IC_3 fortran
-        cmd = [RF_IC_bin, cur_state_file, cur_eqdsk_file,\
-                 cur_cql_file, cur_dql_file, 'INIT', timeStamp]
+        cmd = [RF_IC_bin, cur_state_file, cur_eqdsk_file, 'INIT', timeStamp]
         print 'Executing = ', cmd
         services.send_portal_event(event_type = 'COMPONENT_EVENT',\
           event_comment =  cmd)
