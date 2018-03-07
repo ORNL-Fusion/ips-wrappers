@@ -119,7 +119,8 @@ class generic_driver(Component):
         services.stage_input_files(self.INPUT_FILES)
 
       # get list of ports
-        ports = services.getGlobalConfigParameter('PORTS')
+#        ports = services.getGlobalConfigParameter('PORTS')
+        ports = self.get_config_param(services,'PORTS')
         port_names = ports['NAMES'].split()
         print 'PORTS =', port_names
         port_dict = {}
@@ -211,8 +212,7 @@ class generic_driver(Component):
             print (' ')
 
       # Is this a simulation startup or restart
-        sim_mode = services.getGlobalConfigParameter('SIMULATION_MODE')
-        print 'SIMULATION_MODE =', sim_mode
+        sim_mode = self.get_config_param(services,'SIMULATION_MODE')
 
       # Get timeloop for simulation
         timeloop = services.get_time_loop()
@@ -252,16 +252,42 @@ class generic_driver(Component):
       # Get plasma state files into driver work directory and copy to psn if there is one
         services.stage_plasma_state()
         cur_state_file = services.get_config_param('CURRENT_STATE')
-        try:
-            next_state_file = services.get_config_param('NEXT_STATE')
-            shutil.copyfile(cur_state_file, next_state_file)
-        except Exception, e:
-            print 'generic_driver: No NEXT_STATE file ', e        
-        services.update_plasma_state()
+        
+#         try:
+#             next_state_file = services.get_config_param('NEXT_STATE')
+#             shutil.copyfile(cur_state_file, next_state_file)
+#         except Exception, e:
+#             print 'generic_driver: No NEXT_STATE file ', e        
+#         services.update_plasma_state()
+
+        # Nobody is using PRIOR_STATE and NEXT_STATE anymore.  But at least for now keep
+        # the capability to have them.
+        # See if PRIOR_STATE is defined as a config parameter.  If it is see if it 
+        # appears in the list of plasma state file.  If it is try to copy the current
+        # plasma state file to it.  Same story for NEXT_STATE.
+        
+        prior_state_file = self.get_config_param(services, 'PRIOR_STATE', optional=True)
+        if prior_state_file != None:
+            if prior_state_file in ps_file_list:        
+                try:
+                    shutil.copyfile(cur_state_file, prior_state_file)
+                except Exception, e:
+                    print 'Copy to PRIOR_STATE file failed ', e
+            else: prior_state_file = None
+                
+
+        next_state_file = self.get_config_param(services, 'NEXT_STATE', optional=True)
+        if next_state_file != None:
+            if next_state_file in ps_file_list:     
+                try:
+                    shutil.copyfile(cur_state_file, next_state_file)
+                except Exception, e:
+                    print 'Copy to NEXT_STATE file failed ', e
+            else: next_state_file = None
 
        # Get Portal RUNID and save to a file
-        run_id = services.get_config_param('PORTAL_RUNID')
-        sym_root = services.getGlobalConfigParameter('SIM_ROOT')
+        run_id = self.get_config_param(services,'PORTAL_RUNID')
+        sym_root = self.get_config_param(services,'SIM_ROOT')
         path = os.path.join(sym_root, 'PORTAL_RUNID')
         runid_file = open(path, 'a')
         runid_file.writelines(run_id + '\n')
@@ -293,7 +319,7 @@ class generic_driver(Component):
 
         # call pre_step_logic
             services.stage_plasma_state()
-            self.pre_step_logic(float(t))
+            self.pre_step_logic(float(t), next_state_file)
             services.update_plasma_state()
             print (' ')
 
@@ -408,16 +434,21 @@ class generic_driver(Component):
     
     
     # Pre Step Logic
-    def pre_step_logic(self, timeStamp):
+    def pre_step_logic(self, timeStamp, next_state_file):
 
         cur_state_file = self.services.get_config_param('CURRENT_STATE')
 
       #  Copy data from next plasma state (if there is one) to current plasma state
-        try:
-            next_state_file = services.get_config_param('NEXT_STATE')
-            shutil.copyfile(next_state_file, cur_state_file)
-        except Exception, e:
-            pass
+#         try:
+#             next_state_file = services.get_config_param('NEXT_STATE')
+#             shutil.copyfile(next_state_file, cur_state_file)
+#         except Exception, e:
+#             pass
+        if next_state_file != None:
+            try:
+                shutil.copyfile(cur_state_file, next_state_file)
+            except Exception, e:
+                print 'Copy to NEXT_STATE file failed ', e
 
       # Update time stamps
 
