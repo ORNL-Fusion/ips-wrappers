@@ -266,6 +266,8 @@ class generic_driver(Component):
         # appears in the list of plasma state file.  If it is try to copy the current
         # plasma state file to it.  Same story for NEXT_STATE.
         
+        ps_file_list = self.get_config_param(services, 'PLASMA_STATE_FILES').split(' ')
+
         prior_state_file = self.get_config_param(services, 'PRIOR_STATE', optional=True)
         if prior_state_file != None:
             if prior_state_file in ps_file_list:        
