@@ -13,7 +13,8 @@ class gitr_comp(Component):
 
     def init(self, timeStamp=0.0):
         #Set up input deck
-        gitr.copy_folder(self.INPUT_DIR,os.getcwd())
+        print('input dir and cwd ', self.INPUT_DIR, ' ', os.getcwd())
+        gitr.copy_folder(self.GITR_INPUT_DIR,os.getcwd())
         gitr.modifyInputParam(nT=int(self.NT))
         return
 
