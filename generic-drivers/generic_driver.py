@@ -422,7 +422,7 @@ class generic_driver(Component):
     # Component call - wraps the exception handling for all component calls
     def component_call(self, services, port_name, comp, mode, time):
             comp_mode_string = port_name + ' ' + mode
-            print (comp_mode_string)
+            print '\n', comp_mode_string
 
             try:
                 services.call(comp, mode, time)
