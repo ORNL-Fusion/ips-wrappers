@@ -230,6 +230,13 @@ class xolotlFtridynDriver(Component):
         self.yieldMode=[]        
         self.maxRangeXolotl=[]
         #files
+        #given as string of 4 (name for W, He, D and T) -> split into list
+        self.ft_input_file=self.FT_INPUT_FILE.split()        
+        self.ft_energy_input_file=self.FT_ENERGY_INPUT_FILE.split()
+        self.ftx_lay_file=self.FTX_LAY_FILE.split()
+        self.ft_output_file=self.FT_OUTPUT_FILE.split()
+        self.ft_output_prj_file=self.FT_OUTPUT_PRJ_FILE.split()
+        #others
         self.angleDistrFile=[]
         self.FT_energy_file_name=[]
         self.GITR_energy_output_path=[]
@@ -281,7 +288,7 @@ class xolotlFtridynDriver(Component):
 
             if self.energyIn[i] < 0:
                 print 'get information about energy and angle from: ',self.gitr['gitrOutputDir'].strip()+'_'+prj  #this is a test
-                self.FT_energy_file_name.append(self.FT_ENERGY_INPUT_FILE[i]) #"He_W0001.ED1"                              
+                self.FT_energy_file_name.append(self.ft_energy_input_file[i]) #"He_W0001.ED1"                              
                 self.GITR_energy_output_path.append(self.gitr['gitrOutputDir'].strip()+'_'+prj) #where all the energy distribution files are located
                 self.GITR_energy_output_file.append(['dist','.dat'])
             else:
@@ -383,8 +390,8 @@ class xolotlFtridynDriver(Component):
                 for i in range(len(self.gitr['plasmaSpecies'])): #self.plasmaSpecies.iteritems():
                     prj=self.gitr['plasmaSpecies'][i]
                     if prj!='He': #do not self-copy
-                        print '\t copy ', self.FTX_LAY_FILE[iHe], ' as ', self.FTX_LAY_FILE[i] #this is a test:
-                        shutil.copyfile(self.FTX_LAY_FILE[iHe],self.FTX_LAY_FILE[i])
+                        print '\t copy ', self.ftx_lay_file[iHe], ' as ', self.ftx_lay_file[i] #this is a test:
+                        shutil.copyfile(self.ftx_lay_file[iHe],self.ftx_lay_file[i])
                 
                 if (self.ftridyn['totalDepth']==0.0):
                     print '\t Totaldepth from last_TRIDYN.dat'
@@ -405,7 +412,7 @@ class xolotlFtridynDriver(Component):
                     print 'running F-Tridyn for ', prj  , ' with flux fraction = ', self.gitr['fluxFraction'][i], ' > 0.0' #this is a test
 
                     #component/method calls now include arguments (variables)
-                    self.services.call(ftridyn, 'init', timeStamp, dTime=time, fPrj=prj, fTargetList=targetList, ftParameters=self.ftridyn , fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], ft_folder=self.FT_OUTPUT_FOLDER, input_file=self.FT_INPUT_FILE[i], otherInFiles=[self.FT_SURFACE_FILE,self.FTX_LAY_FILE[i]], energy_file_name=self.FT_energy_file_name[i], orig_energy_files_path=self.GITR_energy_output_path[i], orig_energy_files_pattern=self.GITR_energy_output_file[i])
+                    self.services.call(ftridyn, 'init', timeStamp, dTime=time, fPrj=prj, fTargetList=targetList, ftParameters=self.ftridyn , fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], ft_folder=self.FT_OUTPUT_FOLDER, input_file=self.ft_input_file[i], otherInFiles=[self.FT_SURFACE_FILE,self.ftx_lay_file[i]], energy_file_name=self.FT_energy_file_name[i], orig_energy_files_path=self.GITR_energy_output_path[i], orig_energy_files_pattern=self.GITR_energy_output_file[i])
 
                     self.services.call(ftridyn, 'step', timeStamp, fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i])
 
@@ -425,7 +432,7 @@ class xolotlFtridynDriver(Component):
 
                     #2) #get maximum projectile range to ensure bins are added correctly in 'translate_ftridyn_to_xolotl'
 
-                    ft_output_prj_file=self.FT_OUTPUT_PRJ_FILE[i]
+                    ft_output_prj_file=self.ft_output_prj_file[i]
                     angleFolder=self.FT_OUTPUT_FOLDER+'/ANGLE'
 
                     maxDepth=[]
@@ -446,7 +453,7 @@ class xolotlFtridynDriver(Component):
                     print '\n'
                     #script always needed to reformat output for xolotl
                     #outputs sputtering and reflection yields
-                    ft_output_file=self.FT_OUTPUT_FILE[i]
+                    ft_output_file=self.ft_output_file[i]
                     yields=translate_ftridyn_to_xolotl.ftridyn_to_xolotl(ftridynOnePrjOutput=ft_output_prj_file, ftridynOneOutOutput=ft_output_file, ftridynFolder=angleFolder, fNImpacts=self.ftridyn['nImpacts'], gAngleDistrib=self.angleDistrFile[i], angle=self.angleIn[i], prjRange=maxRange, nBins=self.xp.parameters['grid'][0])            
                     
                     #overwrite spY value if mode is 'calculate'
