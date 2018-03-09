@@ -109,20 +109,20 @@ class ftridynWorker(Component):
         #RUN FTRIDYN
 
 
-        pool = self.services.create_task_pool('pool')
+        pool_ftx = self.services.create_task_pool('pool_ftx')
         for j in range(len(angleIn)): #for i in range(len(energy)):
             if (weightAngle[j] == 0.0):
                 print '\t weight of angle ',  angleIn[j], ' is ' , weightAngle[j] , ', so skip running F-Tridyn'
             elif (weightAngle[j] > 0.0):
                 pathFolder = self.ft_folder+'/ANGLE'+str(angleIn[j])# + "_"+str(energyIn[j])
-                poolInput='FTridyn_angle'+str(angleIn[j])
-                self.services.add_task('pool', 'task'+str(angleIn[j]), 1, pathFolder, self.FTRIDYN_EXE,poolInput,logfile=pathFolder+'/task.log' )
+                poolInput_ftx='FTridyn_angle'+str(angleIn[j])
+                self.services.add_task('pool_ftx', 'task'+str(angleIn[j]), 1, pathFolder, self.FTRIDYN_EXE,poolInput_ftx,logfile=pathFolder+'/task.log' )
             
-        ret_val = self.services.submit_tasks('pool')
+        ret_val = self.services.submit_tasks('pool_ftx')
         print '\t ret_val = ', ret_val
-        exit_status = self.services.get_finished_tasks('pool')
+        exit_status = self.services.get_finished_tasks('pool_ftx')
         print exit_status
-        self.services.remove_task_pool('pool')
+        self.services.remove_task_pool('pool_ftx')
         
 
         #post-processing: COMPRESS ALL OUTPUT INTO A GENERIC, SINGLE ZIP FILE AND ADD TO PLASMA STATE 
