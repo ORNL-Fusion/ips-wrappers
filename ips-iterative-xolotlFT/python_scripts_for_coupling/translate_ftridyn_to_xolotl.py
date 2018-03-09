@@ -31,7 +31,8 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
     print 'tridynPlotting:'
 
     totalSpYield=0.0;
-    aveSpYield=0.0
+    totalRYield=0.0
+    yields=[]
 
     if len(angle)>1:
         angleValue, weightAngle = np.loadtxt(gAngleDistrib, usecols = (0,1) , unpack=True)
@@ -63,20 +64,32 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
             #calculate the sputtering yield for each run and take the average
             #if this does not work, use method of He_WSPYIELD.OUT (in xolotl's component)
             ftridynCurrentOutOutput=angleFolder+"/"+ftridynOneOutOutput
-#            print 'attempting to read current out file', ftridynCurrentOutOutput #test
             ftridynCurrentOutFile=open(ftridynCurrentOutOutput,"r")
-#            print 'read current out file', ftridynCurrentOutOutput #test
             ftridynCurrentOutData=ftridynCurrentOutFile.read().split('\n')
-            searchString='PARTICLES(2)'
+            searchStringSputter='SPUTTERED PARTICLES(2)'
             for line in ftridynCurrentOutData:
-                if searchString in line:
+                if searchStringSputter in line:
                     break
-            stringWithEmptyFields=line.strip().split(" ")
-            sputteringNparticlesString=[x for x in stringWithEmptyFields if x]
+            sputterStringWithEmptyFields=line.strip().split(" ")
+            sputteringNparticlesString=[x for x in sputterStringWithEmptyFields if x]
             sputteringNparticles=sputteringNparticlesString[2]
             spYield=float(sputteringNparticles)/float(fNImpacts)
-            totalSpYield += spYield*weightAngle[a]/totalWeight
-            print '\t for angle ', angleValue[a], ', weight = ', weightAngle[a], ': sp. yield = ', spYield, ' and the weighted spY = ', spYield*weightAngle[a]/totalWeight 
+            weightedSpYield=spYield*weightAngle[a]/totalWeight
+            totalSpYield += weightedSpYield
+
+            #idem for reflection:
+            searchStringReflect='BACKSCATTERED PROJECTILES(1)'
+            for line in ftridynCurrentOutData:
+                if searchStringReflect in line:
+                    break
+            reflectStringWithEmptyFields=line.strip().split(" ")
+            reflectNparticlesString=[x for x in reflectStringWithEmptyFields if x]
+            reflectNparticles=reflectNparticlesString[2]
+            reflectYield=float(reflectNparticles)/float(fNImpacts)
+            weightedRYield=reflectYield*weightAngle[a]/totalWeight
+            totalRYield += weightedRYield
+
+            print '\t for angle ',angleValue[a],', weight = ',weightAngle[a],': spY = ',spYield,' ; weighted spY = ',weightedSpYield,' ; rY = ',reflectYield, ' ; weighted rY = ', weightedRYield
 
 
             ## Open files ("bla1" is not used but I could not figure out how to easily open a file without using two columns)
@@ -154,16 +167,13 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
     #plt.show()
 
 
-
-    #due to using the normalized weight, there's no need to take average
-#    if len(angleValue)>0:
-#        aveSpYield=totalSpYield/len(angleIndex)
-#    else:
-#        aveSpYield=0.0
-
     print ' '
     print "\t average sputtering yield is ", totalSpYield
-    return totalSpYield
+    yields.append(totalSpYield)
+    print "\t average reflection yield is ", totalRYield
+    yields.append(totalRYield)
+
+    return yields
 
 ################# END OF NEW PYTHON SCRIPT  ####################
 
