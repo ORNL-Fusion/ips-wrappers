@@ -13,7 +13,7 @@ class gitr_comp(Component):
 
     def init(self, timeStamp=0.0):
         #Set up input deck
-        print('input dir and cwd ', self.INPUT_DIR, ' ', os.getcwd())
+        print('input dir and cwd this now', self.BASE_DIR, ' ', os.getcwd())
         gitr.copy_folder(self.GITR_INPUT_DIR,os.getcwd())
         gitr.modifyInputParam(nT=int(self.NT))
         return
@@ -29,7 +29,7 @@ class gitr_comp(Component):
         if (self.services.wait_task(task_id)):
             self.services.error('gitr_comp: step failed.')
         
-        gitr.piscesProcessing()
+        gitr.piscesProcessing(path=self.BASE_DIR)
         self.services.update_plasma_state()         
         
         return
