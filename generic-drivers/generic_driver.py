@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# Version 10.3 (Batcherlor 4/25/2017)
+# Version 10.3 (Batchelor 4/25/2017)
 # Added capabiity to terminate simulation after INIT phase based on optional config 
 # parameter INIT_ONLY == True.
 
@@ -252,13 +252,6 @@ class generic_driver(Component):
       # Get plasma state files into driver work directory and copy to psn if there is one
         services.stage_plasma_state()
         cur_state_file = services.get_config_param('CURRENT_STATE')
-        
-#         try:
-#             next_state_file = services.get_config_param('NEXT_STATE')
-#             shutil.copyfile(cur_state_file, next_state_file)
-#         except Exception, e:
-#             print 'generic_driver: No NEXT_STATE file ', e        
-#         services.update_plasma_state()
 
         # Nobody is using PRIOR_STATE and NEXT_STATE anymore.  But at least for now keep
         # the capability to have them.
