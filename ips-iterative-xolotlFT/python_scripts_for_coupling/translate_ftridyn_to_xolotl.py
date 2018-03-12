@@ -22,8 +22,8 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
                       ftridynOneOutOutput='He_WOUT.dat',
                       ftridynFolder="angle",                      
                       fNImpacts=1.0e5,
-                      gAngleDistrib='angularDistribution.dat',
                       angle=[0.0],
+                      weightAngle=[1.0],
                       nBins=200,
                       prjRange=50.0 #in [A]
 ):
@@ -34,32 +34,24 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
     totalRYield=0.0
     yields=[]
 
+
     if len(angle)>1:
-        angleValue, weightAngle = np.loadtxt(gAngleDistrib, usecols = (0,1) , unpack=True)
-        print '\t reading the impact energy distribution for ', (len(angleValue)), ' angles' 
-        print'\t from %s' %(gAngleDistrib)
+        print '\t reading the impact energy distribution for ', (len(angle)), ' angles' 
     else:
-        angleValue=angle
-        weightAngle=[1.0]
         print '\t single, fixed angle used'
 
     totalWeight=np.sum(weightAngle)
     
     print '\t the sum of weights is ', totalWeight, ' and projectile range', prjRange , ' [A]'
     
-    for a in np.arange(0,len(angleValue),1):
+    for a in np.arange(0,len(angle),1):
 
         if weightAngle[a]==0.0:
-            print '\t for angle ', angleValue[a], '(index ', a ,'), found Weight = ', weightAngle[a]
+            print '\t for angle ', angle[a], '(index ', a ,'), found Weight = ', weightAngle[a]
             print '\t \t skipping all analysis for this angle, with no contribution to spYield'
 
         elif weightAngle[a] >0.0:
-
-#            print 'defining angleFolder as', ftridynFolder+str(angleValue[a])
-            angleFolder=ftridynFolder+str(angleValue[a])
-            
-            #print "---------------------"
-            #print "weight of angle ",angleValue[a] , '(index ', a, ") is ", weightAngle[a]
+            angleFolder=ftridynFolder+str(angle[a])
             
             #calculate the sputtering yield for each run and take the average
             #if this does not work, use method of He_WSPYIELD.OUT (in xolotl's component)
@@ -89,7 +81,7 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
             weightedRYield=reflectYield*weightAngle[a]/totalWeight
             totalRYield += weightedRYield
 
-            print '\t for angle ',angleValue[a],', weight = ',weightAngle[a],': spY = ',spYield,' ; weighted spY = ',weightedSpYield,' ; rY = ',reflectYield, ' ; weighted rY = ', weightedRYield
+            print '\t for angle ',angle[a],', weight = ',weightAngle[a],': spY = ',spYield,' ; weighted spY = ',weightedSpYield,' ; rY = ',reflectYield, ' ; weighted rY = ', weightedRYield
 
 
             ## Open files ("bla1" is not used but I could not figure out how to easily open a file without using two columns)

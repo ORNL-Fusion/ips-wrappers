@@ -1,0 +1,3 @@
+fluxFraction=0.5 0.00704171385096 0.5 0.0
+flux=35000.0
+gitrOutputDir=/project/projectdirs/atom/users/a7l/ips-wrappers/ips-iterative-xolotlFT/GITRoutput

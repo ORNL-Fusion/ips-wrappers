@@ -65,7 +65,8 @@ class xolotlFtridynDriver(Component):
 
         #get dimension to read the correct input parameter template
         dim=int(self.XOLOTL_INPUT_PARAMETERS['dimensions'])
-        xolotl_param_template=self.XOLOTL_PARAM_TEMPLATE_PATH+'/paramXolotl_'+str(dim)+'D.txt'
+        #xolotl_param_template=self.XOLOTL_PARAM_TEMPLATE_PATH+'/paramXolotl_'+str(dim)+'D.txt'
+        xolotl_param_template=self.INPUT_DIR+'/paramXolotl_'+str(dim)+'D.txt' 
         print '\t reading Xolotl default parameters from', xolotl_param_template
         self.xp = param_handler.xolotl_params()
         self.xp.read(xolotl_param_template)
@@ -83,9 +84,6 @@ class xolotlFtridynDriver(Component):
             elif param_handler.is_float(v):                
                 print '\t float input parameter ', k, ' = ' , self.xp.parameters[k] , ' with ' , v
                 self.xp.parameters[k]=float(v)
-            #else:
-            #    print '\t other ', type(v), ' input parameter ', k, ' = ' , self.xp.parameters[k] , ' with ' , v
-            #    self.xp.parameters[k]=v
             elif param_handler.is_list(v):
                 values = []
                 for val in v.split(' '):
@@ -160,11 +158,8 @@ class xolotlFtridynDriver(Component):
         ### GITR RELATED PARAMETERS ###
         
         self.gitr = {} #xolotl_param_handler.xolotl_params()
-        #self.gitr.parameters=
-        self.gitr=param_handler.read(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE)
-
-        #print 'this is a test: GITR PARAMETERS READ FROM ', self.GITR_OUTPUT_FILE , 'are: '
-        #print '\t', self.gitr
+        #self.gitr=param_handler.read(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE)
+        self.gitr=param_handler.read(self.SUBMIT_DIR+'/'+self.GITR_OUTPUT_FILE)
 
         for k,v in self.GITR_INPUT_PARAMETERS.iteritems(): #self.gitr.parameters.iteritems():
             if param_handler.is_int(v):
@@ -237,10 +232,11 @@ class xolotlFtridynDriver(Component):
         self.ft_output_file=self.FT_OUTPUT_FILE.split()
         self.ft_output_prj_file=self.FT_OUTPUT_PRJ_FILE.split()
         #others
-        self.angleDistrFile=[]
         self.FT_energy_file_name=[]
-        self.GITR_energy_output_path=[]
-        self.GITR_energy_output_file=[]
+        self.angleFile=[]
+        self.aWeightFile=[]
+        self.GITR_eadist_output_path=[]
+        self.GITR_eadist_output_file=[]
 
         inputEnergy=self.ftridyn['inputEnergy'].split(' ')
         inputAngle=self.ftridyn['inputAngle'].split(' ')
@@ -262,15 +258,19 @@ class xolotlFtridynDriver(Component):
             
 
             if self.inAngle[i] < 0 :
-                self.angleDistrFile.append(self.gitr['gitrOutputDir'].strip()+'_'+prj +'/'+self.GITR_ANGLE_DISTRIB_FILE.strip()) #gitr['angleDistribFile'])
-                print '\t angle distribution file for ', prj , ' found; ', self.angleDistrFile[i] #test angles are assigned correctly
-                a , w = numpy.loadtxt(self.angleDistrFile[i], usecols = (0,1) , unpack=True)
+                ##ADD +'_'+prj in the middle if the full path name for ITER cases, as multiple plasma species will follow distributions
+                self.angleFile.append(self.gitr['gitrOutputDir'].strip()+'/'+self.GITR_ANGLE_FILE.strip())
+                self.aWeightFile.append(self.gitr['gitrOutputDir'].strip()+'/'+self.GITR_AWEIGHT_FILE.strip())
+                print '\t reading angles and weights for ', prj , ' from; ', self.angleFile[i], self.aWeightFile[i]
+                a = numpy.loadtxt(self.angleFile[i], usecols = (0) , unpack=True)
+                w = numpy.loadtxt(self.aWeightFile[i], usecols = (0) , unpack=True)
                 self.angleIn.append(a)
                 self.weightAngle.append(w)
             else:
                 self.angleIn.append([self.inAngle[i]])
                 self.weightAngle.append([1.0])
-                self.angleDistrFile.append(' ')
+                self.angleFile.append('')
+                self.aWeightFile.append('')
                 print '\t ',prj, ' angle value as defined by user' #test angles are assigned correctly
 
             print '\n'
@@ -287,14 +287,15 @@ class xolotlFtridynDriver(Component):
             #leave 'others' empty for a pure FT run
 
             if self.energyIn[i] < 0:
-                print 'get information about energy and angle from: ',self.gitr['gitrOutputDir'].strip()+'_'+prj  #this is a test
-                self.FT_energy_file_name.append(self.ft_energy_input_file[i]) #"He_W0001.ED1"                              
-                self.GITR_energy_output_path.append(self.gitr['gitrOutputDir'].strip()+'_'+prj) #where all the energy distribution files are located
-                self.GITR_energy_output_file.append(['dist','.dat'])
+                ##ADD +'_'+prj in the middle if the full path name for ITER cases, as multiple plasma species will follow distributions
+                print 'get information about energy and angle from: ',self.gitr['gitrOutputDir']#.strip()+'_'+prj
+                self.FT_energy_file_name.append(self.ft_energy_input_file[i]) #"He_W0001.ED1"
+                self.GITR_eadist_output_path.append(self.gitr['gitrOutputDir'].strip())#+'_'+prj) #where all the energy distribution files are located
+                self.GITR_eadist_output_file.append(['dist','.dat'])#(self.GITR_EADIST_FILE)
             else:
-                self.FT_energy_file_name.append(' ')
-                self.GITR_energy_output_path.append(' ')
-                self.GITR_energy_output_file.append([' ',' '])
+                self.FT_energy_file_name.append('')
+                self.GITR_eadist_output_path.append('')
+                self.GITR_eadist_output_file.append([' ',' '])#('')
             
             #initialize maxRangeXolotl list
             self.maxRangeXolotl.append(0.0)
@@ -378,10 +379,8 @@ class xolotlFtridynDriver(Component):
                 for i in range(1,4): #generate_ftridyn_input expects max 4 target species; declare all, even if empty
                     if self.gitr['plasmaSpecies'][i] and self.gitr['fluxFraction'][i]: #species exists and fraction > 0
                         targetList.append(self.gitr['plasmaSpecies'][i])
-                        #print 'this is a test: adding ', targetList[i], ' as target number ' , i+1 ,' of F-Tridyn'
                     else:
                         targetList.append('') #leave empty
-                        #print 'this is a test: target number ' , i+1 ,' of F-Tridyn empty, as fraction =0.0 or does not exist'
                 print '\t passing to F-Tridyn the list of targets ' , targetList
 
 
@@ -412,7 +411,7 @@ class xolotlFtridynDriver(Component):
                     print 'running F-Tridyn for ', prj  , ' with flux fraction = ', self.gitr['fluxFraction'][i], ' > 0.0' #this is a test
 
                     #component/method calls now include arguments (variables)
-                    self.services.call(ftridyn, 'init', timeStamp, dTime=time, fPrj=prj, fTargetList=targetList, ftParameters=self.ftridyn , fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], ft_folder=self.FT_OUTPUT_FOLDER, input_file=self.ft_input_file[i], otherInFiles=[self.FT_SURFACE_FILE,self.ftx_lay_file[i]], energy_file_name=self.FT_energy_file_name[i], orig_energy_files_path=self.GITR_energy_output_path[i], orig_energy_files_pattern=self.GITR_energy_output_file[i])
+                    self.services.call(ftridyn, 'init', timeStamp, dTime=time, fPrj=prj, fTargetList=targetList, ftParameters=self.ftridyn , fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], ft_folder=self.FT_OUTPUT_FOLDER, input_file=self.ft_input_file[i], otherInFiles=[self.FT_SURFACE_FILE,self.ftx_lay_file[i]], energy_file_name=self.FT_energy_file_name[i], orig_energy_files_path=self.GITR_eadist_output_path[i], orig_energy_files_pattern=self.GITR_eadist_output_file[i])
 
                     self.services.call(ftridyn, 'step', timeStamp, fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i])
 
@@ -454,7 +453,7 @@ class xolotlFtridynDriver(Component):
                     #script always needed to reformat output for xolotl
                     #outputs sputtering and reflection yields
                     ft_output_file=self.ft_output_file[i]
-                    yields=translate_ftridyn_to_xolotl.ftridyn_to_xolotl(ftridynOnePrjOutput=ft_output_prj_file, ftridynOneOutOutput=ft_output_file, ftridynFolder=angleFolder, fNImpacts=self.ftridyn['nImpacts'], gAngleDistrib=self.angleDistrFile[i], angle=self.angleIn[i], prjRange=maxRange, nBins=self.xp.parameters['grid'][0])            
+                    yields=translate_ftridyn_to_xolotl.ftridyn_to_xolotl(ftridynOnePrjOutput=ft_output_prj_file, ftridynOneOutOutput=ft_output_file, ftridynFolder=angleFolder, fNImpacts=self.ftridyn['nImpacts'], angle=self.angleIn[i], weightAngle=self.weightAngle[i], prjRange=maxRange, nBins=self.xp.parameters['grid'][0]) #gAngleDistrib=self.angleDistrFile[i]
                     
                     #overwrite spY value if mode is 'calculate'
                     if self.yieldMode[i]=='calculate':
