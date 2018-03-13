@@ -161,6 +161,11 @@ class xolotlFtridynDriver(Component):
         #self.gitr=param_handler.read(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE)
         self.gitr=param_handler.read(self.SUBMIT_DIR+'/'+self.GITR_OUTPUT_FILE)
 
+        print 'read (from file) : ', self.SUBMIT_DIR+'/'+self.GITR_OUTPUT_FILE
+        for k,v, in self.gitr.iteritems():
+            print k, ' : ' , v
+        print ' '
+
         for k,v in self.GITR_INPUT_PARAMETERS.iteritems(): #self.gitr.parameters.iteritems():
             if param_handler.is_int(v):
                 print '\t reading integer GITR input parameter ', k, ' = ' , v #this is a test
@@ -237,9 +242,10 @@ class xolotlFtridynDriver(Component):
         self.aWeightFile=[]
         self.GITR_eadist_output_path=[]
         self.GITR_eadist_output_file=[]
+        
 
-        inputEnergy=self.ftridyn['inputEnergy'].split(' ')
-        inputAngle=self.ftridyn['inputAngle'].split(' ')
+        inputEnergy=self.gitr['inputEnergy']#.split(' ')
+        inputAngle=self.gitr['inputAngle']#.split(' ')
         inputSpYield=self.ftridyn['inputSpYield'].split(' ')
         inputRYield=self.ftridyn['inputRYield'].split(' ')
         #inputFluxFraction=self.GITR_INPUT_PARAMETERS['inputFluxFraction'].split(' ')        
@@ -288,7 +294,7 @@ class xolotlFtridynDriver(Component):
 
             if self.energyIn[i] < 0:
                 ##ADD +'_'+prj in the middle if the full path name for ITER cases, as multiple plasma species will follow distributions
-                print 'get information about energy and angle from: ',self.gitr['gitrOutputDir']#.strip()+'_'+prj
+                #print 'get information about energy and angle from: ',self.gitr['gitrOutputDir']#.strip()+'_'+prj
                 self.FT_energy_file_name.append(self.ft_energy_input_file[i]) #"He_W0001.ED1"
                 self.GITR_eadist_output_path.append(self.gitr['gitrOutputDir'].strip())#+'_'+prj) #where all the energy distribution files are located
                 self.GITR_eadist_output_file.append(['dist','.dat'])#(self.GITR_EADIST_FILE)
@@ -353,12 +359,13 @@ class xolotlFtridynDriver(Component):
             # A) GET INPUT THAT MIGHT CHANGE EVERT LOOP READY
 
             #determine parameters related to init/restart
+            iW=self.gitr['plasmaSpecies'].index('W')
             if (self.driverMode == 'INIT'):
                 print('\t init mode yes')
                 self.ftridyn['iQ0']=0
 
                 targetList=[]
-                targetList.append(self.gitr['plasmaSpecies'][0]) #only W in the first loop
+                targetList.append(self.gitr['plasmaSpecies'][iW]) #only W in the first loop
                 for i in range(1,4):
                     targetList.append('') #leave empty
 
@@ -375,12 +382,14 @@ class xolotlFtridynDriver(Component):
                 #prepare target strings for F-Tridyn:
                 #we always have W in the substrate  (tg1); others are optional; mixed material composition given by LAY file
                 targetList=[]
-                targetList.append(self.gitr['plasmaSpecies'][0])
-                for i in range(1,4): #generate_ftridyn_input expects max 4 target species; declare all, even if empty
-                    if self.gitr['plasmaSpecies'][i] and self.gitr['fluxFraction'][i]: #species exists and fraction > 0
-                        targetList.append(self.gitr['plasmaSpecies'][i])
-                    else:
-                        targetList.append('') #leave empty
+                targetList.append(self.gitr['plasmaSpecies'][iW])
+                for prj in ['He' 'D' 'T']: #generate_ftridyn_input expects max 4 target species; declare all, even if empty
+                    if self.gitr['plasmaSpecies'].index(prj):
+                        i=self.gitr['plasmaSpecies'].index(prj)
+                        if self.gitr['fluxFraction'][i]>0.0: #species exists and fraction > 0
+                            targetList.append(prj)
+                        else:
+                            targetList.append('') #leave empty
                 print '\t passing to F-Tridyn the list of targets ' , targetList
 
 
