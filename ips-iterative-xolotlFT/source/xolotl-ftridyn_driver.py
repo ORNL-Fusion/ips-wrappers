@@ -383,12 +383,12 @@ class xolotlFtridynDriver(Component):
                 #we always have W in the substrate  (tg1); others are optional; mixed material composition given by LAY file
                 targetList=[]
                 targetList.append(self.gitr['plasmaSpecies'][iW])
-                for prj in ['He' 'D' 'T']: #generate_ftridyn_input expects max 4 target species; declare all, even if empty
-                    if self.gitr['plasmaSpecies'].index(prj):
+                for prj in ['He', 'D', 'T']: #generate_ftridyn_input expects max 4 target species; declare all, even if empty
+                    if prj in self.gitr['plasmaSpecies']:
                         i=self.gitr['plasmaSpecies'].index(prj)
                         if self.gitr['fluxFraction'][i]>0.0: #species exists and fraction > 0
                             targetList.append(prj)
-                        else:
+                        else:                        
                             targetList.append('') #leave empty
                 print '\t passing to F-Tridyn the list of targets ' , targetList
 
