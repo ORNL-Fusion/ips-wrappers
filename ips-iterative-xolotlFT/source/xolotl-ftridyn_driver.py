@@ -710,20 +710,23 @@ class xolotlFtridynDriver(Component):
                 if (self.driver['LOOP_N']%self.driver['LOOP_TS_NLOOPS']==0):
                     print '\n',"change in driver's time step (and start_stop) after loop ", self.driver['LOOP_N']
                     self.driver['LOOP_TIME_STEP']*=self.driver['LOOP_TS_FACTOR']
-                    print 'multiplied time step by ', self.driver['LOOP_TS_FACTOR'], ' for a new time step = ', self.driver['LOOP_TIME_STEP']
+                    self.xp.parameters['petscArgs']['-start_stop']*=self.driver['LOOP_TS_FACTOR']
+                    print 'multiplied time step and start_stop by ', self.driver['LOOP_TS_FACTOR']
+                    print '\t for a new time step = ', self.driver['LOOP_TIME_STEP'], ' and start_stop = ', self.xp.parameters['petscArgs']['-start_stop']
                 else:
-                    print '\n', 'in loop ', self.driver['LOOP_N'] ,' no update to the driver time step ', self.driver['LOOP_TIME_STEP']
+                    print '\n', 'in loop ', self.driver['LOOP_N'] ,' no update to '
+                    print '\t driver time step (', self.driver['LOOP_TIME_STEP'] , ') or start_stop (' , self.xp.parameters['petscArgs']['-start_stop'], ')'
             else:
-                print 'loop time step unchanged (factor=1)', self.driver['LOOP_TIME_STEP']
+                print '\n', 'in loop ', self.driver['LOOP_N'],' no change (factor=1) to ' 
+                print '\t driver time step ', self.driver['LOOP_TIME_STEP'], ' and start_stop ' , self.xp.parameters['petscArgs']['-start_stop'] , ')'
 
 
             if time+self.driver['LOOP_TIME_STEP']>self.driver['END_TIME']:
                 self.driver['LOOP_TIME_STEP']=self.driver['END_TIME']-time
                 print 'time step longer than needed for last loop '
                 print 'adapting driver time step to ', self.driver['LOOP_TIME_STEP'] ,' to reach exactly endTime'
-
-            self.xp.parameters['petscArgs']['-start_stop']=self.driver['LOOP_TIME_STEP']/10.0
-            print 'and Xolotls data is saved every (start_stop) ', self.xp.parameters['petscArgs']['-start_stop']
+                self.xp.parameters['petscArgs']['-start_stop']=self.driver['LOOP_TIME_STEP']/10.0
+                print 'and Xolotls data is saved every (start_stop) ', self.xp.parameters['petscArgs']['-start_stop']
 
 
             if self.driver['XOLOTL_MAXTS_FACTOR'] != 1:

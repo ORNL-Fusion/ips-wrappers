@@ -73,7 +73,7 @@ class xolotlWorker(Component):
         for i in range(num_trials):
             xolotlLogFile='xolotl_t%f_%d.log' %(self.driverTime,i)
             task_id = self.services.launch_task(self.NPROC,self.services.get_working_dir(),
-                                                self.XOLOTL_EXE, 'params.txt',logfile=xolotlLogFile)
+                                                self.XOLOTL_EXE, 'params.txt',task_ppn=self.task_ppn,logfile=xolotlLogFile)
             ret_val = self.services.wait_task(task_id)
 
             if (ret_val == 0):
