@@ -48,6 +48,7 @@ class basic_time_step_driver(Component):
             port = services.get_port(port_name) 
             if(port == None):
                 logMsg = 'Error accessing '+port_name+' component'
+                services.error(logMsg)
                 raise Exception(logMsg)
             port_dict[port_name] = port
             port_id_list.append(port)
@@ -77,7 +78,7 @@ class basic_time_step_driver(Component):
         try:
             next_state_file = services.get_config_param('NEXT_STATE')
             shutil.copyfile(cur_state_file, next_state_file)
-        except Exception:
+        except:
             logMsg = 'generic_driver: No NEXT_STATE file '        
             services.exception(logMsg)
             raise
@@ -132,7 +133,7 @@ class basic_time_step_driver(Component):
                         print os.getcwd()
                         print 'Reading this ps file : ' + this_ps_file
                         logMsg = 'ERROR : NaN detected after running : '+ port_name
-                        services.exception(logMsg)
+                        services.error(logMsg)
                         raise Exception(logMsg)
  
             services.stage_plasma_state()
@@ -192,9 +193,9 @@ class basic_time_step_driver(Component):
         try:
             next_state_file = services.get_config_param('NEXT_STATE')
             shutil.copyfile(next_state_file, cur_state_file)
-        except Exception:
+        except:
             logMsg = 'INFO : No Next Plasma State'
-            self.services.warning(logMsg)
+            self.services.info(logMsg)
             pass
 
         # Update time stamps

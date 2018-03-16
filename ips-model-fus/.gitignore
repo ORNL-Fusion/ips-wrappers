@@ -1,0 +1,7 @@
+.depend
+make-result
+*.pyc
+*.o
+*.mod
+model_FUS
+model_FUS_2_mcmd

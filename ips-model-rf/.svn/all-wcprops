@@ -1,0 +1,107 @@
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/cswim/!svn/ver/4081/ips/trunk/components/rf/model_RF_IC
+END
+model_RF_IC_2.f90
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/cswim/!svn/ver/1931/ips/trunk/components/rf/model_RF_IC/model_RF_IC_2.f90
+END
+model_RF_IC_2_mcmd.f90
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/cswim/!svn/ver/3209/ips/trunk/components/rf/model_RF_IC/model_RF_IC_2_mcmd.f90
+END
+load_mdescr_sconfig.f90
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/cswim/!svn/ver/3946/ips/trunk/components/rf/model_RF_IC/load_mdescr_sconfig.f90
+END
+model_RF_IC_3.f90
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/cswim/!svn/ver/3942/ips/trunk/components/rf/model_RF_IC/model_RF_IC_3.f90
+END
+py_model_RF_IC_2_mcmd.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/cswim/!svn/ver/2006/ips/trunk/components/rf/model_RF_IC/py_model_RF_IC_2_mcmd.py
+END
+model_RF_IC_input0.nml
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/cswim/!svn/ver/1863/ips/trunk/components/rf/model_RF_IC/model_RF_IC_input0.nml
+END
+zero_RF_EC_power.f90
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/cswim/!svn/ver/4081/ips/trunk/components/rf/model_RF_IC/zero_RF_EC_power.f90
+END
+py_model_RF_IC_2_mcmd.f90
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/cswim/!svn/ver/1990/ips/trunk/components/rf/model_RF_IC/py_model_RF_IC_2_mcmd.f90
+END
+model_RF_IC.py
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/cswim/!svn/ver/1930/ips/trunk/components/rf/model_RF_IC/model_RF_IC.py
+END
+zero_RF_IC_power.f90
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/cswim/!svn/ver/2466/ips/trunk/components/rf/model_RF_IC/zero_RF_IC_power.f90
+END
+Makefile.include
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/cswim/!svn/ver/1144/ips/trunk/components/rf/model_RF_IC/Makefile.include
+END
+model_RF_IC.f90
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/cswim/!svn/ver/1455/ips/trunk/components/rf/model_RF_IC/model_RF_IC.f90
+END
+model_RF_IC_input.nml
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/cswim/!svn/ver/1935/ips/trunk/components/rf/model_RF_IC/model_RF_IC_input.nml
+END
+model_RF_IC_2.py
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/cswim/!svn/ver/1986/ips/trunk/components/rf/model_RF_IC/model_RF_IC_2.py
+END
+model_RF_IC_2_mcmd.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/cswim/!svn/ver/3126/ips/trunk/components/rf/model_RF_IC/model_RF_IC_2_mcmd.py
+END
+model_RF_IC_3.py
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/cswim/!svn/ver/3919/ips/trunk/components/rf/model_RF_IC/model_RF_IC_3.py
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/cswim/!svn/ver/4081/ips/trunk/components/rf/model_RF_IC/Makefile
+END

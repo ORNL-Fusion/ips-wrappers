@@ -1,0 +1,7 @@
+*.o
+*.mod
+make-result
+do_toric_init_abr
+prepare_toric_input_abr
+process_toric_output_mcmd
+*.swp
