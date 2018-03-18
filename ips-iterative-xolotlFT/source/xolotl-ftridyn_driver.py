@@ -705,41 +705,41 @@ class xolotlFtridynDriver(Component):
             #--> update time explicitely before (possibly) increasing time step
             time+=self.driver['LOOP_TIME_STEP']
 
+            print '\n','after loop ', self.driver['LOOP_N'], 'check for updates in time steps \n'
             #update Xolotl and driver time steps if needed
             if self.driver['LOOP_TS_FACTOR'] != 1:
                 if (self.driver['LOOP_N']%self.driver['LOOP_TS_NLOOPS']==0):
-                    print '\n',"change in driver's time step (and start_stop) after loop ", self.driver['LOOP_N']
+                    print '\t update driver time step and start_stop'
                     self.driver['LOOP_TIME_STEP']*=self.driver['LOOP_TS_FACTOR']
                     self.xp.parameters['petscArgs']['-start_stop']*=self.driver['LOOP_TS_FACTOR']
-                    print 'multiplied time step and start_stop by ', self.driver['LOOP_TS_FACTOR']
+                    print '\t multiplied time step and start_stop by ', self.driver['LOOP_TS_FACTOR']
                     print '\t for a new time step = ', self.driver['LOOP_TIME_STEP'], ' and start_stop = ', self.xp.parameters['petscArgs']['-start_stop']
                 else:
-                    print '\n', 'in loop ', self.driver['LOOP_N'] ,' no update to '
-                    print '\t driver time step (', self.driver['LOOP_TIME_STEP'] , ') or start_stop (' , self.xp.parameters['petscArgs']['-start_stop'], ')'
+                    print '\t no update to driver time step (', self.driver['LOOP_TIME_STEP'] , ') or start_stop (' , self.xp.parameters['petscArgs']['-start_stop'], ')'
             else:
-                print '\n', 'in loop ', self.driver['LOOP_N'],' no change (factor=1) to ' 
-                print '\t driver time step ', self.driver['LOOP_TIME_STEP'], ' and start_stop ' , self.xp.parameters['petscArgs']['-start_stop'] , ')'
+                print '\t driver time step (', self.driver['LOOP_TIME_STEP'], ') and start_stop (' , self.xp.parameters['petscArgs']['-start_stop'] , ') unchanged (factor=1)'
 
 
             if time+self.driver['LOOP_TIME_STEP']>self.driver['END_TIME']:
                 self.driver['LOOP_TIME_STEP']=self.driver['END_TIME']-time
-                print 'time step longer than needed for last loop '
-                print 'adapting driver time step to ', self.driver['LOOP_TIME_STEP'] ,' to reach exactly endTime'
+                print '\n','\t time step longer than needed for last loop '
+                print '\t adapting driver time step to ', self.driver['LOOP_TIME_STEP'] ,' to reach exactly endTime'
                 self.xp.parameters['petscArgs']['-start_stop']=self.driver['LOOP_TIME_STEP']/10.0
-                print 'and Xolotls data is saved every (start_stop) ', self.xp.parameters['petscArgs']['-start_stop']
+                print '\t and Xolotls data is saved every (start_stop) ', self.xp.parameters['petscArgs']['-start_stop']
 
-
+            print ' '
             if self.driver['XOLOTL_MAXTS_FACTOR'] != 1:
                 if (self.driver['LOOP_N']%self.driver['XOLOTL_MAXTS_NLOOPS']==0):
-                    print '\n',"change in Xolotl's maximum time step after loop ", self.driver['LOOP_N']
+                    print '\t change in Xolotls maximum time step after loop ', self.driver['LOOP_N']
                     self.xp.parameters['petscArgs']['-ts_adapt_dt_max']*=self.driver['XOLOTL_MAXTS_FACTOR']
-                    print 'multiply time step by ', self.driver['XOLOTL_MAXTS_FACTOR'] , ' for a new time step = ', self.xp.parameters['petscArgs']['-ts_adapt_dt_max']
+                    print '\t multiply time step by ', self.driver['XOLOTL_MAXTS_FACTOR'] , ' for a new time step = ', self.xp.parameters['petscArgs']['-ts_adapt_dt_max']
                 else:
-                    print '\n', 'in loop ', self.driver['LOOP_N'] , ' continue with xolotl dt max ', self.xp.parameters['petscArgs']['-ts_adapt_dt_max']
+                    print '\t continue with xolotl dt max ', self.xp.parameters['petscArgs']['-ts_adapt_dt_max']
 
             else:
-                print 'Xolotls max time step unchanged (factor=1)'
+                print '\t Xolotls max time step (', self.xp.parameters['petscArgs']['-ts_adapt_dt_max'] , ') unchanged (factor=1)'
 
+            print '\n'
             self.services.update_plasma_state()
 
     def finalize(self, timeStamp=0.0):
