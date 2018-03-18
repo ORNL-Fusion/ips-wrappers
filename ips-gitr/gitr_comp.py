@@ -24,7 +24,7 @@ class gitr_comp(Component):
         shutil.copyfile('ftridyn.nc','input/ftridyn.nc')
         task_id = self.services.launch_task(self.NPROC,
                                             self.services.get_working_dir(),
-                                            self.GITR_EXE,task_ppn=1,ppn=1)
+                                            self.GITR_EXE,task_ppn=self.TASK_PPN)
         #monitor task until complete
         if (self.services.wait_task(task_id)):
             self.services.error('gitr_comp: step failed.')
