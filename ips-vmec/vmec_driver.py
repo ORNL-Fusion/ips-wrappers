@@ -17,7 +17,9 @@ class vmec_driver(Component):
     def __init__(self, services, config):
         print('vmec_driver: Construct')
         Component.__init__(self, services, config)
-            
+        self.async_queue = {}
+        self.ports = {}
+
 #-------------------------------------------------------------------------------
 #
 #  VMEC Driver init method. This method prepairs the namelist input file.
@@ -26,11 +28,9 @@ class vmec_driver(Component):
     def init(self, timeStamp=0.0):
         print('vmec_driver: init')
         
-        vmec_init = self.services.get_port('AINIT')
-        self.services.call(vmec_init, 'init', timeStamp)
-
-        self.vmec_comp = self.services.get_port('VMEC')
-        self.services.call(self.vmec_comp, 'init', timeStamp)
+        self.ports['vmec'] = self.services.get_port('VMEC')
+        self.async_queue['vmec:init'] = self.services.call_nonblocking(self.ports['vmec'],
+                                                                       'init', timeStamp)
     
 #-------------------------------------------------------------------------------
 #
@@ -39,8 +39,12 @@ class vmec_driver(Component):
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
         print('vmec_driver: step')
-        self.services.call(self.vmec_comp, 'step', timeStamp)
-
+        
+        self.services.wait_call_list(self.async_queue.values(), True)
+        self.async_queue = {}
+        self.async_queue['vmec:step'] = self.services.call_nonblocking(self.ports['vmec'],
+                                                                       'step', timeStamp)
+    
 #-------------------------------------------------------------------------------
 #
 #  VMEC Driver finalize method. This cleans up afterwards. Not used.
@@ -48,4 +52,14 @@ class vmec_driver(Component):
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
         print('vmec_driver: finalize')
-        self.services.call(self.vmec_comp, 'finalize', timeStamp)
+        
+        self.services.wait_call_list(self.async_queue.values(), True)
+        self.async_queue = {}
+        
+        for portname, port in self.ports.iteritems():
+            self.async_queue[portname + ':finalize'] = self.services.call_nonblocking(port, 'finalize',
+                                                                                      timeStamp)
+        
+        self.services.wait_call_list(self.async_queue.values(), True)
+        self.async_queue = {}
+

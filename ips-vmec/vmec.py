@@ -9,52 +9,8 @@
 
 from component import Component
 import os
-
-#-------------------------------------------------------------------------------
-#
-#  Helper function to detect the end of a namelist input file. This finds if the
-#  '/' character is found withing a string. However, this if this character is
-#  is located after a '!' character or between '\'' characters ignore it.
-#
-#-------------------------------------------------------------------------------
-def contains_end(line):
-    
-#  Check and remove every character after the !.
-    line = line.split('!')[0]
-    
-    if (line == ''):
-        return False, ''
-    
-    if (line[0] == '/'):
-        return True, ''
-
-    in_single_quote = line[0] == '\''
-    in_double_quote = line[0] == '\"'
-    
-    for i, c in enumerate(line[1:]):
-        
-#  Do not close the quote when a single quote is encounterd in the following
-#  situations.
-#
-#  '\''
-#  "'"
-        if ((c == '\'') and line[i - 1] != '\\' and not in_double_quote):
-            in_single_quote = not in_single_quote
-        
-#  Do not close the quote when a single quote is encounterd in the following
-#  situations.
-#
-#  "\""
-#  '"'
-        elif ((c == '\"') and line[i - 1] != '\\' and not in_single_quote):
-            in_double_quote = not in_double_quote
-        elif ((c == '/') and not in_double_quote and not in_single_quote):
-            return True, line[:i]
-        elif ((c == '&') and not in_double_quote and not in_single_quote):
-            if (i + 4 <= len(line)) and (line[i:i + 4] == '&end'):
-                return TRUE, line[:i]
-
-    return False, ''
+from omfit.classes.omfit_namelist import OMFITnamelist
+import zipfile
 
 #-------------------------------------------------------------------------------
 #
@@ -65,8 +21,7 @@ class vmec(Component):
     def __init__(self, services, config):
         print('vmec: Construct')
         Component.__init__(self, services, config)
-        
-        self.vmec_exe = self.VMEC_EXE
+        self.task_queue = {}
 
 #-------------------------------------------------------------------------------
 #
@@ -75,45 +30,31 @@ class vmec(Component):
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0, **keywords):
         print('vmec: init')
+        
+        self.current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
+        self.current_state = self.services.get_config_param('CURRENT_VMEC_STATE')
+        
+#  Stage plasma state.
         self.services.stage_plasma_state()
+
+#  Unzip files from the plasma state. Use mode a so files can be read and
+#  written to.
+        self.zip_ref = zipfile.ZipFile(self.current_state, 'a')
+        self.zip_ref.extract(self.current_vmec_namelist)
         
-        self.current_vmec_namelist = self.services.get_config_param('CURRENT_VMEC_NAMELIST')
+#  Update parameters in the namelist.
+        namelist = OMFITnamelist(self.current_vmec_namelist)
 
-        params = keywords['name_list_params']
-
-#  Append the new parameters to the end of the namelist input file before the
-#  end. Mark the start of the dakota parameter with a comment. To avoid
-#  littering the namelist file. NAMELIST_FILE should reference a file in the
-#  plasma state.
-        
-        vmec_namelist = open(self.current_vmec_namelist, 'r')
-        vmec_namelist_lines = vmec_namelist.readlines()
-        vmec_namelist.close()
-
-#  Reopen for writting.
-        vmec_namelist = open(self.current_vmec_namelist, 'w')
-
-        for line in vmec_namelist_lines:
-#  Name list input files can have strings containing path separators. Check for
-#  an equals sign to avoid these.
-            end_found, short_line = contains_end(line)
-            if (end_found):
-                vmec_namelist.write(short_line)
-                vmec_namelist.write('\n!  VMEC params\n')
-                for key, value in params.iteritems():
-                    vmec_namelist.write('%s = %s\n'%(key, value))
-                vmec_namelist.write('/\n')
-                break
-            elif ('!  VMEC params\n' in line):
-                vmec_namelist.write(line)
-                for key, value in params.iteritems():
-                    vmec_namelist.write('%s = %s\n'%(key, value))
-                vmec_namelist.write('/\n')
-                break
+        for key, value in keywords.iteritems():
+            if '(' in key :
+                key, indices = key.split('(')
+                indices, extra = indices.split(')')
+                indices = [[int(i) - 1] for i in indices.split(',')]
+                namelist['indata'][key][indices] = value
             else:
-                vmec_namelist.write(line)
-
-        vmec_namelist.close()
+                namelist['indata'][key] = value
+    
+        namelist.save()
 
 #-------------------------------------------------------------------------------
 #
@@ -123,14 +64,42 @@ class vmec(Component):
     def step(self, timeStamp=0.0):
         print('vmec: step')
 
-        task_id = self.services.launch_task(self.NPROC,
-                                            self.services.get_working_dir(),
-                                            self.VMEC_EXE,
-                                            self.current_vmec_namelist,
-                                            logfile = 'vmec.log')
+        self.task_queue['vmec'] = self.services.launch_task(self.NPROC,
+                                                            self.services.get_working_dir(),
+                                                            self.VMEC_EXE,
+                                                            self.current_vmec_namelist,
+                                                            logfile = 'vmec.log')
     
-        if (self.services.wait_task(task_id)):
+#  While vmec is running check the current plasma state for an existing wout
+#  file. If such a file exists replace it from the file.
+        wout_file = 'wout_{}.nc'.format(self.current_vmec_namelist.replace('input.','',1))
+    
+        replace = False
+        for item in self.zip_ref.infolist():
+            if item.filename == wout_file:
+                replace = True
+                break
+
+        if replace:
+            print('No')
+            with zipfile.ZipFile('temp.zip', 'w') as zip_new_ref:
+                for item in self.zip_ref.infolist():
+                    if item.filename != wout_file:
+                        zip_new_ref.writestr(item, zip_old_ref.read(item.filename))
+                self.zip_ref.close()
+        
+            os.remove(self.current_vmec_state)
+            os.rename('temp.zip', self.current_vmec_state)
+            self.zip_ref = zipfile.ZipFile(self.current_state, 'a')
+
+#  Wait for VMEC to finish.
+        if (self.services.wait_task(self.task_queue['vmec']) or not os.path.exists(wout_file)):
             self.services.error('vmec: step failed.')
+        del self.task_queue['vmec']
+
+#  Add the wout file to the plasma state.
+        self.zip_ref.write(wout_file)
+        self.zip_ref.close()
 
         self.services.update_plasma_state()
 
@@ -141,3 +110,4 @@ class vmec(Component):
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
         print('vmec: finalize')
+        self.services.wait_tasklist(self.task_queue.values(), True)
