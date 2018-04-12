@@ -8,7 +8,7 @@
 #-------------------------------------------------------------------------------
 
 from component import Component
-import zipfile
+from utilities import ZipState
 import os
 
 #-------------------------------------------------------------------------------
@@ -30,32 +30,26 @@ class vmec_init(Component):
     def init(self, timeStamp=0.0):
         print('vmec_init: init')
 
-#  Stage input files.
-        self.services.stage_input_files(self.INPUT_FILES)
-        
 #  Get config filenames.
         self.current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
+        current_wout_file = 'wout_{}.nc'.format(self.current_vmec_namelist.replace('input.','',1))
         self.current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
+        
+#  Stage input files. Remove any old files that might still exist.
+        if os.path.exists(self.current_vmec_namelist):
+            os.remove(self.current_vmec_namelist)
+        if os.path.exists(self.current_vmec_state):
+            os.remove(self.current_vmec_state)
+        self.services.stage_input_files(self.INPUT_FILES)
         
 #  Create plasma state from files. Input files can either be a new plasma state,
 #  namelist input file or both. If both file were staged, replace the namelist
-#  input file.
-        if not os.path.exists(self.current_vmec_state) and os.path.exists(self.current_vmec_namelist):
-            with zipfile.ZipFile(self.current_vmec_state, 'w') as zip_ref:
+#  input file. If the namelist file is present remove the wout file and assume
+#  that woutfile should be regenerated.
+        with ZipState.ZipState(self.current_vmec_state, 'a') as zip_ref:
+            if os.path.exists(self.current_vmec_namelist):
                 zip_ref.write(self.current_vmec_namelist)
-        elif os.path.exists(self.current_vmec_namelist) and os.path.exists(self.current_vmec_namelist):
-            with zipfile.ZipFile(self.current_vmec_state, 'r') as zip_old_ref:
-                with zipfile.ZipFile('temp.zip', 'w') as zip_new_ref:
-                    for item in zip_old_ref.infolist():
-                        if item.filename != self.current_vmec_namelist:
-                            zip_new_ref.writestr(item, zip_old_ref.read(item.filename))
-                        else:
-                            zip_new_ref.write(self.current_vmec_namelist)
-
-            os.remove(self.current_vmec_state)
-            os.rename('temp.zip', self.current_vmec_state)
-        else:
-            self.services.error('INPUT_FILES {} are not valid VMEC input files.'.format(self.INPUT_FILES))
+                zip_ref.remove(current_wout_file)
 
         self.services.update_plasma_state()
 
@@ -74,8 +68,3 @@ class vmec_init(Component):
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
         print('vmec_init: finalize')
-
-        if os.path.exists(self.current_vmec_namelist):
-            os.remove(self.current_vmec_namelist)
-        if os.path.exists(self.current_vmec_state):
-            os.remove(self.current_vmec_state)

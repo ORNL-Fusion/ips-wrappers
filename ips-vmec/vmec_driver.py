@@ -25,12 +25,12 @@ class vmec_driver(Component):
 #  VMEC Driver init method. This method prepairs the namelist input file.
 #
 #-------------------------------------------------------------------------------
-    def init(self, timeStamp=0.0):
+    def init(self, timeStamp=0.0, **keywords):
         print('vmec_driver: init')
         
         self.ports['vmec'] = self.services.get_port('VMEC')
-        self.async_queue['vmec:init'] = self.services.call_nonblocking(self.ports['vmec'],
-                                                                       'init', timeStamp)
+        self.async_queue['vmec:init'] = self.services.call_nonblocking(self.ports['vmec'], 'init',
+                                                                       timeStamp, **keywords)
     
 #-------------------------------------------------------------------------------
 #

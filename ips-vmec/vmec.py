@@ -10,7 +10,7 @@
 from component import Component
 import os
 from omfit.classes.omfit_namelist import OMFITnamelist
-import zipfile
+from utilities import ZipState
 
 #-------------------------------------------------------------------------------
 #
@@ -22,6 +22,7 @@ class vmec(Component):
         print('vmec: Construct')
         Component.__init__(self, services, config)
         self.task_queue = {}
+        self.update = False
 
 #-------------------------------------------------------------------------------
 #
@@ -32,6 +33,7 @@ class vmec(Component):
         print('vmec: init')
         
         self.current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
+        self.current_wout_file = 'wout_{}.nc'.format(self.current_vmec_namelist.replace('input.','',1))
         self.current_state = self.services.get_config_param('CURRENT_VMEC_STATE')
         
 #  Stage plasma state.
@@ -39,22 +41,25 @@ class vmec(Component):
 
 #  Unzip files from the plasma state. Use mode a so files can be read and
 #  written to.
-        self.zip_ref = zipfile.ZipFile(self.current_state, 'a')
+        self.zip_ref = ZipState.ZipState(self.current_state, 'a')
         self.zip_ref.extract(self.current_vmec_namelist)
         
+        if self.current_wout_file not in self.zip_ref.namelist() or len(keywords) > 0:
+            self.update = True
+        
 #  Update parameters in the namelist.
-        namelist = OMFITnamelist(self.current_vmec_namelist)
+            namelist = OMFITnamelist(self.current_vmec_namelist)
 
-        for key, value in keywords.iteritems():
-            if '(' in key :
-                key, indices = key.split('(')
-                indices, extra = indices.split(')')
-                indices = [[int(i) - 1] for i in indices.split(',')]
-                namelist['indata'][key][indices] = value
-            else:
-                namelist['indata'][key] = value
+            for key, value in keywords.iteritems():
+                if '(' in key :
+                    key, indices = key.split('(')
+                    indices, extra = indices.split(')')
+                    indices = [[int(i) - 1] for i in indices.split(',')]
+                    namelist['indata'][key][indices] = value
+                else:
+                    namelist['indata'][key] = value
     
-        namelist.save()
+            namelist.save()
 
 #-------------------------------------------------------------------------------
 #
@@ -64,44 +69,23 @@ class vmec(Component):
     def step(self, timeStamp=0.0):
         print('vmec: step')
 
-        self.task_queue['vmec'] = self.services.launch_task(self.NPROC,
-                                                            self.services.get_working_dir(),
-                                                            self.VMEC_EXE,
-                                                            self.current_vmec_namelist,
-                                                            logfile = 'vmec.log')
-    
-#  While vmec is running check the current plasma state for an existing wout
-#  file. If such a file exists replace it from the file.
-        wout_file = 'wout_{}.nc'.format(self.current_vmec_namelist.replace('input.','',1))
-    
-        replace = False
-        for item in self.zip_ref.infolist():
-            if item.filename == wout_file:
-                replace = True
-                break
-
-        if replace:
-            print('No')
-            with zipfile.ZipFile('temp.zip', 'w') as zip_new_ref:
-                for item in self.zip_ref.infolist():
-                    if item.filename != wout_file:
-                        zip_new_ref.writestr(item, zip_old_ref.read(item.filename))
-                self.zip_ref.close()
-        
-            os.remove(self.current_vmec_state)
-            os.rename('temp.zip', self.current_vmec_state)
-            self.zip_ref = zipfile.ZipFile(self.current_state, 'a')
+        if self.update:
+            self.task_queue['vmec'] = self.services.launch_task(self.NPROC,
+                                                                self.services.get_working_dir(),
+                                                                self.VMEC_EXE,
+                                                                self.current_vmec_namelist,
+                                                                logfile = 'vmec.log')
 
 #  Wait for VMEC to finish.
-        if (self.services.wait_task(self.task_queue['vmec']) or not os.path.exists(wout_file)):
-            self.services.error('vmec: step failed.')
-        del self.task_queue['vmec']
+            if (self.services.wait_task(self.task_queue['vmec'], True) or not os.path.exists(self.current_wout_file)):
+                self.services.error('vmec: step failed.')
+            del self.task_queue['vmec']
 
 #  Add the wout file to the plasma state.
-        self.zip_ref.write(wout_file)
-        self.zip_ref.close()
+            self.zip_ref.write([self.current_vmec_namelist, self.current_wout_file])
+            self.zip_ref.close()
 
-        self.services.update_plasma_state()
+            self.services.update_plasma_state()
 
 #-------------------------------------------------------------------------------
 #
