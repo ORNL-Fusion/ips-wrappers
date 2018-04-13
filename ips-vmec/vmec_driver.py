@@ -40,10 +40,13 @@ class vmec_driver(Component):
     def step(self, timeStamp=0.0):
         print('vmec_driver: step')
         
-        self.services.wait_call_list(self.async_queue.values(), True)
-        self.async_queue = {}
+        self.services.wait_call(self.async_queue['vmec:init'], True)
         self.async_queue['vmec:step'] = self.services.call_nonblocking(self.ports['vmec'],
                                                                        'step', timeStamp)
+        del self.async_queue['vmec:init']
+        
+        self.services.wait_call(self.async_queue['vmec:step'], True)
+        del self.async_queue['vmec:step']
     
 #-------------------------------------------------------------------------------
 #

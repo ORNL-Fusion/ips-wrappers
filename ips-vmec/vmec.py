@@ -11,6 +11,7 @@ from component import Component
 import os
 from omfit.classes.omfit_namelist import OMFITnamelist
 from utilities import ZipState
+import time
 
 #-------------------------------------------------------------------------------
 #
@@ -86,6 +87,8 @@ class vmec(Component):
             self.zip_ref.close()
 
             self.services.update_plasma_state()
+            self.services.stage_output_files(timeStamp, self.OUTPUT_FILES,
+                                             keep_old_files=False)
 
 #-------------------------------------------------------------------------------
 #

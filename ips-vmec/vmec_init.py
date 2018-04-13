@@ -35,11 +35,9 @@ class vmec_init(Component):
         current_wout_file = 'wout_{}.nc'.format(self.current_vmec_namelist.replace('input.','',1))
         self.current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
         
-#  Stage input files. Remove any old files that might still exist.
+#  Stage input files. Remove old namelist input if it exists.
         if os.path.exists(self.current_vmec_namelist):
             os.remove(self.current_vmec_namelist)
-        if os.path.exists(self.current_vmec_state):
-            os.remove(self.current_vmec_state)
         self.services.stage_input_files(self.INPUT_FILES)
         
 #  Create plasma state from files. Input files can either be a new plasma state,
