@@ -86,6 +86,8 @@ class ftridynWorker(Component):
         print('ftridyn_worker: step')
         self.services.stage_plasma_state()
 
+        cwd = self.services.get_working_dir()
+
         print 'check that all arguments are read well by ftridyn-step'
         for (k, v) in keywords.iteritems():
             print '\t', k, " = ", v
@@ -124,17 +126,26 @@ class ftridynWorker(Component):
         print exit_status
         self.services.remove_task_pool('pool_ftx')
         
+        #write the path to the current working directory, so the driver can access the data
+        outputPathString="outputPath="+cwd
+        outputPathFile = open(self.PWD_PATH, "w")
+        outputPathFile.write(outputPathString)
+        outputPathFile.write('\n')
+        outputPathFile.close()
+
+        print 'path of FTRIDYNs output: ', cwd
+        print '\t written to file: ', self.PWD_PATH , '\n'
 
         #post-processing: COMPRESS ALL OUTPUT INTO A GENERIC, SINGLE ZIP FILE AND ADD TO PLASMA STATE 
-        zippedFile=str(self.ft_folder)+'.zip'
-        if os.path.isfile(zippedFile):
-            os.remove(zippedFile)
+        #zippedFile=str(self.ft_folder)+'.zip'
+        #if os.path.isfile(zippedFile):
+        #    os.remove(zippedFile)
 
-        zip_output='zipOutput.txt'
-        zipString='zip -r %s %s >> %s' %(zippedFile,self.ft_folder,zip_output)
-        subprocess.call([zipString], shell=True)
+        #zip_output='zipOutput.txt'
+        #zipString='zip -r %s %s >> %s' %(zippedFile,self.ft_folder,zip_output)
+        #subprocess.call([zipString], shell=True)
 
-        shutil.rmtree(self.ft_folder)
+        #shutil.rmtree(self.ft_folder)
 
         #updates plasma state FTridyn output files
         self.services.update_plasma_state()

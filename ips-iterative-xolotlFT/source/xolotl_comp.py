@@ -103,19 +103,24 @@ class xolotlWorker(Component):
         #save TRIDYN_*.dat files, zipped
         TRIDYNFiles='TRIDYN_*.dat'
 
-        if self.coupling=='True' and zipOutput=='True':
-            TRIDYNZipped='allTRIDYN_t%f.zip' %self.driverTime
-            zip_ouput='zipTridynDatOuput.txt'
+        if self.coupling=='True':
+            if zipOutput=='True':
+                TRIDYNZipped='allTRIDYN_t%f.zip' %self.driverTime
+                zip_ouput='zipTridynDatOuput.txt'
 
-            print '\t save and zip output: ', TRIDYNFiles
-            zipString='zip %s %s >> %s ' %(TRIDYNZipped, TRIDYNFiles, zip_ouput)
-            subprocess.call([zipString], shell=True)
+                print '\t save and zip output: ', TRIDYNFiles
+                zipString='zip %s %s >> %s ' %(TRIDYNZipped, TRIDYNFiles, zip_ouput)
+                subprocess.call([zipString], shell=True)
+                
+                rmString='rm '+ TRIDYNFiles
+                subprocess.call([rmString], shell=True)
+
+            else:
+                #print '\t leaving ',  TRIDYNFiles , 'uncompressed'
+                print '\t deleting ',  TRIDYNFiles, ' (without saving compressed)'            
 
             rmString='rm '+ TRIDYNFiles
             subprocess.call([rmString], shell=True)
-
-        elif self.coupling=='True':
-            print '\t leaving ',  TRIDYNFiles , 'uncompressed'
 
         else:
             print '\t no ', TRIDYNFiles , ' generated in this simulation'
@@ -123,22 +128,24 @@ class xolotlWorker(Component):
         #save helium concentration files, zipped
         heConcFiles='heliumConc_*.dat'
 
-        if petscHeConc and zipOutput=='True':
-            heConcZipped='allHeliumConc_t%f.zip' %self.driverTime
-            zip_ouput='zipHeConcOuput.txt'
-            
-            print '\t save and zip output: ', heConcFiles
-            zipString='zip %s %s >> %s ' %(heConcZipped, heConcFiles, zip_ouput)
-            subprocess.call([zipString], shell=True)
+        if petscHeConc:
+            if zipOutput=='True':
+                heConcZipped='allHeliumConc_t%f.zip' %self.driverTime
+                zip_ouput='zipHeConcOuput.txt'
+                
+                print '\t save and zip output: ', heConcFiles
+                zipString='zip %s %s >> %s ' %(heConcZipped, heConcFiles, zip_ouput)
+                subprocess.call([zipString], shell=True)
+
+            else:
+                #print '\t leaving ', heConcFiles ,'uncompressed'
+                print '\t deleting ',  heConcFiles, ' (without saving compressed)'
 
             rmString='rm '+heConcFiles
             subprocess.call([rmString], shell=True)
-            
-        elif petscHeConc:
-            print '\t leaving ', heConcFiles ,'uncompressed'
 
         else:
-            print '\t no ', heConcFiles , ' in this loops output'
+            print '\t no ', heConcFiles , ' generated in this loop'
 
         statusFile=open(self.EXIT_STATUS, "r")
         exitStatus=statusFile.read().rstrip('\n')

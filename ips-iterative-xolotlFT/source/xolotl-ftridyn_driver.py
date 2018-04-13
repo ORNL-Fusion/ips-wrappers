@@ -432,16 +432,22 @@ class xolotlFtridynDriver(Component):
                     # 1) uncompress zipped file (do not remane yet)
                     #FTRIDYN folder is compressed to be added to plasma state; regardless of 'zipOutput' parameter's value
 
-                    zippedFile=self.FT_OUTPUT_FOLDER+'.zip'
-                    unzip_output='unzipOutput'+prj+'.txt'
-                    unzipString='unzip %s -d %s >> %s' %(zippedFile,cwd,unzip_output)
-                    subprocess.call([unzipString], shell=True)
+                    #zippedFile=self.FT_OUTPUT_FOLDER+'.zip'
+                    #unzip_output='unzipOutput'+prj+'.txt'
+                    #unzipString='unzip %s -d %s >> %s' %(zippedFile,cwd,unzip_output)
+                    #subprocess.call([unzipString], shell=True)
 
+                    #access ft folder (read file containing path to FT output directory, as outputPath=...):
+                    t=param_handler.read(self.FT_OUTPUT_PWD_PATH)
+                    for key,value in t.iteritems():
+                        self.ftridyn[key] = value
+
+                    print 'from ', self.FT_OUTPUT_PWD_PATH , ', \t the path to output of FTRIDYN is ' , self.ftridyn['outputPath'], '\n'
 
                     #2) #get maximum projectile range to ensure bins are added correctly in 'translate_ftridyn_to_xolotl'
 
                     ft_output_prj_file=self.ft_output_prj_file[i]
-                    angleFolder=self.FT_OUTPUT_FOLDER+'/ANGLE'
+                    angleFolder=self.ftridyn['outputPath']+'/'+self.FT_OUTPUT_FOLDER+'/ANGLE'
 
                     maxDepth=[]
                     for j in range(len(self.angleIn[i])):
@@ -485,9 +491,9 @@ class xolotlFtridynDriver(Component):
                     shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP, timeFolder+'/'+ft_output_profile_temp_prj)
             
                 
-                    #5) COPY FOLDERS WITH TIME-STAMP & RENAME FOR (Tg,Prj) SPECIES  
+                    #5) MOVE FOLDERS TO DIRECTORY WITH TIME-STAMP & RENAME FOR (Tg,Prj) SPECIES  
                 
-                    shutil.move(self.FT_OUTPUT_FOLDER,timeFolder+'/'+self.FT_OUTPUT_FOLDER+'_'+prj+'W')                
+                    shutil.move(self.ftridyn['outputPath']+'/'+self.FT_OUTPUT_FOLDER,timeFolder+'/'+self.FT_OUTPUT_FOLDER+'_'+prj+'W')                
                     self.services.update_plasma_state()
 
                     print '\n'
@@ -555,8 +561,8 @@ class xolotlFtridynDriver(Component):
             combinedFile.close()
 
             #compress output
-            if self.driver['ZIP_OUTPUT']=='True':
-                print 'zip output: ', timeFolder
+            if self.driver['ZIP_FTRIDYN_OUTPUT']=='True':
+                print 'zip F-TRIDYNs output: ', timeFolder
                 zippedTimeFolder=timeFolder+'.zip'
                 zip_output='zipOutputTimeFolder.txt'
                 zipString='zip -r %s %s >> %s ' %(zippedTimeFolder, timeFolder, zip_output)
@@ -630,7 +636,7 @@ class xolotlFtridynDriver(Component):
                 if self.collapsedLoops<=int(self.driver['MAX_COLLAPSE_LOOPS']):
 
                     self.services.call(xolotl, 'init', timeStamp, dTime=time, xFtCoupling=self.driver['FTX_COUPLING'], xParameters=self.xp.parameters)
-                    self.services.call(xolotl, 'step', timeStamp, dTime=time, dZipOutput=self.driver['ZIP_OUTPUT'], xHe_conc=self.petsc_heConc, xParameters=self.xp.parameters)
+                    self.services.call(xolotl, 'step', timeStamp, dTime=time, dZipOutput=self.driver['ZIP_XOLOTL_OUTPUT'], xHe_conc=self.petsc_heConc, xParameters=self.xp.parameters)
 
                     self.services.stage_plasma_state()
 
@@ -733,6 +739,9 @@ class xolotlFtridynDriver(Component):
                     print '\t change in Xolotls maximum time step after loop ', self.driver['LOOP_N']
                     self.xp.parameters['petscArgs']['-ts_adapt_dt_max']*=self.driver['XOLOTL_MAXTS_FACTOR']
                     print '\t multiply time step by ', self.driver['XOLOTL_MAXTS_FACTOR'] , ' for a new time step = ', self.xp.parameters['petscArgs']['-ts_adapt_dt_max']
+                    if self.xp.parameters['petscArgs']['-ts_adapt_dt_max'] > self.driver['XOLOTL_MAX_TS']:
+                        self.xp.parameters['petscArgs']['-ts_adapt_dt_max']=self.driver['XOLOTL_MAX_TS']
+                        print '\t Xolotls time-step reached the maximum allowed; set to limit value, ',self.driver['XOLOTL_MAX_TS']
                 else:
                     print '\t continue with xolotl dt max ', self.xp.parameters['petscArgs']['-ts_adapt_dt_max']
 
