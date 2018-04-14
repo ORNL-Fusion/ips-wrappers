@@ -34,15 +34,14 @@ class vmec(Component):
         
         self.current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
         self.current_wout_file = 'wout_{}.nc'.format(self.current_vmec_namelist.replace('input.','',1))
-        self.current_state = self.services.get_config_param('CURRENT_VMEC_STATE')
-        current_vmec_flags = self.services.get_config_param('CURRENT_VMEC_FLAGS')
+        current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
         
 #  Stage plasma state.
         self.services.stage_plasma_state()
 
 #  Unzip files from the plasma state. Use mode a so files can be read and
 #  written to.
-        self.zip_ref = ZipState.ZipState(self.current_state, 'a')
+        self.zip_ref = ZipState.ZipState(current_vmec_state, 'a')
         self.zip_ref.extract(self.current_vmec_namelist)
         self.zip_ref.extract('flags.json')
         
