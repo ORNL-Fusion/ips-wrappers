@@ -10,6 +10,7 @@
 from component import Component
 from utilities import ZipState
 import os
+import json
 
 #-------------------------------------------------------------------------------
 #
@@ -31,23 +32,30 @@ class vmec_init(Component):
         print('vmec_init: init')
 
 #  Get config filenames.
-        self.current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
-        current_wout_file = 'wout_{}.nc'.format(self.current_vmec_namelist.replace('input.','',1))
-        self.current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
+        current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
+        current_wout_file = 'wout_{}.nc'.format(current_vmec_namelist.replace('input.','',1))
+        current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
         
 #  Stage input files. Remove old namelist input if it exists.
-        if os.path.exists(self.current_vmec_namelist):
-            os.remove(self.current_vmec_namelist)
+        if os.path.exists(current_vmec_namelist):
+            os.remove(current_vmec_namelist)
         self.services.stage_input_files(self.INPUT_FILES)
+        
+#  Create a VMEC flags dict.
+        flags = {'state': 'unchanged'}
         
 #  Create plasma state from files. Input files can either be a new plasma state,
 #  namelist input file or both. If both file were staged, replace the namelist
 #  input file. If the namelist file is present remove the wout file and assume
 #  that woutfile should be regenerated.
-        with ZipState.ZipState(self.current_vmec_state, 'a') as zip_ref:
-            if os.path.exists(self.current_vmec_namelist):
-                zip_ref.write(self.current_vmec_namelist)
-                zip_ref.remove(current_wout_file)
+        with ZipState.ZipState(current_vmec_state, 'a') as zip_ref:
+            if os.path.exists(current_vmec_namelist):
+                zip_ref.write(current_vmec_namelist)
+                flags['state'] = 'needs_update'
+#  Write flags to a json file.
+            with open('flags.json', 'w') as flags_file:
+                json.dump(flags, flags_file)
+            zip_ref.write('flags.json')
 
         self.services.update_plasma_state()
 

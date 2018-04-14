@@ -11,7 +11,7 @@ from component import Component
 import os
 from omfit.classes.omfit_namelist import OMFITnamelist
 from utilities import ZipState
-import time
+import json
 
 #-------------------------------------------------------------------------------
 #
@@ -23,7 +23,6 @@ class vmec(Component):
         print('vmec: Construct')
         Component.__init__(self, services, config)
         self.task_queue = {}
-        self.update = False
 
 #-------------------------------------------------------------------------------
 #
@@ -36,6 +35,7 @@ class vmec(Component):
         self.current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
         self.current_wout_file = 'wout_{}.nc'.format(self.current_vmec_namelist.replace('input.','',1))
         self.current_state = self.services.get_config_param('CURRENT_VMEC_STATE')
+        current_vmec_flags = self.services.get_config_param('CURRENT_VMEC_FLAGS')
         
 #  Stage plasma state.
         self.services.stage_plasma_state()
@@ -44,9 +44,14 @@ class vmec(Component):
 #  written to.
         self.zip_ref = ZipState.ZipState(self.current_state, 'a')
         self.zip_ref.extract(self.current_vmec_namelist)
+        self.zip_ref.extract('flags.json')
         
-        if self.current_wout_file not in self.zip_ref.namelist() or len(keywords) > 0:
-            self.update = True
+#  Load the json file.
+        with open('flags.json', 'r') as flags_file:
+            self.flags = json.load(flags_file)
+
+        if len(keywords) > 0:
+            self.flags['state'] = 'needs_update'
         
 #  Update parameters in the namelist.
             namelist = OMFITnamelist(self.current_vmec_namelist)
@@ -70,12 +75,17 @@ class vmec(Component):
     def step(self, timeStamp=0.0):
         print('vmec: step')
 
-        if self.update:
+        if self.flags['state'] == 'needs_update':
             self.task_queue['vmec'] = self.services.launch_task(self.NPROC,
                                                                 self.services.get_working_dir(),
                                                                 self.VMEC_EXE,
                                                                 self.current_vmec_namelist,
                                                                 logfile = 'vmec.log')
+
+#  Update flags.
+            self.flags['state'] = 'updated'
+            with open('flags.json', 'w') as flags_file:
+                json.dump(self.flags, flags_file)
 
 #  Wait for VMEC to finish.
             if (self.services.wait_task(self.task_queue['vmec'], True) or not os.path.exists(self.current_wout_file)):
@@ -83,9 +93,21 @@ class vmec(Component):
             del self.task_queue['vmec']
 
 #  Add the wout file to the plasma state.
-            self.zip_ref.write([self.current_vmec_namelist, self.current_wout_file])
+            self.zip_ref.write([self.current_vmec_namelist, self.current_wout_file, 'flags.json'])
             self.zip_ref.close()
 
+            self.services.update_plasma_state()
+            self.services.stage_output_files(timeStamp, self.OUTPUT_FILES,
+                                             keep_old_files=False)
+        else:
+#  Update flags.
+            self.flags['state'] = 'unchanged'
+            with open('flags.json', 'w') as flags_file:
+                json.dump(self.flags, flags_file)
+            
+            self.zip_ref.write(['flags.json'])
+            self.zip_ref.close()
+            
             self.services.update_plasma_state()
             self.services.stage_output_files(timeStamp, self.OUTPUT_FILES,
                                              keep_old_files=False)
