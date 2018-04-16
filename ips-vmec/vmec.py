@@ -11,7 +11,6 @@ from component import Component
 import os
 from omfit.classes.omfit_namelist import OMFITnamelist
 from utilities import ZipState
-import json
 
 #-------------------------------------------------------------------------------
 #
@@ -43,14 +42,9 @@ class vmec(Component):
 #  written to.
         self.zip_ref = ZipState.ZipState(current_vmec_state, 'a')
         self.zip_ref.extract(self.current_vmec_namelist)
-        self.zip_ref.extract('flags.json')
-        
-#  Load the json file.
-        with open('flags.json', 'r') as flags_file:
-            self.flags = json.load(flags_file)
 
         if len(keywords) > 0:
-            self.flags['state'] = 'needs_update'
+            self.zip_ref.set_state(state='needs_update')
         
 #  Update parameters in the namelist.
             namelist = OMFITnamelist(self.current_vmec_namelist)
@@ -74,7 +68,9 @@ class vmec(Component):
     def step(self, timeStamp=0.0):
         print('vmec: step')
 
-        if self.flags['state'] == 'needs_update':
+        flags = self.zip_ref.get_state()
+
+        if 'state' in flags and flags['state'] == 'needs_update':
             self.task_queue['vmec'] = self.services.launch_task(self.NPROC,
                                                                 self.services.get_working_dir(),
                                                                 self.VMEC_EXE,
@@ -82,9 +78,7 @@ class vmec(Component):
                                                                 logfile = 'vmec.log')
 
 #  Update flags.
-            self.flags['state'] = 'updated'
-            with open('flags.json', 'w') as flags_file:
-                json.dump(self.flags, flags_file)
+            self.zip_ref.set_state(state='updated')
 
 #  Wait for VMEC to finish.
             if (self.services.wait_task(self.task_queue['vmec'], True) or not os.path.exists(self.current_wout_file)):
@@ -92,7 +86,7 @@ class vmec(Component):
             del self.task_queue['vmec']
 
 #  Add the wout file to the plasma state.
-            self.zip_ref.write([self.current_vmec_namelist, self.current_wout_file, 'flags.json'])
+            self.zip_ref.write([self.current_vmec_namelist, self.current_wout_file])
             self.zip_ref.close()
 
             self.services.update_plasma_state()
@@ -100,11 +94,7 @@ class vmec(Component):
                                              keep_old_files=False)
         else:
 #  Update flags.
-            self.flags['state'] = 'unchanged'
-            with open('flags.json', 'w') as flags_file:
-                json.dump(self.flags, flags_file)
-            
-            self.zip_ref.write(['flags.json'])
+            self.zip_ref.set_state(state='unchanged')
             self.zip_ref.close()
             
             self.services.update_plasma_state()

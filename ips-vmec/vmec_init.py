@@ -10,7 +10,6 @@
 from component import Component
 from utilities import ZipState
 import os
-import json
 
 #-------------------------------------------------------------------------------
 #
@@ -33,7 +32,6 @@ class vmec_init(Component):
 
 #  Get config filenames.
         current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
-        current_wout_file = 'wout_{}.nc'.format(current_vmec_namelist.replace('input.','',1))
         current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
         
 #  Stage input files. Remove old namelist input if it exists.
@@ -41,22 +39,15 @@ class vmec_init(Component):
             os.remove(current_vmec_namelist)
         self.services.stage_input_files(self.INPUT_FILES)
         
-#  Create a VMEC flags dict.
-        flags = {'state': 'unchanged'}
-        
 #  Create plasma state from files. Input files can either be a new plasma state,
 #  namelist input file or both. If both file were staged, replace the namelist
-#  input file. If the namelist file is present remove the wout file and assume
-#  that woutfile should be regenerated.
+#  input file. If the namelist file is present flag the plasma state as needing
+#  to be updated.
         with ZipState.ZipState(current_vmec_state, 'a') as zip_ref:
             if os.path.exists(current_vmec_namelist):
                 zip_ref.write(current_vmec_namelist)
-                flags['state'] = 'needs_update'
-#  Write flags to a json file.
-            with open('flags.json', 'w') as flags_file:
-                json.dump(flags, flags_file)
-            zip_ref.write('flags.json')
-
+                zip_ref.set_state(state='needs_update')
+                    
         self.services.update_plasma_state()
 
 #-------------------------------------------------------------------------------
