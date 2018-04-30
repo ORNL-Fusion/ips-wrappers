@@ -7,6 +7,7 @@
 import numpy as np
 import math
 import numpy.polynomial.polynomial as poly
+import sys
 #import matplotlib.pyplot as plt
 #from   pylab import spicy # *
 #from scipy.optimize import curve_fit
@@ -25,9 +26,20 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
                       angle=[0.0],
                       weightAngle=[1.0],
                       nBins=200,
-                      prjRange=50.0 #in [A]
-):
+                      prjRange=50.0, #in [A]
+                      logFile=None
+                  ):
 
+    if logFile  is not None:
+        print ('redirect tridynPlotting output of to:', logFile)
+        outF = open(logFile, "a")
+        sys.stdout = outF
+
+    else:
+        print ('no log file defined in tridynPlotting')
+        print ('print output to sys.stdout', sys.stdout)
+        
+    print ' '
     print 'tridynPlotting:'
 
     totalSpYield=0.0;
@@ -120,6 +132,8 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
             for i in range(len(m)):
                 n[i]+=m[i]*weightAngle[a] #/numLines[a] ; no need to normalize by number of lines, as that's caused by reflection
             
+            sys.stdout.flush()
+
     ## Fit with polynomials
     fit = poly.polyfit(b, n, 15)
     ## Get the fit function
@@ -164,6 +178,8 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
     yields.append(totalSpYield)
     print "\t average reflection yield is ", totalRYield
     yields.append(totalRYield)
+
+    sys.stdout.flush()
 
     return yields
 

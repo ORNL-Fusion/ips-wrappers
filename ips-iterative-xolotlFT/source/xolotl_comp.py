@@ -16,12 +16,11 @@ class xolotlWorker(Component):
         
 
     def init(self, timeStamp=0.0, **keywords):
-        print('xolotl_worker: init')
-        self.services.stage_plasma_state()
 
-        print 'check that all arguments are read well by xolotl-init and write Xolotl input file (from dictionary)' 
-        for (k, v) in keywords.iteritems():
-            print '\t', k, " = ", v
+        self.services.stage_plasma_state()
+        cwd = self.services.get_working_dir()
+
+        print('\n')
 
         #asign a local variable to arguments used multiple times 
         self.driverTime=keywords['dTime']
@@ -31,28 +30,63 @@ class xolotlWorker(Component):
 
         xp = param_handler.xolotl_params()
         xp.parameters=keywords['xParameters'] 
+        if 'output_file' in keywords:
+            outFile=keywords['output_file']
+            if outFile  is not None:
+                print('redirect Xolotl:init output of ', cwd , 'to:', outFile)
+                outF=open(outFile , 'a')
+                sys.stdout = outF
+            else:
+                print ('no log file defined in keywords or config file')
+                print ('print output of Xolotl:init to default sys.stdout')
+
+        print (' ')
+        print('xolotl_worker: init')
+
+        print('check that all arguments are read well by xolotl-init and write Xolotl input file (from dictionary)')
+        for (k, v) in keywords.iteritems():
+            print('\t {0} = {1}'.format(k, v))
 
         #write and store xolotls parameter for each loop 
         xp.write('params.txt')
+
         currentXolotlParamFile='params_%f.txt' %self.driverTime
         shutil.copyfile('params.txt',currentXolotlParamFile) 
-        
+ 
+        sys.stdout.flush()
         self.services.update_plasma_state()
 
     def step(self, timeStamp=0.0,**keywords):
-        print('xolotl_worker: step')
 
         self.services.stage_plasma_state()
-
-        #asign a local variable to arguments used multiple times
-
-        print 'check that all arguments are read well by xolotl-step'
-        for (k, v) in keywords.iteritems():
-            print '\t', k, " = ", v
-            
+        cwd = self.services.get_working_dir()
         zipOutput=keywords['dZipOutput']
         petscHeConc=keywords['xHe_conc']
         xp_parameters=keywords['xParameters']
+        outFile=keywords['output_file']
+        
+        print ' '
+        if 'output_file' in keywords:
+            outFile=keywords['output_file']            
+            if outFile  is not None:
+                print('redirect Xolotl:step output of ', cwd , 'to:', outFile)
+                outF=open(outFile , 'a')
+                sys.stdout = outF
+            else:
+                print ('no log file defined in keywords or config file')
+                print ('print output of Xolotl:step to default sys.stdout')
+
+        print ' '
+        print('xolotl_worker: step ')
+        print (' ')
+
+
+        #asign a local variable to arguments used multiple times      
+        print 'checking that all arguments are read well by xolotl-step'
+        for (k, v) in keywords.iteritems():
+            print '\t', k, " = ", v 
+        print 'DONE checking that all arguments are read well by xolotl-step '
+        #print '\n'
 
         #xolotlLogFile='xolotl_t%f.log' %self.driverTime
         #print '\t Xolotl log file ', xolotlLogFile
@@ -75,6 +109,7 @@ class xolotlWorker(Component):
             task_id = self.services.launch_task(self.NPROC,self.services.get_working_dir(),
                                                 self.XOLOTL_EXE, 'params.txt',task_ppn=self.task_ppn,logfile=xolotlLogFile)
             ret_val = self.services.wait_task(task_id)
+            #print 'THIS IS A TEST: Xolotl run done, and exited with ret_val = ', ret_val
 
             if (ret_val == 0):
                 break
@@ -96,7 +131,7 @@ class xolotlWorker(Component):
         #shutil.copyfile('xolotlStop.h5',xp.parameters['networkFile'])
 
         newest = max(glob.iglob('TRIDYN_*.dat'), key=os.path.getctime)
-        print '\t newest file ' , newest
+        print('\t newest file {} \n'.format(newest))
         shutil.copyfile(newest, 'last_TRIDYN.dat')
 
 
@@ -107,23 +142,20 @@ class xolotlWorker(Component):
             if zipOutput=='True':
                 TRIDYNZipped='allTRIDYN_t%f.zip' %self.driverTime
                 zip_ouput='zipTridynDatOuput.txt'
+                print('\t save and zip output: {} \n'.format(TRIDYNFiles))
 
-                print '\t save and zip output: ', TRIDYNFiles
                 zipString='zip %s %s >> %s ' %(TRIDYNZipped, TRIDYNFiles, zip_ouput)
                 subprocess.call([zipString], shell=True)
                 
-                rmString='rm '+ TRIDYNFiles
-                subprocess.call([rmString], shell=True)
-
             else:
-                #print '\t leaving ',  TRIDYNFiles , 'uncompressed'
-                print '\t deleting ',  TRIDYNFiles, ' (without saving compressed)'            
+                ##print '\t leaving ',  TRIDYNFiles , 'uncompressed'
+                print('\t deleting {} (without saving compressed) \n '.format(TRIDYNFiles))
 
             rmString='rm '+ TRIDYNFiles
             subprocess.call([rmString], shell=True)
 
         else:
-            print '\t no ', TRIDYNFiles , ' generated in this simulation'
+            print('\t no {} generated in this simulation \n'.format(TRIDYNFiles))
 
         #save helium concentration files, zipped
         heConcFiles='heliumConc_*.dat'
@@ -133,28 +165,29 @@ class xolotlWorker(Component):
                 heConcZipped='allHeliumConc_t%f.zip' %self.driverTime
                 zip_ouput='zipHeConcOuput.txt'
                 
-                print '\t save and zip output: ', heConcFiles
+                print('\t save and zip output: {} \n'.format(heConcFiles))
                 zipString='zip %s %s >> %s ' %(heConcZipped, heConcFiles, zip_ouput)
                 subprocess.call([zipString], shell=True)
 
             else:
-                #print '\t leaving ', heConcFiles ,'uncompressed'
-                print '\t deleting ',  heConcFiles, ' (without saving compressed)'
+                ##print '\t leaving ', heConcFiles ,'uncompressed'
+                print('\t deleting {} (without saving compressed) \n'.format(heConcFiles))
 
             rmString='rm '+heConcFiles
             subprocess.call([rmString], shell=True)
 
         else:
-            print '\t no ', heConcFiles , ' generated in this loop'
+            print('\t no {} generated in this loop \n'.format(heConcFiles))
 
         statusFile=open(self.EXIT_STATUS, "r")
         exitStatus=statusFile.read().rstrip('\n')
         
-        print '\n'
+        print('')
 
         if exitStatus=='collapsed':
-            print '\t simulation exited loop with status collapse'
-            print '\t rename output files as _collapsed before trying again'
+            print('\t simulation exited loop with status collapse')
+            print('\t rename output files as collapsed before trying again')
+            
 
             currentXolotlNetworkFile='xolotlStop_%f.h5' %self.driverTime
             networkFile_unfinished='xolotlStop_%f_collapsed.h5' %self.driverTime
@@ -178,8 +211,9 @@ class xolotlWorker(Component):
                     os.rename(heConcZipped,heConcUnfinished)
             
         #updates plasma state Xolotl output files
+        sys.stdout.flush()
         self.services.update_plasma_state()
-  
+
     def finalize(self, timeStamp=0.0):
         return
     
