@@ -1,0 +1,4 @@
+plasmaSpecies=He W D T
+fluxFraction=0.1 5.93011708517e-05 0.9 0.0
+flux=10000.0
+gitrOutputDir=/scratch2/scratchdirs/a7l/nested_ftridyn_gitr_xolotl/Test_nestedDrivers_updated/work/nested_driver_nested_driver_1/sub_workflow_1/work/workers__gitr_comp_6

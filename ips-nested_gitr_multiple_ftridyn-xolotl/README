@@ -1,0 +1,4 @@
+For running this test, copy the ('Test') folder in $SCRATCH. Otherwise there might be issues with netcdf when running GITR.
+The test should easily be completed in 30min (debug queue), using 8 nodes.
+
+T.Y. & A.L., 03/14/2018
