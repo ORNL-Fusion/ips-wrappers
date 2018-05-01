@@ -1,55 +1,43 @@
 # How to develop on your own copy of ips-wrappers
+## Install the IPS
+Skip this if you've already installed the IPS. 
 
-**(Assuming you are on Edison and are an ATOM NERSC team member - if not, just ask)**
-
+1. Create an IPS directory and clone the IPS-framework, wrappers, and examples repos.
 ```
-cd /project/projectdirs/atom/users
-mkdir $USER
-cd $USER
-module load git
-git clone https://github.com/ORNL-Fusion/ips-wrappers.git ips-wrappers
-cd ips-wrappers
-git checkout dlg-devel
-git submodule update --init --recursive
+mkdir IPS
+cd IPS
+git clone https://github.com/HPC-SimTools/IPS-framework.git ips-framework
+git clone https://github.com/ORNL-Fusion/ips-wrappers.git
+git clone https://github.com/ORNL-Fusion/ips-examples.git
 ```
-
-You also will want to create your own branch, i.e., 
-
+2. Export the `IPS_DIR` environment variable
 ```
-git checkout -b my-branch-name
+export IPS_DIR=${PWD}
 ```
-
-then in your [batchscript.ips.edison](https://github.com/ORNL-Fusion/ips-wrappers/blob/dlg-devel/template.batchscript.ips.edison), comment out the default, and add the following
-
+3. Add this to your `.bashrc` or otherwise so it's there next time you open a shell (Note: Adapt for `csh` or otherwise).
 ```
-# Production
-# source /project/projectdirs/atom/atom-install-edison/ips-wrappers/env.ips.edison
-# Me
-source /project/projectdirs/atom/users/$USER/ips-wrappers/env.ips.edison
+echo 'export IPS_DIR='${PWD} >> ~/.bashrc 
 ```
 
-## After making some changes you want to make available
-Check was git has to say about the things you changed
-```
-cd /project/projectdirs/atom/users/$USER/ips-wrappers
-git status
-```
-Add the files you want to commit to the staging area
-```
-git add filename1 filename2
-```
-Commit the files (this is only local - it does not push to a remote like SVN)
-```
-git commit -m 'My informative commit message describing a new awesome feature'
-```
-Pull any remote changes prior to pushing
-```
-git pull
-```
-Now push your changes to the default remote (probably github unless you already knew what you are doing)
-```
-git push
-```
-Now issue a "Pull Request" on Github with `base:dlg-devel` and your branch.
+## Run the example
 
-
+1. Source the IPS environemnt
+```
+cd $IPS_DIR
+source ips-wrappers/env.ips
+```
+2. Run the ABC example
+  * Locally
+```
+cd ips-examples/ABC_example
+ips.py --simulation=ABC_simulation.config --platform=platform.conf
+```
+  * On a batch system (e.g., Edison at NERSC)
+```
+cd ips-examples/ABC_example
+sbatch Edison_run
+```
+To clean all the run files and start with just the input deck run 
+```
+./cleanIpsRun.sh
+```
