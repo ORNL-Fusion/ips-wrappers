@@ -113,6 +113,15 @@ class nested_driver(Component):
         #self.async_queue['component_a:driver:step'] = self.services.call_nonblocking(self.nested_components['component_a']['driver'], 'step', 0.0)
 
 
+        gitrOutFile=self.services.get_config_param('GITR_OUTPUT')
+        print ' '
+        print 'Copy GITRs output ', gitrOutFile
+        print '\t from ', self.SUBMIT_DIR  
+        print '\t to ', self.nested_components['component_ftx']['sub_working_dir']
+        print ' '
+        shutil.copy2(self.SUBMIT_DIR+'/'+gitrOutFile, self.nested_components['component_ftx']['sub_working_dir'])
+
+
         print('\n')
         print('FTridyn-Xolotl:init')
         print('\n')
