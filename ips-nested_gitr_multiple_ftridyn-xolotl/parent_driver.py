@@ -90,7 +90,7 @@ class parent_driver(Component):
         ## CREATE SUB-WORKFLOW FOR MULTIPLE (num_children) FTRIDYN-XOLOTL RUNS, IN PARALLEL ##
 
         for i in range(0, num_children):
-            child_comp = 'child_{}'.format(i)
+            child_comp = 'ftx_{}'.format(i)
             
             keys['LOG_FILE'] = 'log.{}'.format(child_comp)
             keys['SIM_NAME'] = child_comp
@@ -188,33 +188,30 @@ class parent_driver(Component):
         for child_comp, child in self.child_components.items():
             print ' '
             print 'Call driver:init for child ', child_comp
-            print 'THIS IS A TEST: with dictionary ', child
-            print ' '
+            print '\t with dictionary ', child
             self.running_components['{}:driver:init'.format(child['sim_name'])] = self.services.call_nonblocking(child['driver'],
                                                                                                                  'init',
                                                                                                                  timeStamp,
                                                                                                                  **child) #**keys
-
+        print ' '
         #  Loop over the children and all the initize driver component.
         for child_comp, child in self.child_components.items(): #.values():
 
-            print 'Wait for driver:init of child ', child_comp,' to be done'
+            print ' '
+            print 'for child ', child_comp, ' with sim_name ', child['sim_name'] 
+            print '\t Wait for driver:init to be done'
             self.services.wait_call(self.running_components['{}:driver:init'.format(child['sim_name'])], True)
-
-            print 'Done waiting for driver:init of child ',child_comp
-            print ' '
-            print 'Call driver:step now'
-            print '\t for child ', child['sim_name']
-            print ' '
+            print '\t Done waiting for driver:init'
+            print '\t Call driver:step now'
 
             #child['LOG_FILE']='log.step.{}'.format(child_comp)
             self.running_components['{}:driver:step'.format(child['sim_name'])] = self.services.call_nonblocking(child['driver'],
                                                                                                                  'step', 
                                                                                                                  timeStamp,
                                                                                                                  **child) #**keys)
-
             del self.running_components['{}:driver:init'.format(child['sim_name'])]
 
+        print ' '
 #-------------------------------------------------------------------------------
 #
 #  parent_driver Component finalize method.
