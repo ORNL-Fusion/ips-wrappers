@@ -13,6 +13,9 @@ import netCDF4
 import pickle
 import math
 
+print 'The generate_ftridyn_input path in ftridyn_worker_taskpool is: '
+print os.path.abspath(generate_ftridyn_input.__file__)
+
 class ftridynWorker(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)

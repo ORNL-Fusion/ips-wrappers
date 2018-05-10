@@ -543,6 +543,7 @@ driver['LOOP_TIME_STEP']))
                 
                     shutil.move(self.ftridyn['outputPath']+'/'+self.FT_OUTPUT_FOLDER,timeFolder+'/'+self.FT_OUTPUT_FOLDER+'_'+prj+'W')                
                     self.services.update_plasma_state()
+                    print('\t done with F-TRIDYN for {} '.format(prj))
                     print('\n')
 
                 #if flux fraction == 0:

@@ -87,6 +87,7 @@ class parent_driver(Component):
                                                                                               'COMPONENT_A_NAMELIST_INPUT' : self.services.get_config_param('COMPONENT_A_NAMELIST_INPUT'),
                                                                                               'LOG_FILE' : 'log.component_a.warning'})
 
+        print 'creating first sub-workflow DONE!'
         ## CREATE SUB-WORKFLOW FOR MULTIPLE (num_children) FTRIDYN-XOLOTL RUNS, IN PARALLEL ##
 
         for i in range(0, num_children):

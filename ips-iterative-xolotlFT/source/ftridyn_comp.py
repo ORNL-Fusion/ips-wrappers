@@ -12,6 +12,9 @@ import numpy as np
 import subprocess
 import re
 
+print 'The generate_ftridyn_input path in ftridyn_comp is:'
+print os.path.abspath(generate_ftridyn_input.__file__) #TEST
+
 class ftridynWorker(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
