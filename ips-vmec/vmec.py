@@ -89,17 +89,12 @@ class vmec(Component):
             self.zip_ref.write([self.current_vmec_namelist, self.current_wout_file])
             self.zip_ref.close()
 
-            self.services.update_plasma_state()
-            self.services.stage_output_files(timeStamp, self.OUTPUT_FILES,
-                                             keep_old_files=False)
         else:
 #  Update flags.
             self.zip_ref.set_state(state='unchanged')
             self.zip_ref.close()
             
-            self.services.update_plasma_state()
-            self.services.stage_output_files(timeStamp, self.OUTPUT_FILES,
-                                             keep_old_files=False)
+        self.services.update_plasma_state()
 
 #-------------------------------------------------------------------------------
 #

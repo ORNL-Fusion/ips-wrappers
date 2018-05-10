@@ -48,6 +48,9 @@ class vmec_driver(Component):
         self.services.wait_call(self.async_queue['vmec:step'], True)
         del self.async_queue['vmec:step']
     
+#  Stage plasma state.
+        self.services.stage_plasma_state()
+    
 #-------------------------------------------------------------------------------
 #
 #  VMEC Driver finalize method. This cleans up afterwards. Not used.

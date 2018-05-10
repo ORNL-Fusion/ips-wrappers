@@ -8,7 +8,8 @@
 #-------------------------------------------------------------------------------
 
 from component import Component
-import shutil
+from utilities import ZipState
+import os
 
 #-------------------------------------------------------------------------------
 #
@@ -30,46 +31,35 @@ class siesta_init(Component):
     def init(self, timeStamp=0.0):
         print('siesta_init: init')
 
+#  Get config filenames.
+        current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
+        current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
+        self.current_siesta_namelist = self.services.get_config_param('SIESTA_NAMELIST_INPUT')
+        self.current_siesta_state = self.services.get_config_param('CURRENT_SIESTA_STATE')
+
+#  Stage input files. Remove an old namelist input if it exists.
+        if os.path.exists(self.current_siesta_namelist):
+            os.remove(self.current_siesta_namelist)
+        if os.path.exists(current_vmec_namelist):
+            os.remove(current_vmec_namelist)
         self.services.stage_input_files(self.INPUT_FILES)
- 
-#  Currently SIESTA has the namelist input file hard coded. This could change in the future.  
-        current_siesta_namelist = self.services.get_config_param('CURRENT_SIESTA_NAMELIST')
-#        shutil.copyfile(self.INPUT_FILES, current_siesta_namelist)
-        
-#  Create a dummy restart file so the plasma state has something to update to.
-        open(self.services.get_config_param('CURRENT_SIESTA_RESTART_FILE'), 'a').close()
-        
-#  Need to set and reset some values in the siest namelist input file. Primarily
-#  the vmec wout file name input needs to be reset to the to the internal name..
-        current_vmec_wout_file = self.services.get_config_param('CURRENT_VMEC_WOUT_FILE')
+    
+#  Create plasma state from files. Input files can either be a new plasma state,
+#  namelist input file or both. If both file were staged, replace the namelist
+#  input file. If the namelist file is present flag the plasma state as needing
+#  to be updated.
+        with ZipState.ZipState(self.current_siesta_state, 'a') as zip_ref:
+            if os.path.exists(self.current_siesta_namelist):
+                zip_ref.write(self.current_siesta_namelist)
+                zip_ref.set_state(state='needs_update')
 
-#  Start by reading in all the lines and closing the file.
-        siesta_namelist = open(current_siesta_namelist, 'r')
-        siesta_namelist_lines = siesta_namelist.readlines()
-        siesta_namelist.close()
-        
-        siesta_vmec_wout_set = False
-        
-#  Reopen the file for writing.
-        siesta_namelist = open(current_siesta_namelist, 'w')
-        for line in siesta_namelist_lines:
-            if ('WOUT_FILE' in line):
-                siesta_namelist.write('WOUT_FILE = \'%s\'\n'%(current_vmec_wout_file))
-                siesta_vmec_wout_set = True
+            with ZipState.ZipState(current_vmec_state, 'a') as zip_vmec_ref:
+                if os.path.exists(current_vmec_namelist):
+                    zip_vmec_ref.write(current_vmec_namelist)
+                    zip_vmec_ref.set_state(state='needs_update')
+            zip_ref.write(current_vmec_state)
             
-#  The siesta namelist input files contains strings that may have path
-#  separators in them. Check for an equal sign to avoid these cases.
-            elif (('/' in line) and ('=' not in line)):
-                if (not siesta_vmec_wout_set):
-                    siesta_namelist.write('WOUT_FILE = \'%s\'\n'%(current_vmec_wout_file))
-                siesta_namelist.write('/\n')
-            else:
-                siesta_namelist.write(line)
-    
-        siesta_namelist.close()
-    
         self.services.update_plasma_state()
-
 
 #-------------------------------------------------------------------------------
 #
