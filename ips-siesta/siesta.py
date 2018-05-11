@@ -93,16 +93,13 @@ class siesta(Component):
                 
 #  Add the restart file to the plasma state.
             self.zip_ref.write([self.current_siesta_namelist, self.restart_file])
-            self.zip_ref.close()
-    
-            self.services.update_plasma_state()
         
         else:
 #  Update flags.
             self.zip_ref.set_state(state='unchanged')
-            self.zip_ref.close()
-            
-            self.services.update_plasma_state()
+        
+        self.zip_ref.close()
+        self.services.update_plasma_state()
                 
 #-------------------------------------------------------------------------------
 #
@@ -115,7 +112,8 @@ class siesta(Component):
 
 #-------------------------------------------------------------------------------
 #
-#  SIESTA Component finalize method. This cleans up afterwards. Not used.
+#  SIESTA Component set_namelist method. This sets the namelist input file from
+#  the keywords.
 #
 #-------------------------------------------------------------------------------
     def set_namelist(self, **keywords):
@@ -124,7 +122,7 @@ class siesta(Component):
         
         self.restart_file = 'siesta_{}.nc'.format(namelist['siesta_info']['restart_ext'])
         
-        if 'wout_file' in keywords and namelist['siesta_info']['wout_file'] != keywords['wout_file']:
+        if 'wout_file' in keywords:
             namelist['siesta_info']['wout_file'] = keywords['wout_file']
             self.update = True
             del keywords['wout_file']

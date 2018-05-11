@@ -34,23 +34,23 @@ class siesta_init(Component):
 #  Get config filenames.
         current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
         current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
-        self.current_siesta_namelist = self.services.get_config_param('SIESTA_NAMELIST_INPUT')
-        self.current_siesta_state = self.services.get_config_param('CURRENT_SIESTA_STATE')
+        current_siesta_namelist = self.services.get_config_param('SIESTA_NAMELIST_INPUT')
+        current_siesta_state = self.services.get_config_param('CURRENT_SIESTA_STATE')
 
 #  Stage input files. Remove an old namelist input if it exists.
-        if os.path.exists(self.current_siesta_namelist):
-            os.remove(self.current_siesta_namelist)
+        if os.path.exists(current_siesta_namelist):
+            os.remove(current_siesta_namelist)
         if os.path.exists(current_vmec_namelist):
             os.remove(current_vmec_namelist)
         self.services.stage_input_files(self.INPUT_FILES)
     
 #  Create plasma state from files. Input files can either be a new plasma state,
-#  namelist input file or both. If both file were staged, replace the namelist
+#  namelist input file or both. If both files were staged, replace the namelist
 #  input file. If the namelist file is present flag the plasma state as needing
 #  to be updated.
-        with ZipState.ZipState(self.current_siesta_state, 'a') as zip_ref:
-            if os.path.exists(self.current_siesta_namelist):
-                zip_ref.write(self.current_siesta_namelist)
+        with ZipState.ZipState(current_siesta_state, 'a') as zip_ref:
+            if os.path.exists(current_siesta_namelist):
+                zip_ref.write(current_siesta_namelist)
                 zip_ref.set_state(state='needs_update')
 
             with ZipState.ZipState(current_vmec_state, 'a') as zip_vmec_ref:

@@ -139,9 +139,9 @@ rp_range_value(7,1:2) = 0,
 
 !  Signals
 
-sxrch_dot_filename = 'sxrem.dot',
-ipch_dot_filename = 'intpol.dot',
-thscte_dot_filename = 'thomson.dot',
+sxrch_dot_filename = '/Users/m4c/ips-wrappers/ips-v3fit/Test/sxrem.dot',
+ipch_dot_filename = '/Users/m4c/ips-wrappers/ips-v3fit/Test/intpol.dot',
+thscte_dot_filename = '/Users/m4c/ips-wrappers/ips-v3fit/Test/thomson.dot',
 
 sdo_data_a(1:4) = 0.5, 0.5, 0.5, 0.5,
 sdo_s_spec_imin(1) = 1,

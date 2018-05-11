@@ -81,7 +81,7 @@ class siesta_driver(Component):
 
         self.ports['siesta'] = self.services.get_port('SIESTA')
 
-# Initalize and run VMEC. Replace values in the siesta state.
+#  Initalize and run VMEC. Replace values in the siesta state.
         self.services.wait_call(self.async_queue['vmec_init:init'], True)
         self.async_queue['vmec_driver:init'] = self.services.call_nonblocking(self.ports['vmec_driver'], 'init',
                                                                               timeStamp, **vmec_keywords)
@@ -93,10 +93,11 @@ class siesta_driver(Component):
         del self.async_queue['vmec_driver:init']
 
 #  After VMEC has run update the VMEC state.
-        self.services.wait_call(self.async_queue['vmec_driver:step'])
+        self.services.wait_call(self.async_queue['vmec_driver:step'], True)
 
         self.services.stage_subflow_output_files()
         zip_ref.write(current_vmec_state)
+        zip_ref.close()
         self.services.update_plasma_state()
         
         self.async_queue['siesta:init'] = self.services.call_nonblocking(self.ports['siesta'], 'init',
@@ -127,8 +128,8 @@ class siesta_driver(Component):
         self.async_queue = {}
 
         for key, value in self.ports.iteritems():
-            self.async_queue['{}:finalize'] = self.services.call_nonblocking(value, 'finalize',
-                                                                             timeStamp)
+            self.async_queue['{}:finalize'.format(key)] = self.services.call_nonblocking(value, 'finalize',
+                                                                                         timeStamp)
 
         self.services.wait_call_list(self.async_queue.values(), True)
         self.async_queue = {}

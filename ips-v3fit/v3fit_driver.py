@@ -9,6 +9,9 @@
 #-------------------------------------------------------------------------------
 
 from component import Component
+import os
+import shutil
+from utilities import ZipState
 
 #-------------------------------------------------------------------------------
 #
@@ -19,24 +22,119 @@ class v3fit_driver(Component):
     def __init__(self, services, config):
         print('v3fit_driver: Construct')
         Component.__init__(self, services, config)
-            
+        self.async_queue = {}
+        self.ports = {}
+        self.model_workers = {}
+        self.first_run = True
+
 #-------------------------------------------------------------------------------
 #
 #  V3FIT Driver init method. This method prepairs the namelist input file.
 #
 #-------------------------------------------------------------------------------
-    def init(self, timeStamp=0.0):
+    def init(self, timeStamp=0.0, **keywords):
         print('v3fit_driver: init')
         
-        vmec_init = self.services.get_port('VMEC_INIT')
-        self.services.call(vmec_init, 'init', timeStamp)
+#  Separate out the siesta, vmec and v3fit keywords.
+        eq_keywords = {}
+        v3fit_keywords = {}
+        for key, value in keywords.iteritems():
+            if 'vmec__' in key or 'siesta__' in key:
+                eq_keywords[key] = value
+            if 'v3fit__' in key:
+                v3fit_keywords[key.replace('v3fit__','',1)] = value
 
-        v3fit_init = self.services.get_port('V3FIT_INIT')
-        self.services.call(v3fit_init, 'init', timeStamp)
+#  Get config filenames.
+        current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
+        current_siesta_state = self.services.get_config_param('CURRENT_SIESTA_STATE')
+        self.current_v3fit_state = self.services.get_config_param('CURRENT_V3FIT_STATE')
 
-        self.v3fit_comp = self.services.get_port('V3FIT')
-        self.services.call(self.v3fit_comp, 'init', timeStamp)
-    
+#  We need to pass the inputs to the SIESTA or VMEC child workflow.
+        self.services.stage_plasma_state()
+            
+        zip_ref = ZipState.ZipState(self.current_v3fit_state, 'a')
+
+#  If this is the first call, set up the VMEC or SIESTA sub workflow.
+        if self.first_run:
+            if current_siesta_state in zip_ref.infolist():
+                zip_ref.extract(current_siesta_state)
+                    
+#  Get keys for the SIESTA sub workflow.
+                keys = {}
+                keys['SIESTA_CONFIG'] = self.services.get_config_param('SIESTA_CONFIG')
+                keys['PWD'] = self.services.get_config_param('PWD')
+                    
+                self.model_workers['eq'] = {'sim_name': None, 'sub_input_dir': 'siesta_inputs'}
+                if os.path.exists(self.model_workers['eq']['sub_input_dir']):
+                    shutil.rmtree(self.model_workers['eq']['sub_input_dir'])
+                os.mkdir(self.model_workers['eq']['sub_input_dir'])
+                shutil.copy2(current_siesta_state, self.model_workers['eq']['sub_input_dir'])
+                    
+                (self.model_workers['eq']['sim_name'],
+                 self.ports['eq_init'],
+                 self.ports['eq_driver']) = self.services.create_sub_workflow('siesta', keys['SIESTA_CONFIG'], {
+                                                                              'pwd'              : keys['PWD'],
+                                                                              'LOG_FILE'         : 'log.siesta.warning',
+                                                                              'SIM_NAME'         : 'siesta',
+                                                                              'USER_INPUT_FILES' : current_siesta_state
+                                                                              }, self.model_workers['eq']['sub_input_dir'])
+                
+            else:
+                zip_ref.extract(current_vmec_state)
+
+#  Get keys for the VMEC sub workflow.
+                keys = {}
+                keys['VMEC_CONFIG'] = self.services.get_config_param('VMEC_CONFIG')
+                keys['PWD'] = self.services.get_config_param('PWD')
+
+                self.model_workers['eq'] = {'sim_name': None, 'sub_input_dir': 'siesta_inputs'}
+                if os.path.exists(self.model_workers['eq']['sub_input_dir']):
+                    shutil.rmtree(self.model_workers['eq']['sub_input_dir'])
+                os.mkdir(self.model_workers['eq']['sub_input_dir'])
+                shutil.copy2(current_vmec_state, self.model_workers['eq']['sub_input_dir'])
+                
+                (self.model_workers['eq']['sim_name'],
+                 self.ports['eq_init'],
+                 self.ports['eq_driver']) = self.services.create_sub_workflow('vmec', keys['VMEC_CONFIG'], {
+                                                                              'pwd'              : keys['PWD'],
+                                                                              'LOG_FILE'         : 'log.vmec.warning',
+                                                                              'SIM_NAME'         : 'vmec',
+                                                                              'USER_INPUT_FILES' : current_vmec_state
+                                                                              }, self.model_workers['eq']['sub_input_dir'])
+                    
+            self.first_run = False
+
+        self.async_queue['eq_init:init'] = self.services.call_nonblocking(self.ports['eq_init'], 'init',
+                                                                          timeStamp)
+        
+        self.ports['v3fit'] = self.services.get_port('V3FIT')
+            
+#  Initialize and run the equilibrium. Replace values in the V3FIT state.
+        self.services.wait_call(self.async_queue['eq_init:init'], True)
+        self.async_queue['eq_driver:init'] = self.services.call_nonblocking(self.ports['eq_driver'], 'init',
+                                                                            timeStamp, **eq_keywords)
+        del self.async_queue['eq_init:init']
+        
+        self.services.wait_call(self.async_queue['eq_driver:init'], True)
+        self.async_queue['eq_driver:step'] = self.services.call_nonblocking(self.ports['eq_driver'], 'step',
+                                                                            timeStamp)
+        del self.async_queue['eq_driver:init']
+            
+#  After the equilibrium has run update the state.
+        self.services.wait_call(self.async_queue['eq_driver:step'], True)
+        
+        self.services.stage_subflow_output_files()
+        if current_siesta_state in zip_ref.infolist():
+            zip_ref.write(current_siesta_state)
+        else:
+            zip_ref.write(current_vmec_state)
+        zip_ref.close()
+        self.services.update_plasma_state()
+
+        self.async_queue['v3fit:init'] = self.services.call_nonblocking(self.ports['v3fit'], 'init',
+                                                                        timeStamp, **v3fit_keywords)
+        del self.async_queue['eq_driver:step']
+
 #-------------------------------------------------------------------------------
 #
 #  V3FIT Driver step method. This runs the vmec component.
@@ -44,7 +142,12 @@ class v3fit_driver(Component):
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
         print('v3fit_driver: step')
-        self.services.call(self.v3fit_comp, 'step', timeStamp)
+
+        self.services.wait_call(self.async_queue['v3fit:init'], True)
+        self.async_queue['v3fit:step'] = self.services.call_nonblocking(self.ports['v3fit'], 'step',
+                                                                        timeStamp)
+    
+        del self.async_queue['v3fit:init']
 
 #-------------------------------------------------------------------------------
 #
@@ -53,4 +156,13 @@ class v3fit_driver(Component):
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
         print('v3fit_driver: finalize')
-        self.services.call(self.v3fit_comp, 'finalize', timeStamp)
+        print(self.async_queue.values())
+        self.services.wait_call_list(self.async_queue.values(), True)
+        self.async_queue = {}
+                
+        for key, value in self.ports.iteritems():
+            self.async_queue['{}:finalize'.format(key)] = self.services.call_nonblocking(value, 'finalize',
+                                                                                         timeStamp)
+                        
+        self.services.wait_call_list(self.async_queue.values(), True)
+        self.async_queue = {}
