@@ -1,4 +1,12 @@
 #! /usr/bin/env python
+# Version 10.3 (Batchelor 4/25/2017)
+# Added capabiity to terminate simulation after INIT phase based on optional config 
+# parameter INIT_ONLY == True.
+
+# Version 10.2 (Batchelor 4/21/2017)
+# reordered INIT phase so that RF INITs before Fokker-Planck. We expect the RF components
+# To set the RF grid dimensions and allocate them, then these are used by Fokker-Planck.
+# Fokker-Planck continues to run after RF in STEP.
 
 # Version 10.1 (Batchelor 11/18/2015)
 # Updated exception handling to new protocol.  Updated old Scientific.IO.NetCDF to
@@ -111,7 +119,8 @@ class generic_driver(Component):
         services.stage_input_files(self.INPUT_FILES)
 
       # get list of ports
-        ports = services.getGlobalConfigParameter('PORTS')
+#        ports = services.getGlobalConfigParameter('PORTS')
+        ports = self.get_config_param(services,'PORTS')
         port_names = ports['NAMES'].split()
         print 'PORTS =', port_names
         port_dict = {}
@@ -137,15 +146,6 @@ class generic_driver(Component):
                 raise
             port_dict['EPA'] = epaComp
             port_id_list.append(epaComp)
-            print (' ')
- 
-        if 'FP' in port_names:
-            fpComp = services.get_port('FP')
-            if(fpComp == None):
-                print 'Error accessing FP component'
-                raise
-            port_dict['FP'] = fpComp
-            port_id_list.append(fpComp)
             print (' ')
        
         if 'RF_EC' in port_names:
@@ -192,6 +192,15 @@ class generic_driver(Component):
             port_dict['FUS'] = fusComp
             port_id_list.append(fusComp)
             print (' ')
+ 
+        if 'FP' in port_names:
+            fpComp = services.get_port('FP')
+            if(fpComp == None):
+                print 'Error accessing FP component'
+                raise
+            port_dict['FP'] = fpComp
+            port_id_list.append(fpComp)
+            print (' ')
 
         if 'MONITOR' in port_names:
             monitorComp = services.get_port('MONITOR')
@@ -203,8 +212,7 @@ class generic_driver(Component):
             print (' ')
 
       # Is this a simulation startup or restart
-        sim_mode = services.getGlobalConfigParameter('SIMULATION_MODE')
-        print 'SIMULATION_MODE =', sim_mode
+        sim_mode = self.get_config_param(services,'SIMULATION_MODE')
 
       # Get timeloop for simulation
         timeloop = services.get_time_loop()
@@ -219,9 +227,6 @@ class generic_driver(Component):
 
         if 'EPA' in port_names:
             self.component_call(services, 'EPA', epaComp, init_mode, t)
-
-        if 'FP' in port_names:
-            self.component_call(services, 'FP', fpComp, init_mode, t)
         
         if 'RF_EC' in port_names:
             self.component_call(services, 'RF_EC', rf_ecComp, init_mode, t)
@@ -238,22 +243,46 @@ class generic_driver(Component):
         if 'FUS' in port_names:
             self.component_call(services, 'FUS', fusComp, init_mode, t)
 
+        if 'FP' in port_names:
+            self.component_call(services, 'FP', fpComp, init_mode, t)
+
         if 'MONITOR' in port_names:
             self.component_call(services, 'MONITOR', monitorComp, init_mode, t)
 
       # Get plasma state files into driver work directory and copy to psn if there is one
         services.stage_plasma_state()
         cur_state_file = services.get_config_param('CURRENT_STATE')
-        try:
-            next_state_file = services.get_config_param('NEXT_STATE')
-            shutil.copyfile(cur_state_file, next_state_file)
-        except Exception, e:
-            print 'generic_driver: No NEXT_STATE file ', e        
-        services.update_plasma_state()
+
+        # Nobody is using PRIOR_STATE and NEXT_STATE anymore.  But at least for now keep
+        # the capability to have them.
+        # See if PRIOR_STATE is defined as a config parameter.  If it is see if it 
+        # appears in the list of plasma state file.  If it is try to copy the current
+        # plasma state file to it.  Same story for NEXT_STATE.
+        
+        ps_file_list = self.get_config_param(services, 'PLASMA_STATE_FILES').split(' ')
+
+        prior_state_file = self.get_config_param(services, 'PRIOR_STATE', optional=True)
+        if prior_state_file != None:
+            if prior_state_file in ps_file_list:        
+                try:
+                    shutil.copyfile(cur_state_file, prior_state_file)
+                except Exception, e:
+                    print 'Copy to PRIOR_STATE file failed ', e
+            else: prior_state_file = None
+                
+
+        next_state_file = self.get_config_param(services, 'NEXT_STATE', optional=True)
+        if next_state_file != None:
+            if next_state_file in ps_file_list:     
+                try:
+                    shutil.copyfile(cur_state_file, next_state_file)
+                except Exception, e:
+                    print 'Copy to NEXT_STATE file failed ', e
+            else: next_state_file = None
 
        # Get Portal RUNID and save to a file
-        run_id = services.get_config_param('PORTAL_RUNID')
-        sym_root = services.getGlobalConfigParameter('SIM_ROOT')
+        run_id = self.get_config_param(services,'PORTAL_RUNID')
+        sym_root = self.get_config_param(services,'SIM_ROOT')
         path = os.path.join(sym_root, 'PORTAL_RUNID')
         runid_file = open(path, 'a')
         runid_file.writelines(run_id + '\n')
@@ -263,6 +292,12 @@ class generic_driver(Component):
         services.stage_output_files(t, self.OUTPUT_FILES)
 
         print ' init sequence complete--ready for time loop'
+
+        INIT_ONLY = self.get_component_param(services, 'INIT_ONLY', optional = True)
+        if INIT_ONLY in [True, 'true', 'True', 'TRUE']:   
+            message = 'INIT_ONLY: Intentional stop after INIT phase'
+            print message
+            return
 
 # ------------------------------------------------------------------------------
 #
@@ -279,7 +314,7 @@ class generic_driver(Component):
 
         # call pre_step_logic
             services.stage_plasma_state()
-            self.pre_step_logic(float(t))
+            self.pre_step_logic(float(t), next_state_file)
             services.update_plasma_state()
             print (' ')
 
@@ -380,30 +415,35 @@ class generic_driver(Component):
     # Component call - wraps the exception handling for all component calls
     def component_call(self, services, port_name, comp, mode, time):
             comp_mode_string = port_name + ' ' + mode
-            print (comp_mode_string)
+            print '\n', comp_mode_string
 
             try:
                 services.call(comp, mode, time)
-            except Exception, e:
+            except Exception:
                 message = comp_mode_string + ' failed'
                 print message
                 services.exception(message)
-                raise e
+                raise 
             
             return
     
     
     # Pre Step Logic
-    def pre_step_logic(self, timeStamp):
+    def pre_step_logic(self, timeStamp, next_state_file):
 
         cur_state_file = self.services.get_config_param('CURRENT_STATE')
 
       #  Copy data from next plasma state (if there is one) to current plasma state
-        try:
-            next_state_file = services.get_config_param('NEXT_STATE')
-            shutil.copyfile(next_state_file, cur_state_file)
-        except Exception, e:
-            pass
+#         try:
+#             next_state_file = services.get_config_param('NEXT_STATE')
+#             shutil.copyfile(next_state_file, cur_state_file)
+#         except Exception, e:
+#             pass
+        if next_state_file != None:
+            try:
+                shutil.copyfile(cur_state_file, next_state_file)
+            except Exception, e:
+                print 'Copy to NEXT_STATE file failed ', e
 
       # Update time stamps
 
@@ -427,8 +467,47 @@ class generic_driver(Component):
         except Exception, e:
             pass       
         
-
         print'generic_driver pre_step_logic: timeStamp = ', timeStamp
         
-
         return
+
+# ------------------------------------------------------------------------------
+#
+# "Private"  methods
+#
+# ------------------------------------------------------------------------------
+
+    # Try to get config parameter - wraps the exception handling for get_config_parameter()
+    def get_config_param(self, services, param_name, optional=False):
+
+        try:
+            value = services.get_config_param(param_name)
+            print param_name, ' = ', value
+        except Exception :
+            if optional: 
+                print 'config parameter ', param_name, ' not found'
+                value = None
+            else:
+                message = 'required config parameter ', param_name, ' not found'
+                print message
+                services.exception(message)
+                raise
+        
+        return value
+
+    # Try to get component specific config parameter - wraps the exception handling
+    def get_component_param(self, services, param_name, optional=False):
+
+        if hasattr(self, param_name):
+            value = getattr(self, param_name)
+            print param_name, ' = ', value
+        elif optional:
+            print 'optional config parameter ', param_name, ' not found'
+            value = None
+        else:
+            message = 'required component config parameter ', param_name, ' not found'
+            print message
+            services.exception(message)
+            raise
+        
+        return value
