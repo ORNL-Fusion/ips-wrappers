@@ -1,0 +1,5 @@
+*.o
+*.mod
+make-result
+generic_ps_init
+.depend
