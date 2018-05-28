@@ -1,3 +1,0 @@
-fluxFraction=0.5 0.00704171385096 0.5 0.0
-flux=35000.0
-gitrOutputDir=/scratch1/scratchdirs/tyounkin/code/gitr
