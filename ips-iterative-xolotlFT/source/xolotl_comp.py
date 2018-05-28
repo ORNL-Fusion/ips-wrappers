@@ -134,60 +134,37 @@ class xolotlWorker(Component):
         print('\t newest file {} \n'.format(newest))
         shutil.copyfile(newest, 'last_TRIDYN.dat')
 
-
-        #save TRIDYN_*.dat files, zipped
         TRIDYNFiles='TRIDYN_*.dat'
-
-        if self.coupling=='True':
-            if zipOutput=='True':
-                TRIDYNZipped='allTRIDYN_t%f.zip' %self.driverTime
-                zip_ouput='zipTridynDatOuput.txt'
-                print('\t save and zip output: {} \n'.format(TRIDYNFiles))
-
-                zipString='zip %s %s >> %s ' %(TRIDYNZipped, TRIDYNFiles, zip_ouput)
-                subprocess.call([zipString], shell=True)
-                
-            else:
-                ##print '\t leaving ',  TRIDYNFiles , 'uncompressed'
-                print('\t deleting {} (without saving compressed) \n '.format(TRIDYNFiles))
-
-            rmString='rm '+ TRIDYNFiles
-            subprocess.call([rmString], shell=True)
-
-        else:
-            print('\t no {} generated in this simulation \n'.format(TRIDYNFiles))
-
-        #save helium concentration files, zipped
-        heConcFiles='heliumConc_*.dat'
-
-        if petscHeConc:
-            if zipOutput=='True':
-                heConcZipped='allHeliumConc_t%f.zip' %self.driverTime
-                zip_ouput='zipHeConcOuput.txt'
-                
-                print('\t save and zip output: {} \n'.format(heConcFiles))
-                zipString='zip %s %s >> %s ' %(heConcZipped, heConcFiles, zip_ouput)
-                subprocess.call([zipString], shell=True)
-
-            else:
-                ##print '\t leaving ', heConcFiles ,'uncompressed'
-                print('\t deleting {} (without saving compressed) \n'.format(heConcFiles))
-
-            rmString='rm '+heConcFiles
-            subprocess.call([rmString], shell=True)
-
-        else:
-            print('\t no {} generated in this loop \n'.format(heConcFiles))
 
         statusFile=open(self.EXIT_STATUS, "r")
         exitStatus=statusFile.read().rstrip('\n')
-        
+
         print('')
 
         if exitStatus=='collapsed':
             print('\t simulation exited loop with status collapse')
-            print('\t rename output files as collapsed before trying again')
-            
+
+            print('\t \t compress TRIDYN_*.dat files, regardless of zipOutput')
+            TRIDYNUnfinished='allTRIDYN_t%f_collapsed.zip' %self.driverTime
+            zip_ouput='zipTridynDatOuput.txt'
+            print('\t \t save and zip output: {} \n'.format(TRIDYNFiles))
+            zipString='zip %s %s >> %s ' %(TRIDYNUnfinished, TRIDYNFiles, zip_ouput)
+            subprocess.call([zipString], shell=True)
+            rmString='rm '+TRIDYNFiles
+            subprocess.call([rmString], shell=True)
+
+            if petscHeConc:
+                heConcZipped='allHeliumConc_t%f.zip' %self.driverTime
+                zip_ouput='zipHeConcOuput.txt'
+                print('\t \t also save and zip output: {} \n'.format(heConcFiles))
+                zipString='zip %s %s >> %s ' %(heConcZipped, heConcFiles, zip_ouput)
+                subprocess.call([zipString], shell=True)
+                rmString='rm '+heConcFiles
+                subprocess.call([rmString], shell=True)
+            else:
+                print('\t \t no {} generated in this loop \n'.format(heConcFiles))
+                
+            print('\t \t rename output files as collapsed before trying again')
 
             currentXolotlNetworkFile='xolotlStop_%f.h5' %self.driverTime
             networkFile_unfinished='xolotlStop_%f_collapsed.h5' %self.driverTime
@@ -196,20 +173,52 @@ class xolotlWorker(Component):
             retentionFile = self.RET_FILE
             rententionUnfinished = 'retention_t%f_collapsed.out' %self.driverTime
             shutil.copyfile(retentionFile,rententionUnfinished)
-            
+
             surfaceFile=self.SURFACE_FILE
             surfaceUnfinished='surface_t%f_collapsed.txt' %self.driverTime
             shutil.copyfile(surfaceFile,surfaceUnfinished)
-
-            if zipOutput=='True':
-                TRIDYNZipped='allTRIDYN_t%f.zip' %self.driverTime
-                TRIDYNUnfinished='allTRIDYN_t%f_collapsed.zip' %self.driverTime
-                os.rename(TRIDYNZipped,TRIDYNUnfinished)
-                if petscHeConc:
-                    heConcZipped='allHeliumConc_t%f.zip' %self.driverTime
-                    heConcUnfinished='allHeliumConc_t%f_collapsed.zip' %self.driverTime
-                    os.rename(heConcZipped,heConcUnfinished)
             
+        else:
+            print('\t simulation exited loop with status good (not collapsed)')
+
+            #save TRIDYN_*.dat files zipped OR delete them  
+            if self.coupling=='True':
+                if zipOutput=='True':
+                    TRIDYNZipped='allTRIDYN_t%f.zip' %self.driverTime
+                    zip_ouput='zipTridynDatOuput.txt'
+                    print('\t \t save and zip output: {} \n'.format(TRIDYNFiles))                    
+                    zipString='zip %s %s >> %s ' %(TRIDYNZipped, TRIDYNFiles, zip_ouput)
+                    subprocess.call([zipString], shell=True)
+                
+                else:
+                    print('\t \t deleting {} (without saving compressed) \n '.format(TRIDYNFiles))
+
+                rmString='rm '+ TRIDYNFiles
+                subprocess.call([rmString], shell=True)
+
+            else:
+                print('\t \t no {} generated in this simulation \n'.format(TRIDYNFiles))
+
+            #save helium concentration files, zipped
+            heConcFiles='heliumConc_*.dat'
+
+            if petscHeConc:
+                if zipOutput=='True':
+                    heConcZipped='allHeliumConc_t%f.zip' %self.driverTime
+                    zip_ouput='zipHeConcOuput.txt'                
+                    print('\t \t save and zip output: {} \n'.format(heConcFiles))
+                    zipString='zip %s %s >> %s ' %(heConcZipped, heConcFiles, zip_ouput)
+                    subprocess.call([zipString], shell=True)
+
+                else:
+                    print('\t \t deleting {} (without saving compressed) \n'.format(heConcFiles))
+
+                rmString='rm '+heConcFiles
+                subprocess.call([rmString], shell=True)
+
+            else:
+                print('\t \t no {} generated in this loop \n'.format(heConcFiles))
+
         #updates plasma state Xolotl output files
         sys.stdout.flush()
         self.services.update_plasma_state()
