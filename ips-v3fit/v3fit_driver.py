@@ -87,7 +87,7 @@ class v3fit_driver(Component):
                 keys['VMEC_CONFIG'] = self.services.get_config_param('VMEC_CONFIG')
                 keys['PWD'] = self.services.get_config_param('PWD')
 
-                self.model_workers['eq'] = {'sim_name': None, 'sub_input_dir': 'siesta_inputs'}
+                self.model_workers['eq'] = {'sim_name': None, 'sub_input_dir': 'vmec_inputs'}
                 if os.path.exists(self.model_workers['eq']['sub_input_dir']):
                     shutil.rmtree(self.model_workers['eq']['sub_input_dir'])
                 os.mkdir(self.model_workers['eq']['sub_input_dir'])
@@ -156,7 +156,6 @@ class v3fit_driver(Component):
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
         print('v3fit_driver: finalize')
-        print(self.async_queue.values())
         self.services.wait_call_list(self.async_queue.values(), True)
         self.async_queue = {}
                 
