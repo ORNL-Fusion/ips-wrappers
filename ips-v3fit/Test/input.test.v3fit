@@ -208,7 +208,7 @@ sdo_s_spec_floor(5) = 1.0E16,
 sdo_s_spec_fraction(5) = 0.01,
 
 sdo_data_a(25) = 400, 
-sdo_data_a(27) = 400, 
+sdo_data_a(26) = 400, 
 sdo_data_a(27) = 400, 
 sdo_data_a(28) = 400,
 sdo_s_spec_imin(6) = 25,
