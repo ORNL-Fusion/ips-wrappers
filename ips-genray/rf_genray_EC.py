@@ -160,17 +160,17 @@ class genray_EC(Component):
 
     # Call prepare_input - init
 
-		cmd_prepare_input = [prepare_input_bin, mode, rfmode,\
-				  isource_string, genraynml, adj_read, ps_add_nml]
-				  
-		print 'running = ', cmd_prepare_input
-		services.send_portal_event(event_type = 'COMPONENT_EVENT',\
-		  event_comment =  cmd_prepare_input)
-		retcode = subprocess.call(cmd_prepare_input, stdout = log_file, stderr = subprocess.STDOUT)
-		if (retcode != 0):
-			logMsg = 'Error executing ' + prepare_input
-			self.services.error(logMsg)
-			raise Exception(logMsg)
+        cmd_prepare_input = [prepare_input_bin, mode, rfmode,\
+                  isource_string, genraynml, adj_read, ps_add_nml]
+                  
+        print 'running = ', cmd_prepare_input
+        services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+          event_comment =  cmd_prepare_input)
+        retcode = subprocess.call(cmd_prepare_input, stdout = log_file, stderr = subprocess.STDOUT)
+        if (retcode != 0):
+            logMsg = 'Error executing ' + prepare_input
+            self.services.error(logMsg)
+            raise Exception(logMsg)
 
 #         print 'rf_genray: calling prepare_input init'        
 #         log_file = open('log_prepare_genray_input_init', 'w')
