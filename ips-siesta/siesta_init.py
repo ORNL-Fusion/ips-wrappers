@@ -38,25 +38,35 @@ class siesta_init(Component):
         current_siesta_state = self.services.get_config_param('CURRENT_SIESTA_STATE')
 
 #  Stage input files. Remove an old namelist input if it exists.
+        if os.path.exists(current_siesta_state):
+            os.remove(current_siesta_state)
         if os.path.exists(current_siesta_namelist):
             os.remove(current_siesta_namelist)
+        if os.path.exists(current_vmec_state):
+            os.remove(current_vmec_state)
         if os.path.exists(current_vmec_namelist):
             os.remove(current_vmec_namelist)
+                        
         self.services.stage_input_files(self.INPUT_FILES)
-    
+
+#  Create a vmec state. If the vmec namelist file exists add the namelist input
+#  file.
+        with ZipState.ZipState(current_vmec_state, 'a') as zip_ref:
+            if os.path.exists(current_vmec_namelist):
+                zip_ref.write(current_vmec_namelist)
+                zip_ref.set_state(state='needs_update')
+
 #  Create plasma state from files. Input files can either be a new plasma state,
 #  namelist input file or both. If both files were staged, replace the namelist
 #  input file. If the namelist file is present flag the plasma state as needing
-#  to be updated.
+#  to be updated. Sub plasma states will automatically merge.
         with ZipState.ZipState(current_siesta_state, 'a') as zip_ref:
             if os.path.exists(current_siesta_namelist):
                 zip_ref.write(current_siesta_namelist)
                 zip_ref.set_state(state='needs_update')
 
-            with ZipState.ZipState(current_vmec_state, 'a') as zip_vmec_ref:
-                if os.path.exists(current_vmec_namelist):
-                    zip_vmec_ref.write(current_vmec_namelist)
-                    zip_vmec_ref.set_state(state='needs_update')
+#  The vmec state will be merged with any existing vmec state in the siesta
+#  state.
             zip_ref.write(current_vmec_state)
             
         self.services.update_plasma_state()

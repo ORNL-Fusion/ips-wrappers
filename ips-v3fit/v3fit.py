@@ -9,7 +9,9 @@
 
 from component import Component
 from omfit.classes.omfit_namelist import OMFITnamelist
+from omfit.classes.omfit_nc import OMFITnc
 from utilities import ZipState
+import json
 
 #-------------------------------------------------------------------------------
 #
@@ -47,6 +49,7 @@ class v3fit(Component):
 #  written to.
         self.zip_ref = ZipState.ZipState(self.current_v3fit_state, 'a')
         self.zip_ref.extract(self.current_v3fit_namelist)
+        self.zip_ref.extract(self.result_file)
     
         if current_siesta_state in self.zip_ref.namelist():
             self.zip_ref.extract(current_siesta_state)
@@ -96,7 +99,7 @@ class v3fit(Component):
 #  V3FIT Component step method. This runs V3FIT.
 #
 #-------------------------------------------------------------------------------
-    def step(self, timeStamp=0.0):
+    def step(self, timeStamp=0.0, **keywords):
         print('v3fit: step')
 
         flags = self.zip_ref.get_state()
@@ -122,6 +125,14 @@ class v3fit(Component):
         else:
 #  Update flags.
             self.zip_ref.set_state(state='unchanged')
+
+        if 'result_file' in keywords:
+            result_nc = OMFITnc(self.result_file)
+            nsteps = result_nc['nsteps']['data']
+            result = {'signal_model': result_nc['signal_model_value']['data'][nsteps,:,0].tolist()}
+            with open(keywords['result_file'], 'w') as result_ref:
+                json.dump(result, result_ref)
+            self.zip_ref.write(keywords['result_file'])
 
         self.zip_ref.close()
         self.services.update_plasma_state()

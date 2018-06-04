@@ -41,13 +41,39 @@ class v3fit_init(Component):
         current_v3fit_state = self.services.get_config_param('CURRENT_V3FIT_STATE')
 
 #  Stage input files. Remove an old namelist input if it exists.
+        if os.path.exists(current_v3fit_state):
+            os.remove(current_v3fit_state)
         if os.path.exists(current_v3fit_namelist):
             os.remove(current_v3fit_namelist)
+        if os.path.exists(current_siesta_state):
+            os.remove(current_siesta_state)
         if os.path.exists(current_siesta_namelist):
             os.remove(current_siesta_namelist)
+        if os.path.exists(current_vmec_state):
+            os.remove(current_vmec_state)
         if os.path.exists(current_vmec_namelist):
             os.remove(current_vmec_namelist)
         self.services.stage_input_files(self.INPUT_FILES)
+
+#  All v3fit runs require a vmec state at the minimum. Create a vmec state. If
+#  the vmec namelist file exists add the namelist input file.
+        with ZipState.ZipState(current_vmec_state, 'a') as zip_ref:
+            if os.path.exists(current_vmec_namelist):
+                zip_ref.write(current_vmec_namelist)
+                zip_ref.set_state(state='needs_update')
+
+#  A siesta state is optional. If a siesta state or namelist exist, create a
+#  siesta state. If the siesta namelist or vmec state files exists add
+#  them to the siesta state.
+        if os.path.exists(current_siesta_state) or os.path.exists(current_siesta_namelist):
+            with ZipState.ZipState(current_siesta_state, 'a') as zip_ref:
+                if os.path.exists(current_siesta_namelist):
+                    zip_ref.write(current_siesta_namelist)
+                    zip_ref.set_state(state='needs_update')
+
+#  The vmec state will be merged with any existing vmec state in the siesta
+#  state.
+                zip_ref.write(current_vmec_state)
 
 #  Create plasma state from files. Input files can either be a new plasma state,
 #  namelist input file or both. If both files were staged, replace the namelist
@@ -58,22 +84,11 @@ class v3fit_init(Component):
                 zip_ref.write(current_v3fit_namelist)
                 zip_ref.set_state(state='needs_update')
 
-            if os.path.exists(current_siesta_state) or os.path.exists(current_siesta_namelist):
-                with ZipState.ZipState(current_siesta_state, 'a') as zip_siesta_ref:
-                    if os.path.exists(current_siesta_namelist):
-                        zip_siesta_ref.write(current_siesta_namelist)
-                        zip_siesta_ref.set_state(state='needs_update')
-                    with ZipState.ZipState(current_vmec_state, 'a') as zip_vmec_ref:
-                        if os.path.exists(current_vmec_namelist):
-                            zip_vmec_ref.write(current_vmec_namelist)
-                            zip_vmec_ref.set_state(state='needs_update')
-                    zip_siesta_ref.write(current_vmec_state)
+#  If a siesta state exists at this point add it to the archive. Otherwise add
+#  the vmec state.
+            if os.path.exists(current_siesta_state):
                 zip_ref.write(current_siesta_state)
             else:
-                with ZipState.ZipState(current_vmec_state, 'a') as zip_vmec_ref:
-                    if os.path.exists(current_vmec_namelist):
-                        zip_vmec_ref.write(current_vmec_namelist)
-                        zip_vmec_ref.set_state(state='needs_update')
                 zip_ref.write(current_vmec_state)
 
         self.services.update_plasma_state()

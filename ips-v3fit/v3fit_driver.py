@@ -64,11 +64,11 @@ class v3fit_driver(Component):
                 keys['SIESTA_CONFIG'] = self.services.get_config_param('SIESTA_CONFIG')
                 keys['PWD'] = self.services.get_config_param('PWD')
                     
-                self.model_workers['eq'] = {'sim_name': None, 'sub_input_dir': 'siesta_inputs'}
-                if os.path.exists(self.model_workers['eq']['sub_input_dir']):
-                    shutil.rmtree(self.model_workers['eq']['sub_input_dir'])
-                os.mkdir(self.model_workers['eq']['sub_input_dir'])
-                shutil.copy2(current_siesta_state, self.model_workers['eq']['sub_input_dir'])
+                self.model_workers['eq'] = {'sim_name': None, 'input_dir': 'siesta_inputs'}
+                if os.path.exists(self.model_workers['eq']['input_dir']):
+                    shutil.rmtree(self.model_workers['eq']['input_dir'])
+                os.mkdir(self.model_workers['eq']['input_dir'])
+                shutil.copy2(current_siesta_state, self.model_workers['eq']['input_dir'])
                     
                 (self.model_workers['eq']['sim_name'],
                  self.ports['eq_init'],
@@ -77,7 +77,7 @@ class v3fit_driver(Component):
                                                                               'LOG_FILE'         : 'log.siesta.warning',
                                                                               'SIM_NAME'         : 'siesta',
                                                                               'USER_INPUT_FILES' : current_siesta_state
-                                                                              }, self.model_workers['eq']['sub_input_dir'])
+                                                                              }, self.model_workers['eq']['input_dir'])
                 
             else:
                 zip_ref.extract(current_vmec_state)
@@ -87,11 +87,11 @@ class v3fit_driver(Component):
                 keys['VMEC_CONFIG'] = self.services.get_config_param('VMEC_CONFIG')
                 keys['PWD'] = self.services.get_config_param('PWD')
 
-                self.model_workers['eq'] = {'sim_name': None, 'sub_input_dir': 'vmec_inputs'}
-                if os.path.exists(self.model_workers['eq']['sub_input_dir']):
-                    shutil.rmtree(self.model_workers['eq']['sub_input_dir'])
-                os.mkdir(self.model_workers['eq']['sub_input_dir'])
-                shutil.copy2(current_vmec_state, self.model_workers['eq']['sub_input_dir'])
+                self.model_workers['eq'] = {'sim_name': None, 'input_dir': 'vmec_inputs'}
+                if os.path.exists(self.model_workers['eq']['input_dir']):
+                    shutil.rmtree(self.model_workers['eq']['input_dir'])
+                os.mkdir(self.model_workers['eq']['input_dir'])
+                shutil.copy2(current_vmec_state, self.model_workers['eq']['input_dir'])
                 
                 (self.model_workers['eq']['sim_name'],
                  self.ports['eq_init'],
@@ -100,7 +100,7 @@ class v3fit_driver(Component):
                                                                               'LOG_FILE'         : 'log.vmec.warning',
                                                                               'SIM_NAME'         : 'vmec',
                                                                               'USER_INPUT_FILES' : current_vmec_state
-                                                                              }, self.model_workers['eq']['sub_input_dir'])
+                                                                              }, self.model_workers['eq']['input_dir'])
                     
             self.first_run = False
 
@@ -137,17 +137,29 @@ class v3fit_driver(Component):
 
 #-------------------------------------------------------------------------------
 #
-#  V3FIT Driver step method. This runs the vmec component.
+#  V3FIT Driver step method. This runs the v3fit component.
 #
 #-------------------------------------------------------------------------------
-    def step(self, timeStamp=0.0):
+    def step(self, timeStamp=0.0, **keywords):
         print('v3fit_driver: step')
 
         self.services.wait_call(self.async_queue['v3fit:init'], True)
         self.async_queue['v3fit:step'] = self.services.call_nonblocking(self.ports['v3fit'], 'step',
-                                                                        timeStamp)
+                                                                        timeStamp, **keywords)
     
         del self.async_queue['v3fit:init']
+
+        self.services.wait_call_list(self.async_queue.values(), True)
+        self.async_queue = {}
+
+#  Prepare the output files for a super work flow.
+        self.services.stage_plasma_state()
+        
+#  The super flow may need to rename the output file. Check is the current state
+#  matches if output file. If it does not rename the plasma state so it can be
+#  staged.
+        if not os.path.exists(self.OUTPUT_FILES):
+            os.rename(self.current_v3fit_state, self.OUTPUT_FILES)
 
 #-------------------------------------------------------------------------------
 #
@@ -158,10 +170,10 @@ class v3fit_driver(Component):
         print('v3fit_driver: finalize')
         self.services.wait_call_list(self.async_queue.values(), True)
         self.async_queue = {}
-                
+        
         for key, value in self.ports.iteritems():
             self.async_queue['{}:finalize'.format(key)] = self.services.call_nonblocking(value, 'finalize',
                                                                                          timeStamp)
-                        
+    
         self.services.wait_call_list(self.async_queue.values(), True)
         self.async_queue = {}
