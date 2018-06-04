@@ -3,7 +3,8 @@
 
 c************************************************************
       character version*64
-      parameter(version="genray_v10.8_141024")
+      parameter(version="genray_v10.12_180529")
+      ! previous: genray_v10.11_180518; genray_v10.10_170809
 c************************************************************
 
 c************************************************************
@@ -25,7 +26,8 @@ c     for common/five/
 
 c      parameter (nxeqda=201,nyeqda=201,nlimit=101)
 c      parameter (nxeqda=129,nyeqda=257,nlimit=101)
-      parameter (nxeqda=136,nyeqda=257,nlimit=101)
+c      parameter (nxeqda=136,nyeqda=257,nlimit=101)
+      parameter (nxeqda=257,nyeqda=257,nlimit=101)
 cSAP091211
 c      parameter (nxeqda=136,nyeqda=257,nlimit=10001)
 
@@ -152,7 +154,7 @@ c               dielectric tensor calculations  n=<n_relt_harm
 c      parameter (n_relt_harma=3)
 c      parameter (n_relt_harm1a=-3)
 c      parameter (n_relt_harm2a=3)
-      parameter (n_relt_harma=5)
+      parameter (n_relt_harma=11)
       parameter (n_relt_harm1a=-5)
       parameter (n_relt_harm2a=5)
 c************************************************************
@@ -186,8 +188,8 @@ c*************************************************************
 c     for common /output/
       integer n_plot_dispa,n_plot_disp_colda,
      &m_r_nperp_a,m_i_nperp_a,n_contour_plot_disp_a
-      parameter (n_plot_dispa=10)
-      parameter (n_plot_disp_colda=10)
+      parameter (n_plot_dispa=100)
+      parameter (n_plot_disp_colda=100)
 c      parameter(m_r_nperp_a=10,m_i_nperp_a=10,n_contour_plot_disp_a=10)
       parameter(m_r_nperp_a=20,m_i_nperp_a=20,n_contour_plot_disp_a=20)
 
@@ -238,7 +240,7 @@ c     n_pol_edge_dens_a is a maximal number of mesh points
 c********************************************************************
 c     to create fine meshes of wall coordinates with additional points
       integer n_wall_add_a
-      parameter (n_wall_add_a=5000) 
+      parameter (n_wall_add_a=10001) 
 c*********************************************************************
 c     for (R,Z) meshes rr_add, zz_add at the poloidal plane
 c     for the density fall near the wall
