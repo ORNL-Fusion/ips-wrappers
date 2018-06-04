@@ -34,5 +34,6 @@ class gitr_driver(Component):
         print 'GITRDriver: finished worker call' 
         return
     def finalize(self, timeStamp=0.0):
+        print 'GITR Driver Finalized' 
         return
 

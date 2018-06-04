@@ -117,7 +117,7 @@ class ftridynWorker(Component):
 
         pool = self.services.create_task_pool('pool')
         for i in range(nFTpoolTasks):
-            self.services.add_task('pool', 'task'+str(i), nFTrunsPerNode, cwd, 'python',self.FTMPI_EXEC,str(i), str(nFTrunsPerNode),task_ppn= nFTrunsPerNode,logfile='task_pool'+str(i)+'.log' )
+            self.services.add_task('pool', 'task'+str(i), nFTrunsPerNode, cwd, 'python',self.FTMPI_EXEC,str(i), str(nFTrunsPerNode),str(self.FTRIDYN_EXE),"W_W_0001.IN",task_ppn= nFTrunsPerNode,logfile='task_pool'+str(i)+'.log' )
         ret_val = self.services.submit_tasks('pool')
         print 'ret_val = ', ret_val
         exit_status = self.services.get_finished_tasks('pool')

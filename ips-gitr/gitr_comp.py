@@ -21,7 +21,8 @@ class gitr_comp(Component):
     def step(self, timeStamp=0.0):
         print 'Hello from gitr_comp'
         self.services.stage_plasma_state()
-        shutil.copyfile('ftridyn.nc','input/ftridyn.nc')
+	if os.path.exists('ftridyn.nc'):
+            shutil.copyfile('ftridyn.nc','input/ftridyn.nc')
         task_id = self.services.launch_task(self.NPROC,
                                             self.services.get_working_dir(),
                                             self.GITR_EXE,task_ppn=self.TASK_PPN,
@@ -30,7 +31,8 @@ class gitr_comp(Component):
         if (self.services.wait_task(task_id)):
             self.services.error('gitr_comp: step failed.')
         
-        gitr.piscesProcessing(path=self.BASE_DIR)
+        #gitr.piscesProcessing(path=self.BASE_DIR)
+	gitr.iter2dProcessing()
         self.services.update_plasma_state()         
         
         return
