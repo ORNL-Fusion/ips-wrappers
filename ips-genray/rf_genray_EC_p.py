@@ -457,6 +457,10 @@ class genray_EC(Component):
         command = prepare_input_bin + ' ' + mode + ' ' +  rfmode + ' ' +\
         isource_string + ' ' + genraynml + ' ' + adj_read + ' ' + ps_add_nml
         
+        print 'running = ', command
+        services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+          event_comment =  command)
+
         retcode = subprocess.call(command.split(), stdout = log_file,\
                                   stderr = subprocess.STDOUT)
         if (retcode != 0):
@@ -619,7 +623,11 @@ class genray_EC(Component):
         log_file = open('log_prepare_genray_input_step', 'w')
         mode = 'step'
         command = prepare_input_bin + ' ' + mode + ' ' +  rfmode + ' ' +\
-        isource_string + ' ' + genraynml + ' ' + adj_read + ' ' + ps_add_nml
+          isource_string + ' ' + genraynml + ' ' + adj_read + ' ' + ps_add_nml
+
+        print 'running = ', command
+        services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+            event_comment =  command)
         
         retcode = subprocess.call(command.split(), stdout = log_file,\
                                   stderr = subprocess.STDOUT)
