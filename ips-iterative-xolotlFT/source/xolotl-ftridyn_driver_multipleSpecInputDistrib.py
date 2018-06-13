@@ -504,12 +504,23 @@ driver['LOOP_TIME_STEP']))
                     ft_output_prj_file=self.ft_output_prj_file[i]
                     angleFolder=self.ftridyn['outputPath']+'/'+self.FT_OUTPUT_FOLDER+'/ANGLE'
 
+                    #print 'TEST: get max projectile range'
                     maxDepth=[]
                     for j in range(len(self.angleIn[i])):
                         if (self.weightAngle[i][j] > 0.0):
                             filePrj=angleFolder+str(self.angleIn[i][j])+'/'+ft_output_prj_file
-                            depth, bla=numpy.loadtxt(filePrj, usecols = (2,3) , unpack=True)
-                            maxDepth.append(max(depth))
+                            num_lines_prj = sum(1 for line in open(filePrj))
+                            #print 'TEST: number of lines in the prj file is ', num_lines_prj
+                            if num_lines_prj == 0:
+                                print '\t WARNING: no ions were implanted at this angle (prj file empty)'
+                            elif num_lines_prj == 1:
+                                depth, bla=numpy.loadtxt(filePrj, usecols = (2,3) , unpack=True)
+                                #print 'TEST: depth is ', depth
+                                maxDepth.append(depth)
+                            elif num_lines_prj > 1:
+                                depth, bla=numpy.loadtxt(filePrj, usecols = (2,3) , unpack=True)
+                                #print 'TEST: depths are ', depth
+                                maxDepth.append(max(depth))
                     
                     maxRange=max(maxDepth)
                     self.maxRangeXolotl[i]=maxRange/10.0 #range in nm for Xolotl 

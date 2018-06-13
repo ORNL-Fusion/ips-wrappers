@@ -56,6 +56,7 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
     
     print '\t the sum of weights is ', totalWeight, ' and projectile range', prjRange , ' [A]'
     
+    nonZeroAngle=0
     for a in np.arange(0,len(angle),1):
 
         if weightAngle[a]==0.0:
@@ -108,31 +109,38 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
             #        if nLines==0:
             #            continue
             
-#            print "reading file: %s" %(ftridynCurrentPrjOutput)
-            depth1, bla1 = np.loadtxt(ftridynCurrentPrjOutput, usecols = (2,3) , unpack=True)
+            #print "reading file: %s" %(ftridynCurrentPrjOutput)
+            num_lines_prj = sum(1 for line in open(ftridynCurrentPrjOutput))
+            if num_lines_prj==0:
+                print "\t \t WARNING: prj file is empty for angle ", angle[a]
+            else:
+                #print "TEST: calculate sputtering yield for angle ", angle[a]
+                nonZeroAngle+=1 #identify the first time that an angle contributes, to initialize n[]
+                depth1, bla1 = np.loadtxt(ftridynCurrentPrjOutput, usecols = (2,3) , unpack=True)
+                                
+                ## Put first data into the plot; '/10.0' is to convert A -> nm
+                #print 'in translate script: using range', prjRange , ' [A]'
+                m, bins = np.histogram(depth1/10.0, nBins,(0.0,prjRange/10.0),normed=True)
             
-            ## Put first data into the plot; '/10.0' is to convert A -> nm
-            #print 'in translate script: using range', prjRange , ' [A]'
-            m, bins = np.histogram(depth1/10.0, nBins,(0.0,prjRange/10.0),normed=True)
-            
-            ## "bins" is actually the edges on the histogram bins so it needs to be formated to give the center of each bin in "b"
-            b = np.delete(bins, len(bins) - 1)
-            offset = (b[1] - b[0]) / 2.0
-            for i in range(len(b)):
-                b[i] = b[i] + offset
+                ## "bins" is actually the edges on the histogram bins so it needs to be formated to give the center of each bin in "b"
+                b = np.delete(bins, len(bins) - 1)
+                offset = (b[1] - b[0]) / 2.0
+                for i in range(len(b)):
+                    b[i] = b[i] + offset
  
-            #weight each binned distribution and add contribution from each angle / energy
-            #m is the values of each run; n is the weighted sum of m's
-            #initialize array of total distribution, n
-            if (a==0):
-                n=[]
-                for i in range(len(m)):
-                    n.append(0)
+                #weight each binned distribution and add contribution from each angle / energy
+                #m is the values of each run; n is the weighted sum of m's
+                #initialize n[] the first time that an angle contributes (when nonZeroAngle=1)
+                if nonZeroAngle==1:
+                    n=[]
+                    #print "TEST: initialized n[] for angle ", angle[a]
+                    for i in range(len(m)):
+                        n.append(0)
 
-            for i in range(len(m)):
-                n[i]+=m[i]*weightAngle[a] #/numLines[a] ; no need to normalize by number of lines, as that's caused by reflection
+                for i in range(len(m)):
+                    n[i]+=m[i]*weightAngle[a] #/numLines[a] ; no need to normalize by number of lines, as that's caused by reflection
             
-            sys.stdout.flush()
+                sys.stdout.flush()
 
     ## Fit with polynomials
     fit = poly.polyfit(b, n, 15)
