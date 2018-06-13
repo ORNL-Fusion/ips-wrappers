@@ -32,9 +32,11 @@ class gitr_comp(Component):
             self.services.error('gitr_comp: step failed.')
         
         #gitr.piscesProcessing(path=self.BASE_DIR)
-	gitr.iter2dProcessing()
+	#gitr.iter2dProcessing()
+	nLocations = gitr.iter3dProcessing()
         self.services.update_plasma_state()         
-        
+        for i in range(nLocations):
+            shutil.copyfile('gitrOut_'+str(i)+'.txt',self.BASE_DIR+'/gitrOut_'+str(i)+'.txt')
         return
     
     def finalize(self, timeStamp=0.0):

@@ -6,7 +6,7 @@ import shutil
 import re
 import sys
 import time
-import generate_ftridyn_input
+import generate_ftridyn_input_gitr
 import analyze_ftridyn_simulations
 import numpy as np
 import netCDF4
@@ -14,7 +14,7 @@ import pickle
 import math
 
 print 'The generate_ftridyn_input path in ftridyn_worker_taskpool is: '
-print os.path.abspath(generate_ftridyn_input.__file__)
+print os.path.abspath(generate_ftridyn_input_gitr.__file__)
 
 class ftridynWorker(Component):
     def __init__(self, services, config):
@@ -40,7 +40,7 @@ class ftridynWorker(Component):
         for i in range(len(energy)):
             for j in range(len(angle)):
                 for k in range(len(roughness)):
-                    generate_ftridyn_input.beam_and_target(ffilename,beam,target,number_histories=nH,incident_energy=energy[i],incident_angle=angle[j],fractal_dimension=roughness[k])
+                    generate_ftridyn_input_gitr.beam_and_target(ffilename,beam,target,number_histories=nH,incident_energy=energy[i],incident_angle=angle[j],fractal_dimension=roughness[k],fluence=1.0e-16)
                     pathString = "FTRIDYN_"+str(energy[i]) + "_"+str(angle[j])+"_" + str(roughness[k])
                     if not os.path.exists(pathString):
                         os.makedirs(pathString)

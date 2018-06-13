@@ -167,13 +167,15 @@ class parent_driver(Component):
         for child_comp, child in self.child_components.items():
             i=int(filter(str.isdigit, child_comp))
             print 'index of ', child_comp, ' is ', i
-            sedInFile=self.SUBMIT_DIR+'/gitrOut.txt'
+            #sedInFile=self.SUBMIT_DIR+'/gitrOut.txt'
             sedOutFile=self.SUBMIT_DIR+'/gitrOut_'+str(i)+'.txt'
-            flux=10000+i*1000
-            print 'modifying ', sedInFile, ' to write flux=',flux, ' in ', sedOutFile , '\n'
-            gitrOutSedString="sed    -e 's/flux=[^ ]*/flux=%e/' < %s > %s"   % (flux, sedInFile, sedOutFile)
+            #self.nested_components['component_a']['sub_working_dir']+'/gitrOut_'+str(i)+'.txt'
+            print 'copying gitr file from ', sedOutFile, 'to ', self.child_components[child_comp]['INPUT_DIR']+'/gitrOut.txt'
+            #flux=10000+i*1000
+            #print 'modifying ', sedInFile, ' to write flux=',flux, ' in ', sedOutFile , '\n'
+            #gitrOutSedString="sed    -e 's/flux=[^ ]*/flux=%e/' < %s > %s"   % (flux, sedInFile, sedOutFile)
 
-            subprocess.call([gitrOutSedString], shell=True)
+            #subprocess.call([gitrOutSedString], shell=True)
             #shutil.copyfile(self.SUBMIT_DIR+'/gitrOut_'+str(i)+'.txt',self.child_components[child_comp]['INPUT_DIR']+'/gitrOut.txt')
             shutil.copyfile(sedOutFile,self.child_components[child_comp]['INPUT_DIR']+'/gitrOut.txt')
 
