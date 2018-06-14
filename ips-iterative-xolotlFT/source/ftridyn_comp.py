@@ -11,6 +11,7 @@ import generate_ftridyn_input #new script to generate FTridyn input
 import numpy as np
 import subprocess
 import re
+import pickle
 
 print 'The generate_ftridyn_input path in ftridyn_comp is:'
 print os.path.abspath(generate_ftridyn_input.__file__) #TEST
@@ -135,8 +136,8 @@ class ftridynWorker(Component):
 
 
         #RUN FTRIDYN
-
-        pool_ftx = self.services.create_task_pool('pool_ftx')
+        file_namelist = []
+        #pool_ftx = self.services.create_task_pool('pool_ftx')
         for j in range(len(angleIn)): #for i in range(len(energy)):
 
             if (weightAngle[j] == 0.0):
@@ -144,9 +145,26 @@ class ftridynWorker(Component):
 
             elif (weightAngle[j] > 0.0):
                 pathFolder = self.ft_folder+'/ANGLE'+str(angleIn[j])# + "_"+str(energyIn[j])
-                poolInput_ftx='FTridyn_angle'+str(angleIn[j])
-                self.services.add_task('pool_ftx', 'task'+str(angleIn[j]), 1, pathFolder, self.FTRIDYN_EXE,poolInput_ftx,logfile=pathFolder+'/task.log' )
-                            
+                file_namelist.append(pathFolder)
+                #poolInput_ftx='FTridyn_angle'+str(angleIn[j])
+                #self.services.add_task('pool_ftx', 'task'+str(angleIn[j]), 1, pathFolder, self.FTRIDYN_EXE,poolInput_ftx,logfile=pathFolder+'/task.log' )
+                 
+        nFTruns = len(file_namelist)
+        nFTrunsPerNode = int(self.FTMPI_PPN)
+        nFTrunNodes = int(self.FTMPI_NODES)
+        if(nFTruns <= nFTrunsPerNode*nFTrunNodes): 
+            nFTrunsPerNode = int(math.ceil(1.0*nFTruns/nFTrunNodes))
+            nFTpoolTasks = nFTrunNodes
+        else:
+            nFTpoolTasks = int(math.ceil(1.0*nFTruns/nFTrunsPerNode))
+
+        with open('ftridyn_file_namelist.pkl', 'wb') as f:
+            pickle.dump(list(reversed(file_namelist)), f)
+           
+        pool_ftx = self.services.create_task_pool('pool_ftx')
+        for i in range(nFTpoolTasks):        
+                #poolInput_ftx='FTridyn_angle'+str(angleIn[j])
+                self.services.add_task('pool_ftx', 'task'+str(i), nFTrunsPerNode, cwd, 'python',self.FTMPI_EXEC,str(i),str(nFTrunsPerNode),str(self.FTRIDYN_EXE),"FTridyn.IN",task_ppn= nFTrunsPerNode,logfile='task_pool'+str(i)+'.log' )
         ret_val = self.services.submit_tasks('pool_ftx')
         print ' '
         print('\t ret_val = {}'.format(ret_val))
