@@ -12,6 +12,7 @@ import numpy as np
 import subprocess
 import re
 import pickle
+import math
 
 print 'The generate_ftridyn_input path in ftridyn_comp is:'
 print os.path.abspath(generate_ftridyn_input.__file__) #TEST
