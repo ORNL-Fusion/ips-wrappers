@@ -522,6 +522,11 @@ driver['LOOP_TIME_STEP']))
                                 #print 'TEST: depths are ', depth
                                 maxDepth.append(max(depth))
                     
+                    if not maxRange:
+                        print "nothing was implanted."
+                        print "END OF THIS SIMULATION"
+                        return
+                        
                     maxRange=max(maxDepth)
                     self.maxRangeXolotl[i]=maxRange/10.0 #range in nm for Xolotl 
                     print ' '

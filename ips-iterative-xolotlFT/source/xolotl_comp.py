@@ -135,7 +135,8 @@ class xolotlWorker(Component):
         shutil.copyfile(newest, 'last_TRIDYN.dat')
 
         TRIDYNFiles='TRIDYN_*.dat'
-
+        heConcFiles='heliumConc_*.dat'
+        
         statusFile=open(self.EXIT_STATUS, "r")
         exitStatus=statusFile.read().rstrip('\n')
 
