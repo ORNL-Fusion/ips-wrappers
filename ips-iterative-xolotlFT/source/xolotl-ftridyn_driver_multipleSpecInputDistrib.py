@@ -522,7 +522,7 @@ driver['LOOP_TIME_STEP']))
                                 #print 'TEST: depths are ', depth
                                 maxDepth.append(max(depth))
                     
-                    if not maxRange:
+                    if(len(maxDepth)==0):
                         print "nothing was implanted."
                         print "END OF THIS SIMULATION"
                         return
