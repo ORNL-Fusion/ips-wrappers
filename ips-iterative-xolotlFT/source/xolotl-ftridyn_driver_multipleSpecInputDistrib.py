@@ -522,9 +522,10 @@ driver['LOOP_TIME_STEP']))
                                 #print 'TEST: depths are ', depth
                                 maxDepth.append(max(depth))
                     
-                    if not maxDepth:
+                    if len(maxDepth)==0:
                         print "nothing was implanted."
                         print "END OF THIS SIMULATION"
+                        sys.stdout.flush()
                         return
                         
                     maxRange=max(maxDepth)
@@ -613,10 +614,11 @@ driver['LOOP_TIME_STEP']))
             shutil.copyfile(self.FTX_SPUT_YIELDS_FILE_TEMP,timeFolder+'/'+self.FTX_SPUT_YIELDS_FILE_TEMP)
             shutil.copyfile(self.FTX_SPUT_YIELDS_FILE_FINAL,timeFolder+'/'+self.FTX_SPUT_YIELDS_FILE_FINAL) #perhaps unnecessary
             
-            if (not maxDepth) and max(self.spYield)==0:
+            if len(maxDepth)==0 and max(self.spYield)==0:
                 print "nothing was implanted or sputtered"
-                print "likely all weights were zero"
+                print "likely all weights are zero"
                 print "END OF THIS SIMULATION"
+                sys.stdout.flush()
                 return
             
 
