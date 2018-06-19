@@ -522,7 +522,7 @@ driver['LOOP_TIME_STEP']))
                                 #print 'TEST: depths are ', depth
                                 maxDepth.append(max(depth))
                     
-                    if(len(maxDepth)==0):
+                    if not maxDepth:
                         print "nothing was implanted."
                         print "END OF THIS SIMULATION"
                         return
@@ -613,6 +613,13 @@ driver['LOOP_TIME_STEP']))
             shutil.copyfile(self.FTX_SPUT_YIELDS_FILE_TEMP,timeFolder+'/'+self.FTX_SPUT_YIELDS_FILE_TEMP)
             shutil.copyfile(self.FTX_SPUT_YIELDS_FILE_FINAL,timeFolder+'/'+self.FTX_SPUT_YIELDS_FILE_FINAL) #perhaps unnecessary
             
+            if (not maxDepth) and max(self.spYield)==0:
+                print "nothing was implanted or sputtered"
+                print "likely all weights were zero"
+                print "END OF THIS SIMULATION"
+                return
+            
+
             #7) write format tridyn.dat to include W redep in Xolotl
             
             print ' '
