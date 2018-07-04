@@ -13,7 +13,7 @@ This version combines several previous initializer routines and extends them.  T
 
 INIT_MODE = touch_only
 This mode only does a touch on all of the files listed as plasma state files so the 
-framework will have a complete set.  It does not actually put data in the plasma state file.
+framework will have a complete set.  It does not actually put data in the plasma state files.
 
 INIT_MODE = minimal
 This is exactly the same as the previous minimal_state_init.py. It produces a CURRENT_STATE 
@@ -443,7 +443,7 @@ class generic_ps_init (Component):
             print param_name, ' = ', value
         except Exception:
             if optional:
-                print 'config parameter ', param_name, ' not found'
+                print 'optional config parameter ', param_name, ' not found'
                 value = None
             else:
                 message = 'required config parameter ', param_name, ' not found'

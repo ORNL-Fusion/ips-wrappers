@@ -485,7 +485,7 @@ class generic_driver(Component):
             print param_name, ' = ', value
         except Exception :
             if optional: 
-                print 'config parameter ', param_name, ' not found'
+                print 'optional config parameter ', param_name, ' not found'
                 value = None
             else:
                 message = 'required config parameter ', param_name, ' not found'
