@@ -56,7 +56,7 @@ class v3fit_driver(Component):
 
 #  If this is the first call, set up the VMEC or SIESTA sub workflow.
         if self.first_run:
-            if current_siesta_state in zip_ref.infolist():
+            if current_siesta_state in zip_ref:
                 zip_ref.extract(current_siesta_state)
                     
 #  Get keys for the SIESTA sub workflow.
@@ -124,7 +124,7 @@ class v3fit_driver(Component):
         self.services.wait_call(self.async_queue['eq_driver:step'], True)
         
         self.services.stage_subflow_output_files()
-        if current_siesta_state in zip_ref.infolist():
+        if current_siesta_state in zip_ref:
             zip_ref.write(current_siesta_state)
         else:
             zip_ref.write(current_vmec_state)

@@ -33,6 +33,7 @@ class v3fit(Component):
         print('v3fit: init')
         self.services.stage_plasma_state()
 
+#  Get config filenames.
         self.current_v3fit_namelist = self.services.get_config_param('V3FIT_NAMELIST_INPUT')
         self.current_v3fit_state = self.services.get_config_param('CURRENT_V3FIT_STATE')
         self.result_file = 'result.{}.nc'.format(self.current_v3fit_namelist)
@@ -49,9 +50,10 @@ class v3fit(Component):
 #  written to.
         self.zip_ref = ZipState.ZipState(self.current_v3fit_state, 'a')
         self.zip_ref.extract(self.current_v3fit_namelist)
-        self.zip_ref.extract(self.result_file)
-    
-        if current_siesta_state in self.zip_ref.namelist():
+        if self.result_file in self.zip_ref:
+            self.zip_ref.extract(self.result_file)
+
+        if current_siesta_state in self.zip_ref:
             self.zip_ref.extract(current_siesta_state)
 
             with ZipState.ZipState(current_siesta_state, 'r') as siesta_zip_ref:
