@@ -20,10 +20,7 @@ class siesta_driver(Component):
     def __init__(self, services, config):
         print('siesta_driver: Construct')
         Component.__init__(self, services, config)
-        self.async_queue = {}
-        self.ports = {}
-        self.model_workers = {}
-        self.first_run = True
+        self.vmec_worker = {}
     
 #-------------------------------------------------------------------------------
 #
@@ -53,56 +50,45 @@ class siesta_driver(Component):
         zip_ref.extract(current_vmec_state)
 
 #  If this is the first call, set up the VMEC sub workflow.
-        if self.first_run:
+        if timeStamp == 0.0:
+#  Get the siesta port
+            self.siesta_port = self.services.get_port('SIESTA')
 
 #  Get keys for the sub workflow.
-            keys = {}
-            keys['VMEC_CONFIG'] = self.services.get_config_param('VMEC_CONFIG')
-            keys['PWD'] = self.services.get_config_param('PWD')
+            keys = {'PWD'              : self.services.get_config_param('PWD'),
+                    'SIM_NAME'         : '{}_vmec'.format(self.services.get_config_param('SIM_NAME')),
+                    'USER_INPUT_FILES' : current_vmec_state,
+                    'LOG_FILE'         : 'log.vmec.warning',
+                   }
             
-            self.model_workers['vmec'] = {'sim_name': None, 'sub_input_dir': 'vmec_inputs'}
-            if os.path.exists(self.model_workers['vmec']['sub_input_dir']):
-                shutil.rmtree(self.model_workers['vmec']['sub_input_dir'])
-            os.mkdir(self.model_workers['vmec']['sub_input_dir'])
-            shutil.copy2(current_vmec_state, self.model_workers['vmec']['sub_input_dir'])
+            if os.path.exists('vmec_input_dir'):
+                shutil.rmtree('vmec_input_dir')
+            os.mkdir('vmec_input_dir')
+            
+            vmec_config = self.services.get_config_param('VMEC_CONFIG')
+            
+            self.vmec_worker = {'sim_name': None, 'init': None, 'driver': None}
+            (self.vmec_worker['sim_name'],
+             self.vmec_worker['init'],
+             self.vmec_worker['driver']) = self.services.create_sub_workflow('vmec', vmec_config,
+                                                                             keys, 'vmec_input_dir')
 
-            (self.model_workers['vmec']['sim_name'],
-             self.ports['vmec_init'],
-             self.ports['vmec_driver']) = self.services.create_sub_workflow('vmec', keys['VMEC_CONFIG'], {
-                                                                            'pwd'              : keys['PWD'],
-                                                                            'LOG_FILE'         : 'log.vmec.warning',
-                                                                            'SIM_NAME'         : 'vmec',
-                                                                            'USER_INPUT_FILES' : current_vmec_state
-                                                                            }, self.model_workers['vmec']['sub_input_dir'])
-                                                                            
-            self.first_run = False
-
-        self.async_queue['vmec_init:init'] = self.services.call_nonblocking(self.ports['vmec_init'], 'init', timeStamp)
-
-        self.ports['siesta'] = self.services.get_port('SIESTA')
+        shutil.copy2(current_vmec_state, 'vmec_input_dir')
 
 #  Initalize and run VMEC. Replace values in the siesta state.
-        self.services.wait_call(self.async_queue['vmec_init:init'], True)
-        self.async_queue['vmec_driver:init'] = self.services.call_nonblocking(self.ports['vmec_driver'], 'init',
-                                                                              timeStamp, **vmec_keywords)
-        del self.async_queue['vmec_init:init']
-
-        self.services.wait_call(self.async_queue['vmec_driver:init'], True)
-        self.async_queue['vmec_driver:step'] = self.services.call_nonblocking(self.ports['vmec_driver'], 'step',
-                                                                              timeStamp)
-        del self.async_queue['vmec_driver:init']
+        self.services.call(self.vmec_worker['init'], 'init', timeStamp)
+        self.services.call(self.vmec_worker['driver'], 'init', timeStamp, **vmec_keywords)
+        self.services.call(self.vmec_worker['driver'], 'step', timeStamp)
 
 #  After VMEC has run update the VMEC state.
-        self.services.wait_call(self.async_queue['vmec_driver:step'], True)
-
         self.services.stage_subflow_output_files()
         zip_ref.write(current_vmec_state)
         zip_ref.close()
         self.services.update_plasma_state()
-        
-        self.async_queue['siesta:init'] = self.services.call_nonblocking(self.ports['siesta'], 'init',
-                                                                         timeStamp, **siesta_keywords)
-        del self.async_queue['vmec_driver:step']
+
+#  Initialize SIESTA.
+        self.wait = self.services.call_nonblocking(self.siesta_port, 'init',
+                                                   timeStamp, **siesta_keywords)
 
 #-------------------------------------------------------------------------------
 #
@@ -112,24 +98,31 @@ class siesta_driver(Component):
     def step(self, timeStamp=0.0):
         print('siesta_driver: step')
 
-        self.services.wait_call(self.async_queue['siesta:init'], True)
-        self.async_queue['siesta:step'] = self.services.call_nonblocking(self.ports['siesta'], 'step',
-                                                                         timeStamp)
-        del self.async_queue['siesta:init']
-    
+#  Run SIESTA.
+        self.services.wait_call(self.wait, True)
+        self.services.call(self.siesta_port, 'step', timeStamp)
+
+#  Prepare the output files for a super work flow.
+        self.services.stage_plasma_state()
+
+#  The super flow may need to rename the output file. Check is the current state
+#  matches if output file. If it does not rename the plasma state so it can be
+#  staged.
+        if not os.path.exists(self.OUTPUT_FILES):
+            os.rename(self.current_siesta_state, self.OUTPUT_FILES)
+
 #-------------------------------------------------------------------------------
 #
-#  SIESTA Driver finalize method. This cleans up afterwards. Not used.
+#  SIESTA Driver finalize method. This cleans up afterwards.
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
         print('siesta_driver: finalize')
-        self.services.wait_call_list(self.async_queue.values(), True)
-        self.async_queue = {}
 
-        for key, value in self.ports.iteritems():
-            self.async_queue['{}:finalize'.format(key)] = self.services.call_nonblocking(value, 'finalize',
-                                                                                         timeStamp)
+        self.wait = [
+                     self.services.call_nonblocking(self.vmec_worker['init'], 'finalize', timeStamp),
+                     self.services.call_nonblocking(self.vmec_worker['driver'], 'finalize', timeStamp),
+                     self.services.call_nonblocking(self.siesta_port, 'finalize', timeStamp)
+                    ]
 
-        self.services.wait_call_list(self.async_queue.values(), True)
-        self.async_queue = {}
+        self.services.wait_call_list(self.wait, True)
