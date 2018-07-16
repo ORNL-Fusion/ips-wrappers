@@ -22,7 +22,6 @@ class v3fit(Component):
     def __init__(self, services, config):
         print('v3fit: Construct')
         Component.__init__(self, services, config)
-        self.task_queue = {}
 
 #-------------------------------------------------------------------------------
 #
@@ -108,18 +107,18 @@ class v3fit(Component):
     
         if 'state' in flags and flags['state'] == 'needs_update':
             self.set_namelist(my_task='v3post')
-            self.task_queue['v3fit'] = self.services.launch_task(self.NPROC,
-                                                                 self.services.get_working_dir(),
-                                                                 self.V3FIT_EXE,
-                                                                 self.current_v3fit_namelist,
-                                                                 logfile = 'v3fit.log')
+            self.task_wait = self.services.launch_task(self.NPROC,
+                                                       self.services.get_working_dir(),
+                                                       self.V3FIT_EXE,
+                                                       self.current_v3fit_namelist,
+                                                       logfile = 'v3fit.log')
 
 #  Update flags.
             self.zip_ref.set_state(state='updated')
 
 #  Wait for V3FIT to finish.
-            self.services.wait_task(self.task_queue['v3fit'], True)
-            del self.task_queue['v3fit']
+            if (self.services.wait_task(self.task_wait) and not os.path.exists(self.result_file)):
+                self.services.error('v3fit: step failed.')
     
 #  Add the result file to the plasma state.
             self.zip_ref.write([self.current_v3fit_namelist, self.result_file])
@@ -146,11 +145,10 @@ class v3fit(Component):
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
         print('v3fit: finalize')
-        self.services.wait_tasklist(self.task_queue.values(), True)
     
 #-------------------------------------------------------------------------------
 #
-#  SIESTA Component set_namelist method. This sets the namelist input file from
+#  V3FIT Component set_namelist method. This sets the namelist input file from
 #  the keywords.
 #
 #-------------------------------------------------------------------------------
@@ -187,12 +185,6 @@ class v3fit(Component):
             self.zip_ref.set_state(state='needs_update')
         
             for key, value in keywords.iteritems():
-                if '(' in key :
-                    key, indices = key.split('(')
-                    indices, extra = indices.split(')')
-                    indices = [[int(i) - 1] for i in indices.split(',')]
-                    namelist['v3fit_main_nli'][key][indices] = value
-                else:
-                    namelist['v3fit_main_nli'][key] = value
+                namelist['v3fit_main_nli'][key] = value
 
         namelist.save()

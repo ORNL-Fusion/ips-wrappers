@@ -127,7 +127,10 @@ class v3fit_driver(Component):
         self.services.wait_call(self.wait, True)
         self.services.call(self.v3fit_port, 'step', timeStamp, **keywords)
 
-#  Prepare the output files for a super work flow.
+#  Prepare the output files for a super work flow. Need to remove any old output
+#  files first before staging the plasma state.
+        if os.path.exists(self.OUTPUT_FILES):
+            os.remove(self.OUTPUT_FILES)
         self.services.stage_plasma_state()
         
 #  The super flow may need to rename the output file. Check is the current state
