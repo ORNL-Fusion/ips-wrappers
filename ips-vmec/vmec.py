@@ -21,7 +21,6 @@ class vmec(Component):
     def __init__(self, services, config):
         print('vmec: Construct')
         Component.__init__(self, services, config)
-        self.task_queue = {}
 
 #-------------------------------------------------------------------------------
 #
@@ -50,13 +49,7 @@ class vmec(Component):
             namelist = OMFITnamelist(self.current_vmec_namelist)
 
             for key, value in keywords.iteritems():
-                if '(' in key :
-                    key, indices = key.split('(')
-                    indices, extra = indices.split(')')
-                    indices = [[int(i) - 1] for i in indices.split(',')]
-                    namelist['indata'][key][indices] = value
-                else:
-                    namelist['indata'][key] = value
+                namelist['indata'][key] = value
     
             namelist.save()
 
@@ -71,28 +64,27 @@ class vmec(Component):
         flags = self.zip_ref.get_state()
 
         if 'state' in flags and flags['state'] == 'needs_update':
-            self.task_queue['vmec'] = self.services.launch_task(self.NPROC,
-                                                                self.services.get_working_dir(),
-                                                                self.VMEC_EXE,
-                                                                self.current_vmec_namelist,
-                                                                logfile = 'vmec.log')
+            task_wait = self.services.launch_task(self.NPROC,
+                                                  self.services.get_working_dir(),
+                                                  self.VMEC_EXE,
+                                                  self.current_vmec_namelist,
+                                                  logfile = 'vmec.log')
 
 #  Update flags.
             self.zip_ref.set_state(state='updated')
 
 #  Wait for VMEC to finish.
-            if (self.services.wait_task(self.task_queue['vmec'], True) or not os.path.exists(self.current_wout_file)):
+            if (self.services.wait_task(task_wait) and not os.path.exists(self.current_wout_file)):
                 self.services.error('vmec: step failed.')
-            del self.task_queue['vmec']
 
 #  Add the wout file to the plasma state.
             self.zip_ref.write([self.current_vmec_namelist, self.current_wout_file])
-            self.zip_ref.close()
 
         else:
 #  Update flags.
             self.zip_ref.set_state(state='unchanged')
-            self.zip_ref.close()
+
+        self.zip_ref.close()
             
         self.services.update_plasma_state()
 
@@ -103,4 +95,3 @@ class vmec(Component):
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
         print('vmec: finalize')
-        self.services.wait_tasklist(self.task_queue.values(), True)

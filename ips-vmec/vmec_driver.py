@@ -27,10 +27,17 @@ class vmec_driver(Component):
     def init(self, timeStamp=0.0, **keywords):
         print('vmec_driver: init')
 
+#  Separate out the vmec keywords.
+#        keywords['vmec__curtor'] = 1.0  # FIXME: Line put in for debugging remove.
+        vmec_keywords = {}
+        for key, value in keywords.iteritems():
+            if 'vmec__' in key:
+                vmec_keywords[key.replace('vmec__','',1)] = value
+    
 #  Initialize vmec.
         self.vmec_port = self.services.get_port('VMEC')
         self.wait = self.services.call_nonblocking(self.vmec_port, 'init',
-                                                   timeStamp, **keywords)
+                                                   timeStamp, **vmec_keywords)
     
 #-------------------------------------------------------------------------------
 #
@@ -44,7 +51,10 @@ class vmec_driver(Component):
         self.services.wait_call(self.wait, True)
         self.services.call(self.vmec_port, 'step', timeStamp)
     
-#  Stage plasma state.
+#  Prepare the output files for a super work flow. Need to remove any old output
+#  files first before staging the plasma state.
+        if os.path.exists(self.OUTPUT_FILES):
+            os.remove(self.OUTPUT_FILES)
         self.services.stage_plasma_state()
 
 #  The super flow may need to rename the output file. Check is the current state
