@@ -21,7 +21,6 @@ class siesta(Component):
     def __init__(self, services, config):
         print('siesta: Construct')
         Component.__init__(self, services, config)
-        self.task_queue = {}
 
 #-------------------------------------------------------------------------------
 #
@@ -69,27 +68,26 @@ class siesta(Component):
         if 'state' in flags and flags['state'] == 'needs_update':
             self.set_namelist(ladd_pert=True, lrestart=False)
 
-            self.task_queue['siesta'] = self.services.launch_task(self.NPROC,
-                                                                  self.services.get_working_dir(),
-                                                                  self.SIESTA_EXE,
-                                                                  logfile = 'siesta1.log')
+            self.task_wait = self.services.launch_task(self.NPROC,
+                                                       self.services.get_working_dir(),
+                                                       self.SIESTA_EXE,
+                                                       logfile = 'siesta1.log')
 
 #  Update flags.
             self.zip_ref.set_state(state='updated')
             
 #  Restart siesta to ensure convergence.
-            self.services.wait_task(self.task_queue['siesta'], True)
-            del self.task_queue['siesta']
+            self.services.wait_task(self.task_wait)
+            
             self.set_namelist(ladd_pert=False, lrestart=True)
-            self.task_queue['siesta'] = self.services.launch_task(self.NPROC,
-                                                                  self.services.get_working_dir(),
-                                                                  self.SIESTA_EXE,
-                                                                  logfile = 'siesta2.log')
+            self.task_wait = self.services.launch_task(self.NPROC,
+                                                       self.services.get_working_dir(),
+                                                       self.SIESTA_EXE,
+                                                       logfile = 'siesta2.log')
                 
 #  Wait for SIESTA to finish.
-            if (self.services.wait_task(self.task_queue['siesta'], True) or not os.path.exists(self.restart_file)):
+            if (self.services.wait_task(self.task_wait) or not os.path.exists(self.restart_file)):
                 self.services.error('siesta: step failed.')
-            del self.task_queue['siesta']
                 
 #  Add the restart file to the plasma state.
             self.zip_ref.write([self.current_siesta_namelist, self.restart_file])
@@ -108,7 +106,6 @@ class siesta(Component):
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
         print('siesta: finalize')
-        self.services.wait_tasklist(self.task_queue.values(), True)
 
 #-------------------------------------------------------------------------------
 #
@@ -131,12 +128,6 @@ class siesta(Component):
             self.zip_ref.set_state(state='needs_update')
         
             for key, value in keywords.iteritems():
-                if '(' in key :
-                    key, indices = key.split('(')
-                    indices, extra = indices.split(')')
-                    indices = [[int(i) - 1] for i in indices.split(',')]
-                    namelist['siesta_info'][key][indices] = value
-                else:
-                    namelist['siesta_info'][key] = value
+                namelist['siesta_info'][key] = value
 
         namelist.save()

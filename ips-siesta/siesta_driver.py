@@ -35,7 +35,7 @@ class siesta_driver(Component):
         vmec_keywords = {}
         for key, value in keywords.iteritems():
             if 'vmec__' in key:
-                vmec_keywords[key.replace('vmec__','',1)] = value
+                vmec_keywords[key] = value
             if 'siesta__' in key:
                 siesta_keywords[key.replace('siesta__','',1)] = value
 
@@ -102,7 +102,10 @@ class siesta_driver(Component):
         self.services.wait_call(self.wait, True)
         self.services.call(self.siesta_port, 'step', timeStamp)
 
-#  Prepare the output files for a super work flow.
+#  Prepare the output files for a super work flow. Need to remove any old output
+#  files first before staging the plasma state.
+        if os.path.exists(self.OUTPUT_FILES):
+            os.remove(self.OUTPUT_FILES)
         self.services.stage_plasma_state()
 
 #  The super flow may need to rename the output file. Check is the current state
