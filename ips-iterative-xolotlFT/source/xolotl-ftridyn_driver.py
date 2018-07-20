@@ -8,6 +8,7 @@ import numpy
 import shutil
 import translate_xolotl_to_ftridyn
 import translate_ftridyn_to_xolotl
+import get_yields
 import binTRIDYN
 import param_handler
 import traceback
@@ -217,8 +218,9 @@ driver['LOOP_TIME_STEP']))
             else:
                 print('\t reading string GITR input parameter {0} = {1} '.format( k, v)) 
                 self.gitr[k]=v
-
-        print('\t GITR output will be read from {} \n'.format(self.gitr['gitrOutputDir'] ))
+                
+        #if 'gitrOutputDir' in self.gitr:
+        #    print('\t GITR output will be read from {} \n'.format(self.gitr['gitrOutputDir']+'_'+prj))
 
         ##NOT SURE IF THERE ARE MORE XOLOTL OR FT PARAMETERS THAT NEED TO OVERWRITTEN
         if 'flux' in self.gitr:
@@ -293,8 +295,11 @@ driver['LOOP_TIME_STEP']))
 
             if self.inAngle[i] < 0 :
                 ##ADD +'_'+prj in the middle if the full path name for ITER cases, as multiple plasma species will follow distributions
-                self.angleFile.append(self.gitr['gitrOutputDir'].strip()+'/'+self.GITR_ANGLE_FILE.strip())
-                self.aWeightFile.append(self.gitr['gitrOutputDir'].strip()+'/'+self.GITR_AWEIGHT_FILE.strip())
+                gitr_output_dir='gitrOutputDir'+'_'+prj
+                #print('\t GITR output of angular distributions will be read from {} \n'.format(self.gitr['gitrOutputDir']))
+                print('\t GITR output of angular distributions will be read from {} \n'.format(self.gitr[gitr_output_dir]))
+                self.angleFile.append(self.gitr[gitr_output_dir].strip()+'/'+self.GITR_ANGLE_FILE.strip()) #self.gitr['gitrOutputDir'].strip()
+                self.aWeightFile.append(self.gitr[gitr_output_dir].strip()+'/'+self.GITR_AWEIGHT_FILE.strip()) #self.gitr['gitrOutputDir'].strip()
                 print('\t reading angles and weights for {0} from {1} {2};\n'.format(prj, self.angleFile[i], self.aWeightFile[i]))
                 a = numpy.loadtxt(self.angleFile[i], usecols = (0) , unpack=True)
                 w = numpy.loadtxt(self.aWeightFile[i], usecols = (0) , unpack=True)
@@ -319,10 +324,13 @@ driver['LOOP_TIME_STEP']))
             #leave 'others' empty for a pure FT run
 
             if self.energyIn[i] < 0:
+                gitr_output_dir='gitrOutputDir'+'_'+prj
+                print('\t GITR output of energy distributions will be read from {} \n'.format(self.gitr[gitr_output_dir]))
                 ##ADD +'_'+prj in the middle if the full path name for ITER cases, as multiple plasma species will follow distributions
                 self.FT_energy_file_name.append(self.ft_energy_input_file[i]) #"He_W0001.ED1"
                 #where all the energy distribution files are located
-                self.GITR_eadist_output_path.append(self.gitr['gitrOutputDir'].strip())#+'_'+prj)
+                #self.GITR_eadist_output_path.append(self.gitr['gitrOutputDir'].strip())#+'_'+prj)
+                self.GITR_eadist_output_path.append(self.gitr[gitr_output_dir].strip())
                 self.GITR_eadist_output_file.append(['dist','.dat'])#(self.GITR_EADIST_FILE)
             else:
                 self.FT_energy_file_name.append('')
@@ -471,9 +479,10 @@ driver['LOOP_TIME_STEP']))
             #print 'printing output of F-TRIDYN component to ', outFile
             for i in range(len(self.gitr['plasmaSpecies'])): #self.plasmaSpecies.iteritems():
                 prj=self.gitr['plasmaSpecies'][i]
-
-                if self.gitr['fluxFraction'][i] > 0.0: #self.fluxFraction[i]>0.0:                     
+                maxDepth=[]
+                if (self.gitr['fluxFraction'][i] > 0.0) and not (all(k==0 for k in self.weightAngle[i])):
                     print('running F-Tridyn for {0} with flux fraction = {1}\n'.format(prj, self.gitr['fluxFraction'][i]))
+                    print('\t and not all angle weights are zero; max angleWeight is {}\n'.format(max(self.weightAngle[i])))
 
                     #component/method calls now include arguments (variables)
                     self.services.call(ftridyn, 'init', timeStamp, dTime=time, fPrj=prj, fTargetList=targetList, ftParameters=self.ftridyn , fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], ft_folder=self.FT_OUTPUT_FOLDER, input_file=self.ft_input_file[i], otherInFiles=[self.FT_SURFACE_FILE,self.ftx_lay_file[i]], energy_file_name=self.FT_energy_file_name[i], orig_energy_files_path=self.GITR_eadist_output_path[i], orig_energy_files_pattern=self.GITR_eadist_output_file[i], output_file=outFile)
@@ -497,34 +506,54 @@ driver['LOOP_TIME_STEP']))
                     ft_output_prj_file=self.ft_output_prj_file[i]
                     angleFolder=self.ftridyn['outputPath']+'/'+self.FT_OUTPUT_FOLDER+'/ANGLE'
 
-                    maxDepth=[]
+                    #print 'TEST: get max projectile range'
                     for j in range(len(self.angleIn[i])):
                         if (self.weightAngle[i][j] > 0.0):
                             filePrj=angleFolder+str(self.angleIn[i][j])+'/'+ft_output_prj_file
-                            depth, bla=numpy.loadtxt(filePrj, usecols = (2,3) , unpack=True)
-                            maxDepth.append(max(depth))
+                            num_lines_prj = sum(1 for line in open(filePrj))
+                            #print 'TEST: number of lines in the prj file is ', num_lines_prj
+                            if num_lines_prj == 0:
+                                print '\t WARNING: no ions were implanted at this angle (prj file empty)'
+                            elif num_lines_prj == 1:
+                                depth, bla=numpy.loadtxt(filePrj, usecols = (2,3) , unpack=True)
+                                #print 'TEST: depth is ', depth
+                                maxDepth.append(depth)
+                            elif num_lines_prj > 1:
+                                depth, bla=numpy.loadtxt(filePrj, usecols = (2,3) , unpack=True)
+                                #print 'TEST: depths are ', depth
+                                maxDepth.append(max(depth))
                     
-                    maxRange=max(maxDepth)
-                    self.maxRangeXolotl[i]=maxRange/10.0 #range in nm for Xolotl 
-                    print ' '
-                    print('\t maximum projectile range for {} is {} [A]'.format(prj, maxRange))
+                    if len(maxDepth)>0:
+                        print "something was implanted."
+                        maxRange=max(maxDepth)
+                        self.maxRangeXolotl[i]=maxRange/10.0 #range in nm for Xolotl 
+                        print ' '
+                        print('\t maximum projectile range for {} is {} [A]'.format(prj, maxRange))
+                        ft_output_file=self.ft_output_file[i]
+                        #get implantation profile
+                        translate_ftridyn_to_xolotl.ftridyn_to_xolotl(ftridynOnePrjOutput=ft_output_prj_file, ftridynFolder=angleFolder, angle=self.angleIn[i], weightAngle=self.weightAngle[i], prjRange=maxRange, nBins=self.xp.parameters['grid'][0], logFile=outFile) #gAngleDistrib=self.angleDistrFile[i]
+
+                    else: #if len(maxDepth)==0
+                        print "nothing was implanted. maxRange and profile = 0 "
+                        maxRange=0.0
+                        self.maxRangeXolotl[i]=0.0
+                        #tridyn.dat = zeros
+                        outputFTFile=open(self.FT_OUTPUT_PROFILE_TEMP, "w")
+                        outputFTFile.write("0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 ")
+                        outputFTFile.close()
+                        sys.stdout.flush()
+                        #print "END OF THIS SIMULATION" & return
 
 
                     #3) get the sputtering yield (or use fixed value)                   
-
                     print ' '
-                    #script always needed to reformat output for xolotl
-                    #outputs sputtering and reflection yields
-                    ft_output_file=self.ft_output_file[i]                    
-                    yields=translate_ftridyn_to_xolotl.ftridyn_to_xolotl(ftridynOnePrjOutput=ft_output_prj_file, ftridynOneOutOutput=ft_output_file, ftridynFolder=angleFolder, fNImpacts=self.ftridyn['nImpacts'], angle=self.angleIn[i], weightAngle=self.weightAngle[i], prjRange=maxRange, nBins=self.xp.parameters['grid'][0], logFile=outFile) #gAngleDistrib=self.angleDistrFile[i]
-                    
+                    yields=get_yields.sputtering_and_reflection(ftridynOneOutOutput=ft_output_file, ftridynFolder=angleFolder, fNImpacts=self.ftridyn['nImpacts'], angle=self.angleIn[i], weightAngle=self.weightAngle[i], logFile=outFile)
                     #overwrite spY value if mode is 'calculate'
                     if self.yieldMode[i]=='calculate':
                         self.spYield[i]=float(yields[0])
                         self.rYield[i]=float(yields[1])
 
                     #4) save tridyn.dat
-
                     #append output to allTridynNN.dat for each species (and save to what folder?)        
                     ft_output_profile_final=self.FT_OUTPUT_PROFILE_FINAL+'_'+prj
                     tempfile = open(self.FT_OUTPUT_PROFILE_TEMP,"r")
@@ -532,7 +561,7 @@ driver['LOOP_TIME_STEP']))
                     f.write('%s %s \n' %(tempfile.read().rstrip('\n'),self.maxRangeXolotl[i]))                    
                     f.close()
                     tempfile.close()
-            
+                    
                     #keep copies of tridyn.dat
                     ft_output_profile_temp_prj=self.FT_OUTPUT_PROFILE_TEMP+'_'+prj #for each species
                     shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP,ft_output_profile_temp_prj)
@@ -546,10 +575,14 @@ driver['LOOP_TIME_STEP']))
                     print('\t done with F-TRIDYN for {} '.format(prj))
                     print('\n')
 
-                #if flux fraction == 0:
+                #if flux fraction == 0 or all weight angles == 0.0:
+                #if (self.gitr['fluxFraction'][i] > 0.0) and not (all(k==0 for k in self.weightAngle[i])):
                 else:
-                    print('Skip running FTridyn for {0}, as fraction in plasma is {1}\n'.format(prj, self.gitr['fluxFraction'][i]))
-
+                    print('Skip running FTridyn for {0}'.format(prj)) #, as fraction in plasma is {1}\n'.format(prj, self.gitr['fluxFraction'][i]))
+                    if self.gitr['fluxFraction'][i]==0:
+                        print '\t as fraction in plasma is {}\n'.format(self.gitr['fluxFraction'][i])
+                    if all(k==0 for k in self.weightAngle[i]):
+                        print '\t as all angle weights are zero\n'
                     self.spYield[i]=0.0
                     self.rYield[i]=1.0
                     self.maxRangeXolotl[i]=0.0
@@ -590,6 +623,14 @@ driver['LOOP_TIME_STEP']))
             shutil.copyfile(self.FTX_SPUT_YIELDS_FILE_TEMP,timeFolder+'/'+self.FTX_SPUT_YIELDS_FILE_TEMP)
             shutil.copyfile(self.FTX_SPUT_YIELDS_FILE_FINAL,timeFolder+'/'+self.FTX_SPUT_YIELDS_FILE_FINAL) #perhaps unnecessary
             
+            if len(maxDepth)==0 and max(self.spYield)==0:
+                print "nothing was implanted or sputtered"
+                print "likely all weights are zero"
+                print "END OF THIS SIMULATION"
+                sys.stdout.flush()
+                return
+            
+
             #7) write format tridyn.dat to include W redep in Xolotl
             
             print ' '
@@ -630,19 +671,27 @@ driver['LOOP_TIME_STEP']))
             ############## RUN XOLOTL ############ 
             ###################################### 
 
-            #Xolotl paramter modifications that need to be done at every loop
+            #make sure at least one of the species was implanted:
+            if all(k==0 for k in self.maxRangeXolotl):
+                print "WARNING: none of the species was implanted"
+                print "EXIT SIMULATION"
+                sys.stdout.flush()
+                return
+
+            #if something was implanted:
+            #Xolotl parameter modifications that need to be done at every loop:
 
             #calculate effective sputtering yield; i.e., weighted by relative flux of W-to-He
             totalSpYield=0
-
             for i in range(len(self.gitr['plasmaSpecies'])): #self.plasmaSpecies.iteritems():
                 prj=self.gitr['plasmaSpecies'][i]
                 print('contribution of {0} to total sputtering yield = {1} '.format( prj, float(self.gitr['fluxFraction'][i])*float(self.spYield[i])))
                 totalSpYield+=(float(self.gitr['fluxFraction'][i])*float(self.spYield[i])) #self.fluxFraction[i]
             print('total weighted sputtering yield = {} (passed to Xolotl)\n'.format(totalSpYield))
             self.xp.parameters['sputtering'] = totalSpYield            
+            
+            #time and time-step related parameters
             self.xp.parameters['petscArgs']['-ts_final_time']=time+self.driver['LOOP_TIME_STEP']
-
             print('\n')
             print('XOLOTL: ')
             print('\t Run from t = {}'.format(time))

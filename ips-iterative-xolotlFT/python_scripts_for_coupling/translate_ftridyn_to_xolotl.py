@@ -19,10 +19,8 @@ import sys
 #      b) a distribution of angles; a distribution of energies for each angle
 #            --> run Ftridyn for each angle, with the given Ein
 
-def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
-                      ftridynOneOutOutput='He_WOUT.dat',
-                      ftridynFolder="angle",                      
-                      fNImpacts=1.0e5,
+def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',                  
+                      ftridynFolder="angle",       
                       angle=[0.0],
                       weightAngle=[1.0],
                       nBins=200,
@@ -37,7 +35,7 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
 
     else:
         print ('no log file defined in tridynPlotting')
-        print ('print output to sys.stdout', sys.stdout)
+        print ('print output to default sys.stdout')
         
     print ' '
     print 'tridynPlotting:'
@@ -53,50 +51,17 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
         print '\t single, fixed angle used'
 
     totalWeight=np.sum(weightAngle)
-    
     print '\t the sum of weights is ', totalWeight, ' and projectile range', prjRange , ' [A]'
     
     nonZeroAngle=0
     for a in np.arange(0,len(angle),1):
-
         if weightAngle[a]==0.0:
-            print '\t for angle ', angle[a], '(index ', a ,'), found Weight = ', weightAngle[a]
-            print '\t \t skipping all analysis for this angle, with no contribution to spYield'
+            print '\t \t angle',a,' of weight ', weightAngle[a], ': skip all analysis with no contribution to implantation profile'
 
         elif weightAngle[a] >0.0:
             angleFolder=ftridynFolder+str(angle[a])
             
             #calculate the sputtering yield for each run and take the average
-            #if this does not work, use method of He_WSPYIELD.OUT (in xolotl's component)
-            ftridynCurrentOutOutput=angleFolder+"/"+ftridynOneOutOutput
-            ftridynCurrentOutFile=open(ftridynCurrentOutOutput,"r")
-            ftridynCurrentOutData=ftridynCurrentOutFile.read().split('\n')
-            searchStringSputter='SPUTTERED PARTICLES(2)'
-            for line in ftridynCurrentOutData:
-                if searchStringSputter in line:
-                    break
-            sputterStringWithEmptyFields=line.strip().split(" ")
-            sputteringNparticlesString=[x for x in sputterStringWithEmptyFields if x]
-            sputteringNparticles=sputteringNparticlesString[2]
-            spYield=float(sputteringNparticles)/float(fNImpacts)
-            weightedSpYield=spYield*weightAngle[a]/totalWeight
-            totalSpYield += weightedSpYield
-
-            #idem for reflection:
-            searchStringReflect='BACKSCATTERED PROJECTILES(1)'
-            for line in ftridynCurrentOutData:
-                if searchStringReflect in line:
-                    break
-            reflectStringWithEmptyFields=line.strip().split(" ")
-            reflectNparticlesString=[x for x in reflectStringWithEmptyFields if x]
-            reflectNparticles=reflectNparticlesString[2]
-            reflectYield=float(reflectNparticles)/float(fNImpacts)
-            weightedRYield=reflectYield*weightAngle[a]/totalWeight
-            totalRYield += weightedRYield
-
-            print '\t for angle ',angle[a],', weight = ',weightAngle[a],': spY = ',spYield,' ; weighted spY = ',weightedSpYield,' ; rY = ',reflectYield, ' ; weighted rY = ', weightedRYield
-
-
             ## Open files ("bla1" is not used but I could not figure out how to easily open a file without using two columns)
             ftridynCurrentPrjOutput=angleFolder+"/"+ftridynOnePrjOutput
 
@@ -180,16 +145,8 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
     ### Show the plots
     #plt.show()
 
-
-    print ' '
-    print "\t average sputtering yield is ", totalSpYield
-    yields.append(totalSpYield)
-    print "\t average reflection yield is ", totalRYield
-    yields.append(totalRYield)
-
     sys.stdout.flush()
-
-    return yields
+    return
 
 ################# END OF NEW PYTHON SCRIPT  ####################
 
