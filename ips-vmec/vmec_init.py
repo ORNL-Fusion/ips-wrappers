@@ -37,7 +37,7 @@ class vmec_init(Component):
 #  Stage input files. Remove old namelist input if it exists.
         if os.path.exists(current_vmec_namelist):
             os.remove(current_vmec_namelist)
-        if os.path.exists(current_vmec_namelist):
+        if os.path.exists(current_vmec_state):
             os.remove(current_vmec_state)
         
         self.services.stage_input_files(self.INPUT_FILES)
