@@ -365,7 +365,10 @@ class generic_ps_init (Component):
             shutil.copyfile(cur_state_file, 'initial_PLASMA_STATE.nc')
         except Exception, e:
             print 'Copy to initial_PLASMA_STATE file failed ', e
-              
+
+        # For benefit of framework file handling generate dummy dakota.out file
+        subprocess.call(['touch', 'dakota.out'])
+                      
 # Update plasma state
         try:
             services.update_plasma_state()
