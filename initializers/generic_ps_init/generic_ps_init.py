@@ -366,31 +366,6 @@ class generic_ps_init (Component):
         except Exception, e:
             print 'Copy to initial_PLASMA_STATE file failed ', e
               
-        # For benefit of framework file handling generate dummy dakota.out file
-        subprocess.call(['touch', 'dakota.out'])
-
-        # Nobody is using PRIOR_STATE and NEXT_STATE anymore.  But at least for now keep
-        # the capability to have them.
-        # See if PRIOR_STATE is defined as a config parameter.  If it is see if it 
-        # appears in the list of plasma state file.  If it is try to copy the current
-        # plasma state file to it.  Same story for NEXT_STATE.
-        
-        prior_state_file = self.get_config_param(services, 'PRIOR_STATE', optional=True)
-        if prior_state_file != None:
-            if prior_state_file in ps_file_list:        
-                try:
-                    shutil.copyfile(cur_state_file, prior_state_file)
-                except Exception, e:
-                    print 'Copy to PRIOR_STATE file failed ', e
-
-        next_state_file = self.get_config_param(services, 'NEXT_STATE', optional=True)
-        if next_state_file != None:
-            if next_state_file in ps_file_list:     
-                try:
-                    shutil.copyfile(cur_state_file, next_state_file)
-                except Exception, e:
-                    print 'Copy to NEXT_STATE file failed ', e
-
 # Update plasma state
         try:
             services.update_plasma_state()
