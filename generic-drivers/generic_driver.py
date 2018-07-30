@@ -291,7 +291,7 @@ class generic_driver(Component):
 
         # call pre_step_logic
             services.stage_plasma_state()
-            self.pre_step_logic(float(t), next_state_file)
+            self.pre_step_logic(float(t))
             services.update_plasma_state()
             print (' ')
 
@@ -406,7 +406,7 @@ class generic_driver(Component):
     
     
     # Pre Step Logic
-    def pre_step_logic(self, timeStamp, next_state_file):
+    def pre_step_logic(self, timeStamp):
 
         cur_state_file = self.services.get_config_param('CURRENT_STATE')
 
@@ -424,13 +424,6 @@ class generic_driver(Component):
             print'generic_driver pre_step_logic: power_ic = ', power_ic
 
         ps.close()
-        
-    # Copy current plasma state to prior state if there is one
-        try:
-            prior_state_file = self.services.get_config_param('PRIOR_STATE')
-            shutil.copyfile(cur_state_file, prior_state_file)
-        except Exception, e:
-            pass       
         
         print'generic_driver pre_step_logic: timeStamp = ', timeStamp
         
