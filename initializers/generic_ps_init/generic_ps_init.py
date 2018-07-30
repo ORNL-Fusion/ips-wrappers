@@ -47,6 +47,9 @@ generic_ps_file_init.f90 to interact with the Plasma State. The fortran code is 
 in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true.
 
 """
+# Version (Batchelor 7/29/2018)
+# Eliminated all reference to NEXT_STATE
+
 # Working notes for generic_ps_init.py 3/5/2018 (Batchelor)
 # Added code to preserve the initial plasma state file generated during the init phase.
 # This is done because the call to services.checkpoint_components(port_id_list, t) in the
