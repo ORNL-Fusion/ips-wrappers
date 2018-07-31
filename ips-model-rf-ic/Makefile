@@ -8,8 +8,8 @@ OBJS = $(F90_SRC:%.f90=%.o)
 
 F90_MOD_INCLUDE =  $(F90_MOD_INCLUDE_PREFIX). $(F90_MOD_INCLUDE_PREFIX)$(IPS_ROOT)/include
 
-EXECUTABLES = model_RF_IC model_RF_IC_3
-SCRIPTS =  model_RF_IC.py model_RF_IC_3.py
+EXECUTABLES = model_RF_IC
+SCRIPTS =  model_RF_IC.py
 
 TARGETS =  $(EXECUTABLES)
 
@@ -24,9 +24,6 @@ all: .depend
 	done;
 
 model_RF_IC: model_RF_IC.o
-	$(F90) -o $@  $@.o $(LIBS)
-
-model_RF_IC_3: model_RF_IC_3.o
 	$(F90) -o $@  $@.o $(LIBS)
 
 install:
