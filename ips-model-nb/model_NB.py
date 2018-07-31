@@ -33,7 +33,7 @@ class model_NB (Component):
 # ------------------------------------------------------------------------------
 
     def init(self, timeStamp=0):
-        print 'model_NB_2_mcmd.init() called'
+        print 'model_NB_2.init() called'
 
         if (self.services == None) :
             services.error('Error in model_NB init (): No self.services')
@@ -78,7 +78,7 @@ class model_NB (Component):
           self.services.error('Error in call to stageInputFiles()')
           raise Exception, 'Error in call to stageInputFiles()'
 
-        NB_bin = os.path.join(BIN_PATH, 'model_NB_2_mcmd')
+        NB_bin = os.path.join(BIN_PATH, 'model_NB')
 
         print 'Executing ', ' '.join([NB_bin, cur_state_file, cur_eqdsk_file, 
             'INIT', timeStamp])
@@ -142,7 +142,7 @@ class model_NB (Component):
 # ------------------------------------------------------------------------------
 
     def step(self, timeStamp):
-        print 'model_NB_2_mcmd.step() called'
+        print 'model_NB.step() called'
 
         if (self.services == None) :
             services.error('Error in model_NB step (): No self.services')
@@ -186,7 +186,7 @@ class model_NB (Component):
           raise Exception, 'Error in call to stageInputFiles()'
 
 # Call model_NB
-        NB_bin = os.path.join(BIN_PATH, 'model_NB_2_mcmd')
+        NB_bin = os.path.join(BIN_PATH, 'model_NB')
 
         print 'Executing ', ' '.join([NB_bin, cur_state_file, cur_eqdsk_file, 'STEP', timeStamp])
         cwd = os.getcwd()
