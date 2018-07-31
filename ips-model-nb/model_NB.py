@@ -33,7 +33,7 @@ class model_NB (Component):
 # ------------------------------------------------------------------------------
 
     def init(self, timeStamp=0):
-        print 'model_NB_2.init() called'
+        print 'model_NB.init() called'
 
         if (self.services == None) :
             services.error('Error in model_NB init (): No self.services')
@@ -117,7 +117,7 @@ class model_NB (Component):
 # ------------------------------------------------------------------------------
         
     def restart(self, timeStamp):
-      print 'model_NB_2.restart() called'
+      print 'model_NB.restart() called'
 
       services = self.services
       workdir = services.get_working_dir()
@@ -129,8 +129,8 @@ class model_NB (Component):
             services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
       except Exception, e:
             print 'Error in call to get_restart_files()' , e
-            self.services.error('model_NB_2.restart: error in call to get_restart_files()')
-            raise Exception, 'model_NB_2.restart: error in call to get_restart_files()'
+            self.services.error('model_NB.restart: error in call to get_restart_files()')
+            raise Exception, 'model_NB.restart: error in call to get_restart_files()'
       return 0
 
 # ------------------------------------------------------------------------------
