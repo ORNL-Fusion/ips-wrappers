@@ -147,7 +147,7 @@ class model_EPA(Component):
         print 'Executing ', ' '.join([epa_bin, cur_state_file, cur_eqdsk_file, 'INIT', timeStamp])
         cwd = os.getcwd()
         task_id = services.launch_task(NPROC, cwd, epa_bin, cur_state_file,
-            cur_eqdsk_file, 'STEP', timeStamp)
+            cur_eqdsk_file, 'INIT', timeStamp)
         retcode = services.wait_task(task_id)
         if (retcode != 0):
             print 'Error executing command: ', epa_bin
