@@ -142,14 +142,25 @@ class model_EPA(Component):
         
         model_epa_bin = os.path.join(self.BIN_PATH, 'model_epa_ps_file_init')
 
-        print 'Executing ', [model_epa_bin, cur_state_file, 'INIT', timeStamp]
-        
-        try:
-            retcode = subprocess.call([model_epa_bin, cur_state_file,
-            cur_eqdsk_file, 'INIT', timeStamp])
-        except Exception, e:
-            services.error(' error executing model_epa_bin')
-            raise Exception(' error executing model_epa_bin')
+# Call model_epa
+        epa_bin = os.path.join(BIN_PATH, 'model_epa')
+        print 'Executing ', ' '.join([epa_bin, cur_state_file, cur_eqdsk_file, 'INIT', timeStamp])
+        cwd = os.getcwd()
+        task_id = services.launch_task(NPROC, cwd, epa_bin, cur_state_file,
+            cur_eqdsk_file, 'STEP', timeStamp)
+        retcode = services.wait_task(task_id)
+        if (retcode != 0):
+            print 'Error executing command: ', epa_bin
+            sys.exit(1)
+
+#         print 'Executing ', [model_epa_bin, cur_state_file, 'INIT', timeStamp]
+#         
+#         try:
+#             retcode = subprocess.call([model_epa_bin, cur_state_file,
+#             cur_eqdsk_file, 'INIT', timeStamp])
+#         except Exception, e:
+#             services.error(' error executing model_epa_bin')
+#             raise Exception(' error executing model_epa_bin')
 
     # Update plasma state files in plasma_state work directory
         try:
