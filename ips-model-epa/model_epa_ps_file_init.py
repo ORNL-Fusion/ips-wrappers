@@ -143,7 +143,7 @@ class model_EPA(Component):
         model_epa_bin = os.path.join(self.BIN_PATH, 'model_epa_ps_file_init')
 
 # Call model_epa
-        epa_bin = os.path.join(BIN_PATH, 'model_epa')
+        epa_bin = os.path.join(BIN_PATH, 'model_epa_ps_file_init')
         print 'Executing ', ' '.join([epa_bin, cur_state_file, cur_eqdsk_file, 'INIT', timeStamp])
         cwd = os.getcwd()
         task_id = services.launch_task(NPROC, cwd, epa_bin, cur_state_file,
