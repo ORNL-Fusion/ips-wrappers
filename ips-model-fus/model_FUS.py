@@ -221,7 +221,7 @@ class model_FUS (Component):
 # ------------------------------------------------------------------------------
 
     def checkpoint(self, timestamp=0.0):
-            print 'model_RF_IC_2.checkpoint() called'
+            print 'model_FUS.checkpoint() called'
             services = self.services
             services.save_restart_files(timestamp, self.RESTART_FILES)
             return 0
