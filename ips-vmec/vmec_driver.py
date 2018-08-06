@@ -28,7 +28,6 @@ class vmec_driver(Component):
         print('vmec_driver: init')
 
 #  Separate out the vmec keywords.
-#        keywords['vmec__curtor'] = 1.0  # FIXME: Line put in for debugging remove.
         vmec_keywords = {}
         for key, value in keywords.iteritems():
             if 'vmec__' in key:
@@ -71,5 +70,4 @@ class vmec_driver(Component):
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
         print('vmec_driver: finalize')
-        
         self.services.call(self.vmec_port, 'finalize', timeStamp)
