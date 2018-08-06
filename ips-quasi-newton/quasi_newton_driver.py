@@ -79,7 +79,13 @@ class quasi_newton_driver(Component):
                 self.cut_dg2 = quasi_newton_config['cut_dg2']
             else:
                 self.cut_dg2 = 0.0
-            
+
+#  Minimization controls
+            if 'max_step' in quasi_newton_config:
+                self.max_step = quasi_newton_config['max_step']
+            else:
+                self.max_step = 100.0
+
 #  Set keys for the subworkflows.
             keys = {'PWD'              : self.services.get_config_param('PWD'),
                     'USER_INPUT_FILES' : self.current_model_state}
@@ -348,3 +354,18 @@ class quasi_newton_driver(Component):
         exp_dg2_quad = numpy.dot(delta, numpy.matmul(self.hessian, delta))
 
         return exp_dg2_lin - exp_dg2_quad
+
+#-------------------------------------------------------------------------------
+#
+#  QUASI-NEWTON Driver try_step method. Trys different step sizes to move to the
+#  minimum in parameter space. Since there are potentially up to the number of
+#  parameter parallel instances, try that many different step sizes.
+#
+#-------------------------------------------------------------------------------
+    def try_step(self, num_sv):
+        print('quasi_newton_driver: try_step')
+
+#  Save the parameter values.
+        param_values = []
+        for worker in self.workers:
+            param_values.append(worker['value'])
