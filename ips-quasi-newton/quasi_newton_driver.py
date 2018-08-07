@@ -14,6 +14,7 @@ import shutil
 import json
 import numpy
 import math
+from scipy import optimize
 
 #-------------------------------------------------------------------------------
 #
@@ -143,7 +144,7 @@ class quasi_newton_driver(Component):
             with ZipState.ZipState(self.model_workers[0]['output'], 'a') as zip_ref:
                 zip_ref.extract(self.model_workers[0]['result'])
                 with open(self.model_workers[0]['result'], 'r') as result_file:
-                    self.signal_model = numpy.array(json.load(result_file)['signal_model'])
+                    self.e = self.signal_weights*((numpy.array(json.load(result_file)['signal_model']) - self.signal_observed)/self.signal_sigma)
 
 #  The initial model state may have changed reset it from the one of the
 #  workers.
@@ -159,8 +160,7 @@ class quasi_newton_driver(Component):
 
 #  Compute chi^2. Set the inital change in chi^2 higher than the tolarance to
 #  ensure at least one iteration of the while loop is performed.
-        self.e = self.signal_weights*((self.signal_model - self.signal_observed)/self.signal_sigma)
-        chi2 = numpy.dot(self.e, self.e)
+        self.chi2 = numpy.dot(self.e, self.e)
         dchi2 = self.dchi2_tol + 1.0
 
         self.jacobian = numpy.empty((len(self.model_workers), self.e.size), dtype=float)
@@ -168,18 +168,22 @@ class quasi_newton_driver(Component):
         self.gradient = numpy.empty(len(self.model_workers), dtype=float)
         self.delta_a = numpy.empty((min(len(self.e), len(self.model_workers)) + 1, len(self.model_workers)), dtype=float)
 
-        etry = numpy.empty((len(self.model_workers), self.e.size), dtype=float)
-        chi2try = numpy.empty(len(self.model_workers), dtype=float)
-
 #  Perform a quasi-newton minimization.
         while dchi2 > self.dchi2_tol:
             timeStamp += 1.0
             
             self.eval_jacobian(timeStamp)
-            num_sv = self.get_k_svd()
+            success = self.try_step(timeStamp)
 
 #  FIXME: Force the loop to end.
-            dchi2 = 0
+            if success:
+                new_chi2 = numpy.dot(self.e, self.e)
+                dchi2 = self.chi2 - new_chi2
+                self.chi2 = new_chi2
+            else:
+                break
+
+            dchi2 = 0.0
 
 #-------------------------------------------------------------------------------
 #
@@ -215,8 +219,8 @@ class quasi_newton_driver(Component):
                 
 #  Perturb the parameters.
         for worker in self.model_workers:
-            self.services.wait_call(worker['wait'], True)
             keywords = {worker['name'] : worker['value'] + worker['vrnc']}
+            self.services.wait_call(worker['wait'], True)
             worker['wait'] = self.services.call_nonblocking(worker['driver'],
                                                             'init', timeStamp,
                                                             **keywords)
@@ -248,9 +252,7 @@ class quasi_newton_driver(Component):
             with ZipState.ZipState(worker['output'], 'a') as zip_ref:
                 zip_ref.extract(worker['result'])
                 with open(worker['result'], 'r') as result_file:
-                    self.signal_model = numpy.array(json.load(result_file)['signal_model'])
-                                                                                            
-            self.jacobian[i] = self.e - self.signal_weights*((self.signal_model - self.signal_observed)/self.signal_sigma)
+                    self.jacobian[i] = self.e - self.signal_weights*((numpy.array(json.load(result_file)['signal_model']) - self.signal_observed)/self.signal_sigma)
 
 #-------------------------------------------------------------------------------
 #
@@ -279,52 +281,52 @@ class quasi_newton_driver(Component):
         self.delta_a[0,:] = self.gradient*numpy.dot(self.gradient, self.gradient)/numpy.dot(self.gradient, numpy.matmul(self.hessian, self.gradient))
 
 #  Singular value decomposition of the Jacobian.
-        j_svd_u, j_svd_w, j_svd_vt = numpy.linalg.svd(numpy.transpose(self.jacobian))
+        self.j_svd_u, self.j_svd_w, self.j_svd_vt = numpy.linalg.svd(numpy.transpose(self.jacobian))
         
 #  Define Inverse singular values.
-        temp_work1 = numpy.where(j_svd_w > 0, 1.0/j_svd_w, 0)
+        temp_work1 = numpy.where(self.j_svd_w > 0, 1.0/self.j_svd_w, 0)
 #    U^T * e                                                                 (4)
-        temp_work2 = numpy.dot(numpy.transpose(j_svd_u), self.e)
+        temp_work2 = numpy.dot(numpy.transpose(self.j_svd_u), self.e)
 
 #  Perform pseudo-inversion for successive numbers of singular values retained.
         temp_work3 = numpy.zeros(len(self.model_workers))
-        for i in range(0, len(j_svd_w)):
+        for i in range(0, len(self.j_svd_w)):
             temp_work3[i] = temp_work1[i]*temp_work2[i]
-            self.delta_a[i + 1,:] = numpy.matmul(numpy.transpose(j_svd_vt), temp_work3)
+            self.delta_a[i + 1,:] = numpy.matmul(numpy.transpose(self.j_svd_vt), temp_work3)
 
 #  Estimate the expected changes in g^2. Equation 22 in Hanson et. al.
 #  doi: 10.1088/0029-5515/49/7/075031
-        exp_dg2 = numpy.empty(len(j_svd_w) + 1, dtype=float)
-        delta_a_len = numpy.empty(len(j_svd_w) + 1, dtype=float)
-        exp_eff = numpy.empty(len(j_svd_w) + 1, dtype=float)
+        exp_dg2 = numpy.empty(len(self.j_svd_w) + 1, dtype=float)
+        self.delta_a_len = numpy.empty(len(self.j_svd_w) + 1, dtype=float)
+        exp_eff = numpy.empty(len(self.j_svd_w) + 1, dtype=float)
         for i in range(0, len(exp_dg2)):
             exp_dg2[i] = self.get_exp_dg2(self.delta_a[i,:])
-            delta_a_len[i] = math.sqrt(numpy.dot(self.delta_a[i,:], self.delta_a[i,:]))
+            self.delta_a_len[i] = math.sqrt(numpy.dot(self.delta_a[i,:], self.delta_a[i,:]))
             
 #  Equation 23 in Hanson et. al. doi: 10.1088/0029-5515/49/7/075031
-            exp_eff[i] = abs(exp_dg2[i])/delta_a_len[i]
+            exp_eff[i] = abs(exp_dg2[i])/self.delta_a_len[i]
 
 
 #  Although marginal efficiencies are not strictly defined for the Steepest
 #  Descent (index 0) and just one singular value cases, for convenience define
 #  them here.
-        marg_exp_eff = numpy.empty(len(j_svd_w) + 1, dtype=float)
+        marg_exp_eff = numpy.empty(len(self.j_svd_w) + 1, dtype=float)
         marg_exp_eff[0:1] = exp_eff[0:1]
         for i in range(2, len(exp_dg2)):
-            d_len = max(delta_a_len[i] - delta_a_len[i - 1], 1.0e-10)
+            d_len = max(self.delta_a_len[i] - self.delta_a_len[i - 1], 1.0e-10)
             marg_exp_eff[i] = abs(exp_dg2[i]) - abs(exp_dg2[i - 1])/d_len
     
 #  Check for cutoffs.
         largest_w = 1.0
-        if j_svd_w[0] > 0:
-            largest_w = j_svd_w[0]
+        if self.j_svd_w[0] > 0:
+            largest_w = self.j_svd_w[0]
 
 #  Find the largest number of singular values to use.
-        for i in range(len(j_svd_w), 1, -1):
-            meets_cut = (j_svd_w[i - 1]/largest_w >= self.cut_svd)
+        for i in range(len(self.j_svd_w), 1, -1):
+            meets_cut = (self.j_svd_w[i - 1]/largest_w >= self.cut_svd)
             meets_cut = meets_cut and (exp_eff[i] >= self.cut_eff)
             meets_cut = meets_cut and (marg_exp_eff[i] >= self.cut_marg_eff)
-            meets_cut = meets_cut and (delta_a_len[i] >= self.cut_delta_a)
+            meets_cut = meets_cut and (self.delta_a_len[i] >= self.cut_delta_a)
             meets_cut = meets_cut and (numpy.abs(exp_dg2[i]) >= self.cut_dg2)
             if meets_cut:
                 return i
@@ -362,10 +364,131 @@ class quasi_newton_driver(Component):
 #  parameter parallel instances, try that many different step sizes.
 #
 #-------------------------------------------------------------------------------
-    def try_step(self, num_sv):
+    def try_step(self, timeStamp=0.0):
         print('quasi_newton_driver: try_step')
 
-#  Save the parameter values.
-        param_values = []
-        for worker in self.workers:
-            param_values.append(worker['value'])
+        k_use = self.get_k_svd()
+
+#  Try different Levenberg-Marquardt step sizes.
+        new_max = self.max_step
+        step_use = []
+        delta_try = numpy.empty((len(self.model_workers), len(self.model_workers)), dtype=float)
+        e_try = numpy.empty((len(self.model_workers), len(self.signal_observed)), dtype=float)
+        chi2try = numpy.empty(len(self.model_workers), dtype=float)
+        
+        while True:
+            for i, worker in enumerate(self.model_workers):
+                step_use.append(new_max - i*new_max/(2.0*len(self.model_workers)))
+                delta_try[i] = self.lm_step(k_use, step_use[i])
+
+#  Set new parameters.
+                keywords = {}
+                for j, worker2 in enumerate(self.model_workers):
+                    keywords[worker2['name']] = worker2['value'] + delta_try[i,j]*worker2['vrnc']
+                self.services.wait_call(worker['wait'], True)
+                worker['wait'] = self.services.call_nonblocking(worker['driver'],
+                                                                'init', timeStamp,
+                                                                **keywords)
+
+#  Recompute the model.
+            for worker in self.model_workers:
+                self.services.wait_call(worker['wait'], True)
+                worker['wait'] = self.services.call_nonblocking(worker['driver'], 'step', timeStamp,
+                                                                result_file=worker['result'])
+
+#  Collect the results.
+            for worker in self.model_workers:
+                self.services.wait_call(worker['wait'], True)
+
+            self.services.stage_subflow_output_files()
+
+#  Compute chi^2 for each attempted step. And keep the largest.
+            for i, worker in enumerate(self.model_workers):
+                with ZipState.ZipState(worker['output'], 'a') as zip_ref:
+                    zip_ref.extract(worker['result'])
+                    with open(worker['result'], 'r') as result_file:
+                        e_try[i] = self.signal_weights*((numpy.array(json.load(result_file)['signal_model']) - self.signal_observed)/self.signal_sigma)
+                        chi2try[i] = numpy.dot(e_try[i], e_try[i])
+
+            i_min = numpy.argmin(chi2try)
+            if chi2try[i_min] <= self.chi2:
+#  Chi^2 decreased. Set the best case to the current model.
+                os.rename(self.model_workers[i_min]['output'], self.current_model_state)
+                shutil.copy2(self.current_model_state, 'model_inputs')
+                self.e = e_try[i_min]
+                
+#  Set the new parameter values.
+                for i, worker in enumerate(self.model_workers):
+                    worker['value'] = delta_try[i_min,i]*worker['vrnc']
+                
+                return True
+            else:
+#  Cut the step size in half and reset the model.
+                new_max /= 2.0
+                for worker in self.model_workers:
+                    worker['wait'] = self.services.call_nonblocking(worker['init'],
+                                                                    'init', timeStamp)
+
+        return False
+
+#-------------------------------------------------------------------------------
+#
+#  QUASI-NEWTON Driver lm_step method. Determines the normalized change in
+#  parameters for a Levenberg-Marquardt step.
+#
+#-------------------------------------------------------------------------------
+    def lm_step(self, k_use, step_size):
+        print('quasi_newton_driver: lm_step')
+
+        if step_size > 0.0 and self.delta_a_len[k_use] > step_size:
+            print('finding root')
+            ut_dot_e = numpy.matmul(self.e, self.j_svd_u)
+        
+#  Find the L-M parameter lambda that corresponds to a step length of step_size.
+            _lambda = self.lm_get_lambda(k_use, step_size, ut_dot_e)
+        
+#  Find the step.
+            return numpy.matmul(ut_dot_e[0:k_use]*self.j_svd_w[0:k_use]/(self.j_svd_w[0:k_use]**2.0 + _lambda), self.j_svd_vt[0:k_use])
+        else:
+            print('using delta')
+            return self.delta_a[k_use]
+
+#-------------------------------------------------------------------------------
+#
+#  QUASI-NEWTON Driver lm_get_lambda method. Finds a Levenberg-Marquardt
+#  parameter lambda coresponding to the length of step_size.
+#
+#-------------------------------------------------------------------------------
+    def lm_get_lambda(self, k_use, step_size, ut_dot_e):
+        print('quasi_newton_driver: lm_get_lambda')
+
+#  Define a default value incase the root find fails. Note lambda is a python
+#  builtin add an underscore to avoid this.
+        _lambda = (self.j_svd_w[0]*self.delta_a_len[k_use]/step_size)**2.0
+        
+        f_sqrd = ut_dot_e[0:k_use]**2.0
+        step_size_sqrd = step_size**2.0
+
+#  Define a lambda function for the root finder.
+        f = lambda x: numpy.sum(f_sqrd*(self.j_svd_w[0:k_use]/(self.j_svd_w[0:k_use]**2.0 + x))**2.0) - step_size_sqrd
+
+        f_a = f(0)
+        if f_a > 0.0:
+            return _lambda
+
+        lambda_b = self.j_svd_w(0)**2.0
+        f_b = f(lambda_b)
+        for i in range(0, 20):
+            if f_b <= 0.0:
+                break
+            lambda_b = 4.0*lambda_b
+            f_b = f(lambda_b)
+
+        if f_b < 0.0:
+            return _lambda
+
+        if f_a*f_b > 0.0:
+            return _lambda
+
+#  Found to intervals that bracket the roots. Now find the root.
+        return optimize.brentq(f, 0.0, lambda_b)
