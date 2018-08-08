@@ -162,6 +162,9 @@ class quasi_newton_driver(Component):
 #  ensure at least one iteration of the while loop is performed.
         self.chi2 = numpy.dot(self.e, self.e)
         dchi2 = self.dchi2_tol + 1.0
+        print('--------------------------------------------------------------------------------')
+        print('Step {} : chi^2 = {}'.format(timeStamp, self.chi2))
+        print('--------------------------------------------------------------------------------')
 
         self.jacobian = numpy.empty((len(self.model_workers), self.e.size), dtype=float)
         self.hessian = numpy.empty((len(self.model_workers), len(self.model_workers)), dtype=float)
@@ -171,19 +174,17 @@ class quasi_newton_driver(Component):
 #  Perform a quasi-newton minimization.
         while dchi2 > self.dchi2_tol:
             timeStamp += 1.0
-            
-            self.eval_jacobian(timeStamp)
-            success = self.try_step(timeStamp)
 
-#  FIXME: Force the loop to end.
-            if success:
+            self.eval_jacobian(timeStamp)
+            if self.try_step(timeStamp):
                 new_chi2 = numpy.dot(self.e, self.e)
                 dchi2 = self.chi2 - new_chi2
                 self.chi2 = new_chi2
+                print('--------------------------------------------------------------------------------')
+                print('Step {} : chi^2 = {} : dchi^2 = {}'.format(timeStamp, self.chi2, dchi2))
+                print('--------------------------------------------------------------------------------')
             else:
                 break
-
-            dchi2 = 0.0
 
 #-------------------------------------------------------------------------------
 #
@@ -231,12 +232,12 @@ class quasi_newton_driver(Component):
             worker['wait'] = self.services.call_nonblocking(worker['driver'], 'step', timeStamp,
                                                             result_file=worker['result'])
                                                                     
-#  Collect the results and reset the model.
+#  Collect the results.
         for worker in self.model_workers:
             self.services.wait_call(worker['wait'], True)
             worker['wait'] = self.services.call_nonblocking(worker['init'],
                                                             'init', timeStamp)
-                                                                            
+
         self.services.stage_subflow_output_files()
                                                                             
 #  Compute the normalized jacobian A.
@@ -253,109 +254,6 @@ class quasi_newton_driver(Component):
                 zip_ref.extract(worker['result'])
                 with open(worker['result'], 'r') as result_file:
                     self.jacobian[i] = self.e - self.signal_weights*((numpy.array(json.load(result_file)['signal_model']) - self.signal_observed)/self.signal_sigma)
-
-#-------------------------------------------------------------------------------
-#
-#  QUASI-NEWTON Driver get_k_svd method. Performs a singular value decomposition
-#  of the jacobian. Based on various cuttoffs, the maximum number of sigular
-#  values retained is determined.
-#
-#-------------------------------------------------------------------------------
-    def get_k_svd(self):
-        print('quasi_newton_driver: get_k_svd')
-
-#  Approximate the hessian.
-#
-#    alpha = A^T * A                                                         (1)
-#
-#  The gradient
-#
-#    beta = A^T * e                                                          (2)
-#
-        self.hessian = numpy.matmul(self.jacobian, numpy.transpose(self.jacobian))
-        self.gradient = numpy.dot(self.jacobian, self.e)
-        
-#  Compute the steepest descent setp size in normalized parameter space.
-#
-#    da = beta * beta * beta / (beta * alpha * beta)                         (3)
-        self.delta_a[0,:] = self.gradient*numpy.dot(self.gradient, self.gradient)/numpy.dot(self.gradient, numpy.matmul(self.hessian, self.gradient))
-
-#  Singular value decomposition of the Jacobian.
-        self.j_svd_u, self.j_svd_w, self.j_svd_vt = numpy.linalg.svd(numpy.transpose(self.jacobian))
-        
-#  Define Inverse singular values.
-        temp_work1 = numpy.where(self.j_svd_w > 0, 1.0/self.j_svd_w, 0)
-#    U^T * e                                                                 (4)
-        temp_work2 = numpy.dot(numpy.transpose(self.j_svd_u), self.e)
-
-#  Perform pseudo-inversion for successive numbers of singular values retained.
-        temp_work3 = numpy.zeros(len(self.model_workers))
-        for i in range(0, len(self.j_svd_w)):
-            temp_work3[i] = temp_work1[i]*temp_work2[i]
-            self.delta_a[i + 1,:] = numpy.matmul(numpy.transpose(self.j_svd_vt), temp_work3)
-
-#  Estimate the expected changes in g^2. Equation 22 in Hanson et. al.
-#  doi: 10.1088/0029-5515/49/7/075031
-        exp_dg2 = numpy.empty(len(self.j_svd_w) + 1, dtype=float)
-        self.delta_a_len = numpy.empty(len(self.j_svd_w) + 1, dtype=float)
-        exp_eff = numpy.empty(len(self.j_svd_w) + 1, dtype=float)
-        for i in range(0, len(exp_dg2)):
-            exp_dg2[i] = self.get_exp_dg2(self.delta_a[i,:])
-            self.delta_a_len[i] = math.sqrt(numpy.dot(self.delta_a[i,:], self.delta_a[i,:]))
-            
-#  Equation 23 in Hanson et. al. doi: 10.1088/0029-5515/49/7/075031
-            exp_eff[i] = abs(exp_dg2[i])/self.delta_a_len[i]
-
-
-#  Although marginal efficiencies are not strictly defined for the Steepest
-#  Descent (index 0) and just one singular value cases, for convenience define
-#  them here.
-        marg_exp_eff = numpy.empty(len(self.j_svd_w) + 1, dtype=float)
-        marg_exp_eff[0:1] = exp_eff[0:1]
-        for i in range(2, len(exp_dg2)):
-            d_len = max(self.delta_a_len[i] - self.delta_a_len[i - 1], 1.0e-10)
-            marg_exp_eff[i] = abs(exp_dg2[i]) - abs(exp_dg2[i - 1])/d_len
-    
-#  Check for cutoffs.
-        largest_w = 1.0
-        if self.j_svd_w[0] > 0:
-            largest_w = self.j_svd_w[0]
-
-#  Find the largest number of singular values to use.
-        for i in range(len(self.j_svd_w), 1, -1):
-            meets_cut = (self.j_svd_w[i - 1]/largest_w >= self.cut_svd)
-            meets_cut = meets_cut and (exp_eff[i] >= self.cut_eff)
-            meets_cut = meets_cut and (marg_exp_eff[i] >= self.cut_marg_eff)
-            meets_cut = meets_cut and (self.delta_a_len[i] >= self.cut_delta_a)
-            meets_cut = meets_cut and (numpy.abs(exp_dg2[i]) >= self.cut_dg2)
-            if meets_cut:
-                return i
-
-#  All the selected criteria failed use no singular values.
-        return 0
-        
-#-------------------------------------------------------------------------------
-#
-#  QUASI-NEWTON Driver get_exp_dg2 method. Obtains the expected change in g^2.
-#
-#-------------------------------------------------------------------------------
-    def get_exp_dg2(self, delta):
-        print('quasi_newton_driver: get_exp_dg2')
-        
-#  Linear part.
-#
-#    2e * A * da                                                             (1)
-        exp_dg2_lin = 2.0*numpy.dot(self.e, numpy.matmul(numpy.transpose(self.jacobian), delta))
-
-#  Qaudratic part.
-#
-#    da * A^T * A * da = da * alpha * da                                     (2)
-#
-#  Alpha is the hessian matrix. Equation 14 in Hanson et. al.
-#  doi: 10.1088/0029-5515/49/7/075031
-        exp_dg2_quad = numpy.dot(delta, numpy.matmul(self.hessian, delta))
-
-        return exp_dg2_lin - exp_dg2_quad
 
 #-------------------------------------------------------------------------------
 #
@@ -419,7 +317,7 @@ class quasi_newton_driver(Component):
                 
 #  Set the new parameter values.
                 for i, worker in enumerate(self.model_workers):
-                    worker['value'] = delta_try[i_min,i]*worker['vrnc']
+                    worker['value'] += delta_try[i_min,i]*worker['vrnc']
                 
                 return True
             else:
@@ -433,6 +331,109 @@ class quasi_newton_driver(Component):
 
 #-------------------------------------------------------------------------------
 #
+#  QUASI-NEWTON Driver get_k_svd method. Performs a singular value decomposition
+#  of the jacobian. Based on various cuttoffs, the maximum number of sigular
+#  values retained is determined.
+#
+#-------------------------------------------------------------------------------
+    def get_k_svd(self):
+        print('quasi_newton_driver: get_k_svd')
+    
+#  Approximate the hessian.
+#
+#    alpha = A^T * A                                                         (1)
+#
+#  The gradient
+#
+#    beta = A^T * e                                                          (2)
+#
+        self.hessian = numpy.matmul(self.jacobian, numpy.transpose(self.jacobian))
+        self.gradient = numpy.dot(self.jacobian, self.e)
+
+#  Compute the steepest descent setp size in normalized parameter space.
+#
+#    da = beta * beta * beta / (beta * alpha * beta)                         (3)
+        self.delta_a[0,:] = self.gradient*numpy.dot(self.gradient, self.gradient)/numpy.dot(self.gradient, numpy.matmul(self.hessian, self.gradient))
+        
+#  Singular value decomposition of the Jacobian.
+        self.j_svd_u, self.j_svd_w, self.j_svd_vt = numpy.linalg.svd(numpy.transpose(self.jacobian))
+        
+#  Define Inverse singular values.
+        temp_work1 = numpy.where(self.j_svd_w > 0, 1.0/self.j_svd_w, 0)
+#    U^T * e                                                                 (4)
+        temp_work2 = numpy.dot(numpy.transpose(self.j_svd_u), self.e)
+        
+#  Perform pseudo-inversion for successive numbers of singular values retained.
+        temp_work3 = numpy.zeros(len(self.model_workers))
+        for i in range(0, len(self.j_svd_w)):
+            temp_work3[i] = temp_work1[i]*temp_work2[i]
+            self.delta_a[i + 1,:] = numpy.matmul(numpy.transpose(self.j_svd_vt), temp_work3)
+    
+#  Estimate the expected changes in g^2. Equation 22 in Hanson et. al.
+#  doi: 10.1088/0029-5515/49/7/075031
+        exp_dg2 = numpy.empty(len(self.j_svd_w) + 1, dtype=float)
+        self.delta_a_len = numpy.empty(len(self.j_svd_w) + 1, dtype=float)
+        exp_eff = numpy.empty(len(self.j_svd_w) + 1, dtype=float)
+        for i in range(0, len(exp_dg2)):
+            exp_dg2[i] = self.get_exp_dg2(self.delta_a[i,:])
+            self.delta_a_len[i] = math.sqrt(numpy.dot(self.delta_a[i,:], self.delta_a[i,:]))
+            
+#  Equation 23 in Hanson et. al. doi: 10.1088/0029-5515/49/7/075031
+            exp_eff[i] = abs(exp_dg2[i])/self.delta_a_len[i]
+        
+        
+#  Although marginal efficiencies are not strictly defined for the Steepest
+#  Descent (index 0) and just one singular value cases, for convenience define
+#  them here.
+        marg_exp_eff = numpy.empty(len(self.j_svd_w) + 1, dtype=float)
+        marg_exp_eff[0:1] = exp_eff[0:1]
+        for i in range(2, len(exp_dg2)):
+            d_len = max(self.delta_a_len[i] - self.delta_a_len[i - 1], 1.0e-10)
+            marg_exp_eff[i] = abs(exp_dg2[i]) - abs(exp_dg2[i - 1])/d_len
+
+#  Check for cutoffs.
+        largest_w = 1.0
+        if self.j_svd_w[0] > 0:
+            largest_w = self.j_svd_w[0]
+
+#  Find the largest number of singular values to use.
+        for i in range(len(self.j_svd_w), 1, -1):
+            meets_cut =               (self.j_svd_w[i - 1]/largest_w >= self.cut_svd)
+            meets_cut = meets_cut and (exp_eff[i]                    >= self.cut_eff)
+            meets_cut = meets_cut and (marg_exp_eff[i]               >= self.cut_marg_eff)
+            meets_cut = meets_cut and (self.delta_a_len[i]           >= self.cut_delta_a)
+            meets_cut = meets_cut and (numpy.abs(exp_dg2[i])         >= self.cut_dg2)
+            if meets_cut:
+                return i
+
+        #  All the selected criteria failed use no singular values.
+        return 0
+    
+#-------------------------------------------------------------------------------
+#
+#  QUASI-NEWTON Driver get_exp_dg2 method. Obtains the expected change in g^2.
+#
+#-------------------------------------------------------------------------------
+    def get_exp_dg2(self, delta):
+        print('quasi_newton_driver: get_exp_dg2')
+        
+#  Linear part.
+#
+#    2e * A * da                                                             (1)
+        exp_dg2_lin = 2.0*numpy.dot(self.e, numpy.matmul(numpy.transpose(self.jacobian), delta))
+        
+#  Qaudratic part.
+#
+#    da * A^T * A * da = da * alpha * da                                     (2)
+#
+#  Alpha is the hessian matrix. Equation 14 in Hanson et. al.
+#  doi: 10.1088/0029-5515/49/7/075031
+        exp_dg2_quad = numpy.dot(delta, numpy.matmul(self.hessian, delta))
+        
+        return exp_dg2_lin - exp_dg2_quad
+    
+#-------------------------------------------------------------------------------
+#
 #  QUASI-NEWTON Driver lm_step method. Determines the normalized change in
 #  parameters for a Levenberg-Marquardt step.
 #
@@ -441,7 +442,6 @@ class quasi_newton_driver(Component):
         print('quasi_newton_driver: lm_step')
 
         if step_size > 0.0 and self.delta_a_len[k_use] > step_size:
-            print('finding root')
             ut_dot_e = numpy.matmul(self.e, self.j_svd_u)
         
 #  Find the L-M parameter lambda that corresponds to a step length of step_size.
@@ -450,7 +450,6 @@ class quasi_newton_driver(Component):
 #  Find the step.
             return numpy.matmul(ut_dot_e[0:k_use]*self.j_svd_w[0:k_use]/(self.j_svd_w[0:k_use]**2.0 + _lambda), self.j_svd_vt[0:k_use])
         else:
-            print('using delta')
             return self.delta_a[k_use]
 
 #-------------------------------------------------------------------------------
