@@ -205,6 +205,10 @@ class solps_iter_data_worker(Component):
 	zdak = np.unique(dak[:,1])
 	te = np.reshape(dak[:,2],(dict['numz'],dict['numr']))
 	te[te == -1]=0
+        plt.close()
+        plt.pcolor(rdak,zdak,np.reshape(te,(dict['numz'],dict['numr'])))
+        plt.colorbar(orientation='vertical')
+        plt.savefig('te.png')
 	#plt.pcolor(rdak,zdak,field1)
 	#plt.savefig('field1.png')
 	ne = np.reshape(dak[:,3],(dict['numz'],dict['numr']))
@@ -225,15 +229,24 @@ class solps_iter_data_worker(Component):
 	nIonSpecies = 21
 	print 'starting ionspec loop',nIonSpecies
 	for i in range(nIonSpecies):
-	    if i<=1:
-	        ni[2*i,:,:] = np.reshape(0.5*dak[:,offset+i],(dict['numz'],dict['numr']))
-	        ni[2*(i+1),:,:] = np.reshape(0.5*dak[:,offset+i],(dict['numz'],dict['numr']))
-	        vr[2*i,:,:] = np.reshape(dak[:,offset+nIonSpecies+i],(dict['numz'],dict['numr']))
-	        vr[2*(i+1),:,:] = np.reshape(dak[:,offset+nIonSpecies+i],(dict['numz'],dict['numr']))
-	        vp[2*i,:,:] = np.reshape(dak[:,offset+2*nIonSpecies+i],(dict['numz'],dict['numr']))
-	        vp[2*(i+1),:,:] = np.reshape(dak[:,offset+2*nIonSpecies+i],(dict['numz'],dict['numr']))
-	        vz[2*i,:,:] = np.reshape(dak[:,offset+3*nIonSpecies+i],(dict['numz'],dict['numr']))
-	        vz[2*(i+1),:,:] = np.reshape(dak[:,offset+3*nIonSpecies+i],(dict['numz'],dict['numr']))
+	    if i==0:
+	        ni[0,:,:] = np.reshape(0.5*dak[:,offset+i],(dict['numz'],dict['numr']))
+	        ni[2,:,:] = np.reshape(0.5*dak[:,offset+i],(dict['numz'],dict['numr']))
+	        vr[0,:,:] = np.reshape(dak[:,offset+nIonSpecies+i],(dict['numz'],dict['numr']))
+	        vr[2,:,:] = np.reshape(dak[:,offset+nIonSpecies+i],(dict['numz'],dict['numr']))
+	        vp[0,:,:] = np.reshape(dak[:,offset+2*nIonSpecies+i],(dict['numz'],dict['numr']))
+	        vp[2,:,:] = np.reshape(dak[:,offset+2*nIonSpecies+i],(dict['numz'],dict['numr']))
+	        vz[0,:,:] = np.reshape(dak[:,offset+3*nIonSpecies+i],(dict['numz'],dict['numr']))
+	        vz[2,:,:] = np.reshape(dak[:,offset+3*nIonSpecies+i],(dict['numz'],dict['numr']))
+	    elif i==1:
+	        ni[1,:,:] = np.reshape(0.5*dak[:,offset+i],(dict['numz'],dict['numr']))
+	        ni[3,:,:] = np.reshape(0.5*dak[:,offset+i],(dict['numz'],dict['numr']))
+	        vr[1,:,:] = np.reshape(dak[:,offset+nIonSpecies+i],(dict['numz'],dict['numr']))
+	        vr[3,:,:] = np.reshape(dak[:,offset+nIonSpecies+i],(dict['numz'],dict['numr']))
+	        vp[1,:,:] = np.reshape(dak[:,offset+2*nIonSpecies+i],(dict['numz'],dict['numr']))
+	        vp[3,:,:] = np.reshape(dak[:,offset+2*nIonSpecies+i],(dict['numz'],dict['numr']))
+	        vz[1,:,:] = np.reshape(dak[:,offset+3*nIonSpecies+i],(dict['numz'],dict['numr']))
+	        vz[3,:,:] = np.reshape(dak[:,offset+3*nIonSpecies+i],(dict['numz'],dict['numr']))
 	    else:
 	        ni[i+2,:,:] = np.reshape(dak[:,offset+i],(dict['numz'],dict['numr']))
 	        vr[i+2,:,:] = np.reshape(dak[:,offset+nIonSpecies+i],(dict['numz'],dict['numr']))
