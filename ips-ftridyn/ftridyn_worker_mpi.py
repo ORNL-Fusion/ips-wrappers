@@ -12,6 +12,8 @@ import numpy as np
 import netCDF4
 import pickle
 import math
+import periodic
+from collections import defaultdict
 
 print 'The generate_ftridyn_input path in ftridyn_worker_taskpool is: '
 print os.path.abspath(generate_ftridyn_input.__file__)
@@ -30,9 +32,33 @@ class ftridynWorker(Component):
         
 	print('ftridyn_worker: step (mpi version)')
         self.services.stage_plasma_state()
-	#shutil.copyfile(self.FTMPI_IN,self.services.get_working_dir()+'/ftMPI.in')
-        d = {}
-        d['beam']=str(self.BEAM)
+        d = defaultdict(list)
+	if(int(self.GET_SPECIES)):
+	    specZs=[];
+	    specList = np.loadtxt('speciesList.txt', dtype='float', skiprows=1)
+	    print specList, len(specList)
+	    for i in range(len(specList)):
+	        print "0",specZs
+	        if ((specList[i,1] ==1.0) and (specList[i,3]>0.0)):
+		    if(specList[i,1] == 1.0 and specList[i,2]==1.0):
+		        d['beam'].append('H')
+		        specZs.append(specList[i,1])
+	                print "2",periodic.element(specList[i,1]).symbol
+		    if(specList[i,1] == 1.0 and specList[i,2]==2.0):
+		        d['beam'].append('D')
+		        specZs.append(specList[i,1])
+	                print "2",periodic.element(specList[i,1]).symbol
+		    if(specList[i,1] == 1.0 and specList[i,2]==3.0):
+		        d['beam'].append('T')
+		        specZs.append(specList[i,1])
+	                print "2",periodic.element(specList[i,1]).symbol
+	        elif((specList[i,1] not in specZs) and (specList[i,3]>0.0)):
+	                print periodic.element(specList[i,1]).symbol
+		        specZs.append(specList[i,1])
+		        d['beam'].append(periodic.element(specList[i,1]).symbol)
+	                print "3",periodic.element(specList[i,1]).symbol
+	    #shutil.copyfile(self.FTMPI_IN,self.services.get_working_dir()+'/ftMPI.in')
+        d['beam'].append(str(self.BEAM))
         d['target']=str(self.TARGET)
         d['Escale']=str(self.ESCALE)
         d['exe']=str(self.FTRIDYN_EXE)
@@ -51,13 +77,20 @@ class ftridynWorker(Component):
 	d['roughness_start']=float(self.R_START)
 	d['roughness_end']=float(self.R_END)
 	d['maxEdist']=float(self.MAXEDIST)
-	f = open('ipsFTmpi.pkl', 'w')
-        pickle.dump(d,f)
-	f.close()
-
+	#f = open('ipsFTmpi.pkl', 'w')
+        #pickle.dump(d,f)
+	#f.close()
+        print d
+	ftMpiFile = open('ftMPI.in', 'w')
+	for key in d:
+	    if (key == 'beam'):
+	        ftMpiFile.write("%s %s\n" %(key,' '.join(d[key])))
+            else:		
+	        ftMpiFile.write("%s %s\n" %(key,str(d[key])))
+	ftMpiFile.close()	
         task_id = self.services.launch_task(self.NPROC,
                                             self.services.get_working_dir(),
-                                            'python',self.FTMPI,'--dictionary=ipsFTmpi.pkl',
+                                            'python -m mpi4py',self.FTMPI,#'--dictionary=ipsFTmpi.pkl',
                                             logfile='ftmpi.log') #,ppn=1)
         
 	#monitor task until complete
