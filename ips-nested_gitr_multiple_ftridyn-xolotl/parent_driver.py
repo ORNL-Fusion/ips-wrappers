@@ -88,6 +88,8 @@ class parent_driver(Component):
                                                                                               'LOG_FILE' : 'log.component_a.warning'})
 
         print 'creating first sub-workflow DONE!'
+
+
         ## CREATE SUB-WORKFLOW FOR MULTIPLE (num_children) FTRIDYN-XOLOTL RUNS, IN PARALLEL ##
 
         for i in range(0, num_children):
@@ -96,6 +98,7 @@ class parent_driver(Component):
             keys['LOG_FILE'] = 'log.{}'.format(child_comp)
             keys['SIM_NAME'] = child_comp
             keys['INPUT_DIR'] = '{}_dir'.format(child_comp)
+            keys['INPUT_FILES'] = self.services.get_config_param('INPUT_FTX')
             
             self.child_components[child_comp] = {
                                                 'sim_name'  : None, #keys['SIM_NAME'],
@@ -115,12 +118,13 @@ class parent_driver(Component):
             os.mkdir(self.child_components[child_comp]['INPUT_DIR'])
 
             #  Copy files to the created directory.
-            #by hand for now --> turn this into loop over input files
-            print '\t and copy input files:'
-            print '\t \t parameter file 1D: ', self.SUBMIT_DIR+'/paramXolotl_1D.txt'
-            print '\t \t parameter file 2D: ', self.SUBMIT_DIR+'/paramXolotl_2D.txt'
-            shutil.copyfile(self.SUBMIT_DIR+'/paramXolotl_1D.txt',self.child_components[child_comp]['INPUT_DIR']+'/paramXolotl_1D.txt')
-            shutil.copyfile(self.SUBMIT_DIR+'/paramXolotl_2D.txt',self.child_components[child_comp]['INPUT_DIR']+'/paramXolotl_2D.txt')
+            #UPDATE: by hand at first --> turn this into loop over input files now
+            input_file_list=keys['INPUT_FILES'].split()
+            print '\t and copy input files:' , input_file_list #self.child_components[child_comp]['INPUT_FILES']
+            for input_file in input_file_list: #self.child_components[child_comp]['INPUT_FILES'])):
+                print '\t \t', input_file , ' from ', self.SUBMIT_DIR, ' to ', self.child_components[child_comp]['INPUT_DIR']
+                shutil.copyfile(self.SUBMIT_DIR+'/'+input_file,self.child_components[child_comp]['INPUT_DIR']+'/'+input_file)
+            print '\t ...done copying input files'
 
             print ' '
             print 'Create_sub_workflow with parameters:'
@@ -161,22 +165,15 @@ class parent_driver(Component):
         del self.async_queue['component_a:driver:init']
         self.async_queue['component_a:driver:step'] = self.services.call(self.nested_components['component_a']['driver'], 'step', 0.0)        
 
-        ## THIS IS JUST A TEST AT READING/MODIFYING/USING GITR's OUTPUT
+        print('\n')
+        print(' COMPLETED FTRIDYN-GITR:step')
+        print('\n')
 
-        #for i in range(0, num_children):
         for child_comp, child in self.child_components.items():
             i=int(filter(str.isdigit, child_comp))
             print 'index of ', child_comp, ' is ', i
-            #sedInFile=self.SUBMIT_DIR+'/gitrOut.txt'
             sedOutFile=self.SUBMIT_DIR+'/gitrOut_'+str(i)+'.txt'
-            #self.nested_components['component_a']['sub_working_dir']+'/gitrOut_'+str(i)+'.txt'
             print 'copying gitr file from ', sedOutFile, 'to ', self.child_components[child_comp]['INPUT_DIR']+'/gitrOut.txt'
-            #flux=10000+i*1000
-            #print 'modifying ', sedInFile, ' to write flux=',flux, ' in ', sedOutFile , '\n'
-            #gitrOutSedString="sed    -e 's/flux=[^ ]*/flux=%e/' < %s > %s"   % (flux, sedInFile, sedOutFile)
-
-            #subprocess.call([gitrOutSedString], shell=True)
-            #shutil.copyfile(self.SUBMIT_DIR+'/gitrOut_'+str(i)+'.txt',self.child_components[child_comp]['INPUT_DIR']+'/gitrOut.txt')
             shutil.copyfile(sedOutFile,self.child_components[child_comp]['INPUT_DIR']+'/gitrOut.txt')
 
         #RUN init AND step OF CHILD (FT-X) SUB-WORKFLOW

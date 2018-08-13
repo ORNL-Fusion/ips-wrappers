@@ -4,19 +4,21 @@
 
 import numpy as np
 import math
+import h5py
 #from   pylab import *
 
-def binTridyn(inFile='last_TRIDYN_toBin.dat', outFile='last_TRIDYN.dat'):
+def binTridyn(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat'):
 
 ## Open the files
-    depth, He, D, T, V, I = np.loadtxt(inFile, usecols = (0,1,2,3,4,5) , unpack=True)
+    f = h5py.File(inFile, 'r')    
+    concDset = f['concs']
 
 ## Look for indiceCut
     indiceCut = -1
-    for k in range(1, len(depth)):
-        step = depth[k] - depth[k-1]
+    for k in range(1, len(concDset)):
+        step = concDset[k][0] - concDset[k-1][0]
         if (step > 0.95):
-            indiceCut = int(depth[k-1] * 2) + 1
+            indiceCut = int(concDset[k-1][0] * 2) + 1
             break
 
 ## Bin the concentrations
@@ -27,7 +29,7 @@ def binTridyn(inFile='last_TRIDYN_toBin.dat', outFile='last_TRIDYN.dat'):
     vBin = []
     iBin = []
 
-    nBins=int(math.floor(depth[len(depth)-1] * 2.0)+1)
+    nBins=int(math.floor(concDset[len(concDset)-1][0] * 2.0)+1)
 
     for k in range (0, nBins):#200):
         depthBin.append(k/2.0)
@@ -40,8 +42,8 @@ def binTridyn(inFile='last_TRIDYN_toBin.dat', outFile='last_TRIDYN.dat'):
     oldIndice = -10
     i = 0
 
-    for k in range(0, len(depth)):
-        indice = int(math.floor(depth[k] * 2.0))
+    for k in range(0, len(concDset)):
+        indice = int(math.floor(concDset[k][0] * 2.0))
         if (indice != oldIndice):
             if (oldIndice >= 0):
                 heBin[oldIndice] = heBin[oldIndice] / float(i)
@@ -54,22 +56,22 @@ def binTridyn(inFile='last_TRIDYN_toBin.dat', outFile='last_TRIDYN.dat'):
     
         i = i + 1
         if (indice < indiceCut):
-            heBin[indice] = heBin[indice] + He[k]
-            dBin[indice] = dBin[indice] + D[k]
-            tBin[indice] = tBin[indice] + T[k]
-            vBin[indice] = vBin[indice] + V[k]
-            iBin[indice] = iBin[indice] + I[k]
+            heBin[indice] = heBin[indice] + concDset[k][1]
+            dBin[indice] = dBin[indice] + concDset[k][2]
+            tBin[indice] = tBin[indice] + concDset[k][3]
+            vBin[indice] = vBin[indice] + concDset[k][4]
+            iBin[indice] = iBin[indice] + concDset[k][5]
         else:
-            heBin[indice] = heBin[indice] + He[k]
-            heBin[indice-1] = heBin[indice-1] + He[k]
-            dBin[indice] = dBin[indice] + D[k]
-            dBin[indice-1] = dBin[indice-1] + D[k]
-            tBin[indice] = tBin[indice] + T[k]
-            tBin[indice-1] = tBin[indice-1] + T[k]
-            vBin[indice] = vBin[indice] + V[k]
-            vBin[indice-1] = vBin[indice-1] + V[k]
-            iBin[indice] = iBin[indice] + I[k]
-            iBin[indice-1] = iBin[indice-1] + I[k]
+            heBin[indice] = heBin[indice] + concDset[k][1]
+            heBin[indice-1] = heBin[indice-1] + concDset[k][1]
+            dBin[indice] = dBin[indice] + concDset[k][2]
+            dBin[indice-1] = dBin[indice-1] + concDset[k][2]
+            tBin[indice] = tBin[indice] + concDset[k][3]
+            tBin[indice-1] = tBin[indice-1] + concDset[k][3]
+            vBin[indice] = vBin[indice] + concDset[k][4]
+            vBin[indice-1] = vBin[indice-1] + concDset[k][4]
+            iBin[indice] = iBin[indice] + concDset[k][5]
+            iBin[indice-1] = iBin[indice-1] + concDset[k][5]
             
 ## Open 'outputFile.dat' where results will be printed
     outputFile = open(outFile, 'w')

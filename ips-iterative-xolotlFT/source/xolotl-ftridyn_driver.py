@@ -141,8 +141,8 @@ driver['LOOP_TIME_STEP']))
                 self.xp.parameters['petscArgs'][k]=v
 
         #if not coupling, delete -tridyn from petsc arguments to not print TRIDYN_*.dat files
-        if self.driver['FTX_COUPLING']=='False':
-            del self.xp.parameters['petscArgs']['-tridyn']
+        #if self.driver['FTX_COUPLING']=='False':
+        #    del self.xp.parameters['petscArgs']['-tridyn']
 
         #CONTROL WHICH PROCESSES ARE ON:
         #delete Xolotl processes that are specified as false in ips.config
@@ -188,10 +188,7 @@ driver['LOOP_TIME_STEP']))
         
         self.gitr = {} #xolotl_param_handler.xolotl_params()
         self.gitr=param_handler.read(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE)
-        print('read GITR parameters (from file) : {}\n'.format( self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE))
-        #self.gitr=param_handler.read(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE)
-        #self.gitr=param_handler.read(self.SUBMIT_DIR+'/'+self.GITR_OUTPUT_FILE)
-        #print 'read (from file) : ', self.SUBMIT_DIR+'/'+self.GITR_OUTPUT_FILE
+        print('read GITR parameters (from file) : {}\n'.format(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE))
 
         for k,v, in self.gitr.iteritems():
             print('{0} : {1}'.format(k, v))
@@ -296,13 +293,12 @@ driver['LOOP_TIME_STEP']))
             if self.inAngle[i] < 0 :
                 ##ADD +'_'+prj in the middle if the full path name for ITER cases, as multiple plasma species will follow distributions
                 gitr_output_dir='gitrOutputDir'+'_'+prj
-                #print('\t GITR output of angular distributions will be read from {} \n'.format(self.gitr['gitrOutputDir']))
                 print('\t GITR output of angular distributions will be read from {} \n'.format(self.gitr[gitr_output_dir]))
                 self.angleFile.append(self.gitr[gitr_output_dir].strip()+'/'+self.GITR_ANGLE_FILE.strip()) #self.gitr['gitrOutputDir'].strip()
                 self.aWeightFile.append(self.gitr[gitr_output_dir].strip()+'/'+self.GITR_AWEIGHT_FILE.strip()) #self.gitr['gitrOutputDir'].strip()
                 print('\t reading angles and weights for {0} from {1} {2};\n'.format(prj, self.angleFile[i], self.aWeightFile[i]))
-                a = numpy.loadtxt(self.angleFile[i], usecols = (0) , unpack=True)
-                w = numpy.loadtxt(self.aWeightFile[i], usecols = (0) , unpack=True)
+                a = numpy.loadtxt(self.angleFile[i], usecols = (0,) , unpack=True)
+                w = numpy.loadtxt(self.aWeightFile[i], usecols = (0,) , unpack=True)
                 self.angleIn.append(a)
                 self.weightAngle.append(w)
             else:
@@ -336,19 +332,25 @@ driver['LOOP_TIME_STEP']))
                 self.FT_energy_file_name.append('')
                 self.GITR_eadist_output_path.append('')
                 self.GITR_eadist_output_file.append([' ',' '])#('')
-            
+
             #initialize maxRangeXolotl list
             self.maxRangeXolotl.append(0.0)
 
+        #stage initial network File (INIT mode) OR restart files (RESTART mode)
+        if (self.driver['START_MODE']=='INIT'):
+            print('\t INIT mode: stage initial network file {}\n'.format(self.NETWORK_FILE))
+            self.services.stage_input_files(self.NETWORK_FILE)
+            print('\t \t ...initial network file staged succesfully {}\n')
 
-        #MAYBE THIS CAN ALSO BE WRITTEN MORE ELEGANTLY
-        if (self.driver['START_MODE']=='RESTART'):
+        elif (self.driver['START_MODE']=='RESTART'):
             restart_files = self.services.get_config_param('RESTART_FILES')
+            print('\t RESTART mode: copy restart files {} \n'.format(restart_files))
             restart_list = restart_files.split()
             for index in range(len(restart_list)):
                 filepath='../../restart_files/'+restart_list[index]
                 shutil.copyfile(filepath,restart_list[index])
-        
+            print('\t \t ...restart files staged succesfully')
+
         sys.stdout.flush()
         self.services.update_plasma_state()
 
@@ -383,6 +385,7 @@ driver['LOOP_TIME_STEP']))
 
         print ' '
         print('xolotl-ftridyn_driver: step \n')
+
 
         ftridyn = self.services.get_port('WORKER')
         xolotl = self.services.get_port('XWORKER')
@@ -476,7 +479,6 @@ driver['LOOP_TIME_STEP']))
             # B) RUN FTRIDYN
 
             print ' '
-            #print 'printing output of F-TRIDYN component to ', outFile
             for i in range(len(self.gitr['plasmaSpecies'])): #self.plasmaSpecies.iteritems():
                 prj=self.gitr['plasmaSpecies'][i]
                 maxDepth=[]
@@ -485,6 +487,7 @@ driver['LOOP_TIME_STEP']))
                     print('\t and not all angle weights are zero; max angleWeight is {}\n'.format(max(self.weightAngle[i])))
 
                     #component/method calls now include arguments (variables)
+
                     self.services.call(ftridyn, 'init', timeStamp, dTime=time, fPrj=prj, fTargetList=targetList, ftParameters=self.ftridyn , fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], ft_folder=self.FT_OUTPUT_FOLDER, input_file=self.ft_input_file[i], otherInFiles=[self.FT_SURFACE_FILE,self.ftx_lay_file[i]], energy_file_name=self.FT_energy_file_name[i], orig_energy_files_path=self.GITR_eadist_output_path[i], orig_energy_files_pattern=self.GITR_eadist_output_file[i], output_file=outFile)
 
                     self.services.call(ftridyn, 'step', timeStamp, ftParameters=self.ftridyn, fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], output_file=outFile)
@@ -506,21 +509,17 @@ driver['LOOP_TIME_STEP']))
                     ft_output_prj_file=self.ft_output_prj_file[i]
                     angleFolder=self.ftridyn['outputPath']+'/'+self.FT_OUTPUT_FOLDER+'/ANGLE'
 
-                    #print 'TEST: get max projectile range'
                     for j in range(len(self.angleIn[i])):
                         if (self.weightAngle[i][j] > 0.0):
                             filePrj=angleFolder+str(self.angleIn[i][j])+'/'+ft_output_prj_file
                             num_lines_prj = sum(1 for line in open(filePrj))
-                            #print 'TEST: number of lines in the prj file is ', num_lines_prj
                             if num_lines_prj == 0:
                                 print '\t WARNING: no ions were implanted at this angle (prj file empty)'
                             elif num_lines_prj == 1:
                                 depth, bla=numpy.loadtxt(filePrj, usecols = (2,3) , unpack=True)
-                                #print 'TEST: depth is ', depth
                                 maxDepth.append(depth)
                             elif num_lines_prj > 1:
                                 depth, bla=numpy.loadtxt(filePrj, usecols = (2,3) , unpack=True)
-                                #print 'TEST: depths are ', depth
                                 maxDepth.append(max(depth))
                     
                     if len(maxDepth)>0:
@@ -639,8 +638,10 @@ driver['LOOP_TIME_STEP']))
             combinedFile = open(self.FT_OUTPUT_PROFILE_TEMP, 'a')
             
             #tridyn.dat always in order: He, W, D, T --> maintain that here, regardless of order in plasmaSpecies
-            for prj in ['He', 'W', 'D', 'T']:
-                i=self.gitr['plasmaSpecies'].index(prj)
+            #for prj in ['He', 'W', 'D', 'T']:
+                #i=self.gitr['plasmaSpecies'].index(prj)
+            for i in range(len(self.gitr['plasmaSpecies'])):
+                prj=self.gitr['plasmaSpecies'][i]                
                 ft_output_profile_temp_prj=timeFolder+'/'+self.FT_OUTPUT_PROFILE_TEMP+'_'+prj
                 profile=open(ft_output_profile_temp_prj, "r")
                 tridynString=profile.read().rstrip('\n')
@@ -699,11 +700,12 @@ driver['LOOP_TIME_STEP']))
             print('\t and time-step = {} '.format( self.driver['LOOP_TIME_STEP']))
 
             if self.driverMode == 'INIT':
-                print('\t init mode: modify xolotl parameters that might change at every loop \n')
+                print('\t init mode: modify xolotl parameters that might change at every loop, and load networkFile file \n')                
             elif self.driverMode == 'RESTART':
                 #add (or replace) networkFile line to parameter file
-                print('\t restart mode: modify xolotl parameters that might change at every loop, including networkFile line \n')
-                self.xp.parameters['networkFile'] = self.XOLOTL_NETWORK_FILE
+                print('\t restart mode: modify xolotl parameters that might change at every loop, including networkFile \n')
+
+            self.xp.parameters['networkFile'] = self.XOLOTL_NETWORK_FILE
 
             #determine if he_conc true/false ; if true, add '-he_conc' to petsc arguments 
             if self.driver['XOLOTL_HE_CONC']=='Last':
@@ -732,13 +734,12 @@ driver['LOOP_TIME_STEP']))
                 
                 self.collapsedLoops+=1
                 print ' '
-                #print('printing output of Xolotl component to ', outFile)
 
                 #set a maximum number of tries
                 if self.collapsedLoops<=int(self.driver['MAX_COLLAPSE_LOOPS']):
 
-                    self.services.call(xolotl, 'init', timeStamp, dTime=time, xFtCoupling=self.driver['FTX_COUPLING'], xParameters=self.xp.parameters, output_file=outFile)
-                    self.services.call(xolotl, 'step', timeStamp, dTime=time, dZipOutput=self.driver['ZIP_XOLOTL_OUTPUT'], xHe_conc=self.petsc_heConc, xParameters=self.xp.parameters, output_file=outFile)
+                    self.services.call(xolotl, 'init', timeStamp, dTime=time, xParameters=self.xp.parameters, output_file=outFile) #, xFtCoupling=self.driver['FTX_COUPLING'])
+                    self.services.call(xolotl, 'step', timeStamp, dTime=time, xHe_conc=self.petsc_heConc, xParameters=self.xp.parameters, output_file=outFile, dZipOutput=self.driver['ZIP_XOLOTL_OUTPUT'])
 
                     sys.stdout.flush()
                     self.services.stage_plasma_state()
@@ -768,13 +769,17 @@ driver['LOOP_TIME_STEP']))
                     print('END IPS SIMULATION \n')
                     quit()
 
-
-            shutil.copyfile('last_TRIDYN.dat', 'last_TRIDYN_toBin.dat')
+            #UPDATE: Xolotl generates HDF5 file of TRIDYN, copied as 'last_TRIDYN_toBin.h5'
+            #thus no need to copy it; and binTRIDYN will transform it to text file, 'last_TRIDYN.dat' 
+            #shutil.copyfile('last_TRIDYN.dat', 'last_TRIDYN_toBin.dat')
             binTRIDYN.binTridyn()
             
             #store xolotls profile output for each loop (not plasma state)          
-            currentXolotlOutputFileToBin='last_TRIDYN_toBin_%f.dat' %time
-            shutil.copyfile('last_TRIDYN_toBin.dat', currentXolotlOutputFileToBin)
+            #UPDATE: 'toBin' is .h5 format instead of .dat
+            #currentXolotlOutputFileToBin='last_TRIDYN_toBin_%f.dat' %time
+            #shutil.copyfile('last_TRIDYN_toBin.dat', currentXolotlOutputFileToBin)
+            currentXolotlOutputFileToBin='last_TRIDYN_toBin_%f.h5' %time
+            shutil.copyfile('last_TRIDYN_toBin.h5', currentXolotlOutputFileToBin)
             currentXolotlOutputFile='last_TRIDYN_%f.dat' %time
             shutil.copyfile('last_TRIDYN.dat', currentXolotlOutputFile)
 
