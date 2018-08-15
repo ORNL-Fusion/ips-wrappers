@@ -26,6 +26,7 @@ class quasi_newton_driver(Component):
         print('quasi_newton_driver: Construct')
         Component.__init__(self, services, config)
         self.model_workers = []
+        self.history = []
 
 #-------------------------------------------------------------------------------
 #
@@ -171,6 +172,8 @@ class quasi_newton_driver(Component):
         self.gradient = numpy.empty(len(self.model_workers), dtype=float)
         self.delta_a = numpy.empty((min(len(self.e), len(self.model_workers)) + 1, len(self.model_workers)), dtype=float)
 
+        self.history.append({'Time' : timeStamp, 'Chi2' : self.chi2})
+
 #  Perform a quasi-newton minimization.
         while dchi2 > self.dchi2_tol:
             timeStamp += 1.0
@@ -180,8 +183,9 @@ class quasi_newton_driver(Component):
                 new_chi2 = numpy.dot(self.e, self.e)
                 dchi2 = self.chi2 - new_chi2
                 self.chi2 = new_chi2
+                self.history.append({'Time' : timeStamp, 'Chi2' : self.chi2, 'DChi2' : dchi2, 'Num SV' : self.k_use})
                 print('--------------------------------------------------------------------------------')
-                print('Step {} : chi^2 = {} : dchi^2 = {}'.format(timeStamp, self.chi2, dchi2))
+                print('Step {} : chi^2 = {} : dchi^2 = {} : Num SV = {}'.format(timeStamp, self.chi2, dchi2, self.k_use))
                 print('--------------------------------------------------------------------------------')
             else:
                 break
@@ -202,6 +206,24 @@ class quasi_newton_driver(Component):
 
         for worker in self.model_workers:
             self.services.wait_call_list(worker['wait'], True)
+
+        print('--------------------------------------------------------------------------------')
+        print('{:<4} : {:<12} : {:<12} : {:<6}'.format('Step', 'chi^2', 'dchi^2', 'Num SV'))
+        print('')
+        for step in self.history:
+            if "DChi2" in step:
+                print('{Time:>4.0f} : {Chi2:>12.5e} : {DChi2:>12.5e} : {Num SV:>6}'.format(**step))
+            else:
+                print('{Time:>4.0f} : {Chi2:>12.5e}'.format(**step))
+        print('--------------------------------------------------------------------------------')
+
+        correlation_matrix = numpy.linalg.inv(self.hessian)
+        print('{:<50} {:<12} {:<12}'.format('Parameter', 'Value', 'Sigma'))
+        print('')
+        for i, worker in enumerate(self.model_workers):
+            worker['sigma'] = correlation_matrix[i,i]*worker['vrnc']**2.0
+            print('{name:<50} {value:>12.5e} {sigma:>12.5e}'.format(**worker))
+        print('--------------------------------------------------------------------------------')
 
 #-------------------------------------------------------------------------------
 #
@@ -265,7 +287,7 @@ class quasi_newton_driver(Component):
     def try_step(self, timeStamp=0.0):
         print('quasi_newton_driver: try_step')
 
-        k_use = self.get_k_svd()
+        self.k_use = self.get_k_svd()
 
 #  Try different Levenberg-Marquardt step sizes.
         new_max = self.max_step
@@ -277,7 +299,7 @@ class quasi_newton_driver(Component):
         while True:
             for i, worker in enumerate(self.model_workers):
                 step_use.append(new_max - i*new_max/(2.0*len(self.model_workers)))
-                delta_try[i] = self.lm_step(k_use, step_use[i])
+                delta_try[i] = self.lm_step(step_use[i])
 
 #  Set new parameters.
                 keywords = {}
@@ -438,19 +460,19 @@ class quasi_newton_driver(Component):
 #  parameters for a Levenberg-Marquardt step.
 #
 #-------------------------------------------------------------------------------
-    def lm_step(self, k_use, step_size):
+    def lm_step(self, step_size):
         print('quasi_newton_driver: lm_step')
 
-        if step_size > 0.0 and self.delta_a_len[k_use] > step_size:
+        if step_size > 0.0 and self.delta_a_len[self.k_use] > step_size:
             ut_dot_e = numpy.matmul(self.e, self.j_svd_u)
         
 #  Find the L-M parameter lambda that corresponds to a step length of step_size.
-            _lambda = self.lm_get_lambda(k_use, step_size, ut_dot_e)
+            _lambda = self.lm_get_lambda(step_size, ut_dot_e)
         
 #  Find the step.
-            return numpy.matmul(ut_dot_e[0:k_use]*self.j_svd_w[0:k_use]/(self.j_svd_w[0:k_use]**2.0 + _lambda), self.j_svd_vt[0:k_use])
+            return numpy.matmul(ut_dot_e[0:self.k_use]*self.j_svd_w[0:self.k_use]/(self.j_svd_w[0:self.k_use]**2.0 + _lambda), self.j_svd_vt[0:self.k_use])
         else:
-            return self.delta_a[k_use]
+            return self.delta_a[self.k_use]
 
 #-------------------------------------------------------------------------------
 #
@@ -458,18 +480,18 @@ class quasi_newton_driver(Component):
 #  parameter lambda coresponding to the length of step_size.
 #
 #-------------------------------------------------------------------------------
-    def lm_get_lambda(self, k_use, step_size, ut_dot_e):
+    def lm_get_lambda(self, step_size, ut_dot_e):
         print('quasi_newton_driver: lm_get_lambda')
 
 #  Define a default value incase the root find fails. Note lambda is a python
 #  builtin add an underscore to avoid this.
-        _lambda = (self.j_svd_w[0]*self.delta_a_len[k_use]/step_size)**2.0
+        _lambda = (self.j_svd_w[0]*self.delta_a_len[self.k_use]/step_size)**2.0
         
-        f_sqrd = ut_dot_e[0:k_use]**2.0
+        f_sqrd = ut_dot_e[0:self.k_use]**2.0
         step_size_sqrd = step_size**2.0
 
 #  Define a lambda function for the root finder.
-        f = lambda x: numpy.sum(f_sqrd*(self.j_svd_w[0:k_use]/(self.j_svd_w[0:k_use]**2.0 + x))**2.0) - step_size_sqrd
+        f = lambda x: numpy.sum(f_sqrd*(self.j_svd_w[0:self.k_use]/(self.j_svd_w[0:self.k_use]**2.0 + x))**2.0) - step_size_sqrd
 
         f_a = f(0)
         if f_a > 0.0:
