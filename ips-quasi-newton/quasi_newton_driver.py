@@ -221,7 +221,7 @@ class quasi_newton_driver(Component):
         print('{:<50} {:<12} {:<12}'.format('Parameter', 'Value', 'Sigma'))
         print('')
         for i, worker in enumerate(self.model_workers):
-            worker['sigma'] = correlation_matrix[i,i]*worker['vrnc']**2.0
+            worker['sigma'] = math.sqrt(correlation_matrix[i,i]*worker['vrnc']**2.0)
             print('{name:<50} {value:>12.5e} {sigma:>12.5e}'.format(**worker))
         print('-------------------------------------------------------------------------------------------------')
 
