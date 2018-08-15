@@ -10,7 +10,7 @@
 from component import Component
 import os
 from omfit.classes.omfit_namelist import OMFITnamelist
-import zipfile
+from utilities import ZipState
 
 #-------------------------------------------------------------------------------
 #
@@ -31,95 +31,34 @@ class solps_iter(Component):
         print('solps_iter: init')
         
 #  Set the top of the SOLPS source tree as an environment variable.
-        os.environ['SOLPSTOP'] = self.services.get_config_param('SOLPSTOP')
+        if timeStamp = 0.0:
+            self.current_solps_state = services.get_config_param('CURRENT_SOLPS_STATE')
+            os.environ['SOLPSTOP'] = self.services.get_config_param('SOLPSTOP')
         
         self.services.stage_plasma_state()
         
-        zip_ref = zipfile.ZipFile(self.services.get_config_param('CURRENT_SOLPS_STATE'), 'r')
+        self.zip_ref = zipfile.ZipFile(self.current_solps_state, 'r')
         zip_ref.extractall()
-        zip_ref.close()
 
-#  Replace parameters in the plasma state.
-        transport_nl = OMFITnamelist('b2.transport.parameters')
-        numerics_nl = OMFITnamelist('b2.numerics.parameters')
-        neutrals_nl = OMFITnamelist('b2.neutrals.parameters')
-        boundary_nl = OMFITnamelist('b2.boundary.parameters')
-
-#  Dakota parameters use the following syntax. To pass a parameter to a
-#  component, Dakota parameters are prefixed with the name of the component
-#  followed by two underscores. To quickly identifiy the dakota parameters a
-#  dakota prefix followed by a single underscore is appended to the parameter.
-#
-#      component__dakota_param
-#
-#  At the component level, everything up to the two underscores is removed. For
-#  b2/eirene, there are multiple files. Files will be indicated by a two letter
-#  code followed by a single underscore:
-#
-#    tr      :  b2.transport.parameters
-#    nu      :  b2.numerics.parameters
-#    ne      :  b2.neutrals.parameters
-#    bo      :  b2.boundary.parameters
-#
-#  The namelist item is specified verbatium. For arrays, the array index is
-#  specifed in the same manner as an entry in the namelist input file would be.
-#
-#  EXAMPLE:
-#
-#    name_of_component__dakota_tr_parm_hci(1)
-#
-        for key, value in self.__dict__.iteritems() :
-            if 'dakota_' in key :
-                extra, key = key.split('_',1)
-                file, key = key.split('_',1)
-
-                if '(' in key :
-                    key, indices = key.split('(')
-                    indices, extra = indices.split(')')
-                    indices = [[int(i) - 1] for i in indices.split(',')]
-
-                    if 'tr' in file :
-                        transport_nl['transport'][key][indices] = float(value)
-
-                    if 'nu' in file :
-                        numerics_nl['numerics'][key][indices] = float(value)
-
-                    if 'ne' in file :
-                        neutrals_nl['NEUTRALS'][key][indices] = float(value)
-
-                    if 'bo' in file :
-                        boundary_nl['boundary'][key][indices] = float(value)
-                else :
-                    if 'tr' in file :
-                        transport_nl['transport'][key] = float(value)
-                    
-                    if 'nu' in file :
-                        numerics_nl['numerics'][key] = float(value)
-                    
-                    if 'ne' in file :
-                        neutrals_nl['NEUTRALS'][key] = float(value)
-                    
-                    if 'bo' in file :
-                        boundary_nl['boundary'][key] = float(value)
-
-        transport_nl.save()
-        numerics_nl.save()
-        neutrals_nl.save()
-        boundary_nl.save()
+#  Rename state file to inital state if it exists. Then delete the state file.
 
 #  Create eirene symbolic links.
-        eirene_database_path = self.services.get_config_param('EIRENE_DATABASE_PATH')
-        os.symlink(os.path.join(eirene_database_path, 'graphite_ext.dat'), 'graphite_ext.dat')
-        os.symlink(os.path.join(eirene_database_path, 'mo_ext.dat'), 'mo_ext.dat')
-        os.symlink(os.path.join(eirene_database_path, 'AMJUEL'), 'AMJUEL')
-        os.symlink(os.path.join(eirene_database_path, 'H2VIBR'), 'H2VIBR')
-        os.symlink(os.path.join(eirene_database_path, 'HYDHEL'), 'HYDHEL')
-        os.symlink(os.path.join(eirene_database_path, 'METHANE'), 'METHANE')
-        os.symlink(os.path.join(eirene_database_path, 'PHOTON'), 'PHOTON')
-        os.symlink(os.path.join(eirene_database_path, 'Surfacedata', 'SPUTTER'), 'SPUTTER')
-        os.symlink(os.path.join(eirene_database_path, 'Surfacedata', 'TRIM', 'trim.dat'), 'fort.21')
-        os.symlink(os.path.join(eirene_database_path, 'Surfacedata', 'TRIM', 'marlow.dat'), 'fort.22')
-    
+        if timeStamp = 0.0:
+            eirene_database_path = self.services.get_config_param('EIRENE_DATABASE_PATH')
+            os.symlink(os.path.join(eirene_database_path, 'graphite_ext.dat'), 'graphite_ext.dat')
+            os.symlink(os.path.join(eirene_database_path, 'mo_ext.dat'), 'mo_ext.dat')
+            os.symlink(os.path.join(eirene_database_path, 'AMJUEL'), 'AMJUEL')
+            os.symlink(os.path.join(eirene_database_path, 'H2VIBR'), 'H2VIBR')
+            os.symlink(os.path.join(eirene_database_path, 'HYDHEL'), 'HYDHEL')
+            os.symlink(os.path.join(eirene_database_path, 'METHANE'), 'METHANE')
+            os.symlink(os.path.join(eirene_database_path, 'PHOTON'), 'PHOTON')
+            os.symlink(os.path.join(eirene_database_path, 'Surfacedata', 'SPUTTER'), 'SPUTTER')
+            os.symlink(os.path.join(eirene_database_path, 'Surfacedata', 'TRIM', 'trim.dat'), 'fort.21')
+            os.symlink(os.path.join(eirene_database_path, 'Surfacedata', 'TRIM', 'marlow.dat'), 'fort.22')
+
+#  Update parameters in the namelist.
+        self.set_namelists(**keywords)
+
 #-------------------------------------------------------------------------------
 #
 #  SOLPS-ITER step Component step method. This runs b2.eirene and computes the
@@ -129,13 +68,26 @@ class solps_iter(Component):
     def step(self, timeStamp=0.0, **keywords):
         print('solps_iter: step')
 
-        b2_eirene_task_id = self.services.launch_task(self.NPROC,
-                                                      self.services.get_working_dir(),
-                                                      self.B2_EIRENE_EXE,
-                                                      logfile = 'b2.eirene.log')
+        flags = self.zip_ref.get_state()
 
-        if self.services.wait_task(b2_eirene_task_id) :
-            self.services.error('solps_iter: step failed')
+        if 'state' in flags and flags['state'] == 'needs_update':
+        
+            b2_eirene_task_id = self.services.launch_task(self.NPROC,
+                                                          self.services.get_working_dir(),
+                                                          self.B2_EIRENE_EXE,
+                                                          logfile = 'b2.eirene.log')
+
+#  Update flags.
+            self.zip_ref.set_state(state='updated')
+
+#  Wait for SOLPS to finish.
+            if self.services.wait_task(b2_eirene_task_id) :
+                self.services.error('solps_iter: step failed')
+
+
+
+        else:
+            self.zip_ref.set_state(state='unchanged')
 
         if 'task' in keywords and 'reconstruct' in keywords['task'] :
             solps_signals_task_id = self.services.launch_task(self.NPROC,
@@ -158,4 +110,53 @@ class solps_iter(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-            print('solps_iter: finalize')
+        print('solps_iter: finalize')
+                     
+#-------------------------------------------------------------------------------
+#
+#  SOLPS-ITER Component set_namelists method. This sets the namelist input files
+#  from the keywords.
+#
+#-------------------------------------------------------------------------------
+    def set_namelists(self, **keywords):
+#  Replace parameters in the plasma state.
+        transport_nl = OMFITnamelist('b2.transport.parameters')
+        numerics_nl = OMFITnamelist('b2.numerics.parameters')
+        neutrals_nl = OMFITnamelist('b2.neutrals.parameters')
+        boundary_nl = OMFITnamelist('b2.boundary.parameters')
+        
+        if len(keywords) > 0:
+            self.zip_ref.set_state(state='needs_update')
+
+#  Keywords will contain the following syntax.
+#
+#      file__param
+#
+#  The file is a two letter indicating which namelist input to update.
+#
+#    tr : b2.transport.parameters
+#    nu : b2.numerics.parameters
+#    ne : b2.neutrals.parameters
+#    bo : b2.boundary.parameters
+#
+#  The namelist item is specified verbatium. For arrays, the array index is
+#  specifed in the same manner as an entry in the namelist input file would be.
+#
+#  EXAMPLE:
+#
+#    name_of_component__dakota_tr_parm_hci(1)
+#
+            for key, value in keywords.iteritems():
+                if 'tr' in key:
+                    transport_nl['transport'][key.replace('tr__','',1)] = value
+                if 'nu' in key:
+                    transport_nl['numerics'][key.replace('nu__','',1)] = value
+                if 'ne' in key:
+                    transport_nl['NEUTRALS'][key.replace('ne__','',1)] = value
+                if 'bo' in file :
+                    transport_nl['boundary'][key.replace('bo__','',1)] = value
+
+        transport_nl.save()
+        numerics_nl.save()
+        neutrals_nl.save()
+        boundary_nl.save()
