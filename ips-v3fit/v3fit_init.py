@@ -8,7 +8,8 @@
 #-------------------------------------------------------------------------------
 
 from component import Component
-import shutil
+from utilities import ZipState
+import os
 
 #-------------------------------------------------------------------------------
 #
@@ -30,76 +31,65 @@ class v3fit_init(Component):
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
         print('v3fit_init: init')
-    
+
+#  Get config filenames.
+        current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
+        current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
+        current_siesta_namelist = self.services.get_config_param('SIESTA_NAMELIST_INPUT')
+        current_siesta_state = self.services.get_config_param('CURRENT_SIESTA_STATE')
+        current_v3fit_namelist = self.services.get_config_param('V3FIT_NAMELIST_INPUT')
+        current_v3fit_state = self.services.get_config_param('CURRENT_V3FIT_STATE')
+
+#  Stage input files. Remove an old namelist input if it exists.
+        if os.path.exists(current_v3fit_state):
+            os.remove(current_v3fit_state)
+        if os.path.exists(current_v3fit_namelist):
+            os.remove(current_v3fit_namelist)
+        if os.path.exists(current_siesta_state):
+            os.remove(current_siesta_state)
+        if os.path.exists(current_siesta_namelist):
+            os.remove(current_siesta_namelist)
+        if os.path.exists(current_vmec_state):
+            os.remove(current_vmec_state)
+        if os.path.exists(current_vmec_namelist):
+            os.remove(current_vmec_namelist)
         self.services.stage_input_files(self.INPUT_FILES)
 
-        current_v3fit_namelist = self.services.get_config_param('CURRENT_V3FIT_NAMELIST')
-        shutil.copyfile(self.INPUT_FILES, current_v3fit_namelist)
+#  All v3fit runs require a vmec state at the minimum. Create a vmec state. If
+#  the vmec namelist file exists add the namelist input file.
+        with ZipState.ZipState(current_vmec_state, 'a') as zip_ref:
+            if os.path.exists(current_vmec_namelist):
+                zip_ref.write(current_vmec_namelist)
+                zip_ref.set_state(state='needs_update')
 
-#  Create a dummy result file so the plasma state has something to update to.
-        open(self.services.get_config_param('CURRENT_V3FIT_RESULT_FILE'), 'a').close()
+#  A siesta state is optional. If a siesta state or namelist exist, create a
+#  siesta state. If the siesta namelist or vmec state files exists add
+#  them to the siesta state.
+        if os.path.exists(current_siesta_state) or os.path.exists(current_siesta_namelist):
+            with ZipState.ZipState(current_siesta_state, 'a') as zip_ref:
+                if os.path.exists(current_siesta_namelist):
+                    zip_ref.write(current_siesta_namelist)
+                    zip_ref.set_state(state='needs_update')
 
-#  Need to set and reset some values in the v3fit namelist input file. Primarily
-#  the vmec namelist input needs to be reset to the to the internal name and the
-#  v3fit task must be set. Optionally a wout file may be specified.
+#  The vmec state will be merged with any existing vmec state in the siesta
+#  state.
+                zip_ref.write(current_vmec_state)
 
-#  All V3FIT namelist input files need a VMEC file name.
-        current_vmec_namelist = self.services.get_config_param('CURRENT_VMEC_NAMELIST')
-        current_vmec_wout_file = self.services.get_config_param('CURRENT_VMEC_WOUT_FILE')
-        
-#  Start by reading in all the lines and closing the file.
-        v3fit_namelist = open(current_v3fit_namelist, 'r')
-        v3fit_namelist_lines = v3fit_namelist.readlines()
-        v3fit_namelist.close()
-        
-        v3fit_task_set = False
-        v3fit_vmec_nli_set = False
-        v3fit_vmec_wout_set = False
-        v3fit_siesta_nli_set = False
-        v3fit_siesta_restart_set = False
-        
-#  Reopen the file for writing.
-        v3fit_namelist = open(current_v3fit_namelist, 'w')
-        for line in v3fit_namelist_lines:
-            if ('my_task' in line):
-                v3fit_namelist.write('my_task = \'%s\'\n'%(self.V3FIT_TASK))
-                v3fit_task_set = True
-            if ('model_eq_type' in line):
-                v3fit_namelist.write('model_eq_type = \'%s\'\n'%(self.MODEL_EQ_TYPE))
-                v3fit_model_set = True
-            elif ('vmec_nli_filename' in line):
-                v3fit_namelist.write('vmec_nli_filename = \'%s\'\n'%(current_vmec_namelist))
-                v3fit_vmec_nli_set = True
-            elif ('vmec_wout_input' in line):
-                v3fit_namelist.write('vmec_wout_input = \'%s\'\n'%(current_vmec_wout_file))
-                v3fit_vmec_wout_set = True
-            elif (self.MODEL_EQ_TYPE == 'siesta' and 'siesta_nli_filename' in line):
-                v3fit_namelist.write('siesta_nli_filename = \'%s\'\n'%(self.services.get_config_param('CURRENT_SIESTA_NAMELIST')))
-                v3fit_siesta_nli_set = True
-            elif (self.MODEL_EQ_TYPE == 'siesta' and 'siesta_restart_filename' in line):
-                v3fit_namelist.write('siesta_restart_filename = \'%s\'\n'%(self.services.get_config_param('CURRENT_SIESTA_RESTART_FILE')))
-                v3fit_siesta_restart_set = True
+#  Create plasma state from files. Input files can either be a new plasma state,
+#  namelist input file or both. If both files were staged, replace the namelist
+#  input file. If the namelist file is present flag the plasma state as needing
+#  to be updated.
+        with ZipState.ZipState(current_v3fit_state, 'a') as zip_ref:
+            if os.path.exists(current_v3fit_namelist):
+                zip_ref.write(current_v3fit_namelist)
+                zip_ref.set_state(state='needs_update')
 
-#  The v3fit namelist input files contains strings that may have path separators
-#  in them. Check for an equal sign to avoid these cases.
-            elif (('/' in line) and ('=' not in line)):
-                if (not v3fit_task_set):
-                    v3fit_namelist.write('my_task = \'%s\'\n'%(self.V3FIT_TASK))
-                if (not v3fit_model_set):
-                    v3fit_namelist.write('model_eq_type = \'%s\'\n'%(self.MODEL_EQ_TYPE))
-                if (not v3fit_vmec_nli_set):
-                    v3fit_namelist.write('vmec_nli_filename = \'%s\'\n'%(current_vmec_namelist))
-                if (not v3fit_vmec_wout_set):
-                    v3fit_namelist.write('vmec_wout_input = \'%s\'\n'%(self.current_vmec_wout_file))
-                if (self.MODEL_EQ_TYPE == 'siesta' and not v3fit_siesta_nli_set):
-                    v3fit_namelist.write('siesta_nli_filename = \'%s\'\n'%(self.services.get_config_param('CURRENT_SIESTA_NAMELIST')))
-                if (self.MODEL_EQ_TYPE == 'siesta' and not v3fit_siesta_restart_set):
-                    v3fit_namelist.write('siesta_restart_filename = \'%s\'\n'%(self.services.get_config_param('CURRENT_SIESTA_RESTART_FILE')))
-                v3fit_namelist.write('/\n')
+#  If a siesta state exists at this point add it to the archive. Otherwise add
+#  the vmec state.
+            if os.path.exists(current_siesta_state):
+                zip_ref.write(current_siesta_state)
             else:
-                v3fit_namelist.write(line)
-
-        v3fit_namelist.close()
+                zip_ref.write(current_vmec_state)
 
         self.services.update_plasma_state()
 

@@ -1,0 +1,43 @@
+INTRODUCTION
+
+
+This example test case run SOLPS-ITER using ips-wrappers. This wrapper is set 
+up to operate SOLPS in any arbitrary directory. That is it does not require to
+be run from inside the SOLPS install.
+
+
+SETUP
+
+To run this case the platform file included must be either modified to match the
+parameters of the host machine, an existing platform file must be modified or 
+environment variables for B2-Eirene install location must be set.
+
+In all cases the following variables must be set:
+
+IPS_SOLPS_COMP_PATH = /path/to/these/ips-wrappers/
+IPS_B2_EIRENE_INSTALL_PATH = /path/to/b2-eirene/executable
+IPS_B2_EIRENE_INSTALL_NAME = name.of.the.b2-eirene.executable
+
+
+If modifying the existing platform.conf file the following variables should be 
+modified if necessary:
+
+IPS_PATH = /path/to/ips/framework/install
+
+The parallel environment and provenance variables must also be set to match the 
+current host environment.
+
+
+The ips.solps-iter.config must be modified to set paths for the following 
+variables:
+
+SOLPSTOP = /path/to/base/directory/of/solps-iter
+EIRENE_DATABASE_PATH = /path/to/eirene/database
+INPUT_DIR = /path/to/inputfiles
+
+
+RUNNING
+
+To run this example call ips with
+
+ips.py --simulation=ips.solps-iter.config --platform=platform.conf

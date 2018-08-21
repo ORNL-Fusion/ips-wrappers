@@ -8,7 +8,8 @@
 #-------------------------------------------------------------------------------
 
 from component import Component
-import shutil
+from utilities import ZipState
+import os
 
 #-------------------------------------------------------------------------------
 #
@@ -22,22 +23,34 @@ class vmec_init(Component):
 
 #-------------------------------------------------------------------------------
 #
-#  VMEC init Component init method. This method prepairs the namelist input
-#  file and creates a dummy out put file. This allows staging the plasma state
-#  files.
+#  VMEC init Component init method. This method prepairs the plasma state. Input
+#  files can either be a new namelist input, a new plasma state, or both.
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
         print('vmec_init: init')
 
+#  Get config filenames.
+        current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
+        current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
+        
+#  Stage input files. Remove old namelist input if it exists.
+        if os.path.exists(current_vmec_namelist):
+            os.remove(current_vmec_namelist)
+        if os.path.exists(current_vmec_state):
+            os.remove(current_vmec_state)
+        
         self.services.stage_input_files(self.INPUT_FILES)
         
-        current_vmec_namelist = self.services.get_config_param('CURRENT_VMEC_NAMELIST')
-        shutil.copyfile(self.INPUT_FILES, current_vmec_namelist)
-        
-#  Create a dummy wout file so the plasma state has something to update to.
-        open(self.services.get_config_param('CURRENT_VMEC_WOUT_FILE'), 'a').close()
-        
+#  Create plasma state from files. Input files can either be a new plasma state,
+#  namelist input file or both. If both file were staged, replace the namelist
+#  input file. If the namelist file is present flag the plasma state as needing
+#  to be updated.
+        with ZipState.ZipState(current_vmec_state, 'a') as zip_ref:
+            if os.path.exists(current_vmec_namelist):
+                zip_ref.write(current_vmec_namelist)
+                zip_ref.set_state(state='needs_update')
+                    
         self.services.update_plasma_state()
 
 #-------------------------------------------------------------------------------
