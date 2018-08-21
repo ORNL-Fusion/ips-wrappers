@@ -90,7 +90,7 @@ class ftridynWorker(Component):
 	ftMpiFile.close()	
         task_id = self.services.launch_task(self.NPROC,
                                             self.services.get_working_dir(),
-                                            'python -m mpi4py',self.FTMPI,#'--dictionary=ipsFTmpi.pkl',
+                                            'python',self.FTMPI,task_ppn=self.TASK_PPN,#'--dictionary=ipsFTmpi.pkl',
                                             logfile='ftmpi.log') #,ppn=1)
         
 	#monitor task until complete

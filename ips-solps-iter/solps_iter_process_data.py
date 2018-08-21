@@ -264,18 +264,18 @@ class solps_iter_data_worker(Component):
 	        vp[i+2,:,:] = np.reshape(dak[:,offset+2*nIonSpecies+i],(dict['numz'],dict['numr']))
 	        vz[i+2,:,:] = np.reshape(dak[:,offset+3*nIonSpecies+i],(dict['numz'],dict['numr']))
 	print "finished ionspec loop"    
-        plt.close()
-        plt.figure(1,figsize=(10, 6), dpi=2000)
-        plotsize = math.ceil(nIonSpecies**(0.5))
-        for i in range(nIonSpecies):
-            plt.subplot(plotsize,plotsize,i+1)
-        #plot2dGeom('../2d/input/iter2dRefinedOuterTarget.cfg')
-        #plt.title("ITER W Impurity Density")
-        #plt.xlabel("r [m]")
-        #plt.ylabel("z [m]")
-            plt.pcolor(rdak,zdak,np.reshape(ni[i,:,:],(dict['numz'],dict['numr'])))
-            plt.colorbar(orientation='vertical')
-        plt.savefig('image1.png')
+        #plt.close()
+        #plt.figure(1,figsize=(10, 6), dpi=2000)
+        #plotsize = math.ceil(nIonSpecies**(0.5))
+        #for i in range(nIonSpecies):
+        #    plt.subplot(plotsize,plotsize,i+1)
+        ##plot2dGeom('../2d/input/iter2dRefinedOuterTarget.cfg')
+        ##plt.title("ITER W Impurity Density")
+        ##plt.xlabel("r [m]")
+        ##plt.ylabel("z [m]")
+        #    plt.pcolor(rdak,zdak,np.reshape(ni[i,:,:],(dict['numz'],dict['numr'])))
+        #    plt.colorbar(orientation='vertical')
+        #plt.savefig('image1.png')
 	for i in range(nIonSpecies):
 	    if zamin[i] > 0.0:
 	        #print niTotal.shape
