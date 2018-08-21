@@ -13,7 +13,7 @@ This version combines several previous initializer routines and extends them.  T
 
 INIT_MODE = touch_only
 This mode only does a touch on all of the files listed as plasma state files so the 
-framework will have a complete set.  It does not actually put data in the plasma state file.
+framework will have a complete set.  It does not actually put data in the plasma state files.
 
 INIT_MODE = minimal
 This is exactly the same as the previous minimal_state_init.py. It produces a CURRENT_STATE 
@@ -47,6 +47,9 @@ generic_ps_file_init.f90 to interact with the Plasma State. The fortran code is 
 in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true.
 
 """
+# Version (Batchelor 7/29/2018)
+# Eliminated all reference to NEXT_STATE
+
 # Working notes for generic_ps_init.py 3/5/2018 (Batchelor)
 # Added code to preserve the initial plasma state file generated during the init phase.
 # This is done because the call to services.checkpoint_components(port_id_list, t) in the
@@ -365,32 +368,10 @@ class generic_ps_init (Component):
             shutil.copyfile(cur_state_file, 'initial_PLASMA_STATE.nc')
         except Exception, e:
             print 'Copy to initial_PLASMA_STATE file failed ', e
-              
+
         # For benefit of framework file handling generate dummy dakota.out file
         subprocess.call(['touch', 'dakota.out'])
-
-        # Nobody is using PRIOR_STATE and NEXT_STATE anymore.  But at least for now keep
-        # the capability to have them.
-        # See if PRIOR_STATE is defined as a config parameter.  If it is see if it 
-        # appears in the list of plasma state file.  If it is try to copy the current
-        # plasma state file to it.  Same story for NEXT_STATE.
-        
-        prior_state_file = self.get_config_param(services, 'PRIOR_STATE', optional=True)
-        if prior_state_file != None:
-            if prior_state_file in ps_file_list:        
-                try:
-                    shutil.copyfile(cur_state_file, prior_state_file)
-                except Exception, e:
-                    print 'Copy to PRIOR_STATE file failed ', e
-
-        next_state_file = self.get_config_param(services, 'NEXT_STATE', optional=True)
-        if next_state_file != None:
-            if next_state_file in ps_file_list:     
-                try:
-                    shutil.copyfile(cur_state_file, next_state_file)
-                except Exception, e:
-                    print 'Copy to NEXT_STATE file failed ', e
-
+                      
 # Update plasma state
         try:
             services.update_plasma_state()
@@ -443,7 +424,7 @@ class generic_ps_init (Component):
             print param_name, ' = ', value
         except Exception:
             if optional:
-                print 'config parameter ', param_name, ' not found'
+                print 'optional config parameter ', param_name, ' not found'
                 value = None
             else:
                 message = 'required config parameter ', param_name, ' not found'
