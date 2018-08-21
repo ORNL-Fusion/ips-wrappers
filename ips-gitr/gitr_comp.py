@@ -21,8 +21,12 @@ class gitr_comp(Component):
     def step(self, timeStamp=0.0):
         print 'Hello from gitr_comp'
         self.services.stage_plasma_state()
-	if os.path.exists('ftridyn.nc'):
-            shutil.copyfile('ftridyn.nc','input/ftridyn.nc')
+	if os.path.exists('bField.nc'):
+            shutil.copyfile('bField.nc','input/bField.nc')
+	if os.path.exists('ftridynSelf.nc'):
+            shutil.copyfile('ftridynSelf.nc','input/ftridynSelf.nc')
+	if os.path.exists('profiles.nc'):
+            shutil.copyfile('profiles.nc','input/profiles.nc')
         task_id = self.services.launch_task(self.NPROC,
                                             self.services.get_working_dir(),
                                             self.GITR_EXE,task_ppn=self.TASK_PPN,

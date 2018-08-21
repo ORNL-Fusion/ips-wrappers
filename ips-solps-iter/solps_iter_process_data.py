@@ -205,16 +205,27 @@ class solps_iter_data_worker(Component):
 	zdak = np.unique(dak[:,1])
 	te = np.reshape(dak[:,2],(dict['numz'],dict['numr']))
 	te[te == -1]=0
+	print('te shape', te.shape)
+	gradients = np.gradient(np.reshape(te,(dict['numz'],dict['numr'])),zdak,rdak)
+	gradTeZ = gradients[0]
+	gradTeR = gradients[1]
         plt.close()
         plt.pcolor(rdak,zdak,np.reshape(te,(dict['numz'],dict['numr'])))
         plt.colorbar(orientation='vertical')
         plt.savefig('te.png')
+        plt.close()
+        plt.pcolor(rdak,zdak,gradTeZ)
+        plt.colorbar(orientation='vertical')
+        plt.savefig('tez.png')
 	#plt.pcolor(rdak,zdak,field1)
 	#plt.savefig('field1.png')
 	ne = np.reshape(dak[:,3],(dict['numz'],dict['numr']))
 	ne[ne == -1]=0
 	ti = np.reshape(dak[:,4],(dict['numz'],dict['numr']))
 	ti[ti == -1]=0
+	gradients = np.gradient(np.reshape(ti,(dict['numz'],dict['numr'])),zdak,rdak)
+	gradTiZ = gradients[0]
+	gradTiR = gradients[1]
 	ni = np.zeros((nIonSpecies,dict['numz'],dict['numr']))
 	vr = np.zeros((nIonSpecies,dict['numz'],dict['numr']))
 	vp = np.zeros((nIonSpecies,dict['numz'],dict['numr']))
@@ -340,7 +351,14 @@ class solps_iter_data_worker(Component):
 	vpp = rootgrp.createVariable("vp","f8",("nZ","nR"))
 	pott = rootgrp.createVariable("pot","f8",("nZ","nR"))
 	Err = rootgrp.createVariable("Er","f8",("nZ","nR"))
+	Ett = rootgrp.createVariable("Et","f8",("nZ","nR"))
 	Ezz = rootgrp.createVariable("Ez","f8",("nZ","nR"))
+	teer = rootgrp.createVariable("gradTeR","f8",("nZ","nR"))
+	teez = rootgrp.createVariable("gradTeZ","f8",("nZ","nR"))
+	teey = rootgrp.createVariable("gradTeY","f8",("nZ","nR"))
+	tiir = rootgrp.createVariable("gradTiR","f8",("nZ","nR"))
+	tiiz = rootgrp.createVariable("gradTiZ","f8",("nZ","nR"))
+	tiiy = rootgrp.createVariable("gradTiY","f8",("nZ","nR"))
 	tee[:] = te
 	nee[:] = ne
 	tii[:] = ti
@@ -352,7 +370,14 @@ class solps_iter_data_worker(Component):
 	vzz[:] = vzTotal
 	pott[:] = pot
 	Err[:] = Er
+	Ett[:] = 0*Er
 	Ezz[:] = Ez
+	teer[:] = gradTeR
+	teey[:] = 0*gradTeR
+	teez[:] = gradTeZ
+	tiir[:] = gradTiR
+	tiiy[:] = 0*gradTiR
+	tiiz[:] = gradTiZ
 	rootgrp.close()
         self.services.update_plasma_state()        
         return
