@@ -1,4 +1,8 @@
 #! /usr/bin/env python
+
+# Version 10.4 (Batchelor 7/29/2018)
+# Eliminated all reference to NEXT_STATE
+
 # Version 10.3 (Batchelor 4/25/2017)
 # Added capabiity to terminate simulation after INIT phase based on optional config 
 # parameter INIT_ONLY == True.
@@ -19,7 +23,7 @@
 # prior plasma state that happens in pre_step_logic() into a try/except structure.  This
 # way it's not necessary to carry a prior state if it's not needed.
 
-# Version 9 (Batchelor 3/9/2011)
+# Version 9 (Batchelor 3/9/2011) N.B. Gone as of version 10.4
 # Eliminates copying of NEXT_STATE to CURRENT_STATE in the pres_tep_logic function
 # This copy clobbers plasma state merges of partial states.  It was already 
 # eliminated from the concurrent_driver.py.  Components are free to still write
@@ -253,33 +257,6 @@ class generic_driver(Component):
         services.stage_plasma_state()
         cur_state_file = services.get_config_param('CURRENT_STATE')
 
-        # Nobody is using PRIOR_STATE and NEXT_STATE anymore.  But at least for now keep
-        # the capability to have them.
-        # See if PRIOR_STATE is defined as a config parameter.  If it is see if it 
-        # appears in the list of plasma state file.  If it is try to copy the current
-        # plasma state file to it.  Same story for NEXT_STATE.
-        
-        ps_file_list = self.get_config_param(services, 'PLASMA_STATE_FILES').split(' ')
-
-        prior_state_file = self.get_config_param(services, 'PRIOR_STATE', optional=True)
-        if prior_state_file != None:
-            if prior_state_file in ps_file_list:        
-                try:
-                    shutil.copyfile(cur_state_file, prior_state_file)
-                except Exception, e:
-                    print 'Copy to PRIOR_STATE file failed ', e
-            else: prior_state_file = None
-                
-
-        next_state_file = self.get_config_param(services, 'NEXT_STATE', optional=True)
-        if next_state_file != None:
-            if next_state_file in ps_file_list:     
-                try:
-                    shutil.copyfile(cur_state_file, next_state_file)
-                except Exception, e:
-                    print 'Copy to NEXT_STATE file failed ', e
-            else: next_state_file = None
-
        # Get Portal RUNID and save to a file
         run_id = self.get_config_param(services,'PORTAL_RUNID')
         sym_root = self.get_config_param(services,'SIM_ROOT')
@@ -314,7 +291,7 @@ class generic_driver(Component):
 
         # call pre_step_logic
             services.stage_plasma_state()
-            self.pre_step_logic(float(t), next_state_file)
+            self.pre_step_logic(float(t))
             services.update_plasma_state()
             print (' ')
 
@@ -429,21 +406,9 @@ class generic_driver(Component):
     
     
     # Pre Step Logic
-    def pre_step_logic(self, timeStamp, next_state_file):
+    def pre_step_logic(self, timeStamp):
 
         cur_state_file = self.services.get_config_param('CURRENT_STATE')
-
-      #  Copy data from next plasma state (if there is one) to current plasma state
-#         try:
-#             next_state_file = services.get_config_param('NEXT_STATE')
-#             shutil.copyfile(next_state_file, cur_state_file)
-#         except Exception, e:
-#             pass
-        if next_state_file != None:
-            try:
-                shutil.copyfile(cur_state_file, next_state_file)
-            except Exception, e:
-                print 'Copy to NEXT_STATE file failed ', e
 
       # Update time stamps
 
@@ -459,13 +424,6 @@ class generic_driver(Component):
             print'generic_driver pre_step_logic: power_ic = ', power_ic
 
         ps.close()
-        
-    # Copy current plasma state to prior state if there is one
-        try:
-            prior_state_file = self.services.get_config_param('PRIOR_STATE')
-            shutil.copyfile(cur_state_file, prior_state_file)
-        except Exception, e:
-            pass       
         
         print'generic_driver pre_step_logic: timeStamp = ', timeStamp
         
@@ -485,7 +443,7 @@ class generic_driver(Component):
             print param_name, ' = ', value
         except Exception :
             if optional: 
-                print 'config parameter ', param_name, ' not found'
+                print 'optional config parameter ', param_name, ' not found'
                 value = None
             else:
                 message = 'required config parameter ', param_name, ' not found'
