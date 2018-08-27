@@ -23,6 +23,7 @@ class gitr_comp(Component):
     def step(self, timeStamp=0.0):
         print 'Hello from gitr_comp'
         self.services.stage_plasma_state()
+        locations_rmrs = [float(numeric_string) for numeric_string in self.LOCATIONS_RMRS.split()]
 	if os.path.exists('bField.nc'):
             shutil.copyfile('bField.nc','input/bField.nc')
 	if os.path.exists('ftridynSelf.nc'):
@@ -31,7 +32,7 @@ class gitr_comp(Component):
             shutil.copyfile('profiles.nc','input/profiles.nc')
         hpic.plot_hpic_ieadDavide(solps_path=str(self.HPIC_SOLPS_FILE),HpicDataFolder=str(self.HPIC_DATA_DIR))
         hpic.computeSputtYld()
-        bgFlux,flux_fracs = hpic.printBackgroundDist()
+        bgFlux,flux_fracs = hpic.printBackgroundDist(rmrsPoints=locations_rmrs)
         fluxPerParticle = gitrParticleSource.particleSource(geomFile=str(self.GEOM_FILE),nParticles=int(self.NP)) 
 	if os.path.exists('particleSource.nc'):
             shutil.copyfile('particleSource.nc','input/particleSource.nc')
@@ -45,7 +46,7 @@ class gitr_comp(Component):
         
         #gitr.piscesProcessing(path=self.BASE_DIR)
 	#gitr.iter2dProcessing()
-	nLocations = gitr.iter3dProcessingQ4(nParticles=int(self.NP),totalParticleRate=fluxPerParticle,path = '',locRmRs=[-0.1,0.02,0.09,0.2],flux_fracs =flux_fracs,locWidth = 0.02)
+	nLocations = gitr.iter3dProcessingQ4(nParticles=int(self.NP),totalParticleRate=fluxPerParticle,path = '',locRmRs=locations_rmrs,flux_fracs =flux_fracs,locWidth = 0.02)
         self.services.update_plasma_state()         
         for i in range(nLocations):
             shutil.copyfile('gitrOut'+str(i)+'.txt',self.BASE_DIR+'/gitrOut'+str(i)+'.txt')
