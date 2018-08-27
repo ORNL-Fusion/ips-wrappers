@@ -172,7 +172,7 @@ class parent_driver(Component):
         for child_comp, child in self.child_components.items():
             i=int(filter(str.isdigit, child_comp))
             print 'index of ', child_comp, ' is ', i
-            sedOutFile=self.SUBMIT_DIR+'/gitrOut_'+str(i)+'.txt'
+            sedOutFile=self.SUBMIT_DIR+'/gitrOut'+str(i)+'.txt'
             print 'copying gitr file from ', sedOutFile, 'to ', self.child_components[child_comp]['INPUT_DIR']+'/gitrOut.txt'
             shutil.copyfile(sedOutFile,self.child_components[child_comp]['INPUT_DIR']+'/gitrOut.txt')
 
