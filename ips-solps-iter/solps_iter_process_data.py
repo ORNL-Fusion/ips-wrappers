@@ -206,9 +206,14 @@ class solps_iter_data_worker(Component):
 	te = np.reshape(dak[:,2],(dict['numz'],dict['numr']))
 	te[te == -1]=0
 	print('te shape', te.shape)
-	gradients = np.gradient(np.reshape(te,(dict['numz'],dict['numr'])),zdak,rdak)
-	gradTeZ = gradients[0]
-	gradTeR = gradients[1]
+        print(te)
+	print('rdak shape', rdak.shape)
+        print(rdak[1]-rdak[0])
+	print('zdak shape', zdak.shape)
+        print(zdak[1]-zdak[0])
+	[gradientsR, gradientsZ] = np.gradient(np.array(te),zdak[1]-zdak[0],rdak[1]-rdak[0])
+	gradTeZ = gradientsZ
+	gradTeR = gradientsR
         plt.close()
         plt.pcolor(rdak,zdak,np.reshape(te,(dict['numz'],dict['numr'])))
         plt.colorbar(orientation='vertical')
@@ -223,9 +228,9 @@ class solps_iter_data_worker(Component):
 	ne[ne == -1]=0
 	ti = np.reshape(dak[:,4],(dict['numz'],dict['numr']))
 	ti[ti == -1]=0
-	gradients = np.gradient(np.reshape(ti,(dict['numz'],dict['numr'])),zdak,rdak)
-	gradTiZ = gradients[0]
-	gradTiR = gradients[1]
+	[gradientsR,gradientsZ] = np.gradient(np.array(ti),zdak[1]-zdak[0],rdak[1]-rdak[0])
+	gradTiZ = gradientsZ
+	gradTiR = gradientsR
 	ni = np.zeros((nIonSpecies,dict['numz'],dict['numr']))
 	vr = np.zeros((nIonSpecies,dict['numz'],dict['numr']))
 	vp = np.zeros((nIonSpecies,dict['numz'],dict['numr']))
@@ -276,6 +281,7 @@ class solps_iter_data_worker(Component):
         #    plt.pcolor(rdak,zdak,np.reshape(ni[i,:,:],(dict['numz'],dict['numr'])))
         #    plt.colorbar(orientation='vertical')
         #plt.savefig('image1.png')
+        print('Starting total loop')
 	for i in range(nIonSpecies):
 	    if zamin[i] > 0.0:
 	        #print niTotal.shape
@@ -286,6 +292,8 @@ class solps_iter_data_worker(Component):
 	        vrTotal = vrTotal+np.reshape(np.multiply(vr[i,:,:],ni[i,:,:]),(1,dict['numz'],dict['numr']))
 	        vpTotal = vpTotal+np.reshape(np.multiply(vp[i,:,:],ni[i,:,:]),(1,dict['numz'],dict['numr']))
 	        vzTotal = vzTotal+np.reshape(np.multiply(vz[i,:,:],ni[i,:,:]),(1,dict['numz'],dict['numr']))
+        
+        print('Finished total loop')
 	aveMass = np.divide(aveMass,niTotal)
 	aveMass[np.reshape(ni[i,:,:],(1,dict['numz'],dict['numr'])) == -1]=0
 	aveCharge= np.divide(aveCharge,niTotal)
@@ -297,6 +305,7 @@ class solps_iter_data_worker(Component):
 	vpTotal[np.reshape(ni[i,:,:],(1,dict['numz'],dict['numr'])) == -1]=0
 	vzTotal = np.divide(vzTotal,niTotal)
 	vzTotal[np.reshape(ni[i,:,:],(1,dict['numz'],dict['numr'])) == -1]=0
+        print('Finished divides')
 	#print 'finished loop'	
 	#print rdak
 	#print zdak
@@ -316,6 +325,7 @@ class solps_iter_data_worker(Component):
 	plt.savefig('aveCharge.png')
         
 	    
+        print('Finished plots, getting target bfields')
 	br = np.reshape(dak[:,offset+4*nIonSpecies],(dict['numz'],dict['numr']))
 	br[br == -1]=0
 	bphi = np.reshape(dak[:,offset+4*nIonSpecies+1],(dict['numz'],dict['numr']))
@@ -324,7 +334,7 @@ class solps_iter_data_worker(Component):
 	bz[bz == -1]=0
 	pot = np.reshape(dak[:,offset+4*nIonSpecies+3],(dict['numz'],dict['numr']))
 	pot[pot == -1]=0
-        [gradz,gradr] = np.gradient(pot,zdak,rdak)
+        [gradz,gradr] = np.gradient(np.array(pot),zdak[1]-zdak[0],rdak[1]-rdak[0])
 	Ez = -gradz
         Er = -gradr
 	rootgrp = netCDF4.Dataset("profiles.nc", "w", format="NETCDF4")
