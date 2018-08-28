@@ -137,6 +137,7 @@ class ftridynWorker(Component):
 
 
         #RUN FTRIDYN
+        os.environ['OMP_NUM_THREADS']=self.THREADS_PER_TASK
         file_namelist = []
         #pool_ftx = self.services.create_task_pool('pool_ftx')
         for j in range(len(angleIn)): #for i in range(len(energy)):
