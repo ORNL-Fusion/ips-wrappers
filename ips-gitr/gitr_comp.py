@@ -36,7 +36,7 @@ class gitr_comp(Component):
         fluxPerParticle = gitrParticleSource.particleSource(geomFile=str(self.GEOM_FILE),nParticles=int(self.NP)) 
 	if os.path.exists('particleSource.nc'):
             shutil.copyfile('particleSource.nc','input/particleSource.nc')
-        os.environ['OMP_NUM_THREADS'] = int(self.THREADS_PER_TASK)
+        os.environ['OMP_NUM_THREADS'] = self.THREADS_PER_TASK
         task_id = self.services.launch_task(self.NPROC,
                                             self.services.get_working_dir(),
                                             self.GITR_EXE,task_ppn=self.TASK_PPN,
