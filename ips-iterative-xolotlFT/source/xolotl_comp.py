@@ -104,6 +104,7 @@ class xolotlWorker(Component):
 
         import time
         num_trials = 2 #SET AS DRIVER ARGUMENT
+        os.environ['OMP_NUM_THREADS']=self.THREADS_PER_TASK
         for i in range(num_trials):
             xolotlLogFile='xolotl_t%f_%d.log' %(self.driverTime,i)
             task_id = self.services.launch_task(self.NPROC,self.services.get_working_dir(),
