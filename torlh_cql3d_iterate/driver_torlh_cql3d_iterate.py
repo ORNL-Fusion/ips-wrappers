@@ -1,7 +1,8 @@
 #! /usr/bin/env python
-# Version 1 (Batchelor 7/23/2017)
-# Driver for torlh/cql3d iteration with logic exposed here rather than buried in the 
-# components.  Adapted from generic_driver.py
+""" Version 1 (Batchelor 7/23/2017)
+Driver for torlh/cql3d iteration with logic exposed here rather than buried in the 
+ components.  Adapted from generic_driver.py
+"""
 
 import sys
 import os
