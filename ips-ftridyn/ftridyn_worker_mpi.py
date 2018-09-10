@@ -67,6 +67,7 @@ class ftridynWorker(Component):
 	d['nA'] = int(self.NA)
 	d['nR'] = int(self.NR)
 	d['nEdist'] = int(self.NEDIST)
+	d['nEdist_ref'] = int(self.NEDIST_REF)
 	d['nAdist'] = int(self.NADIST)
 	d['nH']= int(self.NH)
         
@@ -77,6 +78,7 @@ class ftridynWorker(Component):
 	d['roughness_start']=float(self.R_START)
 	d['roughness_end']=float(self.R_END)
 	d['maxEdist']=float(self.MAXEDIST)
+	d['maxEdist_ref']=float(self.MAXEDIST_REF)
 	#f = open('ipsFTmpi.pkl', 'w')
         #pickle.dump(d,f)
 	#f.close()

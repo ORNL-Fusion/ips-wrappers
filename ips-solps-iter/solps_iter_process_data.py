@@ -145,12 +145,14 @@ class solps_iter_data_worker(Component):
 	ud = np.c_[ud,0.5*rt[:,4]]
 	ud = np.c_[ud,0.5*rt[:,3]]
 	ud = np.c_[ud,0.5*rt[:,4]]
-	ud = np.c_[ud,rt[:,5:25]]
+	ud = np.c_[ud,rt[:,5:24]]
+	ud = np.c_[ud,0.5*rt[:,24]]
 	ud = np.c_[ud,0.5*rt[:,25]]
-	ud = np.c_[ud,0.5*rt[:,26]]
+	ud = np.c_[ud,0.5*rt[:,24]]
 	ud = np.c_[ud,0.5*rt[:,25]]
-	ud = np.c_[ud,0.5*rt[:,26]]
-	ud = np.c_[ud,rt[:,27:50]]
+	ud = np.c_[ud,rt[:,26:45]] #rest of flux species
+	ud = np.c_[ud,rt[:,45:47]] #te,ne
+
 
 	ud = np.c_[ud,bAngle]
 	ud = np.c_[ud,bMag]
