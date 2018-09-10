@@ -226,6 +226,12 @@ driver['LOOP_TIME_STEP']))
         else:
             print('no flux specified in GITR, so using values in Xolotl {} \n'.format(self.xp.parameters['flux']))
 
+        if 'heat' in self.gitr:
+            self.xp.parameters['heat']=self.gitr['heat']
+            print('replaced heat flux in Xolotl by value given by GITR {}\n'.format(self.gitr['heat']))
+        else:
+            print('no heat flux specified in GITR, so using values in Xolotl {} \n'.format(self.xp.parameters['heat']))
+
         #### FTRIDYN PARAMETERS ##### 
         ##LOOP OVER LIST OF PLASMA SPECIES SPECIES #########
         print ' '
