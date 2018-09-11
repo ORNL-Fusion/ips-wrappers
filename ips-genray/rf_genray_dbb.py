@@ -293,25 +293,25 @@ class genray(Component):
         global programming, times_parameters_list
         
     # Get global configuration parameters
-        cur_state_file = get_config_param(self, services, 'CURRENT_STATE')
-        cur_eqdsk_file = get_config_param(self, services, 'CURRENT_EQDSK')
-        cql_file = get_config_param(self, services, 'CURRENT_CQL', optional = True)
+        cur_state_file = self.get_config_param( services, 'CURRENT_STATE')
+        cur_eqdsk_file = self.get_config_param( services, 'CURRENT_EQDSK')
+        cql_file = self.get_config_param( services, 'CURRENT_CQL', optional = True)
 
     # Get component-specific configuration parameters. Note: Not all of these are
     # used in 'init' but if any are missing we get an exception now instead of
     # later
-        NPROC = get_component_param(self, services, 'NPROC')
-        BIN_PATH = get_component_param(self, services, 'BIN_PATH')
-        INPUT_FILES = get_component_param(self, services, 'INPUT_FILES')
-        OUTPUT_FILES = get_component_param(self, services, 'OUTPUT_FILES')
-        RESTART_FILES = get_component_param(self, services, 'RESTART_FILES')
-        BIN_PATH = get_component_param(self, services, 'BIN_PATH')
-        GENRAY_BIN = get_component_param(self, services, 'GENRAY_BIN')
-        RFMODE = get_component_param(self, services, 'RFMODE')
-        ISOURCE_STRING = get_component_param(self, services, 'ISOURCE_STRING')
-        GENRAYNML = get_component_param(self, services, 'GENRAYNML')
-        ADJ_READ = get_component_param(self, services, 'ADJ_READ')
-        PS_ADD_NML = get_component_param(self, services, 'PS_ADD_NML')
+        NPROC = self.get_component_param( services, 'NPROC')
+        BIN_PATH = self.get_component_param( services, 'BIN_PATH')
+        INPUT_FILES = self.get_component_param( services, 'INPUT_FILES')
+        OUTPUT_FILES = self.get_component_param( services, 'OUTPUT_FILES')
+        RESTART_FILES = self.get_component_param( services, 'RESTART_FILES')
+        BIN_PATH = self.get_component_param( services, 'BIN_PATH')
+        GENRAY_BIN = self.get_component_param( services, 'GENRAY_BIN')
+        RFMODE = self.get_component_param( services, 'RFMODE')
+        ISOURCE_STRING = self.get_component_param( services, 'ISOURCE_STRING')
+        GENRAYNML = self.get_component_param( services, 'GENRAYNML')
+        ADJ_READ = self.get_component_param( services, 'ADJ_READ')
+        PS_ADD_NML = self.get_component_param( services, 'PS_ADD_NML')
 
         # Get [rf_genray_EC] programming configuration parameters, if present
         n_launchers = 0
@@ -448,8 +448,8 @@ class genray(Component):
 
     # Get restart files listed in config file.        
       try:
-            restart_root = services.get_config_param(self, 'RESTART_ROOT')
-            restart_time = services.get_config_param(self, 'RESTART_TIME')
+            restart_root = services.self.get_config_param( 'RESTART_ROOT')
+            restart_time = services.self.get_config_param( 'RESTART_TIME')
             services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
       except Exception, e:
             print 'Error in call to get_restart_files()' , e
@@ -458,8 +458,8 @@ class genray(Component):
 
     # Get global configuration parameters
       try:
-            self.plasma_state_file = services.get_config_param(self, 'CURRENT_STATE')
-            self.eqdsk_file = services.get_config_param(self, 'CURRENT_EQDSK')
+            self.plasma_state_file = services.self.get_config_param( 'CURRENT_STATE')
+            self.eqdsk_file = services.self.get_config_param( 'CURRENT_EQDSK')
       except:
             print 'genray restart: error in getting config parameters'
             services.error('genray restart: error in getting config parameters')
@@ -509,8 +509,8 @@ class genray(Component):
           services.error('Error in call to stage_plasma_state()')
           raise Exception, 'Error in call to stage_plasma_state()'
 
-        cur_state_file = services.get_config_param(self, 'CURRENT_STATE')
-        cur_eqdsk_file = services.get_config_param(self, 'CURRENT_EQDSK')
+        cur_state_file = services.self.get_config_param( 'CURRENT_STATE')
+        cur_eqdsk_file = services.self.get_config_param( 'CURRENT_EQDSK')
         
     # Copy current plasma state file to generic name -> cur_state.cdf
         try:
@@ -541,7 +541,7 @@ class genray(Component):
         ps.close()
         print 'Total EC power = ', sum(power_ec)
         if(sum(power_ec) < 0.001):
-            zero_RF_EC_power = get_component_param(self, services, 'ZERO_EC_POWER_BIN')
+            zero_RF_EC_power = self.get_component_param( services, 'ZERO_EC_POWER_BIN')
             retcode = subprocess.call([zero_RF_EC_power, cur_state_file])
             if (retcode != 0):
                 print 'Error executing zero_RF_EC_power '
@@ -681,7 +681,7 @@ class genray(Component):
     def get_config_param(self, services, param_name, optional=False):
 
         try:
-            value = services.get_config_param(self, param_name)
+            value = services.self.get_config_param( param_name)
             print param_name, ' = ', value
         except Exception :
             if optional: 
