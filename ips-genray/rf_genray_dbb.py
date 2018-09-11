@@ -123,7 +123,7 @@ import string
 from  component import Component
 from Numeric import *
 from netCDF4 import *
-from get_IPS_config_parameters import get_config_param, get_component_param
+import get_IPS_config_parameters as gfp
 from simple_file_editing_functions import get_lines, put_lines, edit_nml_file
 
 class genray(Component):
@@ -294,25 +294,25 @@ class genray(Component):
         global programming, times_parameters_list
         
     # Get global configuration parameters
-        cur_state_file = get_config_param(services, 'CURRENT_STATE')
-        cur_eqdsk_file = get_config_param(services, 'CURRENT_EQDSK')
-        cql_file = get_config_param(services, 'CURRENT_CQL', optional = True)
+        cur_state_file = gfp.get_config_param(services, 'CURRENT_STATE')
+        cur_eqdsk_file = gfp.get_config_param(services, 'CURRENT_EQDSK')
+        cql_file = gfp.get_config_param(services, 'CURRENT_CQL', optional = True)
 
     # Get component-specific configuration parameters. Note: Not all of these are
     # used in 'init' but if any are missing we get an exception now instead of
     # later
-        NPROC = get_component_param(services, 'NPROC')
-        BIN_PATH = get_component_param(services, 'BIN_PATH')
-        INPUT_FILES = get_component_param(services, 'INPUT_FILES')
-        OUTPUT_FILES = get_component_param(services, 'OUTPUT_FILES')
-        RESTART_FILES = get_component_param(services, 'RESTART_FILES')
-        BIN_PATH = get_component_param(services, 'BIN_PATH')
+        NPROC = gfp.get_component_param(services, 'NPROC')
+        BIN_PATH = gfp.get_component_param(services, 'BIN_PATH')
+        INPUT_FILES = gfp.get_component_param(services, 'INPUT_FILES')
+        OUTPUT_FILES = gfp.get_component_param(services, 'OUTPUT_FILES')
+        RESTART_FILES = gfp.get_component_param(services, 'RESTART_FILES')
+        BIN_PATH = gfp.get_component_param(services, 'BIN_PATH')
         GENRAY_BIN = get_component_param(services, 'GENRAY_BIN')
-        RFMODE = get_component_param(services, 'RFMODE')
-        ISOURCE_STRING = get_component_param(services, 'ISOURCE_STRING')
-        GENRAYNML = get_component_param(services, 'GENRAYNML')
-        ADJ_READ = get_component_param(services, 'ADJ_READ')
-        PS_ADD_NML = get_component_param(services, 'PS_ADD_NML')
+        RFMODE = gfp.get_component_param(services, 'RFMODE')
+        ISOURCE_STRING = gfp.get_component_param(services, 'ISOURCE_STRING')
+        GENRAYNML = gfp.get_component_param(services, 'GENRAYNML')
+        ADJ_READ = gfp.get_component_param(services, 'ADJ_READ')
+        PS_ADD_NML = gfp.get_component_param(services, 'PS_ADD_NML')
 
         # Get [rf_genray_EC] programming configuration parameters, if present
         n_launchers = 0
