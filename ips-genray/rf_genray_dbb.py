@@ -448,8 +448,8 @@ class genray(Component):
 
     # Get restart files listed in config file.        
       try:
-            restart_root = services.self.get_config_param( 'RESTART_ROOT')
-            restart_time = services.self.get_config_param( 'RESTART_TIME')
+            restart_root = services.get_config_param( 'RESTART_ROOT')
+            restart_time = services.get_config_param( 'RESTART_TIME')
             services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
       except Exception, e:
             print 'Error in call to get_restart_files()' , e
@@ -458,8 +458,8 @@ class genray(Component):
 
     # Get global configuration parameters
       try:
-            self.plasma_state_file = services.self.get_config_param( 'CURRENT_STATE')
-            self.eqdsk_file = services.self.get_config_param( 'CURRENT_EQDSK')
+            self.plasma_state_file = services.get_config_param( 'CURRENT_STATE')
+            self.eqdsk_file = services.get_config_param( 'CURRENT_EQDSK')
       except:
             print 'genray restart: error in getting config parameters'
             services.error('genray restart: error in getting config parameters')
@@ -509,8 +509,8 @@ class genray(Component):
           services.error('Error in call to stage_plasma_state()')
           raise Exception, 'Error in call to stage_plasma_state()'
 
-        cur_state_file = services.self.get_config_param( 'CURRENT_STATE')
-        cur_eqdsk_file = services.self.get_config_param( 'CURRENT_EQDSK')
+        cur_state_file = services.get_config_param( 'CURRENT_STATE')
+        cur_eqdsk_file = services.get_config_param( 'CURRENT_EQDSK')
         
     # Copy current plasma state file to generic name -> cur_state.cdf
         try:
