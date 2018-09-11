@@ -15,7 +15,7 @@ implemented for ECH, so far.
 # RF power that was in the 6/16/2014 version but that seemed to get dropped from the
 # genray_EC_p.py version.  The programming was implemented for ECH aiming angles, but no
 # such k-spectrum programming is implemented for Lower Hybrid, yet.
-# Switched NetCDF4.py for obsolete Scientific.IO.NetCDF.  Removed namelist editing routines
+# Switched NetCDF4.py from obsolete Scientific.IO.NetCDF.  Removed namelist editing routines
 # to /wrappers/utilities/simple_file_editing_functions.py.
 
 # 11/25/2014 DBB
@@ -294,37 +294,25 @@ class genray(Component):
         global programming, times_parameters_list
         
     # Get global configuration parameters
-        try:
-            cur_state_file = services.get_config_param('CURRENT_STATE')
-            cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
-            #cql_file = services.get_config_param('CURRENT_CQL')
-        except:
-            print 'rf_genray_EC: error getting config parameters CURRENT_STATE CURRENT_EQDSK'
-            services.error('rf_genray_EC: error getting config parameters CURRENT_STATE CURRENT_EQDSK')
-            raise Exception, 'rf_EC_gneray: error getting config parameters CURRENT_STATE CURRENT_EQDSK'
+        cur_state_file = get_config_param(services, 'CURRENT_STATE')
+        cur_eqdsk_file = get_config_param(services, 'CURRENT_EQDSK')
+        cql_file = get_config_param(services, 'CURRENT_CQL', optional = True)
 
     # Get component-specific configuration parameters. Note: Not all of these are
     # used in 'init' but if any are missing we get an exception now instead of
     # later
-        try:
-            NPROC = self.NPROC
-            BIN_PATH = self.BIN_PATH
-            INPUT_FILES = self.INPUT_FILES
-            OUTPUT_FILES = self.OUTPUT_FILES
-            RESTART_FILES = self.RESTART_FILES
-            BIN_PATH = self.BIN_PATH
-            GENRAY_BIN = self.GENRAY_BIN
-            RFMODE = self.RFMODE
-            ISOURCE_STRING = self.ISOURCE_STRING
-            GENRAYNML = self.GENRAYNML
-            ADJ_READ = self.ADJ_READ
-            PS_ADD_NML = self.PS_ADD_NML
-        except:
-            print 'rf_genray_EC init: error getting genray-specific config parameters'
-            services.error('rf_genray_EC: error getting genray-specific\
-            config parameters')
-            raise Exception, 'rf_genray_EC: error getting genray-specific\
-            config parameters'
+        NPROC = get_component_param(services, 'NPROC')
+        BIN_PATH = get_component_param(services, 'BIN_PATH')
+        INPUT_FILES = get_component_param(services, 'INPUT_FILES')
+        OUTPUT_FILES = get_component_param(services, 'OUTPUT_FILES')
+        RESTART_FILES = get_component_param(services, 'RESTART_FILES')
+        BIN_PATH = get_component_param(services, 'BIN_PATH')
+        GENRAY_BIN = get_component_param(services, 'GENRAY_BIN')
+        RFMODE = get_component_param(services, 'RFMODE')
+        ISOURCE_STRING = get_component_param(services, 'ISOURCE_STRING')
+        GENRAYNML = get_component_param(services, 'GENRAYNML')
+        ADJ_READ = get_component_param(services, 'ADJ_READ')
+        PS_ADD_NML = get_component_param(services, 'PS_ADD_NML')
 
         # Get [rf_genray_EC] programming configuration parameters, if present
         n_launchers = 0
