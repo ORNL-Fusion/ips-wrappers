@@ -293,9 +293,9 @@ class genray(Component):
         global programming, times_parameters_list
         
     # Get global configuration parameters
-        cur_state_file = self.get_config_param( services, 'CURRENT_STATE')
-        cur_eqdsk_file = self.get_config_param( services, 'CURRENT_EQDSK')
-        cql_file = self.get_config_param( services, 'CURRENT_CQL', optional = True)
+        cur_state_file = self.get_global_param(services, 'CURRENT_STATE')
+        cur_eqdsk_file = self.get_global_param(services, 'CURRENT_EQDSK')
+        cql_file = self.get_global_param(services, 'CURRENT_CQL', optional = True)
 
     # Get component-specific configuration parameters. Note: Not all of these are
     # used in 'init' but if any are missing we get an exception now instead of
@@ -678,14 +678,14 @@ class genray(Component):
 
 
     # Try to get config parameter - wraps the exception handling for get_config_parameter()
-    def get_config_param(self, services, param_name, optional=False):
+    def get_global_param(self, services, param_name, optional=False):
 
         try:
-            value = services.get_config_param( param_name)
+            value = services.get_config_param(param_name)
             print param_name, ' = ', value
-        except Exception :
+        except Exception:
             if optional: 
-                print 'config parameter ', param_name, ' not found'
+                print 'optional config parameter ', param_name, ' not found'
                 value = None
             else:
                 message = 'required config parameter ', param_name, ' not found'
@@ -711,3 +711,4 @@ class genray(Component):
             raise
         
         return value
+
