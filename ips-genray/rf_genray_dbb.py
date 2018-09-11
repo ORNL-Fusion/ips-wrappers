@@ -491,7 +491,6 @@ class genray(Component):
 
     def step(self, timeStamp):
         print 'genray.step() called'
-        print 'rf_genray_EC_p'
 
         if (self.services == None) :
            print 'Error in genray: step (): No services'
@@ -539,7 +538,7 @@ class genray(Component):
 # run zero_RF_power fortran code
         print 'cur_state_file = ', cur_state_file
         ps = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
-        power_ec = ps.variables['shot_number'][:]
+        power_ec = ps.variables['power_ec'][:]
         ps.close()
         print 'Total EC power = ', sum(power_ec)
         if(sum(power_ec) < 0.001):
