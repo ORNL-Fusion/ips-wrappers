@@ -681,7 +681,7 @@ class genray(Component):
     def get_config_param(self, services, param_name, optional=False):
 
         try:
-            value = services.self.get_config_param( param_name)
+            value = services.get_config_param( param_name)
             print param_name, ' = ', value
         except Exception :
             if optional: 
