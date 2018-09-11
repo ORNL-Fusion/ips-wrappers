@@ -123,6 +123,7 @@ import string
 from  component import Component
 from Numeric import *
 from netCDF4 import *
+from get_IPS_config_parameters import get_config_param, get_component_param
 from simple_file_editing_functions import get_lines, put_lines, edit_nml_file
 
 class genray(Component):
@@ -512,7 +513,6 @@ class genray(Component):
 
         prepare_input_bin = os.path.join(self.BIN_PATH, 'prepare_genray_input')
         process_output_bin  = os.path.join(self.BIN_PATH, 'process_genray_output')
-        zero_RF_EC_power = self.ZERO_EC_POWER_BIN
         #genray_bin = os.path.join(self.BIN_PATH, 'genray')
 
     # Copy plasma state files over to working directory
@@ -551,11 +551,12 @@ class genray(Component):
 # run zero_RF_power fortran code
         print 'cur_state_file = ', cur_state_file
         ps = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
-        power_ec = plasma_state.variables['shot_number'][:]
+        power_ec = ps.variables['shot_number'][:]
         ps.close()
         print 'Total EC power = ', sum(power_ec)
         if(sum(power_ec) < 0.001):
-            retcode = subprocess.call([zero_RF_power, cur_state_file])
+            zero_RF_EC_power = get_component_param(services, 'ZERO_EC_POWER_BIN')
+            retcode = subprocess.call([zero_RF_EC_power, cur_state_file])
             if (retcode != 0):
                 print 'Error executing zero_RF_EC_power '
                 self.services.error('Error executing zero_RF_EC_power')
