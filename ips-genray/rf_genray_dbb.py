@@ -537,16 +537,34 @@ class genray(Component):
 # run zero_RF_power fortran code
         print 'cur_state_file = ', cur_state_file
         ps = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
-        power_ec = ps.variables['power_ec'][:]
-        ps.close()
-        print 'Total EC power = ', sum(power_ec)
-        if(sum(power_ec) < 0.001):
-            zero_RF_EC_power = get_component_param(self, services, 'ZERO_EC_POWER_BIN')
-            retcode = subprocess.call([zero_RF_EC_power, cur_state_file])
-            if (retcode != 0):
-                print 'Error executing zero_RF_EC_power '
-                self.services.error('Error executing zero_RF_EC_power')
-                raise Exception, 'Error executing zero_RF_EC_power'
+        if rfmode == 'EC':
+            power_ec = ps.variables['power_ec'][:]
+            ps.close()
+            print 'Total EC power = ', sum(power_ec)
+            if(sum(power_ec) < 0.001):
+                zero_RF_EC_power = get_component_param(self, services, 'ZERO_EC_POWER_BIN')
+                retcode = subprocess.call([zero_RF_EC_power, cur_state_file])
+                if (retcode != 0):
+                    print 'Error executing zero_RF_EC_power '
+                    self.services.error('Error executing zero_RF_EC_power')
+                    raise Exception, 'Error executing zero_RF_EC_power'
+        elif rfmode == 'LH':
+            power_ec = ps.variables['power_lh'][:]
+            ps.close()
+            print 'Total LH power = ', sum(power_lh)
+            if(sum(power_ec) < 0.001):
+                zero_RF_LH_power = get_component_param(self, services, 'ZERO_LH_POWER_BIN')
+                retcode = subprocess.call([zero_RF_LH_power, cur_state_file])
+                if (retcode != 0):
+                    print 'Error executing zero_RF_LH_power '
+                    self.services.error('Error executing zero_RF_LH_power')
+                    raise Exception, 'Error executing zero_RF_LH_power'                 
+            else:
+                message = 'rf_genray.py: Unimplemented rfmode = ' + RFMODE
+                print message
+                services.exception(message)
+                raise
+
 
             # N.B. zero_RF_power does not produce a complete set of GENRAY output
             #      files.  This causes an error in stage_output_files().  To
