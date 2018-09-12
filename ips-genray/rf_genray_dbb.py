@@ -123,6 +123,7 @@ import string
 from  component import Component
 from Numeric import *
 from netCDF4 import *
+from get_IPS_config_parameters import *
 from simple_file_editing_functions import get_lines, put_lines, edit_nml_file
 
 class genray(Component):
