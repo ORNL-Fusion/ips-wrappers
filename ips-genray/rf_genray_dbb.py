@@ -319,13 +319,14 @@ class genray(Component):
         try:
             n_launchers = int(self.N_LAUNCHERS_PROGRAMMED)
         except:
-            print '\nCould not get launcher programming from config file'
+            print '\nNo launcher programming in config file'
 
         if n_launchers > 0: 
             programming = True
+            print 'Programming for ', n_launchers, ' launchers'
             times_parameters_list = self.time_points_and_parameters(n_launchers)
         else:
-            print '\nUsing ECH launcher parmeters in plasma state'
+            print '\nUsing launcher parmeters in plasma state'
 
 
     # Copy plasma state files over to working directory
@@ -549,7 +550,7 @@ class genray(Component):
                     self.services.error('Error executing zero_RF_EC_power')
                     raise Exception, 'Error executing zero_RF_EC_power'
         elif rfmode == 'LH':
-            power_ec = ps.variables['power_lh'][:]
+            power_lh = ps.variables['power_lh'][:]
             ps.close()
             print 'Total LH power = ', sum(power_lh)
             if(sum(power_ec) < 0.001):
