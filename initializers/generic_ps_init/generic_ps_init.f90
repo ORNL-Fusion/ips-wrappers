@@ -1,6 +1,6 @@
 PROGRAM generic_ps_init
 
-! version 1.0  (4/4/2016) Batchelor
+! version 2.0  (9/17/2018) Batchelor
 
 !--------------------------------------------------------------------------
 !
@@ -34,7 +34,12 @@ PROGRAM generic_ps_init
 ! the MHD equilibrium, so the equilibrium must be specified during further component 
 ! initializations
 ! 
-! INIT_MODE = mixed (yet to be implemented)
+! INIT_MODE = mixed
+! This combines existing_ps_file and mdescr modes.  This copies an existing input plasma state 
+! file and optionally an existing eqdsk file to CURRENT_STATE and CURRENT_EQDSK as in 
+! existing_ps_file mode.  But initializations from MDESCR_FILE and SCONFIG_FILE are also added.  
+! Caution is advised.  If the MDESCR_FILE or SCONFIG_FILE attempts to reallocate any of the
+! arrays already allocated in the CURRENT_STATE file a Plasma State error will occur.
 ! 
 ! Except for possibly mode = existing_ps_file, all modes call on the fortran helper code 
 ! generic_ps_file_init.f90 to interact with the Plasma State. The fortran code is also used
@@ -114,12 +119,24 @@ PROGRAM generic_ps_init
 	WRITE (*, nml = ps_init_nml)
 
 !------------------------------------------------------------------------------------
+!  If init_mode is 'mixed' get current plasma state 
+!------------------------------------------------------------------------------------
+
+    IF ((TRIM(init_mode) == 'mixed') .or. (TRIM(init_mode) == 'MIXED')) THEN      
+		call ps_get_plasma_state(ierr, trim(cur_state_file))
+		if(ierr .ne. 0) then
+		   print*, 'generic_ps_init.f90:failed to get_plasma_state'
+		   stop 1
+		end if
+	END IF
+
+!------------------------------------------------------------------------------------
 !     
 !   Do initalizations from machine description file
 !
 !------------------------------------------------------------------------------------
 
-    IF (TRIM(init_mode) == 'mdescr') THEN
+    IF ((TRIM(init_mode) == 'mdescr') .or. (TRIM(init_mode) == 'MDESCR')) THEN
         inquire(file=trim(mdescr_file), exist=file_exists)
         if(.not.file_exists)then
             write(*,*)'generic_ps_init : ERROR - mdescr_file not found'  
