@@ -98,7 +98,7 @@ PROGRAM generic_ps_init
           
            
     WRITE (*,*)
-    WRITE (*,*) 'generic_ps_init'      
+    WRITE (*,*) 'Started generic_ps_init.f90'      
 
 !---------------------------------------------------------------------------------
 !     

@@ -334,9 +334,9 @@ class generic_ps_init (Component):
                    nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
 
 # ------------------------------------------------------------------------------
-            # For 'minimal' and 'mdescr' modes generate namelist for the fortran  
+            # For 'minimal', 'mdescr' and 'mixed' modes generate namelist for the fortran  
             # helper code generic_ps_init.f90 and execute it
-            if init_mode in ['minimal', 'MINIMAL', 'mdescr', 'MDESCR'] :
+            if init_mode in ['minimal', 'MINIMAL', 'mdescr', 'MDESCR', 'mixed', 'MIXED'] :
                 nml_lines.append('/')
                 self.put_lines('generic_ps_init.nml', nml_lines)
                             
