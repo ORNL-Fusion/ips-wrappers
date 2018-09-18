@@ -136,7 +136,7 @@ PROGRAM generic_ps_init
 !
 !------------------------------------------------------------------------------------
 
-    IF (TRIM(sconfig_file) /= ' ') THEN
+    IF (TRIM(mdescr_file) /= ' ') THEN
         inquire(file=trim(mdescr_file), exist=file_exists)
         if(.not.file_exists)then
             write(*,*)'generic_ps_init : ERROR - mdescr_file not found'  
@@ -144,7 +144,7 @@ PROGRAM generic_ps_init
             call exit(1)
         endif
         write(*,*) 'generic_ps_init: mdescr_file = ', trim(mdescr_file)
-        call ps_mdescr_read(trim(mdescr_file), ierr, state=ps)
+        call ps_mdescr_read(trim(mdescr_file), ierr, state=aux)
     END IF
 
 !------------------------------------------------------------------------------------
@@ -162,7 +162,7 @@ PROGRAM generic_ps_init
             call exit(status)
         endif
         write(*,*) 'generic_ps_init: sconfig_file = ', trim(sconfig_file)
-        call ps_sconfig_read(trim(sconfig_file), ierr, state=ps)
+        call ps_sconfig_read(trim(sconfig_file), ierr, state=aux)
     END IF
 
 !--------------------------------------------------------------------------
