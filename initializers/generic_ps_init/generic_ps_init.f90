@@ -82,7 +82,7 @@ PROGRAM generic_ps_init
 !   Internal data: None
 !
 !--------------------------------------------------------------------------
-
+    INTEGER :: cclist(ps_ccount)   ! component activation list
     REAL(KIND=rspec) :: t, tinit, tfinal
     CHARACTER(LEN=*), PARAMETER :: ps_init_nml_file = 'generic_ps_init.nml'
 
@@ -94,7 +94,7 @@ PROGRAM generic_ps_init
 
     namelist /ps_init_nml/ &
           init_mode, generate_eqdsk, cur_state_file, cur_eqdsk_file, &
-          mdescr_file, input_eqdsk_file, sconfig_file
+          mdescr_file, input_eqdsk_file, sconfig_file, cclist
           
            
     WRITE (*,*)
@@ -149,7 +149,7 @@ PROGRAM generic_ps_init
 
 !------------------------------------------------------------------------------------
 !     
-!   Load shot configuration data from sconfig file
+!   Load shot configuration data from sconfig file into aux state
 !
 !------------------------------------------------------------------------------------
 
@@ -162,8 +162,16 @@ PROGRAM generic_ps_init
             call exit(status)
         endif
         write(*,*) 'generic_ps_init: sconfig_file = ', trim(sconfig_file)
-        call ps_sconfig_read(trim(sconfig_file), ierr, state=ps)
+        call ps_sconfig_read(trim(sconfig_file), ierr, state=aux)
     END IF
+
+!--------------------------------------------------------------------------
+! 
+! Copy data from aux to ps for the components that are to be initialized from
+! mdescr and sconfig
+!
+!--------------------------------------------------------------------------
+
 
 !--------------------------------------------------------------------------
 ! 
