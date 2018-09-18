@@ -148,6 +148,27 @@ PROGRAM generic_ps_init
         call ps_sconfig_read(trim(sconfig_file), ierr, state=ps)
     END IF
 
+!------------------------------------------------------------------------------------
+!     
+!   If init_mode = 'mixed' load current state file as aux and copy state data to ps
+!
+!------------------------------------------------------------------------------------
+
+    IF (TRIM(init_mode) == 'mixed') THEN
+          CALL ps_get_plasma_state(ierr, TRIM(cur_state_file), aux)
+          if (ierr .ne. 0) then
+              print*, 'call failed to ps_get_plasma_state for aux state'
+              call exit(1)
+          end if
+          
+         CALL PS_COPY_PLASMA_STATE(aux, ps, ierr, inodims = 1)
+         if (ierr .ne. 0) then
+             print*, 'call failed to PS_COPY_PLASMA_STATE for aux state to ps state'
+             call exit(1)
+         end if
+    	
+
+
 !--------------------------------------------------------------------------
 ! 
 ! Load equilibrium data from input_eqdsk_file if one is provided.
