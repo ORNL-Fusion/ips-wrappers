@@ -361,12 +361,13 @@ class generic_ps_init (Component):
                 mdescr_components =  self.get_component_param(services, 'MDESCR_COMPONENTS')
                 cclist = [0 for i in range(len(component_dict))]
                 for comp in mdescr_components:
-                    if comp.upper() not in component_dict.keys():
+                    print 'comp = ', comp
+                    if comp not in component_dict.keys():
                         message = 'generic_ps_init: Unknown IPS component ' + comp
                         print message
                         services.exception(message)
                         raise
-                    cclist[component_dict[comp]] = 1
+                    cclist[component_dict[comp]-1] = 1
                 print 'cclist = ', cclist
                 cclist_string = ''
                 for i in range(len(cclist)):
