@@ -554,7 +554,7 @@ class genray(Component):
             power_lh = ps.variables['power_lh'][:]
             ps.close()
             print 'Total LH power = ', sum(power_lh)
-            if(sum(power_ec) < 0.001):
+            if(sum(power_lh) < 0.001):
                 zero_RF_LH_power = get_component_param(self, services, 'ZERO_LH_POWER_BIN')
                 retcode = subprocess.call([zero_RF_LH_power, cur_state_file])
                 if (retcode != 0):
