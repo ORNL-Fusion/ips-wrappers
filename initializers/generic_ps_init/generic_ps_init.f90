@@ -166,6 +166,7 @@ PROGRAM generic_ps_init
              print*, 'call failed to PS_COPY_PLASMA_STATE for aux state to ps state'
              call exit(1)
          end if
+    END IF
     	
 
 
