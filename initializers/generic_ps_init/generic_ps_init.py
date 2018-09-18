@@ -359,7 +359,7 @@ class generic_ps_init (Component):
             # mdescr/sconfig and construct cclist for generic_ps_init.f90
             if init_mode in ['mixed', 'MIXED'] :
                 mdescr_components =  self.get_component_param(services, 'MDESCR_COMPONENTS')
-                cclist = [0 for i in range(len(component.dict))]
+                cclist = [0 for i in range(len(component_dict))]
                 for comp in mdescr_components:
                     if comp.upper() not in component_dict.keys():
                         message = 'generic_ps_init: Unknown IPS component ' + comp
