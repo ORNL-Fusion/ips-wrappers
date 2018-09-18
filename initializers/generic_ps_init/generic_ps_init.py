@@ -40,14 +40,22 @@ and ps_scongif_read().  Note:  machine description and shot configuration do not
 the MHD equilibrium, so the equilibrium must be specified during further component 
 initializations
 
-INIT_MODE = mixed (yet to be implemented)
+INIT_MODE = mixed
+This combines existing_ps_file and mdescr modes.  This copies an existing input plasma state 
+file and optionally an existing eqdsk file to CURRENT_STATE and CURRENT_EQDSK as in 
+existing_ps_file mode.  But initializations from MDESCR_FILE and SCONFIG_FILE are also added.  
+Caution is advised.  If the MDESCR_FILE or SCONFIG_FILE attempts to reallocate any of the
+arrays already allocated in the CURRENT_STATE file a Plasma State error will occur.
 
 Except for possibly mode = existing_ps_file, all modes call on the fortran helper code 
 generic_ps_file_init.f90 to interact with the Plasma State. The fortran code is also used
 in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true.
 
 """
-# Version (Batchelor 7/29/2018)
+# Version 6.0 (Batchelor 9/17/2018)
+# Implemented INIT_MODE = mixed
+
+# Version 5.0 (Batchelor 7/29/2018)
 # Eliminated all reference to NEXT_STATE
 
 # Working notes for generic_ps_init.py 3/5/2018 (Batchelor)
@@ -149,7 +157,7 @@ class generic_ps_init (Component):
 #
 # ------------------------------------------------------------------------------
 
-    def step(self, timeStamp):
+    def step (self, timeStamp):
         print (' ')
         print ('generic_ps_init.step() called')
 
@@ -265,7 +273,7 @@ class generic_ps_init (Component):
             
 # ------------------------------------------------------------------------------
             # init from existing plasma state file
-            if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE'] :    
+            if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE', 'mixed', 'MIXED'] :    
                 INPUT_STATE_FILE = self.get_component_param(services, 'INPUT_STATE_FILE')
 
                 # Copy INPUT_STATE_FILE to current state file
@@ -307,7 +315,7 @@ class generic_ps_init (Component):
 
 # ------------------------------------------------------------------------------
             # init from machine description file
-            if init_mode in ['mdescr', 'MDESCR'] :
+            if init_mode in ['mdescr', 'MDESCR', 'mixed', 'MIXED'] :
                 MDESCR_FILE = self.get_component_param(services, 'MDESCR_FILE')
                 nml_lines.append(' mdescr_file = ' + MDESCR_FILE + '\n')
                 SCONFIG_FILE = self.get_component_param(services, 'SCONFIG_FILE', \
@@ -326,9 +334,9 @@ class generic_ps_init (Component):
                    nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
 
 # ------------------------------------------------------------------------------
-            # For 'minimal' and 'mdescr' modes generate namelist for the fortran  
+            # For 'minimal', 'mdescr' and 'mixed' modes generate namelist for the fortran  
             # helper code generic_ps_init.f90 and execute it
-            if init_mode in ['minimal', 'MINIMAL', 'mdescr', 'MDESCR'] :
+            if init_mode in ['minimal', 'MINIMAL', 'mdescr', 'MDESCR', 'mixed', 'MIXED'] :
                 nml_lines.append('/')
                 self.put_lines('generic_ps_init.nml', nml_lines)
                             
