@@ -1,6 +1,6 @@
 PROGRAM generic_ps_init
 
-! version 2.0  (9/17/2018) Batchelor
+! version 1.0  (4/4/2016) Batchelor
 
 !--------------------------------------------------------------------------
 !
@@ -34,12 +34,7 @@ PROGRAM generic_ps_init
 ! the MHD equilibrium, so the equilibrium must be specified during further component 
 ! initializations
 ! 
-! INIT_MODE = mixed
-! This combines existing_ps_file and mdescr modes.  This copies an existing input plasma state 
-! file and optionally an existing eqdsk file to CURRENT_STATE and CURRENT_EQDSK as in 
-! existing_ps_file mode.  But initializations from MDESCR_FILE and SCONFIG_FILE are also added.  
-! Caution is advised.  If the MDESCR_FILE or SCONFIG_FILE attempts to reallocate any of the
-! arrays already allocated in the CURRENT_STATE file a Plasma State error will occur.
+! INIT_MODE = mixed (yet to be implemented)
 ! 
 ! Except for possibly mode = existing_ps_file, all modes call on the fortran helper code 
 ! generic_ps_file_init.f90 to interact with the Plasma State. The fortran code is also used
@@ -82,7 +77,7 @@ PROGRAM generic_ps_init
 !   Internal data: None
 !
 !--------------------------------------------------------------------------
-    INTEGER :: cclist(ps_ccount)   ! component activation list
+
     REAL(KIND=rspec) :: t, tinit, tfinal
     CHARACTER(LEN=*), PARAMETER :: ps_init_nml_file = 'generic_ps_init.nml'
 
@@ -94,11 +89,11 @@ PROGRAM generic_ps_init
 
     namelist /ps_init_nml/ &
           init_mode, generate_eqdsk, cur_state_file, cur_eqdsk_file, &
-          mdescr_file, input_eqdsk_file, sconfig_file, cclist
+          mdescr_file, input_eqdsk_file, sconfig_file
           
            
     WRITE (*,*)
-    WRITE (*,*) 'Started generic_ps_init.f90'      
+    WRITE (*,*) 'generic_ps_init'      
 
 !---------------------------------------------------------------------------------
 !     
@@ -119,24 +114,12 @@ PROGRAM generic_ps_init
 	WRITE (*, nml = ps_init_nml)
 
 !------------------------------------------------------------------------------------
-!  If init_mode is 'mixed' get current plasma state 
-!------------------------------------------------------------------------------------
-
-    IF ((TRIM(init_mode) == 'mixed') .or. (TRIM(init_mode) == 'MIXED')) THEN      
-		call ps_get_plasma_state(ierr, trim(cur_state_file))
-		if(ierr .ne. 0) then
-		   print*, 'generic_ps_init.f90:failed to get_plasma_state'
-		   stop 1
-		end if
-	END IF
-
-!------------------------------------------------------------------------------------
 !     
-!   Do initalizations from machine description file if mdescr_file is specified
+!   Do initalizations from machine description file
 !
 !------------------------------------------------------------------------------------
 
-    IF (TRIM(mdescr_file) /= ' ') THEN
+    IF (TRIM(init_mode) == 'mdescr') THEN
         inquire(file=trim(mdescr_file), exist=file_exists)
         if(.not.file_exists)then
             write(*,*)'generic_ps_init : ERROR - mdescr_file not found'  
@@ -144,12 +127,12 @@ PROGRAM generic_ps_init
             call exit(1)
         endif
         write(*,*) 'generic_ps_init: mdescr_file = ', trim(mdescr_file)
-        call ps_mdescr_read(trim(mdescr_file), ierr, state=aux)
+        call ps_mdescr_read(trim(mdescr_file), ierr, state=ps)
     END IF
 
 !------------------------------------------------------------------------------------
 !     
-!   Load shot configuration data from sconfig file if sconfig file is specified
+!   Load shot configuration data from sconfig file
 !
 !------------------------------------------------------------------------------------
 
@@ -162,16 +145,8 @@ PROGRAM generic_ps_init
             call exit(status)
         endif
         write(*,*) 'generic_ps_init: sconfig_file = ', trim(sconfig_file)
-        call ps_sconfig_read(trim(sconfig_file), ierr, state=aux)
+        call ps_sconfig_read(trim(sconfig_file), ierr, state=ps)
     END IF
-
-!--------------------------------------------------------------------------
-! 
-! Copy data from aux to ps for the components that are to be initialized from
-! mdescr and sconfig
-!
-!--------------------------------------------------------------------------
-
 
 !--------------------------------------------------------------------------
 ! 

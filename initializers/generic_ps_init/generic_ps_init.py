@@ -40,40 +40,14 @@ and ps_scongif_read().  Note:  machine description and shot configuration do not
 the MHD equilibrium, so the equilibrium must be specified during further component 
 initializations
 
-INIT_MODE = mixed
-This combines existing_ps_file and mdescr modes.  This copies an existing input plasma state 
-file and optionally an existing eqdsk file to CURRENT_STATE and CURRENT_EQDSK as in 
-existing_ps_file mode.  But initializations from MDESCR_FILE and SCONFIG_FILE are also added.  
-Caution is advised.  If the MDESCR_FILE or SCONFIG_FILE attempts to reallocate any of the
-arrays already allocated in the CURRENT_STATE file a Plasma State error will occur.
-Therefore one must provide a list of which components are to be initialized from mdescr
-or sconfig
-
-IPS Components are
-
-1  PLASMA   ! Thermal plasma parameters; fluid profile advance
-2  EQ       ! MHD equilibrium
-3  NBI      ! Neutral beam
-4  IC       ! Ion cyclotron heating
-5  LH       ! Lower Hybrid heating and current drive
-6  EC       ! Electron cyclotron heating and current drive
-7  RUNAWAY  ! Runaway electrons
-8  FUS      ! Fusion product fast ions
-9  RAD      ! Radiated Power & impurity transport
-10  GAS     ! Neutral Gas sources & transport
-11  LMHD    ! Linear MHD stability
-12  RIPPLE  ! TF field ripple
-13  ANOM    ! Anomalous transport
+INIT_MODE = mixed (yet to be implemented)
 
 Except for possibly mode = existing_ps_file, all modes call on the fortran helper code 
 generic_ps_file_init.f90 to interact with the Plasma State. The fortran code is also used
 in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true.
 
 """
-# Version 6.0 (Batchelor 9/17/2018)
-# Implemented INIT_MODE = mixed
-
-# Version 5.0 (Batchelor 7/29/2018)
+# Version (Batchelor 7/29/2018)
 # Eliminated all reference to NEXT_STATE
 
 # Working notes for generic_ps_init.py 3/5/2018 (Batchelor)
@@ -149,10 +123,6 @@ import datetime
 from  component import Component
 from netCDF4 import *
 
-component_dict = {'PLASMA':10, 'EQ':2, 'NBI':9, 'IC':6, 'LH':7, 'EC':2,\
-             'RUNAWAY':13, 'FUS':4, 'RAD':11, 'GAS':5, 'LMHD':8, 'RIPPLE':12, 'ANOM':1}
-
-
 class generic_ps_init (Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
@@ -179,7 +149,7 @@ class generic_ps_init (Component):
 #
 # ------------------------------------------------------------------------------
 
-    def step (self, timeStamp):
+    def step(self, timeStamp):
         print (' ')
         print ('generic_ps_init.step() called')
 
@@ -295,7 +265,7 @@ class generic_ps_init (Component):
             
 # ------------------------------------------------------------------------------
             # init from existing plasma state file
-            if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE', 'mixed', 'MIXED'] :    
+            if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE'] :    
                 INPUT_STATE_FILE = self.get_component_param(services, 'INPUT_STATE_FILE')
 
                 # Copy INPUT_STATE_FILE to current state file
@@ -337,7 +307,7 @@ class generic_ps_init (Component):
 
 # ------------------------------------------------------------------------------
             # init from machine description file
-            if init_mode in ['mdescr', 'MDESCR', 'mixed', 'MIXED'] :
+            if init_mode in ['mdescr', 'MDESCR'] :
                 MDESCR_FILE = self.get_component_param(services, 'MDESCR_FILE')
                 nml_lines.append(' mdescr_file = ' + MDESCR_FILE + '\n')
                 SCONFIG_FILE = self.get_component_param(services, 'SCONFIG_FILE', \
@@ -354,34 +324,11 @@ class generic_ps_init (Component):
                    INPUT_EQDSK_FILE = ' '
                 else:
                    nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
-                
-            # Retrieve list of IPS components which are to be initialized from 
-            # mdescr/sconfig and construct cclist for generic_ps_init.f90
-            if init_mode in ['mixed', 'MIXED'] :
-                mdescr_components =  self.get_component_param(services, 'MDESCR_COMPONENTS')
-                if isinstance(mdescr_components, type('str')):
-                	mdescr_components = [mdescr_components]
-                cclist = [0 for i in range(len(component_dict))]
-                for comp in mdescr_components:
-                    if comp not in component_dict.keys():
-                        message = 'generic_ps_init: Unknown IPS component ' + comp
-                        print message
-                        services.exception(message)
-                        raise
-                    cclist[component_dict[comp]-1] = 1
-                print 'cclist = ', cclist
-                cclist_string = ''
-                for i in range(len(cclist)):
-                    cclist_string = cclist_string + str(cclist[i]) + ', '
-                nml_lines.append(' cclist = ' + cclist_string + '\n')
-                        
-                    
-                        
 
 # ------------------------------------------------------------------------------
-            # For 'minimal', 'mdescr' and 'mixed' modes generate namelist for the fortran  
+            # For 'minimal' and 'mdescr' modes generate namelist for the fortran  
             # helper code generic_ps_init.f90 and execute it
-            if init_mode in ['minimal', 'MINIMAL', 'mdescr', 'MDESCR', 'mixed', 'MIXED'] :
+            if init_mode in ['minimal', 'MINIMAL', 'mdescr', 'MDESCR'] :
                 nml_lines.append('/')
                 self.put_lines('generic_ps_init.nml', nml_lines)
                             
@@ -391,9 +338,6 @@ class generic_ps_init (Component):
                 if (retcode != 0):
                    print 'Error executing ', init_bin
                    raise
-                   
-                print 'Debugging intentional stop'
-                raise
 
 # ------------------------------------------------------------------------------
             # For all init init modes insert run identifiers and time data 
