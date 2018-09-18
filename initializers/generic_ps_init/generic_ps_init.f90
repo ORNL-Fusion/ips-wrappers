@@ -132,11 +132,11 @@ PROGRAM generic_ps_init
 
 !------------------------------------------------------------------------------------
 !     
-!   Do initalizations from machine description file
+!   Do initalizations from machine description file if mdescr_file is specified
 !
 !------------------------------------------------------------------------------------
 
-    IF ((TRIM(init_mode) == 'mdescr') .or. (TRIM(init_mode) == 'MDESCR')) THEN
+    IF (TRIM(sconfig_file) /= ' ') THEN
         inquire(file=trim(mdescr_file), exist=file_exists)
         if(.not.file_exists)then
             write(*,*)'generic_ps_init : ERROR - mdescr_file not found'  
@@ -149,7 +149,7 @@ PROGRAM generic_ps_init
 
 !------------------------------------------------------------------------------------
 !     
-!   Load shot configuration data from sconfig file into aux state
+!   Load shot configuration data from sconfig file if sconfig file is specified
 !
 !------------------------------------------------------------------------------------
 
@@ -162,7 +162,7 @@ PROGRAM generic_ps_init
             call exit(status)
         endif
         write(*,*) 'generic_ps_init: sconfig_file = ', trim(sconfig_file)
-        call ps_sconfig_read(trim(sconfig_file), ierr, state=aux)
+        call ps_sconfig_read(trim(sconfig_file), ierr, state=ps)
     END IF
 
 !--------------------------------------------------------------------------
