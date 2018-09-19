@@ -562,7 +562,7 @@ class genray(Component):
                     self.services.error('Error executing zero_RF_LH_power')
                     raise Exception, 'Error executing zero_RF_LH_power'                 
             else:
-                message = 'rf_genray.py: Unimplemented rfmode = ' + RFMODE
+                message = 'rf_genray.py: Unimplemented rfmode = ' + rfmode
                 print message
                 services.exception(message)
                 raise
