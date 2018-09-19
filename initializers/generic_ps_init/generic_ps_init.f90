@@ -120,7 +120,7 @@ PROGRAM generic_ps_init
 !
 !------------------------------------------------------------------------------------
 
-    IF (TRIM(init_mode) == 'mdescr') THEN
+    IF ((TRIM(init_mode) == 'mdescr').or.(TRIM(init_mode) == 'mixed')) THEN
         inquire(file=trim(mdescr_file), exist=file_exists)
         if(.not.file_exists)then
             write(*,*)'generic_ps_init : ERROR - mdescr_file not found'  
