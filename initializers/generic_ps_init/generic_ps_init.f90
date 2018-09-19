@@ -161,6 +161,8 @@ PROGRAM generic_ps_init
               print*, 'call failed to ps_get_plasma_state for aux state'
               call exit(1)
           end if
+
+	     CALL ps_store_plasma_state(ierr, state=aux)
           
          CALL PS_COPY_PLASMA_STATE(aux, ps, ierr, inodims = 1)
          if (ierr .ne. 0) then
