@@ -550,6 +550,14 @@ class genray(Component):
                     print 'Error executing zero_RF_EC_power '
                     self.services.error('Error executing zero_RF_EC_power')
                     raise Exception, 'Error executing zero_RF_EC_power'
+
+                # N.B. zero_RF_power does not produce a complete set of GENRAY output
+                #      files.  This causes an error in stage_output_files().  To
+                #      solve this we generate a dummy set of output files here with
+                #      system call 'touch'
+                for file in self.OUTPUT_FILES.split():
+                    subprocess.call(['touch', file])
+
         elif rfmode == 'LH':
             power_lh = ps.variables['power_lh'][:]
             ps.close()
@@ -561,12 +569,6 @@ class genray(Component):
                     print 'Error executing zero_RF_LH_power '
                     self.services.error('Error executing zero_RF_LH_power')
                     raise Exception, 'Error executing zero_RF_LH_power'                 
-            else:
-                message = 'rf_genray.py: Unimplemented rfmode = ' + rfmode
-                print message
-                services.exception(message)
-                raise
-
 
             # N.B. zero_RF_power does not produce a complete set of GENRAY output
             #      files.  This causes an error in stage_output_files().  To
@@ -574,6 +576,11 @@ class genray(Component):
             #      system call 'touch'
             for file in self.OUTPUT_FILES.split():
                 subprocess.call(['touch', file])
+        elif rfmode not in ['EC', 'LH']:
+            message = 'rf_genray.py: Unimplemented rfmode = ' + rfmode
+            print message
+            services.exception(message)
+            raise
 
     # Or actually run GENRAY
         else:
