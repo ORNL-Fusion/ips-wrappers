@@ -64,6 +64,7 @@ PROGRAM generic_ps_init
     
     CHARACTER (len=256) :: cur_state_file, cur_eqdsk_file
     CHARACTER (len=256) ::  input_eqdsk_file = ' '
+    CHARACTER (len=256) ::  input_state_file = ' '
     CHARACTER (len=32) ::   mdescr_file = ' '
     CHARACTER (len=32) ::   sconfig_file = ' '
     CHARACTER(len=32) :: init_mode  
@@ -89,7 +90,7 @@ PROGRAM generic_ps_init
 
     namelist /ps_init_nml/ &
           init_mode, generate_eqdsk, cur_state_file, cur_eqdsk_file, &
-          mdescr_file, input_eqdsk_file, sconfig_file
+          mdescr_file, input_eqdsk_file, sconfig_file, input_state_file
           
            
     WRITE (*,*)
@@ -155,7 +156,7 @@ PROGRAM generic_ps_init
 !------------------------------------------------------------------------------------
 
     IF (TRIM(init_mode) == 'mixed') THEN
-          CALL ps_get_plasma_state(ierr, TRIM(cur_state_file), aux)
+          CALL ps_get_plasma_state(ierr, TRIM(input_state_file), aux)
           if (ierr .ne. 0) then
               print*, 'call failed to ps_get_plasma_state for aux state'
               call exit(1)

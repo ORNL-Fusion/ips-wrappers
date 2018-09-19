@@ -325,6 +325,9 @@ class generic_ps_init (Component):
                    SCONFIG_FILE = ' '
                 else:
                     nml_lines.append(' sconfig_file = ' + SCONFIG_FILE + '\n')
+
+            if init_mode in ['mixed', 'MIXED'] :
+                nml_lines.append(' input_state_file = ' + INPUT_STATE_FILE + '\n')
                     
                 INPUT_EQDSK_FILE = self.get_component_param(services, 'INPUT_EQDSK_FILE', \
                 optional = True)
@@ -332,6 +335,11 @@ class generic_ps_init (Component):
                    INPUT_EQDSK_FILE = ' '
                 else:
                    nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
+
+# ------------------------------------------------------------------------------
+			# For init_mode = mixed add input_state_file to namelist			
+            if init_mode in ['mixed', 'MIXED'] :
+                nml_lines.append(' input_state_file = ' + INPUT_STATE_FILE + '\n')
 
 # ------------------------------------------------------------------------------
             # For 'minimal', 'mdescr' and 'mixed' modes generate namelist for the fortran  
