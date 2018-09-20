@@ -1307,7 +1307,7 @@ c     First treat electrons and zeff:
 !.......................................................................
       
       allocate(dense(nj),tempe(nj),zeff(nj))
-
+      write(*,*)'before ps_rho_rezone line 1310'
       call ps_rho_rezone(rho_bdy_rezon, ps%id_ns(0), dense, ierr,
      +     zonesmoo=.TRUE.)
       write(*,*)'after ps_rho_rezone: ierr=',ierr
