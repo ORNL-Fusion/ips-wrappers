@@ -537,38 +537,45 @@ class genray(Component):
 
 # Check if RF power is zero (or effectively zero).  If true don't run GENRAY just
 # run zero_RF_power fortran code
+        zero_rf_power_threshold = 0.001
         print 'cur_state_file = ', cur_state_file
         ps = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
         if rfmode == 'EC':
-            power_ec = ps.variables['power_ec'][:]
+            rf_power = ps.variables['power_ec'][:]
             ps.close()
-            print 'Total EC power = ', sum(power_ec)
-            if(sum(power_ec) < 0.001):
-                zero_RF_EC_power = get_component_param(self, services, 'ZERO_EC_POWER_BIN')
-                retcode = subprocess.call([zero_RF_EC_power, cur_state_file])
-                if (retcode != 0):
-                    print 'Error executing zero_RF_EC_power '
-                    self.services.error('Error executing zero_RF_EC_power')
-                    raise Exception, 'Error executing zero_RF_EC_power'
+            total_rf_power = sum(rf_power)
+            print 'Total EC power = ', total_rf_power
+            zero_rf_power_bin_string = 'ZERO_EC_POWER_BIN'
 
-                # N.B. zero_RF_power does not produce a complete set of GENRAY output
-                #      files.  This causes an error in stage_output_files().  To
-                #      solve this we generate a dummy set of output files here with
-                #      system call 'touch'
-                for file in self.OUTPUT_FILES.split():
-                    subprocess.call(['touch', file])
-
-        elif rfmode == 'LH':
-            power_lh = ps.variables['power_lh'][:]
+        # If EC parameters are programmed from config file, set parameters in genray.in
+            if programming == True:
+                # Get t0 from plasma state
+                ps = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
+                t0 = ps.variables['t0'].getValue()
+                ps.close()
+                # set parameters those for time = t0
+                self.set_genray_EC_parameters("genray.in", t0, times_parameters_list)
+            
+        if rfmode == 'LH':
+            rf_power = ps.variables['power_lh'][:]
             ps.close()
-            print 'Total LH power = ', sum(power_lh)
-            if(sum(power_lh) < 0.001):
-                zero_RF_LH_power = get_component_param(self, services, 'ZERO_LH_POWER_BIN')
-                retcode = subprocess.call([zero_RF_LH_power, cur_state_file])
-                if (retcode != 0):
-                    print 'Error executing zero_RF_LH_power '
-                    self.services.error('Error executing zero_RF_LH_power')
-                    raise Exception, 'Error executing zero_RF_LH_power'                 
+            total_rf_power = sum(rf_power)
+            print 'Total LH power = ', total_rf_power
+            zero_rf_power_bin_string = 'ZERO_LH_POWER_BIN'
+
+        if rfmode not in ['EC', 'LH']:
+            message = 'rf_genray.py: Unimplemented rfmode = ' + rfmode
+            print message
+            services.exception(message)
+            raise
+
+        if(total_rf_power < zero_rf_power_threshold):
+            zero_RF_power = get_component_param(self, services, zero_rf_power_bin_string)
+            retcode = subprocess.call([zero_RF_power, cur_state_file])
+            if (retcode != 0):
+                message =  'Error executing ',zero_rf_power_bin
+                self.services.error(message)
+                raise Exception, message
 
             # N.B. zero_RF_power does not produce a complete set of GENRAY output
             #      files.  This causes an error in stage_output_files().  To
@@ -576,14 +583,9 @@ class genray(Component):
             #      system call 'touch'
             for file in self.OUTPUT_FILES.split():
                 subprocess.call(['touch', file])
-        elif rfmode not in ['EC', 'LH']:
-            message = 'rf_genray.py: Unimplemented rfmode = ' + rfmode
-            print message
-            services.exception(message)
-            raise
 
     # Or actually run GENRAY
-        else:
+        if(total_rf_power > zero_rf_power_threshold):
             # Call prepare_input - step
             print 'rf_genray step: calling prepare_input'
         
@@ -602,15 +604,6 @@ class genray(Component):
                 print 'Error executing genray: ', prepare_input_bin
                 services.error('Error executing genray prepare_input')
                 raise Exception, 'Error executing genray prepare_input'
-
-        # If parameters are programmed from config file set parameters in genray.in
-            if programming == True:
-                # Get t0 from plasma state
-                ps = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
-                t0 = ps.variables['t0'].getValue()
-                ps.close()
-                # set parameters those for time = t0
-                self.set_genray_EC_parameters("genray.in", t0, times_parameters_list)
         
     #     Launch genray - N.B: Path to executable is in config parameter GENRAY_BIN
             print 'rf_genray: launching genray'
@@ -645,7 +638,7 @@ class genray(Component):
             cwd = services.get_working_dir()
             partial_file = cwd + '/RF_EC_' + cur_state_file
             if rfmode == 'LH':
-            	partial_file = cwd + '/RF_LH_' + cur_state_file
+                partial_file = cwd + '/RF_LH_' + cur_state_file
             shutil.copyfile('RF_GENRAY_PARTIAL_STATE', partial_file )
         except IOError, (errno, strerror):
             print 'Error copying file %s to %s' % ('cur_state.cdf', cur_state_file), strerror
