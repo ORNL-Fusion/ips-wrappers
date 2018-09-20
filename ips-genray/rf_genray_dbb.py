@@ -640,9 +640,12 @@ class genray(Component):
                 services.error('Error executing genray process_output')
                 raise Exception, 'Error executing genray process_output'
         
-    # Copy generic genray partial plasma state file -> EC_cur_state_file
+    # Copy generic genray output to  partial plasma state file
         try:
+            cwd = services.get_working_dir()
             partial_file = cwd + '/RF_EC_' + cur_state_file
+            if rfmode == 'LH':
+            	partial_file = cwd + '/RF_LH_' + cur_state_file
             shutil.copyfile('RF_GENRAY_PARTIAL_STATE', partial_file )
         except IOError, (errno, strerror):
             print 'Error copying file %s to %s' % ('cur_state.cdf', cur_state_file), strerror
@@ -697,3 +700,7 @@ class genray(Component):
 
     def finalize(self, timestamp=0.0):
         print 'genray.finalize() called'
+
+
+
+
