@@ -168,7 +168,7 @@ PROGRAM generic_ps_init
 ! input_state_file, and copy data from aux that are to be initialized from mdescr and
 ! sconfig
 !--------------------------------------------------------------------------
-         CALL PS_COPY_PLASMA_STATE(aux, ps, ierr, cclist, 1, 0)
+         CALL PS_COPY_PLASMA_STATE(aux, ps, ierr, cclist, 0, 0)
          if (ierr .ne. 0) then
              print*, 'call failed to PS_COPY_PLASMA_STATE for aux state to ps state'
              call exit(1)
@@ -177,7 +177,7 @@ PROGRAM generic_ps_init
          
          cclist_inv = cclist_all - cclist
          write (*,*) 'cclist_inv = ', cclist_inv
-         CALL PS_COPY_PLASMA_STATE(psp, ps, ierr, cclist_inv, 1, 0)
+         CALL PS_COPY_PLASMA_STATE(psp, ps, ierr, cclist_inv, 0, 0)
          if (ierr .ne. 0) then
              print*, 'call failed to PS_COPY_PLASMA_STATE for aux state to ps state'
              call exit(1)
