@@ -1,6 +1,6 @@
 PROGRAM generic_ps_init
 
-! version 1.0  (4/4/2016) Batchelor
+! version 2.0  (9/17/2018) Batchelor
 
 !--------------------------------------------------------------------------
 !
@@ -34,7 +34,12 @@ PROGRAM generic_ps_init
 ! the MHD equilibrium, so the equilibrium must be specified during further component 
 ! initializations
 ! 
-! INIT_MODE = mixed (yet to be implemented)
+! INIT_MODE = mixed
+! This combines existing_ps_file and mdescr modes.  This copies an existing input plasma state 
+! file and optionally an existing eqdsk file to CURRENT_STATE and CURRENT_EQDSK as in 
+! existing_ps_file mode.  But initializations from MDESCR_FILE and SCONFIG_FILE are also added.  
+! Caution is advised.  If the MDESCR_FILE or SCONFIG_FILE attempts to reallocate any of the
+! arrays already allocated in the CURRENT_STATE file a Plasma State error will occur.
 ! 
 ! Except for possibly mode = existing_ps_file, all modes call on the fortran helper code 
 ! generic_ps_file_init.f90 to interact with the Plasma State. The fortran code is also used
@@ -59,6 +64,7 @@ PROGRAM generic_ps_init
     
     IMPLICIT none
     
+    INTEGER :: i
     INTEGER :: istat, ierr = 0
     INTEGER :: iarg, status = 0
     
@@ -74,32 +80,30 @@ PROGRAM generic_ps_init
 
 
 !--------------------------------------------------------------------------
-!
-!   Internal data: None
-!
+!   Internal data
 !--------------------------------------------------------------------------
-
+    INTEGER :: ps_ccount = 13
+    INTEGER :: cclist(ps_ccount)   ! component activation list
+    INTEGER :: cclist_all(ps_ccount) = (/(1, i=1,ps_ccount)/)
+    INTEGER :: cclist_inv(ps_ccount)   ! inverse of cclist
+    
     REAL(KIND=rspec) :: t, tinit, tfinal
     CHARACTER(LEN=*), PARAMETER :: ps_init_nml_file = 'generic_ps_init.nml'
 
-!------------------------------------------------------------------------------------
-!     
+!------------------------------------------------------------------------------------    
 !   Namelists
-!
 !------------------------------------------------------------------------------------
 
     namelist /ps_init_nml/ &
           init_mode, generate_eqdsk, cur_state_file, cur_eqdsk_file, &
-          mdescr_file, input_eqdsk_file, sconfig_file, input_state_file
+          mdescr_file, input_eqdsk_file, sconfig_file, input_state_file, cclist
           
            
     WRITE (*,*)
-    WRITE (*,*) 'generic_ps_init'      
+    WRITE (*,*) 'Started generic_ps_init.f90'      
 
-!---------------------------------------------------------------------------------
-!     
+!---------------------------------------------------------------------------------    
 !  Get init configuration data from ps_init_nml_file
-!
 !---------------------------------------------------------------------------------
 
     OPEN (unit=21, file = 'generic_ps_init.nml', status = 'old',   &
@@ -114,10 +118,8 @@ PROGRAM generic_ps_init
 	CLOSE (21)
 	WRITE (*, nml = ps_init_nml)
 
-!------------------------------------------------------------------------------------
-!     
-!   Do initalizations from machine description file
-!
+!------------------------------------------------------------------------------------     
+!   Load machine description data from mdescr file to state aux
 !------------------------------------------------------------------------------------
 
     IF ((TRIM(init_mode) == 'mdescr').or.(TRIM(init_mode) == 'mixed')) THEN
@@ -128,13 +130,11 @@ PROGRAM generic_ps_init
             call exit(1)
         endif
         write(*,*) 'generic_ps_init: mdescr_file = ', trim(mdescr_file)
-        call ps_mdescr_read(trim(mdescr_file), ierr, state=ps)
+        call ps_mdescr_read(trim(mdescr_file), ierr, state=aux)
     END IF
 
-!------------------------------------------------------------------------------------
-!     
-!   Load shot configuration data from sconfig file
-!
+!------------------------------------------------------------------------------------   
+!   Load shot configuration data from sconfig file to state aux
 !------------------------------------------------------------------------------------
 
     IF (TRIM(sconfig_file) /= ' ') THEN
@@ -146,19 +146,19 @@ PROGRAM generic_ps_init
             call exit(status)
         endif
         write(*,*) 'generic_ps_init: sconfig_file = ', trim(sconfig_file)
-        call ps_sconfig_read(trim(sconfig_file), ierr, state=ps)
+        call ps_sconfig_read(trim(sconfig_file), ierr, state=aux)
     END IF
-	     CALL ps_store_plasma_state(ierr,'mdescr_sconfig_state.nc', state=ps)
+	     CALL ps_store_plasma_state(ierr,'mdescr_sconfig_state.nc', state=aux)
+
 !------------------------------------------------------------------------------------
-!     
-!   If init_mode = 'mixed' load current state file as aux and copy state data to ps
-!
+!  If init_mode is 'mixed' get input plasma state as state psp
 !------------------------------------------------------------------------------------
 
-    IF (TRIM(init_mode) == 'mixed') THEN
-          CALL ps_get_plasma_state(ierr, TRIM(input_state_file), aux)
+    IF ((TRIM(init_mode) == 'mixed') .or. (TRIM(init_mode) == 'MIXED')) THEN      
+          CALL ps_get_plasma_state(ierr, TRIM(input_state_file), psp)
           if (ierr .ne. 0) then
-              print*, 'call failed to ps_get_plasma_state for aux state'
+              print*, 'call failed to ps_get_plasma_state for psp state ', &
+                       &TRIM(input_state_file)
               call exit(1)
           end if
 
@@ -169,9 +169,26 @@ PROGRAM generic_ps_init
              print*, 'call failed to PS_COPY_PLASMA_STATE for aux state to ps state'
              call exit(1)
          end if
-    END IF
     	
+!--------------------------------------------------------------------------
+! Copy data from psp to ps for the components that are to be initialized from
+! input_state_file, and copy data from aux that are to be initialized from mdescr and
+! sconfig
+!--------------------------------------------------------------------------
+         CALL PS_COPY_PLASMA_STATE(aux, ps, ierr, cclist, 1, 0)
+         if (ierr .ne. 0) then
+             print*, 'call failed to PS_COPY_PLASMA_STATE for aux state to ps state'
+             call exit(1)
+         end if
+         
+         cclist_inv = cclist_all - cclist
+         CALL PS_COPY_PLASMA_STATE(psp, ps, ierr, cclist_inv, 1, 0)
+         if (ierr .ne. 0) then
+             print*, 'call failed to PS_COPY_PLASMA_STATE for aux state to ps state'
+             call exit(1)
+         end if
 
+    END IF ! End mixed init section
 
 !--------------------------------------------------------------------------
 ! 

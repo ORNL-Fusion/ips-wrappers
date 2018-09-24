@@ -46,6 +46,24 @@ file and optionally an existing eqdsk file to CURRENT_STATE and CURRENT_EQDSK as
 existing_ps_file mode.  But initializations from MDESCR_FILE and SCONFIG_FILE are also added.  
 Caution is advised.  If the MDESCR_FILE or SCONFIG_FILE attempts to reallocate any of the
 arrays already allocated in the CURRENT_STATE file a Plasma State error will occur.
+Therefore one must provide a list of which components are to be initialized from mdescr
+or sconfig
+
+IPS Components are
+
+1  PLASMA   ! Thermal plasma parameters; fluid profile advance
+2  EQ       ! MHD equilibrium
+3  NBI      ! Neutral beam
+4  IC       ! Ion cyclotron heating
+5  LH       ! Lower Hybrid heating and current drive
+6  EC       ! Electron cyclotron heating and current drive
+7  RUNAWAY  ! Runaway electrons
+8  FUS      ! Fusion product fast ions
+9  RAD      ! Radiated Power & impurity transport
+10  GAS     ! Neutral Gas sources & transport
+11  LMHD    ! Linear MHD stability
+12  RIPPLE  ! TF field ripple
+13  ANOM    ! Anomalous transport
 
 Except for possibly mode = existing_ps_file, all modes call on the fortran helper code 
 generic_ps_file_init.f90 to interact with the Plasma State. The fortran code is also used
@@ -130,6 +148,10 @@ import string
 import datetime
 from  component import Component
 from netCDF4 import *
+
+component_dict = {'PLASMA':10, 'EQ':2, 'NBI':9, 'IC':6, 'LH':7, 'EC':2,\
+             'RUNAWAY':13, 'FUS':4, 'RAD':11, 'GAS':5, 'LMHD':8, 'RIPPLE':12, 'ANOM':1}
+
 
 class generic_ps_init (Component):
     def __init__(self, services, config):
@@ -314,7 +336,7 @@ class generic_ps_init (Component):
                         raise e
 
 # ------------------------------------------------------------------------------
-            # init from machine description file
+            # init from machine description file and possibly sconfig file
             if init_mode in ['mdescr', 'MDESCR', 'mixed', 'MIXED'] :
                 MDESCR_FILE = self.get_component_param(services, 'MDESCR_FILE')
                 nml_lines.append(' mdescr_file = ' + MDESCR_FILE + '\n')
@@ -325,9 +347,6 @@ class generic_ps_init (Component):
                    SCONFIG_FILE = ' '
                 else:
                     nml_lines.append(' sconfig_file = ' + SCONFIG_FILE + '\n')
-
-            if init_mode in ['mixed', 'MIXED'] :
-                nml_lines.append(' input_state_file = ' + INPUT_STATE_FILE + '\n')
                     
                 INPUT_EQDSK_FILE = self.get_component_param(services, 'INPUT_EQDSK_FILE', \
                 optional = True)
@@ -340,6 +359,25 @@ class generic_ps_init (Component):
 			# For init_mode = mixed add input_state_file to namelist			
             if init_mode in ['mixed', 'MIXED'] :
                 nml_lines.append(' input_state_file = ' + INPUT_STATE_FILE + '\n')
+                
+				# Retrieve list of IPS components which are to be initialized from 
+				# mdescr/sconfig and construct cclist for generic_ps_init.f90
+                mdescr_components =  self.get_component_param(services, 'MDESCR_COMPONENTS')
+                if isinstance(mdescr_components, type('str')):
+                	mdescr_components = [mdescr_components]
+                cclist = [0 for i in range(len(component_dict))]
+                for comp in mdescr_components:
+                    if comp not in component_dict.keys():
+                        message = 'generic_ps_init: Unknown IPS component ' + comp
+                        print message
+                        services.exception(message)
+                        raise
+                    cclist[component_dict[comp]-1] = 1
+                print 'cclist = ', cclist
+                cclist_string = ''
+                for i in range(len(cclist)):
+                    cclist_string = cclist_string + str(cclist[i]) + ', '
+                nml_lines.append(' cclist = ' + cclist_string + '\n')
 
 # ------------------------------------------------------------------------------
             # For 'minimal', 'mdescr' and 'mixed' modes generate namelist for the fortran  
@@ -354,6 +392,9 @@ class generic_ps_init (Component):
                 if (retcode != 0):
                    print 'Error executing ', init_bin
                    raise
+                   
+                print 'Debugging intentional stop'
+                raise
 
 # ------------------------------------------------------------------------------
             # For all init init modes insert run identifiers and time data 
