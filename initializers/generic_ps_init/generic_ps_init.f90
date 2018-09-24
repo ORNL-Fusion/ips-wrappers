@@ -177,8 +177,14 @@ PROGRAM generic_ps_init
              call exit(1)
          end if
          CALL ps_store_plasma_state(ierr,'ps1.nc', state=ps)
+         
+         CALL PS_COPY_DIMS(aux, ps, 0 ,ierr, cclist, 0)
+         if (ierr .ne. 0) then
+             print*, 'call failed to PS_COPY_DIMS for aux state to ps state'
+             call exit(1)
+         end if
 
-         CALL PS_COPY_PLASMA_STATE(aux, ps, ierr, cclist, 0, 0)
+         CALL PS_COPY_PLASMA_STATE(aux, ps, ierr, cclist, 1, 0)
          if (ierr .ne. 0) then
              print*, 'call failed to PS_COPY_PLASMA_STATE for aux state to ps state'
              call exit(1)
