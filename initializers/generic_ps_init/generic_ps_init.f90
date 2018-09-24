@@ -82,7 +82,7 @@ PROGRAM generic_ps_init
 !--------------------------------------------------------------------------
 !   Internal data
 !--------------------------------------------------------------------------
-    INTEGER :: ps_ccount = 13
+
     INTEGER :: cclist(ps_ccount)   ! component activation list
     INTEGER :: cclist_all(ps_ccount) = (/(1, i=1,ps_ccount)/)
     INTEGER :: cclist_inv(ps_ccount)   ! inverse of cclist
