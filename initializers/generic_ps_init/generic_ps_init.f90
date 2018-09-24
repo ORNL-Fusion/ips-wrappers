@@ -176,7 +176,7 @@ PROGRAM generic_ps_init
          CALL ps_store_plasma_state(ierr,'ps1.nc', state=ps)
          
          cclist_inv = cclist_all - cclist
-         print (*,*) 'cclist_inv = ', cclist_inv
+         write (*,*) 'cclist_inv = ', cclist_inv
          CALL PS_COPY_PLASMA_STATE(psp, ps, ierr, cclist_inv, 1, 0)
          if (ierr .ne. 0) then
              print*, 'call failed to PS_COPY_PLASMA_STATE for aux state to ps state'
