@@ -2,8 +2,9 @@ PROGRAM model_EPA_mdescr
 
 ! Version 2.0 9/19/2018 (Batchelor)
 ! Added source_powers_only flag so that profiles are not initialized or set,
-! only source powers are set.  Nothing is initialized.  Use with fully allocated plasma
-! state.
+! only source powers are set. For now all sources are assumed to have the same power as
+! set in the /state_data/ namelist.  With source_powers_only == true 
+! nothing is initialized.  Use with fully allocated plasma state.
 !
 ! version 1.1 11/20/2017 (Batchelor)
 ! Reads cut down version of TORIC equidt.data file for thermal profiles
@@ -461,26 +462,26 @@ WRITE(*,*)
     ! Source powers
     !--------------------------------------------------------------------------
 		
-		! NB: For now assume power is the same on all EC sources
-        IF (ALLOCATED(ps%power_ec)) THEN   		       
-			ps%power_ic = power_ec
-        END IF
+	! NB: For now assume power is the same on all EC sources
+	IF (ALLOCATED(ps%power_ec)) THEN   		       
+		ps%power_ic = power_ec
+	END IF
+	
+	! NB: For now assume power is the same on all ICRF sources
+	IF (ALLOCATED(ps%power_ic)) THEN   		       
+		ps%power_ic = power_ic
+	END IF
+
+	! NB: For now assume power is the same on all LH sources
+	IF (ALLOCATED(ps%power_lh)) THEN   		       
+		ps%power_lh = power_lh
+	END IF
+
+	! NB: For now assume power is the same on all NBI sources
+	IF (ALLOCATED(ps%power_nbi)) THEN   		       
+		ps%power_ic = power_nbi
+	END IF
 		
-		! NB: For now assume power is the same on all ICRF sources
-        IF (ALLOCATED(ps%power_ic)) THEN   		       
-			ps%power_ic = power_ic
-        END IF
-
-		! NB: For now assume power is the same on all LH sources
-        IF (ALLOCATED(ps%power_lh)) THEN   		       
-			ps%power_lh = power_lh
-        END IF
-
-		! NB: For now assume power is the same on all NBI sources
-        IF (ALLOCATED(ps%power_nbi)) THEN   		       
-			ps%power_ic = power_nbi
-        END IF
-            
 
     !-------------------------------------------------------------------------- 
     ! Store plasma state
