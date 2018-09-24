@@ -161,14 +161,7 @@ PROGRAM generic_ps_init
                        &TRIM(input_state_file)
               call exit(1)
           end if
-
-	     CALL ps_store_plasma_state(ierr, state=aux)
-          
-         CALL PS_COPY_PLASMA_STATE(aux, ps, ierr, inodims = 1)
-         if (ierr .ne. 0) then
-             print*, 'call failed to PS_COPY_PLASMA_STATE for aux state to ps state'
-             call exit(1)
-         end if
+	     CALL ps_store_plasma_state(ierr, state=psp)
     	
 !--------------------------------------------------------------------------
 ! Copy data from psp to ps for the components that are to be initialized from
@@ -180,13 +173,16 @@ PROGRAM generic_ps_init
              print*, 'call failed to PS_COPY_PLASMA_STATE for aux state to ps state'
              call exit(1)
          end if
+         CALL ps_store_plasma_state(ierr,'ps1.nc', state=ps)
          
          cclist_inv = cclist_all - cclist
+         print (*,*) 'cclist_inv = ', cclist_inv
          CALL PS_COPY_PLASMA_STATE(psp, ps, ierr, cclist_inv, 1, 0)
          if (ierr .ne. 0) then
              print*, 'call failed to PS_COPY_PLASMA_STATE for aux state to ps state'
              call exit(1)
          end if
+         CALL ps_store_plasma_state(ierr,'ps2.nc', state=ps)
 
     END IF ! End mixed init section
 
