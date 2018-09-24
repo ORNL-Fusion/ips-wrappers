@@ -393,9 +393,6 @@ class generic_ps_init (Component):
                    print 'Error executing ', init_bin
                    raise
                    
-                print 'Debugging intentional stop'
-                raise
-
 # ------------------------------------------------------------------------------
             # For all init init modes insert run identifiers and time data 
             # (do it here in python instead of in minimal_state_init.f90 as before)
