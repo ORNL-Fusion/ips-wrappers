@@ -146,7 +146,9 @@ PROGRAM generic_ps_init
             call exit(status)
         endif
         write(*,*) 'generic_ps_init: sconfig_file = ', trim(sconfig_file)
-        call ps_sconfig_read(trim(sconfig_file), ierr, state=aux)
+        !call ps_sconfig_read(trim(sconfig_file), ierr, state=aux)
+        call ps_sconfig_namelist_read(init = .false. ,trim(sconfig_file),tmp_filename = ' '&
+             & ,state=aux,ierr)
     END IF
 	     CALL ps_store_plasma_state(ierr,'mdescr_sconfig_state.nc', state=aux)
 
