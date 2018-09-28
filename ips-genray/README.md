@@ -1,5 +1,6 @@
 
-New: rf_genray.py
+# New: rf_genray.py
+
 Multi-frequency, config file programmable version: Batchelor (9/3/2018)
 Supports both RFMODE = EC and LH.  Launcher power and launcher aiming programming is only 
 implemented for ECH, so far.
