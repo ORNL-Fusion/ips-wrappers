@@ -109,7 +109,7 @@ class cql3d(Component):
     # Get global configuration parameters
         cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
         cur_eqdsk_file = get_global_param(self, services, 'CURRENT_EQDSK')
-        cql_file = get_global_param(self, services, 'CURRENT_DQL')
+        cur_dql_file = get_global_param(self, services, 'CURRENT_DQL')
         cur_cql_file = get_global_param(self, services,'CURRENT_CQL')
         cur_ImChizz_inp_file = get_global_param(self, services,'CURRENT_ImChizz_inp', optional = True)
 
