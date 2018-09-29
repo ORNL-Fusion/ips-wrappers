@@ -124,12 +124,12 @@ class cql3d(Component):
         RESTART_FILES = get_component_param(self, services, 'RESTART_FILES')
         BIN_PATH = get_component_param(self, services, 'BIN_PATH')
         CQL3D_BIN = get_component_param(self, services, 'CQL3D_BIN')
-        cql3d_mode = get_component_param(self, services, CQL3D_MODE)
-        cql3d_output = get_component_param(self, services, CQL3D_OUTPUT)
-        cql3d_nml = get_component_param(self, services, CQL3D_NML)
-        nsteps_str = get_component_param(self, services, NSTEPS_STR)
-        deltat_str = get_component_param(self, services, DELTAT_STR)
-        ps_add_nml = get_component_param(self, services, PS_ADD_NML)
+        cql3d_mode = get_component_param(self, services, 'CQL3D_MODE')
+        cql3d_output = get_component_param(self, services, 'CQL3D_OUTPUT')
+        cql3d_nml = get_component_param(self, services, 'CQL3D_NML')
+        nsteps_str = get_component_param(self, services, 'NSTEPS_STR')
+        deltat_str = get_component_param(self, services, 'DELTAT_STR')
+        ps_add_nml = get_component_param(self, services, 'PS_ADD_NML')
 
         # enorm which is used here and in cql3d
         arg_enorm = 'None'
@@ -368,12 +368,12 @@ class cql3d(Component):
               services.error('Error copying cur_dql_file -> genray.nc')
               raise Exception, 'Error copying cur_dql_file -> genray.nc'
 
-          cql3d_mode = get_component_param(self, services, CQL3D_MODE)
-          cql3d_output = get_component_param(self, services, CQL3D_OUTPUT)
-          cql3d_nml = get_component_param(self, services, CQL3D_NML)
-          nsteps_str = get_component_param(self, services, NSTEPS_STR)
-          deltat_str = get_component_param(self, services, DELTAT_STR)
-          ps_add_nml = get_component_param(self, services, PS_ADD_NML)
+          cql3d_mode = get_component_param(self, services, 'CQL3D_MODE')
+          cql3d_output = get_component_param(self, services, 'CQL3D_OUTPUT')
+          cql3d_nml = get_component_param(self, services, 'CQL3D_NML')
+          nsteps_str = get_component_param(self, services, 'NSTEPS_STR')
+          deltat_str = get_component_param(self, services, 'DELTAT_STR')
+          ps_add_nml = get_component_param(self, services, 'PS_ADD_NML')
           cur_ImChizz_inp_file = get_global_param(self, services,'CURRENT_ImChizz_inp', optional = True)
 
         # enorm which is used here and in cql3d
