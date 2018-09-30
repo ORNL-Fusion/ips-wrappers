@@ -225,7 +225,7 @@ class cql3d(Component):
     # ptb:    cql3d_output + ' ' + cql3d_nml + ' ' + nsteps_str + ' ' + ps_add_nml
         command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
         cql3d_output + ' ' + cql3d_nml + ' ' + restart + ' ' + nsteps_str + ' ' +\
-        ' ' + deltat_str + ' ' + ps_add_nml + ' ' + arg_enorm
+        ' ' + deltat_str + ' ' + ps_add_nml
         if arg_enorm != 'None':
         	command = command  + ' ' + arg_enorm
         
