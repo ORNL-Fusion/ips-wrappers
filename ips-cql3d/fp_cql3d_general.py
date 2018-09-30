@@ -193,12 +193,13 @@ class cql3d(Component):
             raise Exception, 'Error copying cur_eqdsk_file -> eqdsk'
 
     # Copy current Dql file to generic name -> genray.nc
-        try:
-            shutil.copyfile(cur_dql_file, 'genray.nc')
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror)
-            services.error('Error copying cur_dql_file -> genray.nc')
-            raise Exception, 'Error copying cur_dql_file -> genray.nc'
+        if cur_dql_file != 'genray.nc':
+			try:
+				shutil.copyfile(cur_dql_file, 'genray.nc')
+			except IOError, (errno, strerror):
+				print 'Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror)
+				services.error('Error copying cur_dql_file -> genray.nc')
+				raise Exception, 'Error copying cur_dql_file -> genray.nc'
 
         prepare_input_bin = os.path.join(self.BIN_PATH, 'prepare_cql3d_input')
 
