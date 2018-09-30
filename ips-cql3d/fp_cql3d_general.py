@@ -387,7 +387,7 @@ class cql3d(Component):
           cur_ImChizz_inp_file = get_global_param(self, services,'CURRENT_ImChizz_inp', optional = True)
 
         # enorm which is used here and in cql3d
-          arg_enorm = self.try_get_config_param(services,'ENORM', optional = True)
+          arg_enorm = get_component_param(self, services, 'ENORM', optional = True)
           
     # Call prepare_input - step
           print 'fp_cql3d step: calling prepare_input'
