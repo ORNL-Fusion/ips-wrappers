@@ -132,7 +132,6 @@ class cql3d(Component):
         ps_add_nml = get_component_param(self, services, 'PS_ADD_NML')
 
         # enorm which is used here and in cql3d
-        arg_enorm = 'None'
         arg_enorm = get_component_param(self, services, 'ENORM', optional = True)
 
     # Copy plasma state files over to working directory
@@ -338,6 +337,13 @@ class cql3d(Component):
           print 'Error in call to stage_plasma_state()' , e
           services.error('Error in call to stage_plasma_state()')
           raise Exception, 'Error in call to stage_plasma_state()'
+
+    # Get global configuration parameters
+        cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
+        cur_eqdsk_file = get_global_param(self, services, 'CURRENT_EQDSK')
+        cur_dql_file = get_global_param(self, services, 'CURRENT_DQL')
+        cur_cql_file = get_global_param(self, services,'CURRENT_CQL')
+        cur_ImChizz_inp_file = get_global_param(self, services,'CURRENT_ImChizz_inp', optional = True)
         
         print 'CURRENT_CQL = ', cur_cql_file
     # Copy current plasma state file to generic name -> cur_state.cdf
@@ -364,12 +370,13 @@ class cql3d(Component):
         if(power_lh > 1.0E-04):
 
     # Copy current Dql file to generic name -> genray.nc
-          try:
-              shutil.copyfile(cur_dql_file, 'genray.nc')
-          except IOError, (errno, strerror):
-              print 'Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror)
-              services.error('Error copying cur_dql_file -> genray.nc')
-              raise Exception, 'Error copying cur_dql_file -> genray.nc'
+          if cur_dql_file != 'genray.nc':
+			try:
+				shutil.copyfile(cur_dql_file, 'genray.nc')
+			except IOError, (errno, strerror):
+				print 'Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror)
+				services.error('Error copying cur_dql_file -> genray.nc')
+				raise Exception, 'Error copying cur_dql_file -> genray.nc'
 
           cql3d_mode = get_component_param(self, services, 'CQL3D_MODE')
           cql3d_output = get_component_param(self, services, 'CQL3D_OUTPUT')
@@ -380,7 +387,6 @@ class cql3d(Component):
           cur_ImChizz_inp_file = get_global_param(self, services,'CURRENT_ImChizz_inp', optional = True)
 
         # enorm which is used here and in cql3d
-          arg_enorm = 'None'
           arg_enorm = self.try_get_config_param(services,'ENORM', optional = True)
           
     # Call prepare_input - step
