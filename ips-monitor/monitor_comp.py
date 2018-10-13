@@ -969,7 +969,7 @@ class monitor(Component):
                 (monitor_file, self.cdfFile, strerror)
 
    # Generate pdf file with PCMF.py
-        cmd = ['python', 'PCMF.py', 'pdf_fileName']
+        cmd = ['python', 'PCMF.py', pdf_fileName]
         print 'Executing = ', cmd
         services.send_portal_event(event_type = 'COMPONENT_EVENT',\
           event_comment =  cmd)
