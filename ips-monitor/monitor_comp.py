@@ -1,7 +1,10 @@
 #! /usr/bin/env python
 
 """
-monitor_comp.py 2-4-2014
+monitor_comp.py 10-11-2018
+
+Version 5.4 runs PCMF to generate pdf plot of plasma state and pushes it out to the w3 
+directory.
 
 Version 5.3 picks up the simulation config file and pushes it out to the w3 directory.
 This is done in the init
@@ -211,6 +214,7 @@ include_zone_based_profiles = False
 include_cumulative_profiles = True
 
 monitor_fileName = 'monitor_file.nc'
+pdf_fileName = 'monitor_file.pdf'
 
 # List of requested variables to monitor (if dependencies are satisfied)
 # The list just below is the default containing everything.  In the component it can
@@ -936,11 +940,13 @@ class monitor(Component):
         self.run_id = services.get_config_param('PORTAL_RUNID')
         #self.run_id = self.get_config_param(services,'PORTAL_RUNID')
         print 'run_id = ', self.run_id
-        monitor_file = 'monitor_file.nc'
-    	print 'monitor file = ', monitor_file
+    	print 'monitor file = ', monitor_fileName
+    	print 'state pdf file = ', pdf_fileName
 
-        self.cdfFile = self.run_id+'_' + monitor_file
+        self.cdfFile = self.run_id+'_' + monitor_fileName
+        self.pdfFile = self.run_id+'_' + pdf_fileName
         services.log('w3 monitor file = ' + self.cdfFile)
+        services.log('state pdf file = ' + self.pdfFile)
 
     # Copy current state over to working directory
         services.stage_plasma_state()
@@ -998,10 +1004,13 @@ class monitor(Component):
         workdir = services.get_working_dir()
         #self.run_id = services.get_config_param('PORTAL_RUNID')
         self.run_id = self.get_config_param(services,'PORTAL_RUNID')
-        monitor_file = 'monitor_file.nc'
+     #   monitor_file = 'monitor_file.nc'
     #      print 'monitor file = ', monitor_file
 
-        self.cdfFile = self.run_id+'_' + monitor_file.nc
+#         self.cdfFile = self.run_id+'_' + monitor_file
+#         services.log('w3 monitor file = ' + self.cdfFile)
+
+        self.cdfFile = self.run_id+'_' + monitor_fileName
         services.log('w3 monitor file = ' + self.cdfFile)
         
     # Get restart files listed in config file.        
@@ -1015,11 +1024,11 @@ class monitor(Component):
 
         # copy monitor file to w3 directory
         try:
-            shutil.copyfile(monitor_file,
+            shutil.copyfile(monitor_fileName,
                             os.path.join(self.W3_DIR, self.cdfFile))
         except IOError, (errno, strerror):
             print 'Error copying file %s to %s: %s' % \
-                (monitor_file, self.cdfFile, strerror)
+                (monitor_fileName, self.cdfFile, strerror)
     
         # Load monitorVars and ps_VarsList from pickle file "monitor_restart".
 
@@ -1055,7 +1064,7 @@ class monitor(Component):
             print 'Error in monitor_comp: step() : no framework services'
             return 1
 
-        monitor_file = 'monitor_file.nc'
+#        monitor_file = 'monitor_file.nc'
 
     # Copy current and prior state over to working directory
         services.stage_plasma_state()
@@ -1073,13 +1082,20 @@ class monitor(Component):
         services.stage_output_files(timeStamp, self.OUTPUT_FILES)
 
     # copy montor file to w3 directory
+#         try:
+#             shutil.copyfile(monitor_file,
+#                             os.path.join(self.W3_DIR, self.cdfFile))
+#         except IOError, (errno, strerror):
+#             print 'Error copying file %s to %s: %s' % \
+#                 (monitor_file, self.W3_DIR, strerror)
+#         return
+
         try:
-            shutil.copyfile(monitor_file,
+            shutil.copyfile(monitor_fileName,
                             os.path.join(self.W3_DIR, self.cdfFile))
         except IOError, (errno, strerror):
             print 'Error copying file %s to %s: %s' % \
-                (monitor_file, self.W3_DIR, strerror)
-        return
+                (monitor_fileName, self.cdfFile, strerror)
 
 # ------------------------------------------------------------------------------
 #
