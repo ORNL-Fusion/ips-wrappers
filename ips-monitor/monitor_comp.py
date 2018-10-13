@@ -941,7 +941,7 @@ class monitor(Component):
         #self.run_id = self.get_config_param(services,'PORTAL_RUNID')
         print 'run_id = ', self.run_id
     	print 'monitor file = ', monitor_fileName
-    	print 'state pdf file = ', pdf_fileName
+    	print 'monitor pdf file = ', pdf_fileName
 
         self.cdfFile = self.run_id+'_' + monitor_fileName
         self.pdfFile = self.run_id+'_' + pdf_fileName
@@ -967,6 +967,25 @@ class monitor(Component):
         except IOError, (errno, strerror):
             print 'Error copying file %s to %s: %s' % \
                 (monitor_file, self.cdfFile, strerror)
+
+   # Generate pdf file with PCMF.py
+        cmd = ['python', 'PCMF.py', 'pdf_fileName']
+        print 'Executing = ', cmd
+        services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+          event_comment =  cmd)
+        retcode = subprocess.call(cmd)
+        if (retcode != 0):
+            logMsg = 'Error executing '.join(map(str, cmd))
+            self.services.error(logMsg)
+            raise Exception(logMsg)
+
+   # copy pdf file to w3 directory
+        try:
+            shutil.copyfile(pdf_fileName,
+                            os.path.join(self.W3_DIR, self.pdfFile))
+        except IOError, (errno, strerror):
+            print 'Error copying file %s to %s: %s' % \
+                (pdf_fileName, self.pdfFile, strerror)
 
     # Copy config file to w3 directory
         conf_file = services.get_config_param('SIMULATION_CONFIG_FILE')
@@ -1022,19 +1041,26 @@ class monitor(Component):
             print 'Error in call to get_restart_files()' , e
             raise
 
-        # copy monitor file to w3 directory
+    # copy monitor file to w3 directory
         try:
             shutil.copyfile(monitor_fileName,
                             os.path.join(self.W3_DIR, self.cdfFile))
         except IOError, (errno, strerror):
             print 'Error copying file %s to %s: %s' % \
                 (monitor_fileName, self.cdfFile, strerror)
+
+    # copy pdf file to w3 directory
+        try:
+            shutil.copyfile(pdf_fileName,
+                            os.path.join(self.W3_DIR, self.pdfFile))
+        except IOError, (errno, strerror):
+            print 'Error copying file %s to %s: %s' % \
+                (pdf_fileName, self.pdfFile, strerror)
     
-        # Load monitorVars and ps_VarsList from pickle file "monitor_restart".
+    # Load monitorVars, monitorDefinition and ps_VarsList from pickle file "monitor_restart".
 
         pickleDict = {'monitorVars' : monitorVars, 'ps_VarsList': ps_VarsList,\
                      'monitorDefinition':monitorDefinition}
-#        pickleDict = {'monitorVars' : monitorVars, 'ps_VarsList': ps_VarsList}
         pickFile = open('monitor_restart', 'r')
         pickleDict = pickle.load(pickFile)
         pickFile.close()
@@ -1081,21 +1107,21 @@ class monitor(Component):
     # "Archive" output files in history directory
         services.stage_output_files(timeStamp, self.OUTPUT_FILES)
 
-    # copy montor file to w3 directory
-#         try:
-#             shutil.copyfile(monitor_file,
-#                             os.path.join(self.W3_DIR, self.cdfFile))
-#         except IOError, (errno, strerror):
-#             print 'Error copying file %s to %s: %s' % \
-#                 (monitor_file, self.W3_DIR, strerror)
-#         return
-
+    # copy monitor file to w3 directory
         try:
             shutil.copyfile(monitor_fileName,
                             os.path.join(self.W3_DIR, self.cdfFile))
         except IOError, (errno, strerror):
             print 'Error copying file %s to %s: %s' % \
                 (monitor_fileName, self.cdfFile, strerror)
+
+    # copy pdf file to w3 directory
+        try:
+            shutil.copyfile(pdf_fileName,
+                            os.path.join(self.W3_DIR, self.pdfFile))
+        except IOError, (errno, strerror):
+            print 'Error copying file %s to %s: %s' % \
+                (pdf_fileName, self.pdfFile, strerror)
 
 # ------------------------------------------------------------------------------
 #
