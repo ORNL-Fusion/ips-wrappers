@@ -1049,6 +1049,17 @@ class monitor(Component):
             print 'Error copying file %s to %s: %s' % \
                 (monitor_fileName, self.cdfFile, strerror)
 
+   # Generate pdf file with PCMF.py
+        cmd = ['python', 'PCMF.py', pdf_fileName]
+        print 'Executing = ', cmd
+        services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+          event_comment =  cmd)
+        retcode = subprocess.call(cmd)
+        if (retcode != 0):
+            logMsg = 'Error executing '.join(map(str, cmd))
+            self.services.error(logMsg)
+            raise Exception(logMsg)
+
     # copy pdf file to w3 directory
         try:
             shutil.copyfile(pdf_fileName,
@@ -1114,6 +1125,17 @@ class monitor(Component):
         except IOError, (errno, strerror):
             print 'Error copying file %s to %s: %s' % \
                 (monitor_fileName, self.cdfFile, strerror)
+
+   # Generate pdf file with PCMF.py
+        cmd = ['python', 'PCMF.py', pdf_fileName]
+        print 'Executing = ', cmd
+        services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+          event_comment =  cmd)
+        retcode = subprocess.call(cmd)
+        if (retcode != 0):
+            logMsg = 'Error executing '.join(map(str, cmd))
+            self.services.error(logMsg)
+            raise Exception(logMsg)
 
     # copy pdf file to w3 directory
         try:
