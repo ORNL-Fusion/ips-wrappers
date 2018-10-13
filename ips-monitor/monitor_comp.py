@@ -962,7 +962,7 @@ class monitor(Component):
 
     # copy monitor file to w3 directory
         try:
-            shutil.copyfile(monitor_file,
+            shutil.copyfile(monitor_fileName,
                             os.path.join(self.W3_DIR, self.cdfFile))
         except IOError, (errno, strerror):
             print 'Error copying file %s to %s: %s' % \
