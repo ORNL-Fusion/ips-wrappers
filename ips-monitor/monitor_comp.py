@@ -964,6 +964,8 @@ class monitor(Component):
         self.GENERATE_PDF = get_component_param(self, services, 'GENERATE_PDF', optional = True)
         if (self.GENERATE_PDF == None):
             self.GENERATE_PDF = True
+        if (self.GENERATE_PDF in ['false', 'FALSE', 'False']):
+            self.GENERATE_PDF = False
         print 'self.GENERATE_PDF 1 = ', self.GENERATE_PDF
         
     # Copy current state over to working directory
@@ -1158,21 +1160,33 @@ class monitor(Component):
 #
 # finalize function
 #
-# Calls monitor executable in "FINALIZE" mode which sets
-# 'running' atribute to false so Elvis will stop watching the monitor file.
+# If self.GENERATE_PDF == False go ahead and make a pdf file anyway for the last
+# time step.  To eliminate even this call to PCMF set 'GENERATE_PDF = Never' in simulation
+# config file.
 #
 # ------------------------------------------------------------------------------
 
     def finalize(self, timestamp=0.0):
 
-        # Open the monitor file for output
-        monitor_file = Dataset(monitor_fileName, 'r+', format = 'NETCDF3_CLASSIC')
+        if self.GENERATE_PDF == False:
+       # Generate pdf file with PCMF.py
+			cmd = [self.PCMF_bin, monitor_fileName]
+			print 'Executing = ', cmd
+			services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+			  event_comment =  cmd)
+			retcode = subprocess.call(cmd)
+			if (retcode != 0):
+				logMsg = 'Error executing '.join(map(str, cmd))
+				self.services.error(logMsg)
+				raise Exception(logMsg)
 
-        # set 'running' attribute to tell ELVis to stop watching this file
-        setattr(monitor_file, 'running', 'false')
-
-        # Close plasma_state
-        monitor_file.close()
+	   # copy pdf file to w3 directory
+			try:
+				shutil.copyfile(pdf_fileName,
+								os.path.join(self.W3_DIR, self.pdfFile))
+			except IOError, (errno, strerror):
+				print 'Error copying file %s to %s: %s' % \
+					(pdf_fileName, self.pdfFile, strerror)
 
         print 'monitor finalize finished'
         return 0
