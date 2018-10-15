@@ -961,12 +961,10 @@ class monitor(Component):
         self.PCMF_bin = os.path.join(self.BIN_PATH, 'PCMF.py')
         
         self.GENERATE_PDF = get_component_param(self, services, 'GENERATE_PDF', optional = True)
-        print 'self.GENERATE_PDF 0 = ', self.GENERATE_PDF
         if (self.GENERATE_PDF in [None, 'true', 'TRUE', 'True']):
             self.GENERATE_PDF = True
         if (self.GENERATE_PDF in ['false', 'FALSE', 'False']):
             self.GENERATE_PDF = False
-        print 'self.GENERATE_PDF 1 = ', self.GENERATE_PDF
         
     # Copy current state over to working directory
         services.stage_plasma_state()
@@ -1043,7 +1041,6 @@ class monitor(Component):
             print 'Error copying file %s to %s: %s' % \
                 (monitor_fileName, self.cdfFile, strerror)
 
-        print 'self.GENERATE_PDF 2 = ', self.GENERATE_PDF
         if self.GENERATE_PDF == True:
        # Generate pdf file with PCMF.py
             cmd = [self.PCMF_bin, monitor_fileName]
@@ -1120,8 +1117,6 @@ class monitor(Component):
             print 'Error copying file %s to %s: %s' % \
                 (monitor_fileName, self.cdfFile, strerror)
 
-
-        print 'self.GENERATE_PDF 3 = ', self.GENERATE_PDF
         if self.GENERATE_PDF == True:
        # Generate pdf file with PCMF.py
             cmd = [self.PCMF_bin, monitor_fileName]
