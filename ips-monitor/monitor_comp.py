@@ -960,6 +960,7 @@ class monitor(Component):
         BIN_PATH = get_component_param(self, services, 'BIN_PATH')
         self.PCMF_bin = os.path.join(self.BIN_PATH, 'PCMF.py')
         
+        self.GENERATE_PDF = True
         self.GENERATE_PDF = get_component_param(self, services, 'GENERATE_PDF', optional = True)
         if (self.GENERATE_PDF == None):
             self.GENERATE_PDF = True
@@ -1041,7 +1042,7 @@ class monitor(Component):
                 (monitor_fileName, self.cdfFile, strerror)
 
         print 'self.GENERATE_PDF 2 = ', self.GENERATE_PDF
-        if self.GENERATE_PDF:
+        if self.GENERATE_PDF == True:
        # Generate pdf file with PCMF.py
             cmd = [self.PCMF_bin, monitor_fileName]
             print 'Executing = ', cmd
@@ -1118,8 +1119,8 @@ class monitor(Component):
                 (monitor_fileName, self.cdfFile, strerror)
 
 
-        print 'self.GENERATE_PDF 1 = ', self.GENERATE_PDF
-        if self.GENERATE_PDF:
+        print 'self.GENERATE_PDF 2 = ', self.GENERATE_PDF
+        if self.GENERATE_PDF == True:
        # Generate pdf file with PCMF.py
             cmd = [self.PCMF_bin, monitor_fileName]
             print 'Executing = ', cmd
