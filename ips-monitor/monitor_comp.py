@@ -1168,6 +1168,8 @@ class monitor(Component):
 
     def finalize(self, timestamp=0.0):
 
+        services = self.services
+
         if self.GENERATE_PDF == False:
        # Generate pdf file with PCMF.py
 			cmd = [self.PCMF_bin, monitor_fileName]
