@@ -972,7 +972,7 @@ class monitor(Component):
                 (monitor_file, self.cdfFile, strerror)
 
    # Generate pdf file with PCMF.py
-        cmd = [self.PCMF_bin, pdf_fileName]
+        cmd = [self.PCMF_bin, monitor_fileName]
         print 'Executing = ', cmd
         services.send_portal_event(event_type = 'COMPONENT_EVENT',\
           event_comment =  cmd)
@@ -1046,7 +1046,7 @@ class monitor(Component):
                 (monitor_fileName, self.cdfFile, strerror)
 
    # Generate pdf file with PCMF.py
-        cmd = [self.PCMF_bin, pdf_fileName]
+        cmd = [self.PCMF_bin, monitor_fileName]
         print 'Executing = ', cmd
         services.send_portal_event(event_type = 'COMPONENT_EVENT',\
           event_comment =  cmd)
@@ -1123,7 +1123,7 @@ class monitor(Component):
                 (monitor_fileName, self.cdfFile, strerror)
 
    # Generate pdf file with PCMF.py
-        cmd = [self.PCMF_bin, pdf_fileName]
+        cmd = [self.PCMF_bin, monitor_fileName]
         print 'Executing = ', cmd
         services.send_portal_event(event_type = 'COMPONENT_EVENT',\
           event_comment =  cmd)
