@@ -194,6 +194,7 @@ import time
 import datetime
 
 from  component import Component
+from get_IPS_config_parameters import get_component_param
 
 # Import the necessary Numeric and netCDF modules
 from netCDF4 import *
@@ -935,7 +936,6 @@ class monitor(Component):
 
         services = self.services
 
-        workdir = services.get_working_dir()
         time.sleep(5)
         self.run_id = services.get_config_param('PORTAL_RUNID')
         #self.run_id = self.get_config_param(services,'PORTAL_RUNID')
@@ -948,6 +948,9 @@ class monitor(Component):
         services.log('w3 monitor file = ' + self.cdfFile)
         services.log('state pdf file = ' + self.pdfFile)
 
+        BIN_PATH = self.get_component_param(services, 'BIN_PATH')
+        self.PCMF_bin = os.path.join(self.BIN_PATH, 'PCMF.py')
+         
     # Copy current state over to working directory
         services.stage_plasma_state()
 
@@ -969,7 +972,7 @@ class monitor(Component):
                 (monitor_file, self.cdfFile, strerror)
 
    # Generate pdf file with PCMF.py
-        cmd = ['python', 'PCMF.py', pdf_fileName]
+        cmd = [self.PCMF_bin, pdf_fileName]
         print 'Executing = ', cmd
         services.send_portal_event(event_type = 'COMPONENT_EVENT',\
           event_comment =  cmd)
@@ -1020,14 +1023,7 @@ class monitor(Component):
         services = self.services
         global monitorVars, ps_VarsList, monitorDefinition
         
-        workdir = services.get_working_dir()
-        #self.run_id = services.get_config_param('PORTAL_RUNID')
         self.run_id = self.get_config_param(services,'PORTAL_RUNID')
-     #   monitor_file = 'monitor_file.nc'
-    #      print 'monitor file = ', monitor_file
-
-#         self.cdfFile = self.run_id+'_' + monitor_file
-#         services.log('w3 monitor file = ' + self.cdfFile)
 
         self.cdfFile = self.run_id+'_' + monitor_fileName
         services.log('w3 monitor file = ' + self.cdfFile)
@@ -1050,7 +1046,7 @@ class monitor(Component):
                 (monitor_fileName, self.cdfFile, strerror)
 
    # Generate pdf file with PCMF.py
-        cmd = ['python', 'PCMF.py', pdf_fileName]
+        cmd = [self.PCMF_bin, pdf_fileName]
         print 'Executing = ', cmd
         services.send_portal_event(event_type = 'COMPONENT_EVENT',\
           event_comment =  cmd)
@@ -1127,7 +1123,7 @@ class monitor(Component):
                 (monitor_fileName, self.cdfFile, strerror)
 
    # Generate pdf file with PCMF.py
-        cmd = ['python', 'PCMF.py', pdf_fileName]
+        cmd = [self.PCMF_bin, pdf_fileName]
         print 'Executing = ', cmd
         services.send_portal_event(event_type = 'COMPONENT_EVENT',\
           event_comment =  cmd)
