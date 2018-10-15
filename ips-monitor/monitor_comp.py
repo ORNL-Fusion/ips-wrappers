@@ -960,7 +960,6 @@ class monitor(Component):
         BIN_PATH = get_component_param(self, services, 'BIN_PATH')
         self.PCMF_bin = os.path.join(self.BIN_PATH, 'PCMF.py')
         
-        self.GENERATE_PDF = True
         self.GENERATE_PDF = get_component_param(self, services, 'GENERATE_PDF', optional = True)
         print 'self.GENERATE_PDF 0 = ', self.GENERATE_PDF
         if (self.GENERATE_PDF == None):
