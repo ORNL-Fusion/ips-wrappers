@@ -194,7 +194,7 @@ import time
 import datetime
 
 from  component import Component
-from get_IPS_config_parameters import get_component_param
+from get_IPS_config_parameters import get_global_param, get_component_param
 
 # Import the necessary Numeric and netCDF modules
 from netCDF4 import *
@@ -937,8 +937,8 @@ class monitor(Component):
         services = self.services
 
         time.sleep(5)
-        self.run_id = services.get_config_param('PORTAL_RUNID')
-        #self.run_id = self.get_config_param(services,'PORTAL_RUNID')
+#        self.run_id = services.get_config_param('PORTAL_RUNID')
+        self.run_id = self.get_global_param(services,'PORTAL_RUNID')
         print 'run_id = ', self.run_id
     	print 'monitor file = ', monitor_fileName
     	print 'monitor pdf file = ', pdf_fileName
@@ -1096,8 +1096,6 @@ class monitor(Component):
         if (self.services == None) :
             print 'Error in monitor_comp: step() : no framework services'
             return 1
-
-#        monitor_file = 'monitor_file.nc'
 
     # Copy current and prior state over to working directory
         services.stage_plasma_state()
