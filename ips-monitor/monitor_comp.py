@@ -962,6 +962,7 @@ class monitor(Component):
         
         self.GENERATE_PDF = True
         self.GENERATE_PDF = get_component_param(self, services, 'GENERATE_PDF', optional = True)
+        print 'self.GENERATE_PDF 0 = ', self.GENERATE_PDF
         if (self.GENERATE_PDF == None):
             self.GENERATE_PDF = True
         if (self.GENERATE_PDF in ['false', 'FALSE', 'False']):
@@ -1121,7 +1122,7 @@ class monitor(Component):
                 (monitor_fileName, self.cdfFile, strerror)
 
 
-        print 'self.GENERATE_PDF 2 = ', self.GENERATE_PDF
+        print 'self.GENERATE_PDF 3 = ', self.GENERATE_PDF
         if self.GENERATE_PDF == True:
        # Generate pdf file with PCMF.py
             cmd = [self.PCMF_bin, monitor_fileName]
