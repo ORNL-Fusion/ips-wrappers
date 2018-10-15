@@ -978,7 +978,7 @@ class monitor(Component):
             print 'Error copying file %s to %s: %s' % \
                 (monitor_file, self.cdfFile, strerror)
 
-        if GENERATE_PDF:
+        if self.GENERATE_PDF:
        # Generate pdf file with PCMF.py
             cmd = [self.PCMF_bin, monitor_fileName]
             print 'Executing = ', cmd
@@ -1054,7 +1054,7 @@ class monitor(Component):
                 (monitor_fileName, self.cdfFile, strerror)
 
 
-        if GENERATE_PDF:
+        if self.GENERATE_PDF:
        # Generate pdf file with PCMF.py
             cmd = [self.PCMF_bin, monitor_fileName]
             print 'Executing = ', cmd
@@ -1131,7 +1131,7 @@ class monitor(Component):
                 (monitor_fileName, self.cdfFile, strerror)
 
 
-        if GENERATE_PDF:
+        if self.GENERATE_PDF:
        # Generate pdf file with PCMF.py
             cmd = [self.PCMF_bin, monitor_fileName]
             print 'Executing = ', cmd
