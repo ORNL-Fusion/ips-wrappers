@@ -962,7 +962,7 @@ class monitor(Component):
         
         self.GENERATE_PDF = get_component_param(self, services, 'GENERATE_PDF', optional = True)
         print 'self.GENERATE_PDF 0 = ', self.GENERATE_PDF
-        if (self.GENERATE_PDF == None):
+        if (self.GENERATE_PDF in [None, 'true', 'TRUE', 'True']):
             self.GENERATE_PDF = True
         if (self.GENERATE_PDF in ['false', 'FALSE', 'False']):
             self.GENERATE_PDF = False
