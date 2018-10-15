@@ -938,7 +938,7 @@ class monitor(Component):
 
         time.sleep(5)
 #        self.run_id = services.get_config_param('PORTAL_RUNID')
-        self.run_id = self.get_global_param(services,'PORTAL_RUNID')
+        self.run_id = get_global_param(services,'PORTAL_RUNID')
         print 'run_id = ', self.run_id
     	print 'monitor file = ', monitor_fileName
     	print 'monitor pdf file = ', pdf_fileName
@@ -948,7 +948,7 @@ class monitor(Component):
         services.log('w3 monitor file = ' + self.cdfFile)
         services.log('state pdf file = ' + self.pdfFile)
 
-        BIN_PATH = self.get_component_param(services, 'BIN_PATH')
+        BIN_PATH = get_component_param(services, 'BIN_PATH')
         self.PCMF_bin = os.path.join(self.BIN_PATH, 'PCMF.py')
          
     # Copy current state over to working directory
