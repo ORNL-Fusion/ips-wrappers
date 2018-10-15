@@ -7,7 +7,13 @@ Version 5.4
 Runs PCMF each time step to generate pdf plots of the plasma state and pushes it out to the 
 w3 directory.  The bad news is that PCMF takes about 20 sec to run on Edison.  If this is
 too much of a burden, you can turn it off by putting a parameter GENERATE_PDF = False in
-the monitor section of the simulation config file.  However you can always run PCMF.py
+the monitor section of the simulation config file.  The behavior is:
+    GENERATE_PDF = True, or is absent -> Run PCMF at each invocation of the monitor Component
+    GENERATE_PDF = False -> Run PCMF only on monitor 'finalize' i.e. plots only last monitor_file.nc
+    GENERATE_PDF = Never -> Doesn't even plot the last monitor_file.nc
+
+
+However you can always run PCMF.py
 on a monitor_file.nc from the command line separately.
 
 Version 5.3 picks up the simulation config file and pushes it out to the w3 directory.
@@ -957,6 +963,7 @@ class monitor(Component):
         self.GENERATE_PDF = get_component_param(self, services, 'GENERATE_PDF', optional = True)
         if (self.GENERATE_PDF == None):
             self.GENERATE_PDF = True
+        print 'self.GENERATE_PDF 1 = ', self.GENERATE_PDF
         
     # Copy current state over to working directory
         services.stage_plasma_state()
@@ -977,26 +984,6 @@ class monitor(Component):
         except IOError, (errno, strerror):
             print 'Error copying file %s to %s: %s' % \
                 (monitor_file, self.cdfFile, strerror)
-
-        if self.GENERATE_PDF:
-       # Generate pdf file with PCMF.py
-            cmd = [self.PCMF_bin, monitor_fileName]
-            print 'Executing = ', cmd
-            services.send_portal_event(event_type = 'COMPONENT_EVENT',\
-              event_comment =  cmd)
-            retcode = subprocess.call(cmd)
-            if (retcode != 0):
-                logMsg = 'Error executing '.join(map(str, cmd))
-                self.services.error(logMsg)
-                raise Exception(logMsg)
-
-       # copy pdf file to w3 directory
-            try:
-                shutil.copyfile(pdf_fileName,
-                                os.path.join(self.W3_DIR, self.pdfFile))
-            except IOError, (errno, strerror):
-                print 'Error copying file %s to %s: %s' % \
-                    (pdf_fileName, self.pdfFile, strerror)
 
     # Copy config file to w3 directory
         conf_file = services.get_config_param('SIMULATION_CONFIG_FILE')
@@ -1053,7 +1040,7 @@ class monitor(Component):
             print 'Error copying file %s to %s: %s' % \
                 (monitor_fileName, self.cdfFile, strerror)
 
-
+        print 'self.GENERATE_PDF 2 = ', self.GENERATE_PDF
         if self.GENERATE_PDF:
        # Generate pdf file with PCMF.py
             cmd = [self.PCMF_bin, monitor_fileName]
@@ -1131,6 +1118,7 @@ class monitor(Component):
                 (monitor_fileName, self.cdfFile, strerror)
 
 
+        print 'self.GENERATE_PDF 1 = ', self.GENERATE_PDF
         if self.GENERATE_PDF:
        # Generate pdf file with PCMF.py
             cmd = [self.PCMF_bin, monitor_fileName]
