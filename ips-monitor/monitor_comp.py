@@ -3,8 +3,12 @@
 """
 monitor_comp.py 10-11-2018
 
-Version 5.4 runs PCMF to generate pdf plot of plasma state and pushes it out to the w3 
-directory.
+Version 5.4 
+Runs PCMF each time step to generate pdf plots of the plasma state and pushes it out to the 
+w3 directory.  The bad news is that PCMF takes about 20 sec to run on Edison.  If this is
+too much of a burden, you can turn it off by putting a parameter GENERATE_PDF = False in
+the monitor section of the simulation config file.  However you can always run PCMF.py
+on a monitor_file.nc from the command line separately.
 
 Version 5.3 picks up the simulation config file and pushes it out to the w3 directory.
 This is done in the init
@@ -141,12 +145,12 @@ change log:
               metadata.)  It made some sense when I thought monitor variables might be 
               specified from the config file. But no more.
 
-1/24/2014	Changed the test in function area_grid_interp() so that the validity test for
-			grids has a tolerance of 1.e-12.  The aorsa component was crashing the 
-			component because the the upper value of rho_icrf was not exactly 1.0.  So 
-			now the first and last rho values have to be within this tolerance of 0.0
-			and 1.0 respectively.  I only hope there are not other tests for exactly 0.0
-			and 1.0.
+1/24/2014   Changed the test in function area_grid_interp() so that the validity test for
+            grids has a tolerance of 1.e-12.  The aorsa component was crashing the 
+            component because the the upper value of rho_icrf was not exactly 1.0.  So 
+            now the first and last rho values have to be within this tolerance of 0.0
+            and 1.0 respectively.  I only hope there are not other tests for exactly 0.0
+            and 1.0.
 
 2/24/2014   Version 5.3 picks up the simulation config file and pushes it out to the w3 
             directory.  The portal run_id is prepended to the file name, like with the
@@ -709,13 +713,13 @@ class monitor(Component):
         # Check validity of inputs
                 
         if abs(g1[0]) < 1.e-12:
-        	g1[0] = 0.
+            g1[0] = 0.
         if abs(g2[0]) < 1.e-12:
-        	g2[0] = 0.
+            g2[0] = 0.
         if abs(g1[-1] -1.0) < 1.e-12:
-        	g1[-1] = 1.0
+            g1[-1] = 1.0
         if abs(g2[-1] -1.0) < 1.e-12:
-        	g2[-1] = 1.0
+            g2[-1] = 1.0
         
         if g2[0] != 0.0 or g1[0] != 0.0 or g2[-1] != 1.0 or  g1[-1] != 1.0 :
             print 'Improper range for grids'
@@ -937,11 +941,10 @@ class monitor(Component):
         services = self.services
 
         time.sleep(5)
-#        self.run_id = services.get_config_param('PORTAL_RUNID')
         self.run_id = get_global_param(self, services,'PORTAL_RUNID')
         print 'run_id = ', self.run_id
-    	print 'monitor file = ', monitor_fileName
-    	print 'monitor pdf file = ', pdf_fileName
+        print 'monitor file = ', monitor_fileName
+        print 'monitor pdf file = ', pdf_fileName
 
         self.cdfFile = self.run_id+'_' + monitor_fileName
         self.pdfFile = self.run_id+'_' + pdf_fileName
@@ -950,7 +953,11 @@ class monitor(Component):
 
         BIN_PATH = get_component_param(self, services, 'BIN_PATH')
         self.PCMF_bin = os.path.join(self.BIN_PATH, 'PCMF.py')
-         
+        
+        self.GENERATE_PDF = get_component_param(self, services, 'GENERATE_PDF', optional = True)
+        if (self.GENERATE_PDF == None):
+            self.GENERATE_PDF = True
+        
     # Copy current state over to working directory
         services.stage_plasma_state()
 
@@ -971,24 +978,25 @@ class monitor(Component):
             print 'Error copying file %s to %s: %s' % \
                 (monitor_file, self.cdfFile, strerror)
 
-   # Generate pdf file with PCMF.py
-        cmd = [self.PCMF_bin, monitor_fileName]
-        print 'Executing = ', cmd
-        services.send_portal_event(event_type = 'COMPONENT_EVENT',\
-          event_comment =  cmd)
-        retcode = subprocess.call(cmd)
-        if (retcode != 0):
-            logMsg = 'Error executing '.join(map(str, cmd))
-            self.services.error(logMsg)
-            raise Exception(logMsg)
+        if GENERATE_PDF:
+       # Generate pdf file with PCMF.py
+            cmd = [self.PCMF_bin, monitor_fileName]
+            print 'Executing = ', cmd
+            services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+              event_comment =  cmd)
+            retcode = subprocess.call(cmd)
+            if (retcode != 0):
+                logMsg = 'Error executing '.join(map(str, cmd))
+                self.services.error(logMsg)
+                raise Exception(logMsg)
 
-   # copy pdf file to w3 directory
-        try:
-            shutil.copyfile(pdf_fileName,
-                            os.path.join(self.W3_DIR, self.pdfFile))
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s: %s' % \
-                (pdf_fileName, self.pdfFile, strerror)
+       # copy pdf file to w3 directory
+            try:
+                shutil.copyfile(pdf_fileName,
+                                os.path.join(self.W3_DIR, self.pdfFile))
+            except IOError, (errno, strerror):
+                print 'Error copying file %s to %s: %s' % \
+                    (pdf_fileName, self.pdfFile, strerror)
 
     # Copy config file to w3 directory
         conf_file = services.get_config_param('SIMULATION_CONFIG_FILE')
@@ -1045,24 +1053,26 @@ class monitor(Component):
             print 'Error copying file %s to %s: %s' % \
                 (monitor_fileName, self.cdfFile, strerror)
 
-   # Generate pdf file with PCMF.py
-        cmd = [self.PCMF_bin, monitor_fileName]
-        print 'Executing = ', cmd
-        services.send_portal_event(event_type = 'COMPONENT_EVENT',\
-          event_comment =  cmd)
-        retcode = subprocess.call(cmd)
-        if (retcode != 0):
-            logMsg = 'Error executing '.join(map(str, cmd))
-            self.services.error(logMsg)
-            raise Exception(logMsg)
 
-    # copy pdf file to w3 directory
-        try:
-            shutil.copyfile(pdf_fileName,
-                            os.path.join(self.W3_DIR, self.pdfFile))
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s: %s' % \
-                (pdf_fileName, self.pdfFile, strerror)
+        if GENERATE_PDF:
+       # Generate pdf file with PCMF.py
+            cmd = [self.PCMF_bin, monitor_fileName]
+            print 'Executing = ', cmd
+            services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+              event_comment =  cmd)
+            retcode = subprocess.call(cmd)
+            if (retcode != 0):
+                logMsg = 'Error executing '.join(map(str, cmd))
+                self.services.error(logMsg)
+                raise Exception(logMsg)
+
+       # copy pdf file to w3 directory
+            try:
+                shutil.copyfile(pdf_fileName,
+                                os.path.join(self.W3_DIR, self.pdfFile))
+            except IOError, (errno, strerror):
+                print 'Error copying file %s to %s: %s' % \
+                    (pdf_fileName, self.pdfFile, strerror)
     
     # Load monitorVars, monitorDefinition and ps_VarsList from pickle file "monitor_restart".
 
@@ -1120,24 +1130,26 @@ class monitor(Component):
             print 'Error copying file %s to %s: %s' % \
                 (monitor_fileName, self.cdfFile, strerror)
 
-   # Generate pdf file with PCMF.py
-        cmd = [self.PCMF_bin, monitor_fileName]
-        print 'Executing = ', cmd
-        services.send_portal_event(event_type = 'COMPONENT_EVENT',\
-          event_comment =  cmd)
-        retcode = subprocess.call(cmd)
-        if (retcode != 0):
-            logMsg = 'Error executing '.join(map(str, cmd))
-            self.services.error(logMsg)
-            raise Exception(logMsg)
 
-    # copy pdf file to w3 directory
-        try:
-            shutil.copyfile(pdf_fileName,
-                            os.path.join(self.W3_DIR, self.pdfFile))
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s: %s' % \
-                (pdf_fileName, self.pdfFile, strerror)
+        if GENERATE_PDF:
+       # Generate pdf file with PCMF.py
+            cmd = [self.PCMF_bin, monitor_fileName]
+            print 'Executing = ', cmd
+            services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+              event_comment =  cmd)
+            retcode = subprocess.call(cmd)
+            if (retcode != 0):
+                logMsg = 'Error executing '.join(map(str, cmd))
+                self.services.error(logMsg)
+                raise Exception(logMsg)
+
+       # copy pdf file to w3 directory
+            try:
+                shutil.copyfile(pdf_fileName,
+                                os.path.join(self.W3_DIR, self.pdfFile))
+            except IOError, (errno, strerror):
+                print 'Error copying file %s to %s: %s' % \
+                    (pdf_fileName, self.pdfFile, strerror)
 
 # ------------------------------------------------------------------------------
 #
@@ -2191,13 +2203,13 @@ class monitor(Component):
             heating = self.calculate_MonitorVariable('Pe_OH_total', varDepsDict)
             
             if 'power_ec' in varDepsDict.keys():
-	            heating = heating + self.calculate_MonitorVariable('power_EC', varDepsDict)
+                heating = heating + self.calculate_MonitorVariable('power_EC', varDepsDict)
             if 'power_lh' in varDepsDict.keys():
-	            heating = heating + self.calculate_MonitorVariable('power_LH', varDepsDict)
+                heating = heating + self.calculate_MonitorVariable('power_LH', varDepsDict)
             if 'power_ic' in varDepsDict.keys():
-	            heating = heating + self.calculate_MonitorVariable('power_IC', varDepsDict)
+                heating = heating + self.calculate_MonitorVariable('power_IC', varDepsDict)
             if 'power_nbi' in varDepsDict.keys():
-	            heating = heating + self.calculate_MonitorVariable('power_NB', varDepsDict)
+                heating = heating + self.calculate_MonitorVariable('power_NB', varDepsDict)
             value = P_nuc_FUS/heating
     
         # ------------- ICRF power deposition ________________
