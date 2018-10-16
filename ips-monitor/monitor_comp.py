@@ -12,7 +12,6 @@ the monitor section of the simulation config file.  The behavior is:
     GENERATE_PDF = False -> Run PCMF only on monitor 'finalize' i.e. plots only last monitor_file.nc
     GENERATE_PDF = Never -> Doesn't even plot the last monitor_file.nc
 
-
 However you can always run PCMF.py
 on a monitor_file.nc from the command line separately.
 
@@ -71,10 +70,9 @@ file. That is one can select from a list of quantities to monitor.  N.B. This
 selecting between density, zone based, and cumulative profiles.  So far there has been
 no demand for selecting individual variables in the config file.
 
-This component has
-to know how to calculate the things it's requested to monitor, so there is at least some  
-custom programing required for each quantity that can be monitored.  To add a new
-variable to monitor there are three customizations that must be done:
+This component has to know how to calculate the things it's requested to monitor, so there
+is at least some custom programing required for each quantity that can be monitored.  
+To add a new variable to monitor there are three customizations that must be done:
 
 1) The name of the new variable, in the form you want the lable displayed, must be
    added to the 'requestedVars' list below.
@@ -94,8 +92,8 @@ init - defines the netcdf monitor file for monitor data then calls step to inser
 restart - unpickles the internal monitor data previously saved in file 'monitor_restart'
           and loads these global variables.
 step - writes monitor data for current time step to the monitor netcdf file and saves it
-finalize - sets the global netcdf attribute to tell ELViz to stop watching this
-           monitor file
+finalize -Even if self.GENERATE_PDF == False finalize goes ahead to make a pdf file anyway
+          for the last time step, unless 'GENERATE_PDF = Never' in the simulation config file.
 
 change log:
  1/21/09
