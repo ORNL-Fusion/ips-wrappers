@@ -10,6 +10,7 @@ from component import Component
 import os
 import shutil
 from utilities import ZipState
+from utilities import ScreenWriter
 
 #-------------------------------------------------------------------------------
 #
@@ -18,7 +19,6 @@ from utilities import ZipState
 #-------------------------------------------------------------------------------
 class siesta_driver(Component):
     def __init__(self, services, config):
-        print('siesta_driver: Construct')
         Component.__init__(self, services, config)
         self.vmec_worker = {}
     
@@ -28,7 +28,7 @@ class siesta_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0, **keywords):
-        print('siesta_driver: init')
+        ScreenWriter.screen_output(self, 'verbose', 'siesta_driver: init')
     
 #  Separate out the siesta and vmec keywords.
         siesta_keywords = {}
@@ -59,6 +59,7 @@ class siesta_driver(Component):
                     'SIM_NAME'         : '{}_vmec'.format(self.services.get_config_param('SIM_NAME')),
                     'USER_INPUT_FILES' : current_vmec_state,
                     'LOG_FILE'         : 'log.vmec.warning',
+                    'OUTPUT_LEVEL'     : self.services.get_config_param('OUTPUT_LEVEL')
                    }
             
             if os.path.exists('vmec_input_dir'):
@@ -96,7 +97,7 @@ class siesta_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        print('siesta_driver: step')
+        ScreenWriter.screen_output(self, 'verbose', 'siesta_driver: step')
 
 #  Run SIESTA.
         self.services.wait_call(self.wait, True)
@@ -120,7 +121,7 @@ class siesta_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('siesta_driver: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'siesta_driver: finalize')
 
         self.wait = [
                      self.services.call_nonblocking(self.vmec_worker['init'], 'finalize', timeStamp),

@@ -9,6 +9,7 @@
 
 from component import Component
 from utilities import ZipState
+from utilities import ScreenWriter
 import os
 
 #-------------------------------------------------------------------------------
@@ -18,7 +19,6 @@ import os
 #-------------------------------------------------------------------------------
 class siesta_init(Component):
     def __init__(self, services, config):
-        print('siesta_init: Construct')
         Component.__init__(self, services, config)
 
 #-------------------------------------------------------------------------------
@@ -29,7 +29,7 @@ class siesta_init(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
-        print('siesta_init: init')
+        ScreenWriter.screen_output(self, 'verbose', 'siesta_init: init')
 
 #  Get config filenames.
         current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
@@ -77,7 +77,7 @@ class siesta_init(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        print('siesta_init: step')
+        ScreenWriter.screen_output(self, 'verbose', 'siesta_init: step')
 
 #-------------------------------------------------------------------------------
 #
@@ -85,4 +85,4 @@ class siesta_init(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('siesta_init: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'siesta_init: finalize')

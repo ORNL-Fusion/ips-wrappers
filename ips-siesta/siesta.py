@@ -11,6 +11,7 @@ from component import Component
 import os
 from omfit.classes.omfit_namelist import OMFITnamelist
 from utilities import ZipState
+from utilities import ScreenWriter
 
 #-------------------------------------------------------------------------------
 #
@@ -19,7 +20,6 @@ from utilities import ZipState
 #-------------------------------------------------------------------------------
 class siesta(Component):
     def __init__(self, services, config):
-        print('siesta: Construct')
         Component.__init__(self, services, config)
 
 #-------------------------------------------------------------------------------
@@ -28,7 +28,7 @@ class siesta(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0, **keywords):
-        print('siesta: init')
+        ScreenWriter.screen_output(self, 'verbose', 'siesta: init')
         self.services.stage_plasma_state()
 
         self.current_siesta_namelist = self.services.get_config_param('SIESTA_NAMELIST_INPUT')
@@ -61,7 +61,7 @@ class siesta(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        print('siesta: step')
+        ScreenWriter.screen_output(self, 'verbose', 'siesta: step')
         
         flags = self.zip_ref.get_state()
         
@@ -105,7 +105,7 @@ class siesta(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('siesta: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'siesta: finalize')
 
 #-------------------------------------------------------------------------------
 #
