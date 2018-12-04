@@ -7,6 +7,7 @@
 #-------------------------------------------------------------------------------
 
 from component import Component
+from utilities import ScreenWriter
 import os
 
 #-------------------------------------------------------------------------------
@@ -16,7 +17,6 @@ import os
 #-------------------------------------------------------------------------------
 class vmec_driver(Component):
     def __init__(self, services, config):
-        print('vmec_driver: Construct')
         Component.__init__(self, services, config)
 
 #-------------------------------------------------------------------------------
@@ -25,7 +25,7 @@ class vmec_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0, **keywords):
-        print('vmec_driver: init')
+        ScreenWriter.screen_output(self, 'verbose', 'vmec_driver: init')
 
 #  Separate out the vmec keywords.
         vmec_keywords = {}
@@ -44,7 +44,7 @@ class vmec_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        print('vmec_driver: step')
+        ScreenWriter.screen_output(self, 'verbose', 'vmec_driver: step')
 
 #  Run vmec.
         self.services.wait_call(self.wait, True)
@@ -69,5 +69,5 @@ class vmec_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('vmec_driver: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'vmec_driver: finalize')
         self.services.call(self.vmec_port, 'finalize', timeStamp)

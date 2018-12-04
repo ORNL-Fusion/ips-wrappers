@@ -11,6 +11,7 @@ from component import Component
 import os
 from omfit.classes.omfit_namelist import OMFITnamelist
 from utilities import ZipState
+from utilities import ScreenWriter
 
 #-------------------------------------------------------------------------------
 #
@@ -19,7 +20,6 @@ from utilities import ZipState
 #-------------------------------------------------------------------------------
 class vmec(Component):
     def __init__(self, services, config):
-        print('vmec: Construct')
         Component.__init__(self, services, config)
 
 #-------------------------------------------------------------------------------
@@ -28,7 +28,7 @@ class vmec(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0, **keywords):
-        print('vmec: init')
+        ScreenWriter.screen_output(self, 'verbose', 'vmec: init')
         
         self.current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
         self.current_wout_file = 'wout_{}.nc'.format(self.current_vmec_namelist.replace('input.','',1))
@@ -59,7 +59,7 @@ class vmec(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        print('vmec: step')
+        ScreenWriter.screen_output(self, 'verbose', 'vmec: step')
 
         flags = self.zip_ref.get_state()
 
@@ -94,4 +94,4 @@ class vmec(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('vmec: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'vmec: finalize')

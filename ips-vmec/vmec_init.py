@@ -9,6 +9,7 @@
 
 from component import Component
 from utilities import ZipState
+from utilities import ScreenWriter
 import os
 
 #-------------------------------------------------------------------------------
@@ -18,7 +19,6 @@ import os
 #-------------------------------------------------------------------------------
 class vmec_init(Component):
     def __init__(self, services, config):
-        print('vmec_init: Construct')
         Component.__init__(self, services, config)
 
 #-------------------------------------------------------------------------------
@@ -28,7 +28,7 @@ class vmec_init(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
-        print('vmec_init: init')
+        ScreenWriter.screen_output(self, 'verbose', 'vmec_init: init')
 
 #  Get config filenames.
         current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
@@ -59,7 +59,7 @@ class vmec_init(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        print('vmec_init: step')
+        ScreenWriter.screen_output(self, 'verbose', 'vmec_init: step')
 
 #-------------------------------------------------------------------------------
 #
@@ -67,4 +67,4 @@ class vmec_init(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('vmec_init: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'vmec_init: finalize')
