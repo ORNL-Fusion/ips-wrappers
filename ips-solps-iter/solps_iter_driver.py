@@ -8,6 +8,7 @@
 #-------------------------------------------------------------------------------
 
 from component import Component
+from utilities import ScreenWriter
 
 #-------------------------------------------------------------------------------
 #
@@ -16,7 +17,6 @@ from component import Component
 #-------------------------------------------------------------------------------
 class solps_iter_driver(Component):
     def __init__(self, services, config):
-        print('solps_iter_driver: Construct')
         Component.__init__(self, services, config)
 
 #-------------------------------------------------------------------------------
@@ -25,17 +25,20 @@ class solps_iter_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0, **keywords):
-        print('solps_iter_driver: init')
+        ScreenWriter.screen_output(self, 'verbose', 'solps_iter_driver: init')
 
 #  Separate out the vmec keywords.
         solps_keywords = {}
         for key, value in keywords.iteritems():
-            if 'solps__' in key:
-                solps_keywords[key.replace('solps__','',1)] = value
+            if 'solps_iter__' in key:
+                solps_keywords[key.replace('solps_iter__','',1)] = value
 
         self.solps_port = self.services.get_port('SOLPS')
         self.wait = self.services.call_nonblocking(self.solps, 'init',
                                                    timeStamp, **solps_keywords)
+
+        if timeStamp == 0.0:
+            self.current_solps_state = self.services.get_config_param('CURRENT_SOLPS_STATE')
 
 #-------------------------------------------------------------------------------
 #
@@ -43,12 +46,7 @@ class solps_iter_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0, **keywords):
-        print('solps_iter_driver: step')
-
-        current_solps_state = self.services.get_config_param('CURRENT_SOLPS_STATE')
-
-        if not 'task' in keywords:
-            keywords['task'] = self.SOLPS_TASK
+        ScreenWriter.screen_output(self, 'verbose', 'solps_iter_driver: step')
 
 #  Run SOLPS.
         self.services.wait_call(self.wait, True)
@@ -64,7 +62,7 @@ class solps_iter_driver(Component):
 #  matches if output file. If it does not rename the plasma state so it can be
 #  staged.
         if not os.path.exists(self.OUTPUT_FILES):
-            os.rename(current_solps_state, self.OUTPUT_FILES)
+            os.rename(self.current_solps_state, self.OUTPUT_FILES)
     
 #-------------------------------------------------------------------------------
 #
@@ -72,7 +70,6 @@ class solps_iter_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('solps_iter_driver: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'solps_iter_driver: finalize')
 
         self.services.call(self.solps_port, 'finalize', timeStamp)
-

@@ -10,6 +10,7 @@
 from component import Component
 import os
 from utilities import ZipState
+from utilities import ScreenWriter
 
 #-------------------------------------------------------------------------------
 #
@@ -18,7 +19,6 @@ from utilities import ZipState
 #-------------------------------------------------------------------------------
 class solps_iter_init(Component):
     def __init__(self, services, config):
-        print('solps_iter_init: Construct')
         Component.__init__(self, services, config)
 
 #-------------------------------------------------------------------------------
@@ -28,7 +28,7 @@ class solps_iter_init(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
-        print('solps_iter_init: init')
+        ScreenWriter.screen_output(self, 'verbose', 'solps_iter_init: init')
 
 #  Get config filenames.
         current_solps_state = self.services.get_config_param('CURRENT_SOLPS_STATE')
@@ -40,14 +40,6 @@ class solps_iter_init(Component):
 #  Stage input files. Remove old namelist input if it exists.
         if os.path.exists(current_solps_state):
             os.remove(current_solps_state)
-        if os.path.exists('fort.1'):
-            os.remove('fort.1')
-        if os.path.exists('fort.33'):
-            os.remove('fort.33')
-        if os.path.exists('fort.34'):
-            os.remove('fort.34')
-        if os.path.exists('fort.35'):
-            os.remove('fort.35')
         if os.path.exists(eirene_input_dat):
             os.remove(eirene_input_dat)
         if os.path.exists(eirene_nodes):
@@ -77,34 +69,56 @@ class solps_iter_init(Component):
     
         self.services.stage_input_files(self.INPUT_FILES)
 
-#  Rename the eirene input files.
-        os.rename(eirene_input_dat, 'fort.1')
-        os.rename(eirene_nodes, 'fort.33')
-        os.rename(eirene_cells, 'fort.34')
-        os.rename(eirene_links, 'fort.35')
-
 #  Create plasma state zip file.
         with ZipState.ZipState(current_vmec_state, 'a') as zip_ref:
-
 #  b2 files
-            zip_ref.write('b2fgmtry')
-            zip_ref.write('b2fpardf')
-            zip_ref.write('b2frates')
-            zip_ref.write('b2fstati')
-            zip_ref.write('b2mn.dat')
+            if os.path.exists('b2fgmtry'):
+                zip_ref.write('b2fgmtry')
+                zip_ref.set_state(state='needs_update')
+            if os.path.exists('b2fpardf'):
+                zip_ref.write('b2fpardf')
+                zip_ref.set_state(state='needs_update')
+            if os.path.exists('b2frates'):
+                zip_ref.write('b2frates')
+                zip_ref.set_state(state='needs_update')
+            if os.path.exists('b2fstati'):
+                zip_ref.write('b2fstati')
+                zip_ref.set_state(state='needs_update')
+            if os.path.exists('b2mn.dat'):
+                zip_ref.write('b2mn.dat')
+                zip_ref.set_state(state='needs_update')
 
-            zip_ref.write('b2.transport.parameters')
-            zip_ref.write('b2.numerics.parameters')
-            zip_ref.write('b2.neutrals.parameters')
-            zip_ref.write('b2.boundary.parameters')
+#  Namelist files.
+            if os.path.exists('b2.transport.parameters'):
+                zip_ref.write('b2.transport.parameters')
+                zip_ref.set_state(state='needs_update')
+            if os.path.exists('b2.numerics.parameters'):
+                zip_ref.write('b2.numerics.parameters')
+                zip_ref.set_state(state='needs_update')
+            if os.path.exists('b2.neutrals.parameters'):
+                zip_ref.write('b2.neutrals.parameters')
+                zip_ref.set_state(state='needs_update')
+            if os.path.exists('b2.boundary.parameters'):
+                zip_ref.write('b2.boundary.parameters')
+                zip_ref.set_state(state='needs_update')
 
-#  eirene files
-            zip_ref.write('fort.1')
-            zip_ref.write('fort.33')
-            zip_ref.write('fort.34')
-            zip_ref.write('fort.35')
-
-            zip_ref.set_state(state='needs_update')
+#  eirene files. We need to rename the eirene input files.
+            if os.path.exists(eirene_input_dat):
+                os.rename(eirene_input_dat, 'fort.1')
+                zip_ref.write('fort.1')
+                zip_ref.set_state(state='needs_update')
+            if os.path.exists(eirene_nodes):
+                os.rename(eirene_nodes, 'fort.33')
+                zip_ref.write('fort.33')
+                zip_ref.set_state(state='needs_update')
+            if os.path.exists(eirene_cells):
+                os.rename(eirene_cells, 'fort.34')
+                zip_ref.write('fort.34')
+                zip_ref.set_state(state='needs_update')
+            if os.path.exists(eirene_links):
+                os.rename(eirene_links, 'fort.35')
+                zip_ref.write('fort.35')
+                zip_ref.set_state(state='needs_update')
 
         self.services.update_plasma_state()
 
@@ -114,7 +128,7 @@ class solps_iter_init(Component):
 #
 #-------------------------------------------------------------------------------
         def step(self, timeStamp=0.0):
-            print('solps_iter_init: step')
+            ScreenWriter.screen_output(self, 'verbose', 'solps_iter_init: step')
     
 #-------------------------------------------------------------------------------
 #
@@ -122,4 +136,4 @@ class solps_iter_init(Component):
 #
 #-------------------------------------------------------------------------------
         def finalize(self, timeStamp=0.0):
-            print('solps_iter_init: finalize')
+            ScreenWriter.screen_output(self, 'verbose', 'solps_iter_init: finalize')
