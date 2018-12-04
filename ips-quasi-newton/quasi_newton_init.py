@@ -8,6 +8,7 @@
 
 from component import Component
 from utilities import ZipState
+from utilities import ScreenWriter
 import os
 
 #-------------------------------------------------------------------------------
@@ -17,7 +18,6 @@ import os
 #-------------------------------------------------------------------------------
 class quasi_newton_init(Component):
     def __init__(self, services, config):
-        print('quasi_newton_init: Construct')
         Component.__init__(self, services, config)
 
 #-------------------------------------------------------------------------------
@@ -26,7 +26,7 @@ class quasi_newton_init(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
-        print('quasi_newton_init: init')
+        ScreenWriter.screen_output(self, 'verbose', 'quasi_newton_init: init')
     
 #  Get config filenames.
         current_model_state = self.services.get_config_param('MODEL_INPUT')
@@ -55,7 +55,7 @@ class quasi_newton_init(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        print('quasi_newton_init: step')
+        ScreenWriter.screen_output(self, 'verbose', 'quasi_newton_init: step')
 
 #-------------------------------------------------------------------------------
 #
@@ -63,4 +63,4 @@ class quasi_newton_init(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('quasi_newton_init: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'quasi_newton_init: finalize')

@@ -9,6 +9,7 @@
 
 from component import Component
 from utilities import ZipState
+from utilities import ScreenWriter
 import os
 import shutil
 import json
@@ -23,7 +24,6 @@ from scipy import optimize
 #-------------------------------------------------------------------------------
 class quasi_newton_driver(Component):
     def __init__(self, services, config):
-        print('quasi_newton_driver: Construct')
         Component.__init__(self, services, config)
         self.model_workers = []
         self.history = []
@@ -34,7 +34,7 @@ class quasi_newton_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
-        print('quasi_newton_driver: init')
+        ScreenWriter.screen_output(self, 'verbose', 'quasi_newton_driver: init')
     
 #  Get config filenames.
         self.current_model_state = self.services.get_config_param('MODEL_INPUT')
@@ -90,7 +90,8 @@ class quasi_newton_driver(Component):
 
 #  Set keys for the subworkflows.
             keys = {'PWD'              : self.services.get_config_param('PWD'),
-                    'USER_INPUT_FILES' : self.current_model_state}
+                    'USER_INPUT_FILES' : self.current_model_state,
+                    'OUTPUT_LEVEL'     : self.services.get_config_param('OUTPUT_LEVEL')}
 
 #  Copy the model state to the input file staging directory. Since all the
 #  model instances start from the same state, we only need this in one place.
@@ -145,7 +146,7 @@ class quasi_newton_driver(Component):
             with ZipState.ZipState(self.model_workers[0]['output'], 'a') as zip_ref:
                 zip_ref.extract(self.model_workers[0]['result'])
                 with open(self.model_workers[0]['result'], 'r') as result_file:
-                    self.e = self.signal_weights*((numpy.array(json.load(result_file)['signal_model']) - self.signal_observed)/self.signal_sigma)
+                    self.e = self.get_e(result_file)
 
 #  The initial model state may have changed reset it from the one of the
 #  workers.
@@ -157,15 +158,15 @@ class quasi_newton_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        print('quasi_newton_driver: step')
+        ScreenWriter.screen_output(self, 'verbose', 'quasi_newton_driver: step')
 
 #  Compute chi^2. Set the inital change in chi^2 higher than the tolarance to
 #  ensure at least one iteration of the while loop is performed.
         self.chi2 = numpy.dot(self.e, self.e)
         dchi2 = self.dchi2_tol + 1.0
-        print('-------------------------------------------------------------------------------------------------')
-        print('Step {:>4.0f} : chi^2 = {:12.5e}'.format(timeStamp, self.chi2))
-        print('-------------------------------------------------------------------------------------------------')
+        ScreenWriter.screen_output(self, 'quiet',   '-------------------------------------------------------------------------------------------------')
+        ScreenWriter.screen_output(self, 'quiet',   'Step {:>4.0f} : chi^2 = {:12.5e}'.format(timeStamp, self.chi2))
+        ScreenWriter.screen_output(self, 'verbose', '-------------------------------------------------------------------------------------------------')
 
         self.jacobian = numpy.empty((len(self.model_workers), self.e.size), dtype=float)
         self.hessian = numpy.empty((len(self.model_workers), len(self.model_workers)), dtype=float)
@@ -184,9 +185,9 @@ class quasi_newton_driver(Component):
                 dchi2 = self.chi2 - new_chi2
                 self.chi2 = new_chi2
                 self.history.append({'Time' : timeStamp, 'Chi2' : self.chi2, 'DChi2' : dchi2, 'Num SV' : self.k_use, 'Size' : self.norm_len})
-                print('-------------------------------------------------------------------------------------------------')
-                print('Step {:>4.0f} : chi^2 = {:12.5e} : dchi^2 = {:12.5e} : Num SV = {:4} : Norm Size {:12.5e}'.format(timeStamp, self.chi2, dchi2, self.k_use, self.norm_len))
-                print('-------------------------------------------------------------------------------------------------')
+                ScreenWriter.screen_output(self, 'verbose', '-------------------------------------------------------------------------------------------------')
+                ScreenWriter.screen_output(self, 'quiet',   'Step {:>4.0f} : chi^2 = {:12.5e} : dchi^2 = {:12.5e} : Num SV = {:4} : Norm Size {:12.5e}'.format(timeStamp, self.chi2, dchi2, self.k_use, self.norm_len))
+                ScreenWriter.screen_output(self, 'verbose', '-------------------------------------------------------------------------------------------------')
             else:
                 break
 
@@ -196,7 +197,7 @@ class quasi_newton_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('quasi_newton_driver: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'quasi_newton_driver: finalize')
 
         for worker in self.model_workers:
             worker['wait'] = [
@@ -207,23 +208,23 @@ class quasi_newton_driver(Component):
         for worker in self.model_workers:
             self.services.wait_call_list(worker['wait'], True)
 
-        print('-------------------------------------------------------------------------------------------------')
-        print('{:<4} : {:<12} : {:<12} : {:<6} : {:<12}'.format('Step', 'chi^2', 'dchi^2', 'Num SV', 'Norm Size'))
-        print('')
+        ScreenWriter.screen_output(self, 'quiet', '-------------------------------------------------------------------------------------------------')
+        ScreenWriter.screen_output(self, 'quiet', '{:<4} : {:<12} : {:<12} : {:<6} : {:<12}'.format('Step', 'chi^2', 'dchi^2', 'Num SV', 'Norm Size'))
+        ScreenWriter.screen_output(self, 'quiet', '')
         for step in self.history:
             if "DChi2" in step:
-                print('{Time:>4.0f} : {Chi2:>12.5e} : {DChi2:>12.5e} : {Num SV:>6} : {Size:>12.5e}'.format(**step))
+                ScreenWriter.screen_output(self, 'quiet', '{Time:>4.0f} : {Chi2:>12.5e} : {DChi2:>12.5e} : {Num SV:>6} : {Size:>12.5e}'.format(**step))
             else:
-                print('{Time:>4.0f} : {Chi2:>12.5e}'.format(**step))
-        print('-------------------------------------------------------------------------------------------------')
+                ScreenWriter.screen_output(self, 'quiet', '{Time:>4.0f} : {Chi2:>12.5e}'.format(**step))
+        ScreenWriter.screen_output(self, 'quiet', '-------------------------------------------------------------------------------------------------')
 
         correlation_matrix = numpy.linalg.inv(self.hessian)
-        print('{:<50} {:<12} {:<12}'.format('Parameter', 'Value', 'Sigma'))
-        print('')
+        ScreenWriter.screen_output(self, 'quiet', '{:<50} {:<12} {:<12}'.format('Parameter', 'Value', 'Sigma'))
+        ScreenWriter.screen_output(self, 'quiet', '')
         for i, worker in enumerate(self.model_workers):
             worker['sigma'] = math.sqrt(correlation_matrix[i,i]*worker['vrnc']**2.0)
-            print('{name:<50} {value:>12.5e} {sigma:>12.5e}'.format(**worker))
-        print('-------------------------------------------------------------------------------------------------')
+            ScreenWriter.screen_output(self, 'quiet', '{name:<50} {value:>12.5e} {sigma:>12.5e}'.format(**worker))
+        ScreenWriter.screen_output(self, 'quiet', '-------------------------------------------------------------------------------------------------')
 
 #-------------------------------------------------------------------------------
 #
@@ -232,7 +233,7 @@ class quasi_newton_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def eval_jacobian(self, timeStamp=0.0):
-        print('quasi_newton_driver: eval_jacobian')
+        ScreenWriter.screen_output(self, 'verbose', 'quasi_newton_driver: eval_jacobian')
 
 #  Set the model to a known state.
         shutil.copy2(self.current_model_state, 'model_inputs')
@@ -275,7 +276,15 @@ class quasi_newton_driver(Component):
             with ZipState.ZipState(worker['output'], 'a') as zip_ref:
                 zip_ref.extract(worker['result'])
                 with open(worker['result'], 'r') as result_file:
-                    self.jacobian[i] = self.e - self.signal_weights*((numpy.array(json.load(result_file)['signal_model']) - self.signal_observed)/self.signal_sigma)
+                    self.jacobian[i] = self.e - self.get_e(result_file)
+
+#-------------------------------------------------------------------------------
+#
+#  QUASI-NEWTON Driver get_e method. This computes the non squared error.
+#
+#-------------------------------------------------------------------------------
+    def get_e(self, result_file):
+        return self.signal_weights*((numpy.array(json.load(result_file)['signal_model']) - self.signal_observed)/self.signal_sigma)
 
 #-------------------------------------------------------------------------------
 #
@@ -285,7 +294,7 @@ class quasi_newton_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def try_step(self, timeStamp=0.0):
-        print('quasi_newton_driver: try_step')
+        ScreenWriter.screen_output(self, 'verbose', 'quasi_newton_driver: try_step')
 
         self.k_use = self.get_k_svd()
 
@@ -327,7 +336,7 @@ class quasi_newton_driver(Component):
                 with ZipState.ZipState(worker['output'], 'a') as zip_ref:
                     zip_ref.extract(worker['result'])
                     with open(worker['result'], 'r') as result_file:
-                        e_try[i] = self.signal_weights*((numpy.array(json.load(result_file)['signal_model']) - self.signal_observed)/self.signal_sigma)
+                        e_try[i] = self.get_e(result_file)
                         chi2try[i] = numpy.dot(e_try[i], e_try[i])
 
             i_min = numpy.argmin(chi2try)
@@ -361,7 +370,7 @@ class quasi_newton_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def get_k_svd(self):
-        print('quasi_newton_driver: get_k_svd')
+        ScreenWriter.screen_output(self, 'verbose', 'quasi_newton_driver: get_k_svd')
     
 #  Approximate the hessian.
 #
@@ -439,7 +448,7 @@ class quasi_newton_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def get_exp_dg2(self, delta):
-        print('quasi_newton_driver: get_exp_dg2')
+        ScreenWriter.screen_output(self, 'verbose', 'quasi_newton_driver: get_exp_dg2')
         
 #  Linear part.
 #
@@ -463,7 +472,7 @@ class quasi_newton_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def lm_step(self, step_size):
-        print('quasi_newton_driver: lm_step')
+        ScreenWriter.screen_output(self, 'verbose', 'quasi_newton_driver: lm_step')
 
         if step_size > 0.0 and self.delta_a_len[self.k_use] > step_size:
             ut_dot_e = numpy.matmul(self.e, self.j_svd_u)
@@ -483,7 +492,7 @@ class quasi_newton_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def lm_get_lambda(self, step_size, ut_dot_e):
-        print('quasi_newton_driver: lm_get_lambda')
+        ScreenWriter.screen_output(self, 'verbose', 'quasi_newton_driver: lm_get_lambda')
 
 #  Define a default value incase the root find fails. Note lambda is a python
 #  builtin add an underscore to avoid this.
