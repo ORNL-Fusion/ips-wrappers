@@ -9,6 +9,7 @@
 
 from component import Component
 from utilities import ZipState
+from utilities import ScreenWriter
 import os
 
 #-------------------------------------------------------------------------------
@@ -18,7 +19,6 @@ import os
 #-------------------------------------------------------------------------------
 class v3fit_init(Component):
     def __init__(self, services, config):
-        print('v3fit_init: Construct')
         Component.__init__(self, services, config)
 
 #-------------------------------------------------------------------------------
@@ -30,7 +30,7 @@ class v3fit_init(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
-        print('v3fit_init: init')
+        ScreenWriter.screen_output(self, 'verbose', 'v3fit_init: init')
 
 #  Get config filenames.
         current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
@@ -99,7 +99,7 @@ class v3fit_init(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        print('v3fit_init: step')
+        ScreenWriter.screen_output(self, 'verbose', 'v3fit_init: step')
 
 #-------------------------------------------------------------------------------
 #
@@ -107,4 +107,4 @@ class v3fit_init(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('v3fit_init: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'v3fit_init: finalize')

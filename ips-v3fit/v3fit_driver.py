@@ -12,6 +12,7 @@ from component import Component
 import os
 import shutil
 from utilities import ZipState
+from utilities import ScreenWriter
 
 #-------------------------------------------------------------------------------
 #
@@ -20,7 +21,6 @@ from utilities import ZipState
 #-------------------------------------------------------------------------------
 class v3fit_driver(Component):
     def __init__(self, services, config):
-        print('v3fit_driver: Construct')
         Component.__init__(self, services, config)
         self.eq_worker = {'sim_name': None, 'init': None, 'driver': None}
 
@@ -30,7 +30,7 @@ class v3fit_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0, **keywords):
-        print('v3fit_driver: init')
+        ScreenWriter.screen_output(self, 'verbose', 'v3fit_driver: init')
         
 #  Separate out the siesta, vmec and v3fit keywords.
         eq_keywords = {}
@@ -65,6 +65,7 @@ class v3fit_driver(Component):
                         'USER_INPUT_FILES' : current_siesta_state,
                         'SIM_NAME'         : '{}_siesta'.format(self.services.get_config_param('SIM_NAME')),
                         'LOG_FILE'         : 'log.{}_siesta.warning'.format(self.services.get_config_param('SIM_NAME')),
+                        'OUTPUT_LEVEL'     : self.services.get_config_param('OUTPUT_LEVEL')
                        }
 
                 siesta_config = self.services.get_config_param('SIESTA_CONFIG')
@@ -121,7 +122,7 @@ class v3fit_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0, **keywords):
-        print('v3fit_driver: step')
+        ScreenWriter.screen_output(self, 'verbose', 'v3fit_driver: step')
 
 #  Run V3FIT.
         self.services.wait_call(self.wait, True)
@@ -145,7 +146,7 @@ class v3fit_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('v3fit_driver: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'v3fit_driver: finalize')
         
         self.wait = [
                      self.services.call_nonblocking(self.eq_worker['init'], 'finalize', timeStamp),

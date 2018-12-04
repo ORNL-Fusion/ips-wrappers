@@ -11,6 +11,7 @@ from component import Component
 from omfit.classes.omfit_namelist import OMFITnamelist
 from omfit.classes.omfit_nc import OMFITnc
 from utilities import ZipState
+from utilities import ScreenWriter
 import json
 
 #-------------------------------------------------------------------------------
@@ -20,7 +21,6 @@ import json
 #-------------------------------------------------------------------------------
 class v3fit(Component):
     def __init__(self, services, config):
-        print('v3fit: Construct')
         Component.__init__(self, services, config)
 
 #-------------------------------------------------------------------------------
@@ -29,7 +29,7 @@ class v3fit(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0, **keywords):
-        print('v3fit: init')
+        ScreenWriter.screen_output(self, 'verbose', 'v3fit: init')
         self.services.stage_plasma_state()
 
 #  Get config filenames.
@@ -101,7 +101,7 @@ class v3fit(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0, **keywords):
-        print('v3fit: step')
+        ScreenWriter.screen_output(self, 'verbose', 'v3fit: step')
 
         flags = self.zip_ref.get_state()
     
@@ -144,7 +144,7 @@ class v3fit(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('v3fit: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'v3fit: finalize')
     
 #-------------------------------------------------------------------------------
 #
