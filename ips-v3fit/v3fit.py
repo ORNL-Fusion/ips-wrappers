@@ -13,6 +13,7 @@ from omfit.classes.omfit_nc import OMFITnc
 from utilities import ZipState
 from utilities import ScreenWriter
 import json
+import os
 
 #-------------------------------------------------------------------------------
 #
@@ -44,7 +45,7 @@ class v3fit(Component):
 
 #  Stage plasma state.
         self.services.stage_plasma_state()
-    
+
 #  Unzip files from the plasma state. Use mode a so files can be read and
 #  written to.
         self.zip_ref = ZipState.ZipState(self.current_v3fit_state, 'a')
@@ -59,14 +60,14 @@ class v3fit(Component):
                 siesta_zip_ref.extract(current_siesta_namelist)
                 namelist = OMFITnamelist(current_siesta_namelist)
                 current_restart_file = 'siesta_{}.nc'.format(namelist['siesta_info']['restart_ext'])
-                
+
                 siesta_zip_ref.extract(current_restart_file)
                 flags = siesta_zip_ref.get_state()
                 if 'state' in flags and flags['state'] == 'updated':
                     self.zip_ref.set_state(state='needs_update')
-                        
+
                 siesta_zip_ref.extract(current_vmec_state)
-                
+
                 with ZipState.ZipState(current_vmec_state, 'r') as vmec_zip_ref:
                     vmec_zip_ref.extract(current_wout_file)
                     flags = vmec_zip_ref.get_state()
@@ -80,7 +81,7 @@ class v3fit(Component):
                 keywords['model_eq_type'] = 'siesta'
         else:
             self.zip_ref.extract(current_vmec_state)
-            
+
             with ZipState.ZipState(current_vmec_state, 'r') as vmec_zip_ref:
                 vmec_zip_ref.extract(current_wout_file)
                 vmec_zip_ref.extract(current_vmec_namelist)
@@ -94,7 +95,7 @@ class v3fit(Component):
 
 #  Update parameters in the namelist.
         self.set_namelist(**keywords)
-    
+
 #-------------------------------------------------------------------------------
 #
 #  V3FIT Component step method. This runs V3FIT.
@@ -104,7 +105,7 @@ class v3fit(Component):
         ScreenWriter.screen_output(self, 'verbose', 'v3fit: step')
 
         flags = self.zip_ref.get_state()
-    
+
         if 'state' in flags and flags['state'] == 'needs_update':
             self.set_namelist(my_task='v3post')
             self.task_wait = self.services.launch_task(self.NPROC,
@@ -119,10 +120,10 @@ class v3fit(Component):
 #  Wait for V3FIT to finish.
             if (self.services.wait_task(self.task_wait) and not os.path.exists(self.result_file)):
                 self.services.error('v3fit: step failed.')
-    
+
 #  Add the result file to the plasma state.
             self.zip_ref.write([self.current_v3fit_namelist, self.result_file])
-            
+
         else:
 #  Update flags.
             self.zip_ref.set_state(state='unchanged')
@@ -145,7 +146,7 @@ class v3fit(Component):
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
         ScreenWriter.screen_output(self, 'verbose', 'v3fit: finalize')
-    
+
 #-------------------------------------------------------------------------------
 #
 #  V3FIT Component set_namelist method. This sets the namelist input file from
@@ -155,7 +156,7 @@ class v3fit(Component):
     def set_namelist(self, **keywords):
 #  Update parameters in the namelist.
         namelist = OMFITnamelist(self.current_v3fit_namelist)
-        
+
         if 'vmec_nli_filename' in keywords:
             namelist['v3fit_main_nli']['vmec_nli_filename'] = keywords['vmec_nli_filename']
             self.update = True
@@ -180,10 +181,10 @@ class v3fit(Component):
             namelist['v3fit_main_nli']['my_task'] = keywords['my_task']
             self.update = True
             del keywords['my_task']
-        
+
         if len(keywords) > 0:
             self.zip_ref.set_state(state='needs_update')
-        
+
             for key, value in keywords.iteritems():
                 namelist['v3fit_main_nli'][key] = value
 
