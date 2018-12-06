@@ -193,12 +193,12 @@ class cql3d(Component):
 
     # Copy current Dql file to generic name -> genray.nc
         if cur_dql_file != 'genray.nc':
-			try:
-				shutil.copyfile(cur_dql_file, 'genray.nc')
-			except IOError, (errno, strerror):
-				print 'Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror)
-				services.error('Error copying cur_dql_file -> genray.nc')
-				raise Exception, 'Error copying cur_dql_file -> genray.nc'
+            try:
+                shutil.copyfile(cur_dql_file, 'genray.nc')
+            except IOError, (errno, strerror):
+                print 'Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror)
+                services.error('Error copying cur_dql_file -> genray.nc')
+                raise Exception, 'Error copying cur_dql_file -> genray.nc'
 
         prepare_input_bin = os.path.join(self.BIN_PATH, 'prepare_cql3d_input')
 
@@ -226,7 +226,7 @@ class cql3d(Component):
         cql3d_output + ' ' + cql3d_nml + ' ' + restart + ' ' + nsteps_str + ' ' +\
         ' ' + deltat_str + ' ' + ps_add_nml
         if arg_enorm != None:
-        	command = command  + ' ' + arg_enorm
+            command = command  + ' ' + arg_enorm
         
         print 'running = ', command
         services.send_portal_event(event_type = 'COMPONENT_EVENT',\
@@ -371,12 +371,12 @@ class cql3d(Component):
 
     # Copy current Dql file to generic name -> genray.nc
           if cur_dql_file != 'genray.nc':
-			try:
-				shutil.copyfile(cur_dql_file, 'genray.nc')
-			except IOError, (errno, strerror):
-				print 'Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror)
-				services.error('Error copying cur_dql_file -> genray.nc')
-				raise Exception, 'Error copying cur_dql_file -> genray.nc'
+            try:
+                shutil.copyfile(cur_dql_file, 'genray.nc')
+            except IOError, (errno, strerror):
+                print 'Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror)
+                services.error('Error copying cur_dql_file -> genray.nc')
+                raise Exception, 'Error copying cur_dql_file -> genray.nc'
 
           cql3d_mode = get_component_param(self, services, 'CQL3D_MODE')
           cql3d_output = get_component_param(self, services, 'CQL3D_OUTPUT')
@@ -415,7 +415,7 @@ class cql3d(Component):
           cql3d_output + ' ' + cql3d_nml + ' ' + restart + ' ' + nsteps_str + ' ' +\
           ' ' + deltat_str + ' ' + ps_add_nml
           if arg_enorm != None:
-        	command = command  + ' ' + arg_enorm
+            command = command  + ' ' + arg_enorm
 
           print 'running', command
           services.send_portal_event(event_type = 'COMPONENT_EVENT',\
@@ -482,10 +482,10 @@ class cql3d(Component):
       # This way it can be used concurrently without overwriting other plasma state files.
           print 'CURRENT_CQL = ', cur_cql_file
           try:
-            if cur_ImChizz_inp_file != None
-	            services.update_plasma_state([cur_cql_file, cur_ImChizz_inp_file])
-          else:
-            	services.update_plasma_state([cur_cql_file])
+            if cur_ImChizz_inp_file != None:
+                services.update_plasma_state([cur_cql_file, cur_ImChizz_inp_file])
+            else:
+                services.update_plasma_state([cur_cql_file])
           except Exception:
             logMsg = 'Error in call to update_plasma_state()'
             self.services.exception(logMsg)
