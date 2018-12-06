@@ -478,11 +478,14 @@ class cql3d(Component):
              raise Exception, 'Error in call to merge_current_plasma_state'
 
       # Update plasma state files in plasma_state work directory, but only cur_cql_file
+      # and cur_ImChizz_inp_file if there is one.
       # This way it can be used concurrently without overwriting other plasma state files.
           print 'CURRENT_CQL = ', cur_cql_file
           try:
-#            services.update_plasma_state(plasma_state_files = cur_cql_file)
-            services.update_plasma_state([cur_cql_file, cur_ImChizz_inp_file])
+            if cur_ImChizz_inp_file != None
+	            services.update_plasma_state([cur_cql_file, cur_ImChizz_inp_file])
+          else:
+            	services.update_plasma_state([cur_cql_file])
           except Exception:
             logMsg = 'Error in call to update_plasma_state()'
             self.services.exception(logMsg)
