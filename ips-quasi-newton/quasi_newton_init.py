@@ -47,11 +47,11 @@ class quasi_newton_init(Component):
             zip_ref.write(quasi_newton_config)
             zip_ref.write(current_model_state)
 
-        self.services.update_plasma_state()
+        self.services.update_state()
 
 #-------------------------------------------------------------------------------
 #
-#  QUASI-NEWTON Init step method. This runs the vmec component.
+#  QUASI-NEWTON Init step method.
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):

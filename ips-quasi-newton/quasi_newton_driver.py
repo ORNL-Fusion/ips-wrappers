@@ -42,8 +42,8 @@ class quasi_newton_driver(Component):
         self.current_quasi_newton_state = self.services.get_config_param('CURRENT_QUASI_NEWTON_STATE')
         ips_model_config = self.services.get_config_param('MODEL_SIM_CONFIG')
 
-#  Stage plasma state and extract all files.
-        self.services.stage_plasma_state()
+#  Stage state and extract all files.
+        self.services.stage_state()
         with ZipState.ZipState(self.current_quasi_newton_state, 'a') as zip_ref:
             zip_ref.extractall()
 
