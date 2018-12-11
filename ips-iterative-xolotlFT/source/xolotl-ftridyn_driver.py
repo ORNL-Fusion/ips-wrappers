@@ -107,10 +107,16 @@ driver['LOOP_TIME_STEP']))
 
         for k,v in self.XOLOTL_INPUT_PARAMETERS.iteritems():
             if param_handler.is_int(v):
-                print('\t integer input parameter {0} = {1} with {2}'.format(k, self.xp.parameters[k] , v))
+                if k in self.xp.parameters:
+                    print('\t integer input parameter {0} = {1} with {2}'.format(k, self.xp.parameters[k] , v))
+                else:
+                    print('\t add integer input parameter {0} = {1} to xolotl parameters'.format(k , v))
                 self.xp.parameters[k]=int(v)
             elif param_handler.is_float(v):                
-                print('\t float input parameter {0} = {1} with {2}'.format(k, self.xp.parameters[k] , v))
+                if k in self.xp.parameters:
+                    print('\t float input parameter {0} = {1} with {2}'.format(k, self.xp.parameters[k] , v))
+                else:
+                    print('\t add float input parameter {0} = {1} to xolotl parameters'.format(k , v))
                 self.xp.parameters[k]=float(v)
             elif param_handler.is_list(v):
                 values = []
@@ -163,6 +169,9 @@ driver['LOOP_TIME_STEP']))
 
         print('processes included in Xolotl are: {}\n'.format(processString.strip()))
         self.xp.parameters['process']=processString.strip()
+
+        print "THIS IS A TEST: final Xolotl parameters: "
+        print self.xp.parameters
 
 
         #INCLUDE IF NEEDED (already debugged)
@@ -229,8 +238,13 @@ driver['LOOP_TIME_STEP']))
         if 'heat' in self.gitr:
             self.xp.parameters['heat']=self.gitr['heat']
             print('replaced heat flux in Xolotl by value given by GITR {}\n'.format(self.gitr['heat']))
-        else:
+        elif 'heat' in self.xp.parameters:
             print('no heat flux specified in GITR, so using values in Xolotl {} \n'.format(self.xp.parameters['heat']))
+        elif 'startTemp' in self.gitr:
+            self.xp.parameters['startTemp']=self.gitr['startTemp']
+            print('no heat flux provided by GITR or Xolotl; use fixed temperature specified by GITR {}\n'.format(self.gitr['startTemp']))
+        else:
+            print('no heat flux provided by GITR or Xolotl; use fixed temperature specified by Xolotl {}\n'.format(self.xp.parameters['startTemp']))
 
         #### FTRIDYN PARAMETERS ##### 
         ##LOOP OVER LIST OF PLASMA SPECIES SPECIES #########
@@ -349,12 +363,12 @@ driver['LOOP_TIME_STEP']))
             print('\t \t ...initial network file staged succesfully {}\n')
 
         elif (self.driver['START_MODE']=='RESTART'):
-            restart_files = self.services.get_config_param('RESTART_FILES')
-            print('\t RESTART mode: copy restart files {} \n'.format(restart_files))
+            restart_files = self.services.get_config_param('RESTART_FILES') 
+            print('\t RESTART mode: stage restart files {} \n'.format(restart_files))
             restart_list = restart_files.split()
-            for index in range(len(restart_list)):
-                filepath='../../restart_files/'+restart_list[index]
-                shutil.copyfile(filepath,restart_list[index])
+            for index in range(len(restart_list)): 
+                print '\t staging input file ', restart_list[index] 
+                self.services.stage_input_files(restart_list[index])
             print('\t \t ...restart files staged succesfully')
 
         sys.stdout.flush()
@@ -628,7 +642,12 @@ driver['LOOP_TIME_STEP']))
             shutil.copyfile(self.FTX_SPUT_YIELDS_FILE_TEMP,timeFolder+'/'+self.FTX_SPUT_YIELDS_FILE_TEMP)
             shutil.copyfile(self.FTX_SPUT_YIELDS_FILE_FINAL,timeFolder+'/'+self.FTX_SPUT_YIELDS_FILE_FINAL) #perhaps unnecessary
             
-            if len(maxDepth)==0 and max(self.spYield)==0:
+            #if len(maxDepth)==0 and max(self.spYield)==0:
+            
+            print 'self.maxRangeXolotl = ', self.maxRangeXolotl ,' and max of self.maxRangeXolotl =', max(self.maxRangeXolotl)
+            print 'spYield = ', self.spYield, ' and max(self.spYield) = ', max(self.spYield)
+
+            if max(self.maxRangeXolotl)==0 and max(self.spYield)==0:
                 print "nothing was implanted or sputtered"
                 print "likely all weights are zero"
                 print "END OF THIS SIMULATION"
@@ -763,10 +782,14 @@ driver['LOOP_TIME_STEP']))
                         print('\t ERROR: XOLOTL SOLVER DIVERGED ')
                         print('END IPS SIMULATION \n')
                         quit()
-
+                    elif self.xolotlExitStatus=='overgrid':
+                        print('\t ERROR: XOLOTL OVERGRID ')
+                        print('END IPS SIMULATION \n')
+                        quit()
                     elif self.xolotlExitStatus=='collapsed':
                         print('\t WARNING: simulation exited loop with status collapse')
-                        print('\t try number {0} out of {1}\n'.format(self.collapsedLoops,self.maxCollapseLoops))
+                        print('\t try number {0} out of {1}\n'.format(self.collapsedLoops,self.maxCollapseLoops))                    
+
                     else:
                         print('\t WARNING: Xolotl exit status UNKOWN -- IPS simulation continues \n')
 
