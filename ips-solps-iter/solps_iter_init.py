@@ -3,7 +3,7 @@
 #-------------------------------------------------------------------------------
 #
 #  IPS wrapper for SOLPS-ITER_init component. Take the work flow inputs and
-#  generates a plasma state.
+#  generates a state.
 #
 #-------------------------------------------------------------------------------
 
@@ -24,7 +24,7 @@ class solps_iter_init(Component):
 #-------------------------------------------------------------------------------
 #
 #  SOLPS-ITER_init Component init method. This method prepairs the input files.
-#  This allows staging the plasma state files.
+#  This allows staging the state files.
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
@@ -69,8 +69,8 @@ class solps_iter_init(Component):
     
         self.services.stage_input_files(self.INPUT_FILES)
 
-#  Create plasma state zip file.
-        with ZipState.ZipState(current_vmec_state, 'a') as zip_ref:
+#  Create state zip file.
+        with ZipState.ZipState(current_solps_state, 'a') as zip_ref:
 #  b2 files
             if os.path.exists('b2fgmtry'):
                 zip_ref.write('b2fgmtry')
@@ -120,11 +120,11 @@ class solps_iter_init(Component):
                 zip_ref.write('fort.35')
                 zip_ref.set_state(state='needs_update')
 
-        self.services.update_plasma_state()
+        self.services.update_state()
 
 #-------------------------------------------------------------------------------
 #
-#  SOLPS-ITER_init init Component step method. This runs vmec.
+#  SOLPS-ITER_init init Component step method. Not used.
 #
 #-------------------------------------------------------------------------------
         def step(self, timeStamp=0.0):
@@ -132,7 +132,8 @@ class solps_iter_init(Component):
     
 #-------------------------------------------------------------------------------
 #
-#  SOLPS-ITER_init init Component finalize method. This cleans up afterwards. Not used.
+#  SOLPS-ITER_init init Component finalize method. This cleans up afterwards.
+#  Not used.
 #
 #-------------------------------------------------------------------------------
         def finalize(self, timeStamp=0.0):

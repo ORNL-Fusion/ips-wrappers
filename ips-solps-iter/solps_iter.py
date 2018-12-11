@@ -11,6 +11,7 @@ from component import Component
 import os
 from omfit.classes.omfit_namelist import OMFITnamelist
 from utilities import ZipState
+from utilities import ScreenWriter
 
 #-------------------------------------------------------------------------------
 #
@@ -31,7 +32,7 @@ class solps_iter(Component):
         
 #  Set the top of the SOLPS source tree as an environment variable.
         if timeStamp == 0.0:
-            self.current_solps_state = services.get_config_param('CURRENT_SOLPS_STATE')
+            self.current_solps_state = self.services.get_config_param('CURRENT_SOLPS_STATE')
             try:
                 self.diag_geometry = self.services.get_config_param('DIAGNOSTIC_GEOMETRY')
                 self.diag_state = self.services.get_config_param('DIAGNOSTIC_STATE')
@@ -40,9 +41,9 @@ class solps_iter(Component):
             
             os.environ['SOLPSTOP'] = self.services.get_config_param('SOLPSTOP')
         
-        self.services.stage_plasma_state()
+        self.services.stage_state()
         
-        self.zip_ref = zipfile.ZipFile(self.current_solps_state, 'r')
+        self.zip_ref = ZipState.ZipState(self.current_solps_state, 'a')
         self.zip_ref.extractall()
 
 #  Create eirene symbolic links.
@@ -92,7 +93,7 @@ class solps_iter(Component):
             if self.services.wait_task(task_wait) :
                 self.services.error('solps_iter: step failed')
 
-#  Update changed files to the plasma state.
+#  Update changed files to the state.
             self.zip_ref.write(['b2.transport.parameters',
                                 'b2.numerics.parameters',
                                 'b2.neutrals.parameters',
@@ -122,7 +123,7 @@ class solps_iter(Component):
             self.zip_ref.write(keywords['result_file'])
 
         self.zip_ref.close()
-        self.services.update_plasma_state()
+        self.services.update_state()
 
 #-------------------------------------------------------------------------------
 #
@@ -139,7 +140,7 @@ class solps_iter(Component):
 #
 #-------------------------------------------------------------------------------
     def set_namelists(self, **keywords):
-#  Replace parameters in the plasma state.
+#  Replace parameters in the state.
         transport_nl = OMFITnamelist('b2.transport.parameters')
         numerics_nl  = OMFITnamelist('b2.numerics.parameters')
         neutrals_nl  = OMFITnamelist('b2.neutrals.parameters')
