@@ -134,10 +134,10 @@ PROGRAM generic_ps_init
             call exit(1)
         endif
         write(*,*) 'generic_ps_init: mdescr_file = ', trim(mdescr_file)
-        state = ps
+        if (TRIM(init_mode) == 'mdescr') then
+	        call ps_mdescr_read(trim(mdescr_file), ierr, state = ps)
         if (TRIM(init_mode) == 'mixed') then
-        	state = aux
-        call ps_mdescr_read(trim(mdescr_file), ierr, state)
+	        call ps_mdescr_read(trim(mdescr_file), ierr, state = aux)
     END IF
 
 !------------------------------------------------------------------------------------   
@@ -153,12 +153,12 @@ PROGRAM generic_ps_init
             call exit(status)
         endif
         write(*,*) 'generic_ps_init: sconfig_file = ', trim(sconfig_file)
-        state = ps
+        if (TRIM(init_mode) == 'mdescr') then
+	        call ps_mdescr_read(trim(mdescr_file), ierr, state = ps)
         if (TRIM(init_mode) == 'mixed') then
-        	state = aux
-        call ps_sconfig_namelist_read(.false. ,trim(sconfig_file),' ', state, ierr)
+	        call ps_mdescr_read(trim(mdescr_file), ierr, state = aux)
     END IF
-	     CALL ps_store_plasma_state(ierr,'mdescr_sconfig_state.nc', state=state)
+	     CALL ps_store_plasma_state(ierr,'mdescr_sconfig_state.nc', state=aux)
 
 !------------------------------------------------------------------------------------
 !  If init_mode is 'mixed' get input plasma state as state psp
