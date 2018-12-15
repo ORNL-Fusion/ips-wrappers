@@ -12,14 +12,14 @@ This version combines several previous initializer routines and extends them.  T
 4 modes of initialization which must be specified by the config file variable INIT_MODE
 
 INIT_MODE = touch_only
-This mode only does a touch on all of the files listed as plasma state files so the 
-framework will have a complete set.  It does not actually put data in the plasma state files.
+This mode only does a touch on all of the files listed as plasma state files so the
+framework will have a complete set.  It does not actually put data in the plasma state file.
 
 INIT_MODE = minimal
-This is exactly the same as the previous minimal_state_init.py. It produces a CURRENT_STATE 
+This is exactly the same as the previous minimal_state_init.py. It produces a CURRENT_STATE
 that is empty except for some metadata:
-time variables - ps%t0, ps%t1, ps%tinit, and ps%tfinal 
-simulation identifiers - ps%tokamak_id, ps%shot_number, ps%run_id.  
+time variables - ps%t0, ps%t1, ps%tinit, and ps%tfinal
+simulation identifiers - ps%tokamak_id, ps%shot_number, ps%run_id.
 ps%Global_label is set to run_id_tokamak_id_shot_number.
 This data is set for all initialization modes, but for 'minimal' this is all the data
 included.
@@ -31,13 +31,13 @@ the CURRENT_EQDSK file is generated from equilibrium data in the INPUT_STATE_FIL
 The INPUT_STATE_FILE and INPUT_EQDSK_FILE must be specified in the config file.
 
 INIT_MODE = mdescr
-This initializes all machine description data from a plasma state machine description 
+This initializes all machine description data from a plasma state machine description
 file, e.g. <tokamak>.mdescr, as specified by config parameter MDESCR_FILE. In addition
 if a shot configuration file config parameter, SCONFIG_FILE, is specified, the shot config
 data is also loaded into CURRENT_STATE.  Machine description and shot configuration files
 are namelist files that can be read and loaded using Plasma State subroutines ps_mdescr_read()
 and ps_scongif_read().  Note:  machine description and shot configuration do not define
-the MHD equilibrium, so the equilibrium must be specified during further component 
+the MHD equilibrium, so the equilibrium must be specified during further component
 initializations
 
 INIT_MODE = mixed
@@ -65,7 +65,7 @@ IPS Components are
 12  RIPPLE  ! TF field ripple
 13  ANOM    ! Anomalous transport
 
-Except for possibly mode = existing_ps_file, all modes call on the fortran helper code 
+Except for possibly mode = existing_ps_file, all modes call on the fortran helper code
 generic_ps_file_init.f90 to interact with the Plasma State. The fortran code is also used
 in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true.
 
@@ -93,8 +93,8 @@ in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true
 #--------------------------------------------------------------------------
 #
 # This version supports both checkpoint and restart using framework functions
-# A checkpoint() function is provided that is called by the framework 
-# services.checkpoint_components() fnction.  The restart priocess now uses framwork 
+# A checkpoint() function is provided that is called by the framework
+# services.checkpoint_components() fnction.  The restart priocess now uses framwork
 # function get_restart_files() in 'step'.  There is no 'restart' function for the
 # INIT component.
 
@@ -109,22 +109,22 @@ in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true
 # CURRENT_EQDSK, CURRENT_CQL, CURRENT_DQL, CURRENT_EQDSK].  We can always add more.
 #
 # This produces a CURRENT_STATE that is empty except for:
-# time variables - ps%t0, ps%t1, ps%tinit, and ps%tfinal 
-# simulation identifiers - ps%tokamak_id, ps%shot_number, ps%run_id.  
+# time variables - ps%t0, ps%t1, ps%tinit, and ps%tfinal
+# simulation identifiers - ps%tokamak_id, ps%shot_number, ps%run_id.
 # ps%Global_label is set to run_id_tokamak_id_shot_number.
 #
 # This component drives the fortran executable generic_ps_init.f90 which uses
 # Plasma State calls to generate CURRENT_STATE
 #
 # This version also supports RESTART as specified by the SIMULATION_MODE variable in
-# the config file.  For a restart run the plasma state files are retrieved 
-# by the framework from the path indicated by the INPUT_DIR config parameter in the 
+# the config file.  For a restart run the plasma state files are retrieved
+# by the framework from the path indicated by the INPUT_DIR config parameter in the
 # [generic_ps_init] section.  The new values of ps%t0 and ps%tfinal are written into
 # CURRENT_STATE, and CURRENT_STATE is copied to PRIOR_STATE and NEXT_STATE if these are
 # in the PLASMA_STATE_FILES list.  The state files are copied to the plasma state work
 # directory by services.update_plasma_state().
 #
-# Nota Bene: For restart the plasma state files should be listed in the config file as  
+# Nota Bene: For restart the plasma state files should be listed in the config file as
 # input files to the generic_ps_init component.
 #
 # N.B. The other plasma state files that in previous versions were produced by the
@@ -134,7 +134,7 @@ in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true
 #
 # N.B. Both ps%t0 and ps%t1 are set to the value time_stamp.  tinit and tfinal
 #      are generated here from the TIME_LOOP variable in the
-#      simulation config file.  Note that the initial t0 can be different from 
+#      simulation config file.  Note that the initial t0 can be different from
 #      tinit, as might be needed in a restart.
 #
 # ------------------------------------------------------------------------------
@@ -179,7 +179,7 @@ class generic_ps_init (Component):
 #
 # ------------------------------------------------------------------------------
 
-    def step (self, timeStamp):
+    def step(self, timeStamp):
         print (' ')
         print ('generic_ps_init.step() called')
 
@@ -201,13 +201,13 @@ class generic_ps_init (Component):
             logMsg = 'generic_ps_init: unrecoginzed SIMULATION_MODE: ' + mode
             self.services.error(logMsg)
             raise ValueError(logMsg)
- 
+
 # ------------------------------------------------------------------------------
 #
 # RESTART simulation mode
 #
 # ------------------------------------------------------------------------------
-            
+
         if simulation_mode == 'RESTART':
             # Get restart files listed in config file. Here just the plasma state files.
             restart_root = self.get_config_param(services, 'RESTART_ROOT')
@@ -218,24 +218,24 @@ class generic_ps_init (Component):
                 logMsg = 'Error in call to get_restart_files()'
                 self.services.exception(logMsg)
                 raise
-            
+
             cur_state_file = self.services.get_config_param('CURRENT_STATE')
-    
-            # Update ps%t0, ps%t1 and ps%tfinal. 
-            # Note ps%tinit stays the same in the plasma state file, 
-            # tinit from the config file timeloop is the restart time 
+
+            # Update ps%t0, ps%t1 and ps%tfinal.
+            # Note ps%tinit stays the same in the plasma state file,
+            # tinit from the config file timeloop is the restart time
             ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
             ps.variables['t0'].assignValue(float(tinit))
             ps.variables['t1'].assignValue(float(tinit))
             ps.variables['tfinal'].assignValue(float(tfinal))
             ps.close()
-        
+
 # ------------------------------------------------------------------------------
 #
 # NORMAL simulation mode
 #
 # ------------------------------------------------------------------------------
-        
+
         else:
 
             print 'generic_ps_init: simulation mode NORMAL'
@@ -262,7 +262,7 @@ class generic_ps_init (Component):
                     raise
                 return
 
-            try:       
+            try:
                 services.stage_input_files(self.INPUT_FILES)
             except Exception:
                 message = 'generic_ps_init: Error in staging input files'
@@ -281,9 +281,9 @@ class generic_ps_init (Component):
                 INPUT_EQDSK_FILE = ' '
             else:
                 nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
-                
+
                 # If there is an INPUT_EQDSK_FILE copy it to CURRENT_EQDSK although
-                # CURRENT_EQDSK will be overwritten with plasma state data if 
+                # CURRENT_EQDSK will be overwritten with plasma state data if
                 # GENERATE_EQDSK is True
                 try:
                     subprocess.call(['cp', INPUT_EQDSK_FILE, cur_eqdsk_file ])
@@ -291,8 +291,8 @@ class generic_ps_init (Component):
                     message = 'generic_ps_init: Error copying INPUT_EQDSK_FILE to CURRENT_EQDSK'
                     print message
                     services.exception(message)
-                    raise              
-            
+                    raise
+
 # ------------------------------------------------------------------------------
             # init from existing plasma state file
             if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE', 'mixed', 'MIXED'] :    
@@ -307,7 +307,7 @@ class generic_ps_init (Component):
                     print message
                     services.exception(message)
                     raise
-                    
+
                 # Generate cur_eqdsk_file from cur_state_file if GENERATE_EQDSK is True
                 GENERATE_EQDSK = self.get_component_param(services, 'GENERATE_EQDSK', \
                 optional = True)
@@ -315,7 +315,7 @@ class generic_ps_init (Component):
                     nml_lines.append(' generate_eqdsk = True')
                     nml_lines.append('/')
                     self.put_lines('generic_ps_init.nml', nml_lines)
-                    
+
                     init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
                     print 'Executing ', init_bin
                     retcode = subprocess.call(init_bin)
@@ -330,7 +330,7 @@ class generic_ps_init (Component):
                     try:
                         subprocess.call(['cp', INPUT_EQDSK_FILE, cur_eqdsk_file ])
                     except Exception, e:
-                        message =  'generic_ps_init: Error in copying input_eqdsk_file' 
+                        message =  'generic_ps_init: Error in copying input_eqdsk_file'
                         print message
                         services.exception(message)
                         raise e
@@ -342,12 +342,12 @@ class generic_ps_init (Component):
                 nml_lines.append(' mdescr_file = ' + MDESCR_FILE + '\n')
                 SCONFIG_FILE = self.get_component_param(services, 'SCONFIG_FILE', \
                 optional = 'TRUE')
-                
+
                 if (SCONFIG_FILE is None) or (len(SCONFIG_FILE) == 0):
                    SCONFIG_FILE = ' '
                 else:
                     nml_lines.append(' sconfig_file = ' + SCONFIG_FILE + '\n')
-                    
+
                 INPUT_EQDSK_FILE = self.get_component_param(services, 'INPUT_EQDSK_FILE', \
                 optional = True)
                 if (INPUT_EQDSK_FILE is None) or (len(INPUT_EQDSK_FILE) == 0):
@@ -385,16 +385,16 @@ class generic_ps_init (Component):
             if init_mode in ['minimal', 'MINIMAL', 'mdescr', 'MDESCR', 'mixed', 'MIXED'] :
                 nml_lines.append('/')
                 self.put_lines('generic_ps_init.nml', nml_lines)
-                            
+
                 init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
                 print 'Executing ', init_bin
                 retcode = subprocess.call(init_bin)
                 if (retcode != 0):
                    print 'Error executing ', init_bin
                    raise
-                   
+
 # ------------------------------------------------------------------------------
-            # For all init init modes insert run identifiers and time data 
+            # For all init init modes insert run identifiers and time data
             # (do it here in python instead of in minimal_state_init.f90 as before)
             # For minimal mode this is the only data in initial state
             tokamak = self.get_config_param(services, 'TOKAMAK_ID')
@@ -445,11 +445,11 @@ class generic_ps_init (Component):
 
     def checkpoint(self, timestamp=0.0):
         print 'generic_ps_init.checkpoint() called'
-        
+
         services = self.services
         services.stage_plasma_state()
         services.save_restart_files(timestamp, self.RESTART_FILES)
-        
+
 
 # ------------------------------------------------------------------------------
 #
