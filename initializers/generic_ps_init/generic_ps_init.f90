@@ -156,10 +156,10 @@ PROGRAM generic_ps_init
         endif
         write(*,*) 'generic_ps_init: sconfig_file = ', trim(sconfig_file)
         if (TRIM(init_mode) == 'mdescr') then
-	        call ps_mdescr_read(trim(mdescr_file), ierr, state=ps)
+	        call ps_mdescr_read(trim(sconfig_file), ierr, state=ps)
 	    endif
         if (TRIM(init_mode) == 'mixed') then
-	        call ps_mdescr_read(trim(mdescr_file), ierr, state=aux)
+	        call ps_mdescr_read(trim(sconfig_file), ierr, state=aux)
 	    endif
     END IF
 	     CALL ps_store_plasma_state(ierr,'mdescr_sconfig_state.nc', state=aux)
