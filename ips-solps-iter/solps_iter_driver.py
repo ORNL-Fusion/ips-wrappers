@@ -28,7 +28,7 @@ class solps_iter_driver(Component):
     def init(self, timeStamp=0.0, **keywords):
         ScreenWriter.screen_output(self, 'verbose', 'solps_iter_driver: init')
 
-#  Separate out the vmec keywords.
+#  Separate out the solps_iter keywords.
         solps_keywords = {}
         for key, value in keywords.iteritems():
             if 'solps_iter__' in key:

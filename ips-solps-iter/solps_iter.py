@@ -94,18 +94,24 @@ class solps_iter(Component):
                 self.services.error('solps_iter: step failed')
 
 #  Update changed files to the state.
-            self.zip_ref.write(['b2.transport.parameters',
-                                'b2.numerics.parameters',
-                                'b2.neutrals.parameters',
-                                'b2.boundary.parameters',
-                                'b2fstate',
+            self.zip_ref.write(['b2fstate',
                                 'b2fstati'])
+            if os.path.exists('b2.transport.parameters'):
+                self.zip_ref.write('b2.transport.parameters')
+            if os.path.exists('b2.numerics.parameters'):
+                self.zip_ref.write('b2.numerics.parameters')
+            if os.path.exists('b2.neutrals.parameters'):
+                self.zip_ref.write('b2.neutrals.parameters')
+            if os.path.exists('b2.boundary.parameters'):
+                self.zip_ref.write('b2.boundary.parameters')
+            if os.path.exists('b2.transport.inputfile'):
+                self.zip_ref.write('b2.transport.inputfile')
 
         else:
             self.zip_ref.set_state(state='unchanged')
 
         if 'result_file' in keywords:
-            task_wait = self.services.launch_task(self.NPROC,
+            task_wait = self.services.launch_task(1,
                                                   self.services.get_working_dir(),
                                                   self.SOLPS_SIGNALS_EXE,
                                                   '-task=get_result',
@@ -136,16 +142,11 @@ class solps_iter(Component):
 #-------------------------------------------------------------------------------
 #
 #  SOLPS-ITER Component set_namelists method. This sets the namelist input files
-#  from the keywords.
+#  from the keywords. This devides the keywords into
 #
 #-------------------------------------------------------------------------------
     def set_namelists(self, **keywords):
 #  Replace parameters in the state.
-        transport_nl = OMFITnamelist('b2.transport.parameters')
-        numerics_nl  = OMFITnamelist('b2.numerics.parameters')
-        neutrals_nl  = OMFITnamelist('b2.neutrals.parameters')
-        boundary_nl  = OMFITnamelist('b2.boundary.parameters')
-        
         if len(keywords) > 0:
             self.zip_ref.set_state(state='needs_update')
 
@@ -159,6 +160,7 @@ class solps_iter(Component):
 #    nu : b2.numerics.parameters
 #    ne : b2.neutrals.parameters
 #    bo : b2.boundary.parameters
+#    ti : b2.transport.inputfile
 #
 #  The namelist item is specified verbatium. For arrays, the array index is
 #  specifed in the same manner as an entry in the namelist input file would be.
@@ -167,17 +169,42 @@ class solps_iter(Component):
 #
 #    tr__parm_hci(1)
 #
+
+            transport_parameters = {}
+            numerics_parameters = {}
+            neutrals_parameters = {}
+            boundary_parameters = {}
+            transport_inputfile = {}
+
             for key, value in keywords.iteritems():
                 if 'tr__' in key:
-                    transport_nl['transport'][key.replace('tr__','',1)] = value
+                    transport_parameters[key.replace('tr__','',1)] = value
                 if 'nu__' in key:
-                    transport_nl['numerics'][key.replace('nu__','',1)] = value
+                    numerics_parameters[key.replace('nu__','',1)] = value
                 if 'ne__' in key:
-                    transport_nl['NEUTRALS'][key.replace('ne__','',1)] = value
+                    neutrals_parameters[key.replace('ne__','',1)] = value
                 if 'bo__' in file :
-                    transport_nl['boundary'][key.replace('bo__','',1)] = value
+                    boundary_parameters[key.replace('bo__','',1)] = value
+                if 'ti__' in key:
+                    transport_inputfile[key.replace('ti__','',1)] = value
+                    
+            set_namelist('b2.transport.parameters', 'transport', **transport_parameters)
+            set_namelist('b2.numerics.parameters', 'numerics', **numerics_parameters)
+            set_namelist('b2.numerics.parameters', 'NEUTRALS', **neutrals_parameters)
+            set_namelist('b2.boundary.parameters', 'boundary', **boundary_parameters)
+            set_namelist('b2.transport.inputfile', 'TRANSPORT', **transport_inputfile)
 
-        transport_nl.save()
-        numerics_nl.save()
-        neutrals_nl.save()
-        boundary_nl.save()
+#-------------------------------------------------------------------------------
+#
+#  SOLPS-ITER Component set_namelist method. This sets a namelist input file
+#  from the keywords.
+#
+#-------------------------------------------------------------------------------
+    def set_namelist(file, name, **keywords):
+        if os.path.exists(file) and len(keywords) > 0:
+            nl_file  = OMFITnamelist(file)
+
+            for key, value in keywords.iteritems():
+                nl_file[name][key] = value
+                    
+            nl_file.save()

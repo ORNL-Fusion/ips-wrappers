@@ -66,6 +66,8 @@ class solps_iter_init(Component):
             os.remove('b2.neutrals.parameters')
         if os.path.exists('b2.boundary.parameters'):
             os.remove('b2.boundary.parameters')
+        if os.path.exists('b2.transport.inputfile'):
+            os.remove('b2.transport.inputfile')
     
         self.services.stage_input_files(self.INPUT_FILES)
 
@@ -101,7 +103,10 @@ class solps_iter_init(Component):
             if os.path.exists('b2.boundary.parameters'):
                 zip_ref.write('b2.boundary.parameters')
                 zip_ref.set_state(state='needs_update')
-
+            if os.path.exists('b2.transport.inputfile'):
+                zip_ref.write('b2.transport.inputfile')
+                zip_ref.set_state(state='needs_update')
+            
 #  eirene files. We need to rename the eirene input files.
             if os.path.exists(eirene_input_dat):
                 os.rename(eirene_input_dat, 'fort.1')
