@@ -3,6 +3,7 @@
 from  component import Component
 import sys
 import os
+import os.path
 import subprocess
 import numpy
 import shutil
@@ -170,8 +171,8 @@ driver['LOOP_TIME_STEP']))
         print('processes included in Xolotl are: {}\n'.format(processString.strip()))
         self.xp.parameters['process']=processString.strip()
 
-        print "THIS IS A TEST: final Xolotl parameters: "
-        print self.xp.parameters
+        #print "THIS IS A TEST: final Xolotl parameters: "
+        #print self.xp.parameters
 
 
         #INCLUDE IF NEEDED (already debugged)
@@ -356,11 +357,21 @@ driver['LOOP_TIME_STEP']))
             #initialize maxRangeXolotl list
             self.maxRangeXolotl.append(0.0)
 
+
         #stage initial network File (INIT mode) OR restart files (RESTART mode)
         if (self.driver['START_MODE']=='INIT'):
-            print('\t INIT mode: stage initial network file {}\n'.format(self.NETWORK_FILE))
-            self.services.stage_input_files(self.NETWORK_FILE)
-            print('\t \t ...initial network file staged succesfully {}\n')
+            #print 'check if theres a network file in the input directory'
+            #print self.INPUT_DIR+'/'+self.NETWORK_FILE
+            #print os.path.exists(self.INPUT_DIR+'/'+self.NETWORK_FILE)
+            if os.path.exists(self.INPUT_DIR+'/'+self.NETWORK_FILE):
+                print('\t INIT mode: stage initial network file {}\n'.format(self.NETWORK_FILE))
+                self.services.stage_input_files(self.NETWORK_FILE)
+                print('\t \t ...initial network file staged succesfully {}\n')
+            else:
+                print('\t WARNING: INIT mode: could not find initial network file {}\n'.format(self.NETWORK_FILE))
+                print('\t WARNING: INIT mode: in input file directory {}\n'.format(self.INPUT_DIR))
+                print('\t WARNING: INIT mode: SKIP staging  {}\n'.format(self.NETWORK_FILE))
+                
 
         elif (self.driver['START_MODE']=='RESTART'):
             restart_files = self.services.get_config_param('RESTART_FILES') 
@@ -725,12 +736,17 @@ driver['LOOP_TIME_STEP']))
             print('\t and time-step = {} '.format( self.driver['LOOP_TIME_STEP']))
 
             if self.driverMode == 'INIT':
-                print('\t init mode: modify xolotl parameters that might change at every loop, and load networkFile file \n')                
+                if os.path.exists(self.INPUT_DIR+'/'+self.NETWORK_FILE):
+                    print('\t init mode: modify xolotl parameters that might change at every loop, and load networkFile file \n')                
+                    self.xp.parameters['networkFile'] = self.XOLOTL_NETWORK_FILE
+                else:
+                    #no network file in input dir -- do not add to param dictionary, so it's not in param file and doesn't try to load
+                    print('\t init mode: modify xolotl parameters that might change at every loop \n')
+                    print('\t \t WARNING: no network file in input dir; will create (not load) the network \n')
             elif self.driverMode == 'RESTART':
                 #add (or replace) networkFile line to parameter file
                 print('\t restart mode: modify xolotl parameters that might change at every loop, including networkFile \n')
-
-            self.xp.parameters['networkFile'] = self.XOLOTL_NETWORK_FILE
+                self.xp.parameters['networkFile'] = self.XOLOTL_NETWORK_FILE
 
             #determine if he_conc true/false ; if true, add '-he_conc' to petsc arguments 
             if self.driver['XOLOTL_HE_CONC']=='Last':
