@@ -88,6 +88,12 @@ class quasi_newton_driver(Component):
             else:
                 self.max_step = 100.0
 
+#  Maximum reconstruction steps
+            if 'max_recon_steps' in quasi_newton_config:
+                self.max_recon_steps = quasi_newton_config['max_recon_steps']
+            else:
+                self.max_recon_steps = 20
+
 #  Set keys for the subworkflows.
             keys = {'PWD'              : self.services.get_config_param('PWD'),
                     'USER_INPUT_FILES' : self.current_model_state,
@@ -176,7 +182,7 @@ class quasi_newton_driver(Component):
         self.history.append({'Time' : timeStamp, 'Chi2' : self.chi2})
 
 #  Perform a quasi-newton minimization.
-        while dchi2 > self.dchi2_tol:
+        while dchi2 > self.dchi2_tol and timeStamp < self.max_recon_steps:
             timeStamp += 1.0
 
             self.eval_jacobian(timeStamp)
