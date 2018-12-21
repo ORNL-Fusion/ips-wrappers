@@ -80,7 +80,21 @@ class solps_iter(Component):
             if os.path.exists('b2fstate'):
                 os.remove('b2fstati')
                 os.rename('b2fstate', 'b2fstati')
-        
+
+#  Clean up existing files.
+            if os.path.exists('b2mn.prt'):
+                os.remove('b2mn.prt')
+            if os.path.exists('b2fparam'):
+                os.remove('b2fparam')
+            if os.path.exists('b2fmovie'):
+                os.remove('b2fmovie')
+            if os.path.exists('b2ftrace'):
+                os.remove('b2ftrace')
+            if os.path.exists('b2ftrack'):
+                os.remove('b2ftrack')
+            if os.path.exists('b2fplasma'):
+                os.remove('b2fplasma')
+
             task_wait = self.services.launch_task(self.NPROC,
                                                   self.services.get_working_dir(),
                                                   self.B2_EIRENE_EXE,
