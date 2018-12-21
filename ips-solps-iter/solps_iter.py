@@ -183,7 +183,7 @@ class solps_iter(Component):
                     numerics_parameters[key.replace('nu__','',1)] = value
                 if 'ne__' in key:
                     neutrals_parameters[key.replace('ne__','',1)] = value
-                if 'bo__' in file :
+                if 'bo__' in key:
                     boundary_parameters[key.replace('bo__','',1)] = value
                 if 'ti__' in key:
                     transport_inputfile[key.replace('ti__','',1)] = value
