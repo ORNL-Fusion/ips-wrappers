@@ -115,11 +115,11 @@ class solps_iter(Component):
                                                   self.services.get_working_dir(),
                                                   self.SOLPS_SIGNALS_EXE,
                                                   '-task=get_result',
-                                                  '-geometry=b2fgmtry',
-                                                  '-state=b2fstate',
+                                                  '-solps_geometry=b2fgmtry',
+                                                  '-solps_state=b2fstate',
                                                   '-diag_geometry={}'.format(self.diag_geometry),
                                                   '-diag_state={}'.format(self.diag_state),
-                                                  '-model_result={result_file}'.format(keywords),
+                                                  '-model_result={result_file}'.format(**keywords),
                                                   logfile = 'solps_signals.log',
                                                   whole_nodes = True)
         
@@ -187,24 +187,18 @@ class solps_iter(Component):
                     boundary_parameters[key.replace('bo__','',1)] = value
                 if 'ti__' in key:
                     transport_inputfile[key.replace('ti__','',1)] = value
+
+            def set_namelist(file, name, **keywords):
+                if os.path.exists(file) and len(keywords) > 0:
+                    nl_file  = OMFITnamelist(file)
+
+                    for key, value in keywords.iteritems():
+                        nl_file[name][key] = value
+
+                    nl_file.save()
                     
             set_namelist('b2.transport.parameters', 'transport', **transport_parameters)
             set_namelist('b2.numerics.parameters', 'numerics', **numerics_parameters)
             set_namelist('b2.numerics.parameters', 'NEUTRALS', **neutrals_parameters)
             set_namelist('b2.boundary.parameters', 'boundary', **boundary_parameters)
             set_namelist('b2.transport.inputfile', 'TRANSPORT', **transport_inputfile)
-
-#-------------------------------------------------------------------------------
-#
-#  SOLPS-ITER Component set_namelist method. This sets a namelist input file
-#  from the keywords.
-#
-#-------------------------------------------------------------------------------
-    def set_namelist(file, name, **keywords):
-        if os.path.exists(file) and len(keywords) > 0:
-            nl_file  = OMFITnamelist(file)
-
-            for key, value in keywords.iteritems():
-                nl_file[name][key] = value
-                    
-            nl_file.save()
