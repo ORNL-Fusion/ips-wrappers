@@ -17,5 +17,6 @@
     "cut_marg_eff"    : 0.0,
     "cut_delta_a"     : 0.0,
     "cut_dg2"         : 0.0,
-    "max_step"        : 100.0
+    "max_step"        : 100.0,
+    "max_step_try"    : 10
 }

@@ -94,6 +94,12 @@ class quasi_newton_driver(Component):
             else:
                 self.max_recon_steps = 20
 
+#  Maximum number of trys a step can take to reduce g^2
+            if 'max_step_try' in quasi_newton_config:
+                self.max_step_try = quasi_newton_config['max_step_try']
+            else:
+                self.max_step_try = 10
+
 #  Set keys for the subworkflows.
             keys = {'PWD'              : self.services.get_config_param('PWD'),
                     'USER_INPUT_FILES' : self.current_model_state,
@@ -305,15 +311,19 @@ class quasi_newton_driver(Component):
         self.k_use = self.get_k_svd()
 
 #  Try different Levenberg-Marquardt step sizes.
-        new_max = self.max_step
-        step_use = []
+        new_max = min(self.delta_a_len[self.k_use], self.max_step)
+        step_use = numpy.empty(len(self.model_workers), dtype=float)
         delta_try = numpy.empty((len(self.model_workers), len(self.model_workers)), dtype=float)
         e_try = numpy.empty((len(self.model_workers), len(self.signal_observed)), dtype=float)
         chi2try = numpy.empty(len(self.model_workers), dtype=float)
         
-        while True:
+        num_trys = 0
+        
+        while num_trys < self.max_step_try:
+            num_trys += 1
+            
             for i, worker in enumerate(self.model_workers):
-                step_use.append(new_max - i*new_max/(2.0*len(self.model_workers)))
+                step_use[i] = new_max - i*new_max/(2.0*len(self.model_workers))
                 delta_try[i] = self.lm_step(step_use[i])
 
 #  Set new parameters.
@@ -353,9 +363,16 @@ class quasi_newton_driver(Component):
                 self.e = e_try[i_min]
                 
 #  Set the new parameter values.
+                current_values = {}
                 for i, worker in enumerate(self.model_workers):
                     worker['value'] += delta_try[i_min,i]*worker['vrnc']
+                    current_values[worker['name']] = worker['value']
                 
+#  Dump current values to a json file. This can be used for restarting a
+#  reconstruction.
+                with open('current_values.json', 'w') as current_values_file:
+                    json.dump(current_values, current_values_file)
+
                 self.norm_len = numpy.sqrt(numpy.dot(delta_try[i_min], delta_try[i_min]))
 
                 return True
