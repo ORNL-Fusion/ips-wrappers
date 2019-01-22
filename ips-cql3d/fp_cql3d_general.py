@@ -1,5 +1,9 @@
 #! /usr/bin/env python
 
+# fp_cql3d_general.py, Version 0.3 Batchelor 1-22-2019
+# Added coding to make enorm and cur_ImChizz_inp_file (needed for TORLH/CQL3D iteration)
+# optional config config parameters
+
 # fp_cql3d_general.py, Version 0.2 Batchelor 5-16-2017
 # Added code to pick up enorm from global parameter in config file and add to argument list
 # of prepare_cql3d_input.f90
