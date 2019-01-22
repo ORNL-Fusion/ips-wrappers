@@ -7,7 +7,7 @@ PROGRAM generic_ps_init
 ! Fortran code called by generic_ps_init.py.  The  Swiss army knife of Plasma State initializers.
 !
 ! This version combines several previous initializer routines and extends them.  There are
-! 3 modes of initialization which must be specified by the config file variable INIT_MODE
+! 4 modes of initialization which must be specified by the config file variable INIT_MODE
 !
 ! INIT_MODE = minimal
 ! This is exactly the same as the previous minimal_state_init.py. It produces a CURRENT_STATE

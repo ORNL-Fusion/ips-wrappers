@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 """
-generic_init.py  Batchelor (2-21-2018)
+generic_init.py  Batchelor (9-17-2018)
 
 See working notes below
 
@@ -46,8 +46,9 @@ file and optionally an existing eqdsk file to CURRENT_STATE and CURRENT_EQDSK as
 existing_ps_file mode.  But initializations from MDESCR_FILE and SCONFIG_FILE are also added.  
 Caution is advised.  If the MDESCR_FILE or SCONFIG_FILE attempts to reallocate any of the
 arrays already allocated in the CURRENT_STATE file a Plasma State error will occur.
-Therefore one must provide a list of which components are to be initialized from mdescr
-or sconfig
+Therefore one must provide in the simulation config file a list of which components are
+to be initialized from mdescr or sconfig.  The config parameter is MDESCR_COMPONENTS.  For
+example  "MDESCR_COMPONENTS = LH EC NBI"
 
 IPS Components are
 
