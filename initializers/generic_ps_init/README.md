@@ -50,19 +50,19 @@ example  "MDESCR_COMPONENTS = LH EC NBI"
 
 IPS Components are
 
-1  PLASMA    Thermal plasma parameters; fluid profile advance
-2  EQ        MHD equilibrium
-3  NBI       Neutral beam
-4  IC        Ion cyclotron heating
-5  LH        Lower Hybrid heating and current drive
-6  EC        Electron cyclotron heating and current drive
-7  RUNAWAY   Runaway electrons
-8  FUS       Fusion product fast ions
-9  RAD       Radiated Power & impurity transport
-10  GAS      Neutral Gas sources & transport
-11  LMHD     Linear MHD stability
-12  RIPPLE   TF field ripple
-13  ANOM     Anomalous transport
+1  PLASMA    Thermal plasma parameters; fluid profile advance  
+2  EQ        MHD equilibrium  
+3  NBI       Neutral beam  
+4  IC        Ion cyclotron heating  
+5  LH        Lower Hybrid heating and current drive  
+6  EC        Electron cyclotron heating and current drive  
+7  RUNAWAY   Runaway electrons  
+8  FUS       Fusion product fast ions  
+9  RAD       Radiated Power & impurity transport  
+10  GAS      Neutral Gas sources & transport  
+11  LMHD     Linear MHD stability  
+12  RIPPLE   TF field ripple  
+13  ANOM     Anomalous transport  
 
 Except for possibly mode = existing_ps_file, all modes call on the fortran helper code
 generic_ps_file_init.f90 to interact with the Plasma State. The fortran code is also used
