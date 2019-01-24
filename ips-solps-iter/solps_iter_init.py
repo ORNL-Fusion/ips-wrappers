@@ -37,37 +37,9 @@ class solps_iter_init(Component):
         eirene_cells = self.services.get_config_param('EIRENE_CELLS')
         eirene_links = self.services.get_config_param('EIRENE_LINKS')
 
-#  Stage input files. Remove old namelist input if it exists.
-        if os.path.exists(current_solps_state):
-            os.remove(current_solps_state)
-        if os.path.exists(eirene_input_dat):
-            os.remove(eirene_input_dat)
-        if os.path.exists(eirene_nodes):
-            os.remove(eirene_nodes)
-        if os.path.exists(eirene_cells):
-            os.remove(eirene_cells)
-        if os.path.exists(eirene_links):
-            os.remove(eirene_links)
-        if os.path.exists('b2fgmtry'):
-            os.remove('b2fgmtry')
-        if os.path.exists('b2fpardf'):
-            os.remove('b2fpardf')
-        if os.path.exists('b2frates'):
-            os.remove('b2frates')
-        if os.path.exists('b2fstati'):
-            os.remove('b2fstati')
-        if os.path.exists('b2mn.dat'):
-            os.remove('b2mn.dat')
-        if os.path.exists('b2.transport.parameters'):
-            os.remove('b2.transport.parameters')
-        if os.path.exists('b2.numerics.parameters'):
-            os.remove('b2.numerics.parameters')
-        if os.path.exists('b2.neutrals.parameters'):
-            os.remove('b2.neutrals.parameters')
-        if os.path.exists('b2.boundary.parameters'):
-            os.remove('b2.boundary.parameters')
-        if os.path.exists('b2.transport.inputfile'):
-            os.remove('b2.transport.inputfile')
+#  Remove old inputs. Stage input files.
+        for file in os.listdir('.'):
+            os.remove(file)
     
         self.services.stage_input_files(self.INPUT_FILES)
 

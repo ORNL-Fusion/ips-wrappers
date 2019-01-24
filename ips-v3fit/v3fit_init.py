@@ -40,19 +40,10 @@ class v3fit_init(Component):
         current_v3fit_namelist = self.services.get_config_param('V3FIT_NAMELIST_INPUT')
         current_v3fit_state = self.services.get_config_param('CURRENT_V3FIT_STATE')
 
-#  Stage input files. Remove an old namelist input if it exists.
-        if os.path.exists(current_v3fit_state):
-            os.remove(current_v3fit_state)
-        if os.path.exists(current_v3fit_namelist):
-            os.remove(current_v3fit_namelist)
-        if os.path.exists(current_siesta_state):
-            os.remove(current_siesta_state)
-        if os.path.exists(current_siesta_namelist):
-            os.remove(current_siesta_namelist)
-        if os.path.exists(current_vmec_state):
-            os.remove(current_vmec_state)
-        if os.path.exists(current_vmec_namelist):
-            os.remove(current_vmec_namelist)
+#  Remove old inputs. Stage input files.
+        for file in os.listdir('.'):
+            os.remove(file)
+        
         self.services.stage_input_files(self.INPUT_FILES)
 
 #  All v3fit runs require a vmec state at the minimum. Create a vmec state. If

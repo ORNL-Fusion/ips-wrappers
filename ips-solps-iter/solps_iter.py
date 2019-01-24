@@ -32,6 +32,7 @@ class solps_iter(Component):
         
 #  Set the top of the SOLPS source tree as an environment variable.
         if timeStamp == 0.0:
+            self.eirene_database_path = self.services.get_config_param('EIRENE_DATABASE_PATH')
             self.current_solps_state = self.services.get_config_param('CURRENT_SOLPS_STATE')
             try:
                 self.diag_geometry = self.services.get_config_param('DIAGNOSTIC_GEOMETRY')
@@ -41,24 +42,26 @@ class solps_iter(Component):
             
             os.environ['SOLPSTOP'] = self.services.get_config_param('SOLPSTOP')
         
+#  Remove existing files.
+        for file in os.listdir('.'):
+            os.remove(file)
+        
         self.services.stage_state()
         
         self.zip_ref = ZipState.ZipState(self.current_solps_state, 'a')
         self.zip_ref.extractall()
 
 #  Create eirene symbolic links.
-        if timeStamp == 0.0:
-            eirene_database_path = self.services.get_config_param('EIRENE_DATABASE_PATH')
-            os.symlink(os.path.join(eirene_database_path, 'graphite_ext.dat'), 'graphite_ext.dat')
-            os.symlink(os.path.join(eirene_database_path, 'mo_ext.dat'), 'mo_ext.dat')
-            os.symlink(os.path.join(eirene_database_path, 'AMJUEL'), 'AMJUEL')
-            os.symlink(os.path.join(eirene_database_path, 'H2VIBR'), 'H2VIBR')
-            os.symlink(os.path.join(eirene_database_path, 'HYDHEL'), 'HYDHEL')
-            os.symlink(os.path.join(eirene_database_path, 'METHANE'), 'METHANE')
-            os.symlink(os.path.join(eirene_database_path, 'PHOTON'), 'PHOTON')
-            os.symlink(os.path.join(eirene_database_path, 'Surfacedata', 'SPUTTER'), 'SPUTTER')
-            os.symlink(os.path.join(eirene_database_path, 'Surfacedata', 'TRIM', 'trim.dat'), 'fort.21')
-            os.symlink(os.path.join(eirene_database_path, 'Surfacedata', 'TRIM', 'marlow.dat'), 'fort.22')
+        os.symlink(os.path.join(self.eirene_database_path, 'graphite_ext.dat'), 'graphite_ext.dat')
+        os.symlink(os.path.join(self.eirene_database_path, 'mo_ext.dat'), 'mo_ext.dat')
+        os.symlink(os.path.join(self.eirene_database_path, 'AMJUEL'), 'AMJUEL')
+        os.symlink(os.path.join(self.eirene_database_path, 'H2VIBR'), 'H2VIBR')
+        os.symlink(os.path.join(self.eirene_database_path, 'HYDHEL'), 'HYDHEL')
+        os.symlink(os.path.join(self.eirene_database_path, 'METHANE'), 'METHANE')
+        os.symlink(os.path.join(self.eirene_database_path, 'PHOTON'), 'PHOTON')
+        os.symlink(os.path.join(self.eirene_database_path, 'Surfacedata', 'SPUTTER'), 'SPUTTER')
+        os.symlink(os.path.join(self.eirene_database_path, 'Surfacedata', 'TRIM', 'trim.dat'), 'fort.21')
+        os.symlink(os.path.join(self.eirene_database_path, 'Surfacedata', 'TRIM', 'marlow.dat'), 'fort.22')
 
 #  Update parameters in the namelist.
         self.set_namelists(**keywords)
@@ -76,24 +79,10 @@ class solps_iter(Component):
 
         if 'state' in flags and flags['state'] == 'needs_update':
         
-#  Rename state file to inital state if it exists.
+#  Rename state file to inital state if it exists before launching the task.
             if os.path.exists('b2fstate'):
                 os.remove('b2fstati')
                 os.rename('b2fstate', 'b2fstati')
-
-#  Clean up existing files.
-            if os.path.exists('b2mn.prt'):
-                os.remove('b2mn.prt')
-            if os.path.exists('b2fparam'):
-                os.remove('b2fparam')
-            if os.path.exists('b2fmovie'):
-                os.remove('b2fmovie')
-            if os.path.exists('b2ftrace'):
-                os.remove('b2ftrace')
-            if os.path.exists('b2ftrack'):
-                os.remove('b2ftrack')
-            if os.path.exists('b2fplasma'):
-                os.remove('b2fplasma')
 
             task_wait = self.services.launch_task(self.NPROC,
                                                   self.services.get_working_dir(),

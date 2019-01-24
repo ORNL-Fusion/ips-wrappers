@@ -290,6 +290,13 @@ class quasi_newton_driver(Component):
                 with open(worker['result'], 'r') as result_file:
                     self.jacobian[i] = self.e - self.get_e(result_file)
 
+        with open('jacobian.log', 'a') as jacobian_ref:
+            jacobian_ref.write('Jacobian step {}\n'.format(timeStamp));
+            for j in range(len(self.e)):
+                self.jacobian[:,j].tofile(jacobian_ref, sep=',', format='%12.5e');
+                jacobian_ref.write('\n')
+            jacobian_ref.write('\n')
+
 #-------------------------------------------------------------------------------
 #
 #  QUASI-NEWTON Driver get_e method. This computes the non squared error.
@@ -348,12 +355,19 @@ class quasi_newton_driver(Component):
             self.services.stage_subflow_output_files()
 
 #  Compute chi^2 for each attempted step. And keep the largest.
-            for i, worker in enumerate(self.model_workers):
-                with ZipState.ZipState(worker['output'], 'a') as zip_ref:
-                    zip_ref.extract(worker['result'])
+            with open('chi.log', 'a') as chi_ref:
+                chi_ref.write('Chi step {}\n'.format(timeStamp));
+                for i, worker in enumerate(self.model_workers):
+                    with ZipState.ZipState(worker['output'], 'a') as zip_ref:
+                        zip_ref.extract(worker['result'])
                     with open(worker['result'], 'r') as result_file:
                         e_try[i] = self.get_e(result_file)
                         chi2try[i] = numpy.dot(e_try[i], e_try[i])
+
+                    chi_ref.write('chi2 = {} : '.format(chi2try[i]))
+                    e_try[i].tofile(chi_ref, sep=',', format='%12.5e')
+                    chi_ref.write('\n')
+                chi_ref.write('\n')
 
             i_min = numpy.argmin(chi2try)
             if chi2try[i_min] <= self.chi2:

@@ -34,11 +34,9 @@ class vmec_init(Component):
         current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
         current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
         
-#  Stage input files. Remove old namelist input if it exists.
-        if os.path.exists(current_vmec_namelist):
-            os.remove(current_vmec_namelist)
-        if os.path.exists(current_vmec_state):
-            os.remove(current_vmec_state)
+#  Remove old inputs. Stage input files.
+        for file in os.listdir('.'):
+            os.remove(file)
         
         self.services.stage_input_files(self.INPUT_FILES)
         

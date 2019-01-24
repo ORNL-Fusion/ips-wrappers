@@ -81,6 +81,7 @@ class v3fit_driver(Component):
                         'USER_INPUT_FILES' : current_vmec_state,
                         'SIM_NAME'         : '{}_vmec'.format(self.services.get_config_param('SIM_NAME')),
                         'LOG_FILE'         : 'log.{}_vmec.warning'.format(self.services.get_config_param('SIM_NAME')),
+                        'OUTPUT_LEVEL'     : self.services.get_config_param('OUTPUT_LEVEL')
                        }
 
                 vmec_config = self.services.get_config_param('VMEC_CONFIG')
