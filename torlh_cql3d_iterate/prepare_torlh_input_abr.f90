@@ -12,10 +12,10 @@
 ! Previous versions had wrong logic for controlling the INUMIN variable.  In particular the
 ! explanation in Working notes: DBB 9-8-2016 was wrong so I'm eliminating that and fixing.
 
-! Modified to be able select different values for toricmode, inumin and isol in the output 
-! torica.inp file using optional command line arguments to this code. 
-! By default (i.e. no optional command line arguments) toricmode = 'toric', 
-! inumin = INUMIN_Maxwell => (0, 0, 0, 0), and isol = 1.  
+! Modified to be able select different values for toricmode, inumin and isol in the output
+! torica.inp file using optional command line arguments to this code.
+! By default (i.e. no optional command line arguments) toricmode = 'toric',
+! inumin = INUMIN_Maxwell => (0, 0, 0, 0), and isol = 1.
 ! Optional command line arguments are arg_toric_Mode, arg_inumin_Mode, and arg_isol_Mode.
 ! arg_toric_Mode = "toric' or 'qldce'
 ! arg_inumin_Mode = "Maxwell" or "nonMaxwell"
@@ -65,7 +65,7 @@
 ! PTB ends
 
 
-!  Defaults for optional command line args 
+!  Defaults for optional command line args
       character(10):: arg_toric_Mode = 'toric'
       character(10):: arg_inumin_Mode = 'Maxwell'
       character(1):: arg_isol_Mode = '1'
@@ -151,8 +151,12 @@
       integer  :: ibcant = -1     !boundary condition for antenna. When ibcant<0, the grill antenna is used
 
 !units are in cm for lengths
-      real(rspec) :: antlen=6.0_rspec, antlc=1.0_rspec, &
-         theant=0.0_rspec
+      real(rspec) :: antlen=6.0_rspec, antlc=1.0_rspec
+      real(rspec), dimension(:) :: theant(8)=                          &
+     &  (/0.0_rspec,0.0_rspec,0.0_rspec,0.0_rspec,0.0_rspec,0.0_rspec, &
+     &  0.0_rspec,0.0_rspec/)
+      integer  :: nant = 1   !sets number of antennas used in boundary condition model
+
 
 ! Parameters for Ehst-Karney current drive estimate and collisions
       real(rspec) ::  zeff=1._rspec, enhcol=1
@@ -247,8 +251,8 @@
 !      &   iwdisk, ipltht, zeff,   iclres, dnures, tnures, &
 !      &   timing_on, scratchpath, bscale, use_incore, pcblock
      &  nmod,   ntt,    nelm,   nptvac, mxmvac, &
-     &   freqcy, anzedg, ibcant,  antlen, antlc,  theant, &
-     &   iflr,   ibpol,  icoll,  enhcol, &
+     &   freqcy, anzedg, ibcant,  antlen, antlc,  nant, &
+     &   theant, iflr,   ibpol,  icoll,  enhcol, &
      &   iregax, &
      &   isol,   mastch,         iout,   idlout, &
      &   iwdisk, zeff, &
@@ -525,7 +529,7 @@
          call get_arg(5,arg_enorm)
 
          toricmode = trim(arg_toric_Mode)
-      
+
 		 if (trim(arg_inumin_Mode) == 'Maxwell') then
 			inumin = INUMIN_Maxwell
 		 else if (trim(arg_inumin_Mode) == 'nonMaxwell') then
@@ -534,7 +538,7 @@
 			write (*,*) 'prepare_torlh_input_abr: unknown arg_inumin_Mode = ', arg_inumin_Mode
 			stop
 		 end if
-      
+
 		 if (trim(arg_isol_Mode) == '0') then
 			isol = 0
 		 else if (trim(arg_isol_Mode) == '1') then
@@ -542,7 +546,7 @@
 		 else
 			write (*,*) 'prepare_torlh_input_abr: unknown arg_isol_Mode = ', arg_isol_Mode
 			stop
-		 end if		 
+		 end if
 
       case(2:3)
          write(0,*) 'Error. Illegal number of arguments.'
@@ -568,13 +572,13 @@
       WRITE (*,*) 'toricmode = ', toricmode
       WRITE (*,*) 'inumin = ', inumin
       WRITE (*,*) 'isol = ', isol
-      
+
       call getlun(inp_unit,ierr)  ;  call getlun(out_unit,ierr)
 
 
       call ps_get_plasma_state(ierr,trim(cur_state_file))
       if(ierr .ne. 0) stop 'cannot get plasma state to get profiles '
-      
+
 !     nspec = ps%nspec_th !+1 !torlh includes electrons in species count
 ! PTB - begins
 ! Use the abridged species list index count (nspec_alla) that includes:
@@ -621,7 +625,7 @@
 
       freqcy = ps%freq_lh(isrc) !Hz
       pwtot =  ps%power_lh(isrc) !watts
-		 
+
 	  if (trim(arg_enorm) /= 'None') then
 		read(arg_enorm,*) enorm
 	  end if
@@ -749,7 +753,7 @@
 !             try to interpolate ps%psipol with the ps_user_1dintrp_vec routine it will
 !              detect that ps%psipol is a zone centered variable and will interpolate it
 !              to length nrho-1. So fool it by introducing dummy non-PS varible psi_poloidal_eq
-	  
+
 	  psi_poloidal_eq = ps%psipol
       call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, psi_poloidal_eq, x_torlh, ierr )
       x_torlh = sqrt(x_torlh/x_torlh(nprodt))
@@ -934,14 +938,14 @@
 ! grid, and then writing it to the equidt.data file.
 !
          write(out_unit,'(A4,I2.2)')  't_rfmin_',isp
-         if (ps%isThermal(1) .eq. 1) then 
+         if (ps%isThermal(1) .eq. 1) then
 			 call ps_user_1dintrp_vec(x_torlh, ps%rho, Ts_tha(:,1), &
 				   tmp_prof(:),ierr ) !DBB 6-27_2017
 			 if(ierr .ne. 0) stop 'error interpolating PS RF minority temperature profile onto Torlh grid'
 			 write(out_unit,'(5E16.9)')  tmp_prof !keV
 			  write (*,*) " "
 			  write (*,*) "rf minority tail temperature interpolated from Ts_tha(:,1) = "
-			  write (*,*) tmp_prof		 
+			  write (*,*) tmp_prof
          endif
 !
 ! If isThermal=2 then assume the RF minority tail temperature data is available in the PS. In this
@@ -960,7 +964,7 @@
           write(out_unit,'(5E16.9)')  tmp_prof !keV
 			  write (*,*) " "
 			  write (*,*) "rf minority tail temperature interpolated from plasma state = "
-			  write (*,*) tmp_prof		 
+			  write (*,*) tmp_prof
          endif
       endif
 !
@@ -980,7 +984,7 @@
          write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
 		  write (*,*) " "
 		  write (*,*) "nfusi interpolated from plasma state = "
-		  write (*,*) tmp_prof		 
+		  write (*,*) tmp_prof
 
 !
 ! Next interpolate the alpha energies [eperp_fusi(:,1) and epll_fusi(:,1)] from the fusion grid
@@ -998,7 +1002,7 @@
           write(out_unit,'(5E16.9)')  tmp_prof !keV
 		  write (*,*) " "
 		  write (*,*) "alpha energy interpolated from plasma state = "
-		  write (*,*) tmp_prof		 
+		  write (*,*) tmp_prof
 
       endif
 !
