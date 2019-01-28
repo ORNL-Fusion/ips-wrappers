@@ -1017,7 +1017,7 @@ class monitor(Component):
         services = self.services
         global monitorVars, ps_VarsList, monitorDefinition
         
-        self.run_id = self.get_config_param(services,'PORTAL_RUNID')
+        self.run_id = get_global_param(self, services,'PORTAL_RUNID')
 
         self.cdfFile = self.run_id+'_' + monitor_fileName
         services.log('w3 monitor file = ' + self.cdfFile)
