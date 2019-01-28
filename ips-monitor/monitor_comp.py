@@ -1039,6 +1039,15 @@ class monitor(Component):
             print 'Error copying file %s to %s: %s' % \
                 (monitor_fileName, self.cdfFile, strerror)
 
+        BIN_PATH = get_component_param(self, services, 'BIN_PATH')
+        self.PCMF_bin = os.path.join(self.BIN_PATH, 'PCMF.py')
+        
+        self.GENERATE_PDF = get_component_param(self, services, 'GENERATE_PDF', optional = True)
+        if (self.GENERATE_PDF in [None, 'true', 'TRUE', 'True']):
+            self.GENERATE_PDF = True
+        if (self.GENERATE_PDF in ['false', 'FALSE', 'False']):
+            self.GENERATE_PDF = False
+
         if self.GENERATE_PDF == True:
        # Generate pdf file with PCMF.py
             cmd = [self.PCMF_bin, monitor_fileName]
