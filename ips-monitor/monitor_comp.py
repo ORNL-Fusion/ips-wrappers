@@ -1020,6 +1020,7 @@ class monitor(Component):
         self.run_id = get_global_param(self, services,'PORTAL_RUNID')
 
         self.cdfFile = self.run_id+'_' + monitor_fileName
+        self.pdfFile = self.run_id+'_' + pdf_fileName
         services.log('w3 monitor file = ' + self.cdfFile)
         
     # Get restart files listed in config file.        
