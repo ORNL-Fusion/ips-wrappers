@@ -24,8 +24,7 @@ class siesta_init(Component):
 #-------------------------------------------------------------------------------
 #
 #  SIESTA init Component init method. This method prepairs the namelist input
-#  file and creates a dummy out put file. This allows staging the plasma state
-#  files.
+#  file and creates a dummy out put file. This allows staging the state files.
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
@@ -50,10 +49,10 @@ class siesta_init(Component):
                 zip_ref.write(current_vmec_namelist)
                 zip_ref.set_state(state='needs_update')
 
-#  Create plasma state from files. Input files can either be a new plasma state,
-#  namelist input file or both. If both files were staged, replace the namelist
-#  input file. If the namelist file is present flag the plasma state as needing
-#  to be updated. Sub plasma states will automatically merge.
+#  Create state from files. Input files can either be a new state, namelist
+#  input file or both. If both files were staged, replace the namelist input
+#  file. If the namelist file is present flag the state as needing to be
+#  updated. Sub states will automatically merge.
         with ZipState.ZipState(current_siesta_state, 'a') as zip_ref:
             if os.path.exists(current_siesta_namelist):
                 zip_ref.write(current_siesta_namelist)
@@ -63,7 +62,7 @@ class siesta_init(Component):
 #  state.
             zip_ref.write(current_vmec_state)
             
-        self.services.update_plasma_state()
+        self.services.update_state()
 
 #-------------------------------------------------------------------------------
 #

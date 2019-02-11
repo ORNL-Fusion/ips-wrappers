@@ -23,8 +23,8 @@ class vmec_init(Component):
 
 #-------------------------------------------------------------------------------
 #
-#  VMEC init Component init method. This method prepairs the plasma state. Input
-#  files can either be a new namelist input, a new plasma state, or both.
+#  VMEC init Component init method. This method prepairs the state. Input files
+#  can either be a new namelist input, a new state, or both.
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
@@ -40,16 +40,16 @@ class vmec_init(Component):
         
         self.services.stage_input_files(self.INPUT_FILES)
         
-#  Create plasma state from files. Input files can either be a new plasma state,
-#  namelist input file or both. If both file were staged, replace the namelist
-#  input file. If the namelist file is present flag the plasma state as needing
-#  to be updated.
+#  Create state from files. Input files can either be a new state, namelist
+#  input file or both. If both file were staged, replace the namelist input
+#  file. If the namelist file is present flag the state as needing to be
+#  updated.
         with ZipState.ZipState(current_vmec_state, 'a') as zip_ref:
             if os.path.exists(current_vmec_namelist):
                 zip_ref.write(current_vmec_namelist)
                 zip_ref.set_state(state='needs_update')
                     
-        self.services.update_plasma_state()
+        self.services.update_state()
 
 #-------------------------------------------------------------------------------
 #

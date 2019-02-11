@@ -1,4 +1,4 @@
-	#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #
 #  This utility writes messages to the console based on a predfined priority 
 #  level. The uses can set the amount of screen output in the work flow config

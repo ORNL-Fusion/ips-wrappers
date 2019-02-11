@@ -39,7 +39,7 @@ class quasi_newton_init(Component):
 
         self.services.stage_input_files(self.INPUT_FILES)
 
-#  Create plasma state from files.
+#  Create state from files.
         with ZipState.ZipState(current_quasi_newton_state, 'a') as zip_ref:
             zip_ref.write(quasi_newton_config)
             zip_ref.write(current_model_state)

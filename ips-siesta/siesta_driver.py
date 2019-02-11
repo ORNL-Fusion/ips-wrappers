@@ -44,7 +44,7 @@ class siesta_driver(Component):
         self.current_siesta_state = self.services.get_config_param('CURRENT_SIESTA_STATE')
 
 #  We need to pass the inputs to the VMEC child workflow.
-        self.services.stage_plasma_state()
+        self.services.stage_state()
         
         zip_ref = ZipState.ZipState(self.current_siesta_state, 'a')
         zip_ref.extract(current_vmec_state)
@@ -85,7 +85,7 @@ class siesta_driver(Component):
         self.services.stage_subflow_output_files()
         zip_ref.write(current_vmec_state)
         zip_ref.close()
-        self.services.update_plasma_state()
+        self.services.update_state()
 
 #  Initialize SIESTA.
         self.wait = self.services.call_nonblocking(self.siesta_port, 'init',
@@ -104,13 +104,13 @@ class siesta_driver(Component):
         self.services.call(self.siesta_port, 'step', timeStamp)
 
 #  Prepare the output files for a super work flow. Need to remove any old output
-#  files first before staging the plasma state.
+#  files first before staging the state.
         if os.path.exists(self.OUTPUT_FILES):
             os.remove(self.OUTPUT_FILES)
-        self.services.stage_plasma_state()
+        self.services.stage_state()
 
 #  The super flow may need to rename the output file. Check is the current state
-#  matches if output file. If it does not rename the plasma state so it can be
+#  matches if output file. If it does not rename the state so it can be
 #  staged.
         if not os.path.exists(self.OUTPUT_FILES):
             os.rename(self.current_siesta_state, self.OUTPUT_FILES)

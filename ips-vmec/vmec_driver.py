@@ -51,14 +51,13 @@ class vmec_driver(Component):
         self.services.call(self.vmec_port, 'step', timeStamp)
     
 #  Prepare the output files for a super work flow. Need to remove any old output
-#  files first before staging the plasma state.
+#  files first before staging the state.
         if os.path.exists(self.OUTPUT_FILES):
             os.remove(self.OUTPUT_FILES)
-        self.services.stage_plasma_state()
+        self.services.stage_state()
 
 #  The super flow may need to rename the output file. Check is the current state
-#  matches if output file. If it does not rename the plasma state so it can be
-#  staged.
+#  matches if output file. If it does not rename the state so it can be staged.
         if not os.path.exists(self.OUTPUT_FILES):
             os.rename(self.services.get_config_param('CURRENT_VMEC_STATE'),
                       self.OUTPUT_FILES)

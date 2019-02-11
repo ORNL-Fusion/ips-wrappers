@@ -24,9 +24,9 @@ class v3fit_init(Component):
 #-------------------------------------------------------------------------------
 #
 #  V3FIT init Component init method. This method prepairs the namelist input
-#  file and creates a dummy out put file. This allows staging the plasma state
-#  files. In the v3fit namelist input file configure the v3fit namelist input
-#  with the task, internal vmec input name and optional name of the wout file.
+#  file and creates a dummy out put file. This allows staging the state files.
+#  In the v3fit namelist input file configure the v3fit namelist input with the
+#  task, internal vmec input name and optional name of the wout file.
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
@@ -66,10 +66,10 @@ class v3fit_init(Component):
 #  state.
                 zip_ref.write(current_vmec_state)
 
-#  Create plasma state from files. Input files can either be a new plasma state,
-#  namelist input file or both. If both files were staged, replace the namelist
-#  input file. If the namelist file is present flag the plasma state as needing
-#  to be updated.
+#  Create state from files. Input files can either be a new state, namelist
+#  input file or both. If both files were staged, replace the namelist input
+#  file. If the namelist file is present flag the state as needing to be
+#  updated.
         with ZipState.ZipState(current_v3fit_state, 'a') as zip_ref:
             if os.path.exists(current_v3fit_namelist):
                 zip_ref.write(current_v3fit_namelist)
@@ -82,7 +82,7 @@ class v3fit_init(Component):
             else:
                 zip_ref.write(current_vmec_state)
 
-        self.services.update_plasma_state()
+        self.services.update_state()
 
 #-------------------------------------------------------------------------------
 #
