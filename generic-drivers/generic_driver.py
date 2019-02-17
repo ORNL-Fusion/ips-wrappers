@@ -298,9 +298,6 @@ class generic_driver(Component):
        # Call step for each component
 
             print (' ')
-            if 'FP' in port_names:
-                self.component_call(services, 'FP', fpComp, 'step', t)
-
             if 'RF_EC' in port_names:
                 self.component_call(services, 'RF_EC', rf_ecComp, 'step', t)
 
@@ -315,6 +312,9 @@ class generic_driver(Component):
 
             if 'FUS' in port_names:
                 self.component_call(services, 'FUS', fusComp, 'step', t)
+
+            if 'FP' in port_names:
+                self.component_call(services, 'FP', fpComp, 'step', t)
 
             if 'EPA' in port_names:
                 self.component_call(services, 'EPA', epaComp, 'step', t)
@@ -342,8 +342,6 @@ class generic_driver(Component):
       
       # Post simulation: call finalize on each component
         print (' ')
-        if 'FP' in port_names:
-            self.component_call(services, 'FP', fpComp, 'finalize', t)
 
         if 'RF_EC' in port_names:
             self.component_call(services, 'RF_EC', rf_ecComp, 'finalize', t)
@@ -359,6 +357,9 @@ class generic_driver(Component):
 
         if 'FUS' in port_names:
             self.component_call(services, 'FUS', fusComp, 'finalize', t)
+
+        if 'FP' in port_names:
+            self.component_call(services, 'FP', fpComp, 'finalize', t)
 
         if 'EPA' in port_names:
             self.component_call(services, 'EPA', epaComp, 'finalize', t)
