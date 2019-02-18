@@ -464,7 +464,7 @@ WRITE(*,*)
 		
 	! NB: For now assume power is the same on all EC sources
 	IF (ALLOCATED(ps%power_ec)) THEN   		       
-		ps%power_ic = power_ec
+		ps%power_ec = power_ec
 	END IF
 	
 	! NB: For now assume power is the same on all ICRF sources
