@@ -17,22 +17,24 @@ c.......................................................................
      &  ,bhdiv(kb),bvdiv(kb)
      &  ,beamon,btime,ebkev(kb)
      &  ,fbcur(ke,kb)
-     &  ,mf,nbeams,npart,npskip
-     &  ,nsourc,ranseed,relnub
+     &  ,mf,nbeams,npart,npskip,ne_tk
+     &  ,nsourc,ds_tk,fe_tk,ranseed,relnub
      &  ,sfrac1(kb),rpivot(kb),zpivot(kb)
      &  ,timbplt(5)
      &  ,fionx,hdepsmth
+c     Remove NBI source at psi outside of psicutoff:     
+     +  ,psicutoff
 
 
 c................................................................
 
-      character*8 frplt,frmod,multiply
+      character*8 frplt,frmod,fr_gyro,beamplse,multiply
 
       common /nub2_/ 
      &  ibcur,ibcx,iborb,ibslow,inubpat,npat(2),itrapfi,itrapech
 c     ONETWO DIVERGENCE
-     &  ,smooth,multiply,bmsprd,frmod,frplt,nfrplt,multiplyn
-
+     &  ,smooth,multiply,bmsprd,frmod,fr_gyro,beamplse,frplt,nfrplt
+     &  ,multiplyn,beampon,beampoff
 
 c................................................................
 
@@ -46,6 +48,16 @@ c................................................................
       common /io_/  xdebug(20),nouthx
 
 c................................................................
+
+c.......................................................................
+
+      character*8 read_birth_pts
+      character*128, dimension(24) ::  birth_pts_files
+      integer nbirth_pts_files, nbirth_pts
+      common /nubeam_list/ nbirth_pts_files, nbirth_pts,
+     +  read_birth_pts, birth_pts_files 
+
+c.......................................................................
 
       character*8 nameb
       common /ions_/ nameb
