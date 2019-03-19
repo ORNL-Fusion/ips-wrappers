@@ -493,6 +493,7 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
          write(*,*) 'ps%rho_lhrf = ', ps%rho_lhrf
          write(*,*) 'rho_cql = ', rho_cql
          write(*,*) 'tmp_prof = ', tmp_prof
+         write(*,*) 'ps%pelh = ', ps%pelh
          
 !ptb         call ps_user_1dintrp_vec(ps%rho_lhrf, rya(1:lrz), tmp_prof,
 !ptb     &        ps%pelh, ierr, interp = 1)
