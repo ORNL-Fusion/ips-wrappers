@@ -663,7 +663,7 @@ class genray(Component):
       # Update plasma state files in plasma_state work directory, but only cur_dql_file
       # if there is one. This way it will not overwrite the current partial plasma state that
       # was just merged
-        print 'CURRENT_DQL = ', dql_file
+        dql_file = get_global_param(self, services, 'CURRENT_DQL', optional = True)
         try:
             if dql_file != None:
                 services.update_plasma_state([cur_dql_file])
