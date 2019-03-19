@@ -666,7 +666,7 @@ class genray(Component):
         dql_file = get_global_param(self, services, 'CURRENT_DQL', optional = True)
         try:
             if dql_file != None:
-                services.update_plasma_state([cur_dql_file])
+                services.update_plasma_state([dql_file])
         except Exception:
             logMsg = 'Error in call to update_plasma_state ' + cur_dql_file
             self.services.exception(logMsg)
