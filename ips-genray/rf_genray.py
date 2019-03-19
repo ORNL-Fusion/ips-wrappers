@@ -8,6 +8,11 @@ implemented for ECH, so far.
 """
 
 # Working notes:
+# 3/18/2019 DBB
+# Code to update state files in plasma_state work directory, but only cur_dql_file
+# if there is one. This way it will not overwrite the current partial plasma state that
+# was just merged
+
 
 # 9/3/2018 DBB
 # This version is adapted from the previous version genray_EC_p.py.  It retains the
@@ -297,6 +302,7 @@ class genray(Component):
         cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
         cur_eqdsk_file = get_global_param(self, services, 'CURRENT_EQDSK')
         cql_file = get_global_param(self, services, 'CURRENT_CQL', optional = True)
+        dql_file = get_global_param(self, services, 'CURRENT_DQL', optional = True)
 
     # Get component-specific configuration parameters. Note: Not all of these are
     # used in 'init' but if any are missing we get an exception now instead of
@@ -653,6 +659,19 @@ class genray(Component):
             print 'Error in call to merge_current_plasma_state(' , partial_file, ')'
             self.services.error('Error in call to merge_current_plasma_state')
             raise Exception, 'Error in call to merge_current_plasma_state'
+
+      # Update plasma state files in plasma_state work directory, but only cur_dql_file
+      # if there is one. This way it will not overwrite the current partial plasma state that
+      # was just merged
+        print 'CURRENT_DQL = ', cur_dql_file
+        try:
+            if cur_dql_file != None:
+                services.update_plasma_state([cur_dql_file])
+        except Exception:
+            logMsg = 'Error in call to update_plasma_state ' + cur_dql_file
+            self.services.exception(logMsg)
+            raise 
+        
             
     # Archive output files
         try:
