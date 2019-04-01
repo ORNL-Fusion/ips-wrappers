@@ -9,7 +9,6 @@
 from component import Component
 from utilities import ScreenWriter
 from utilities import ZipState
-import subprocess
 
 #-------------------------------------------------------------------------------
 #
@@ -31,9 +30,9 @@ class ml_train(Component):
         current_ml_train_state = self.services.get_config_param('CURRENT_ML_TRAIN_STATE')
 
 #  Stage state.
-        self.services.stage_plasma_state()
+        self.services.stage_state()
 
-#  Unzip files from the plasma state. Use mode a so files can be read and
+#  Unzip files from the current state. Use mode a so files can be read and
 #  written to.
         self.zip_ref = ZipState.ZipState(current_ml_train_state, 'a')
         self.zip_ref.extract('training_data.dat')
@@ -70,7 +69,7 @@ class ml_train(Component):
 
         self.zip_ref.close()
 
-        self.services.update_plasma_state()
+        self.services.update_state()
 
 #-------------------------------------------------------------------------------
 #

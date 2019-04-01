@@ -28,10 +28,16 @@ class ml_train_driver(Component):
     def init(self, timeStamp=0.0, **keywords):
         ScreenWriter.screen_output(self, 'verbose', 'ml_train_driver: init')
 
+        current_ml_train_state = self.services.get_config_param('CURRENT_ML_TRAIN_STATE')
+        
 #  Initialize ml_train.
         self.ml_train_port = self.services.get_port('ML_TRAIN')
         self.wait = self.services.call_nonblocking(self.ml_train_port, 'init',
                                                    timeStamp, **keywords)
+
+        self.stage_state()
+        with ZipState.ZipState(current_ml_train_state, 'a') as zip_ref:
+            
 
 #-------------------------------------------------------------------------------
 #
@@ -49,7 +55,7 @@ class ml_train_driver(Component):
 #  files first before staging the plasma state.
         if os.path.exists(self.OUTPUT_FILES):
             os.remove(self.OUTPUT_FILES)
-        self.services.stage_plasma_state()
+        self.services.stage_state()
 
 #  The super flow may need to rename the output file. Check is the current state
 #  matches if output file. If it does not rename the plasma state so it can be

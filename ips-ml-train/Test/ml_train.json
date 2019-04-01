@@ -1,0 +1,18 @@
+{
+    "input_params" : [
+        {"name" : "r0",    "prefix" : "modeleq_init", "type" : "float", "upper_range" :, "lower_range" :},
+        {"name" : "a0",    "prefix" : "modeleq_init", "type" : "float", "upper_range" :, "lower_range" :},
+        {"name" : "kappa", "prefix" : "modeleq_init", "type" : "float", "upper_range" :, "lower_range" :},
+        {"name" : "delta", "prefix" : "modeleq_init", "type" : "float", "upper_range" :, "lower_range" :},
+        {"name" : "ip",    "prefix" : "modeleq_init", "type" : "float", "upper_range" :, "lower_range" :},
+        {"name" : "b0",    "prefix" : "modeleq_init", "type" : "float", "upper_range" :, "lower_range" :},
+        {"name" : "nebar", "prefix" : "modeleq_init", "type" : "float", "upper_range" :, "lower_range" :},
+        {"name" : "zeff",  "prefix" : "modeleq_init", "type" : "float", "upper_range" :, "lower_range" :},
+        {"name" : "ploss", "prefix" : "modeleq_init", "type" : "float", "upper_range" :, "lower_range" :}
+    ],
+    "output_params" : [
+        {"name" : "tauth", "prefix" :, "type" : "float"}
+    ]
+    "batch_size" : 10,
+    "extract"    : True
+}
