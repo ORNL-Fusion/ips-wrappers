@@ -701,6 +701,7 @@ CONTAINS
 !  Reading the first variable name and the number of radial mesh points
 !
          read(lun22,'(A10,i4)')  var_name, nprodt
+         write (*,*) 'var_name = ', var_name, '  nprodt = ', nprodt
 !
 ! On INIT just set nrho to nprodt and return (DBB)
 !
@@ -726,7 +727,8 @@ CONTAINS
 !  edge, and is linear in SQRT(Psi_poloidal). An equidistant
 !  mesh is required for the interpolation in toric.
 !
-         read(lun22,'(5E16.9)')  tbpsi
+!         read(lun22,'(5E16.9)')  tbpsi
+         read(lun22, *)  tbpsi
 
          if(tbpsi(nprodt) .ne. 1._rspec)  then
             write(*,*) "warning profnt radial mesh does not end at 1"
@@ -737,20 +739,23 @@ CONTAINS
 !  Reading the particle densities (hardwired ni = ne and one ion species)
 !
          read(lun22,'(A10,i4)')  var_name, nprodt
-         read(lun22,'(5E16.9)')  tbne
+ !        read(lun22,'(5E16.9)')  tbne
+          read(lun22, *)  tbne
          ps%ns(:,0) = zone_centered_profile(nprodt, tbne)
          ps%ns(:,1) = ps%ns(:,0)
 !
 !  Reading the electron temperature (units: keV)
 !
          read(lun22,'(A10,i4)')  var_name, nprodt
-         read(lun22,'(5E16.9)')  tbte
+!         read(lun22,'(5E16.9)')  tbte
+         read(lun22,*)  tbte
          ps%Ts(:,0) = zone_centered_profile(nprodt, tbte)
 !
 !  Reading the ion temperature
 !
          read(lun22,'(A10,i4)')  var_name, nprodt
-	     read(lun22,'(5E16.9)')  tbti(1:nprodt)
+!	     read(lun22,'(5E16.9)')  tbti(1:nprodt)
+	     read(lun22,*)  tbti(1:nprodt)
          ps%Ts(:,1) = zone_centered_profile(nprodt, tbti)
 
          write(*,*) 'finished reading profiles'
