@@ -730,6 +730,7 @@ CONTAINS
 !
 !         read(lun22,'(5E16.9)')  tbpsi
          read(lun22, *)  tbpsi
+         write (*,*) 'tbpsi = ', tbpsi
 
          if(tbpsi(nprodt) .ne. 1._rspec)  then
             write(*,*) "warning profnt radial mesh does not end at 1"
