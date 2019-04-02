@@ -728,7 +728,6 @@ CONTAINS
 !  edge, and is linear in SQRT(Psi_poloidal). An equidistant
 !  mesh is required for the interpolation in toric.
 !
-!         read(lun22,'(5E16.9)')  tbpsi
          read(lun22, *)  tbpsi
          write (*,*) 'tbpsi = ', tbpsi
 
@@ -742,8 +741,6 @@ CONTAINS
 !
          read(lun22,*)  var_name, nprodt
          write (*,*) 'var_name = ', var_name
-!        read(lun22,'(A10,i4)')  var_name, nprodt
-!        read(lun22,'(5E16.9)')  tbne
          read(lun22, *)  tbne
          write (*,*) 'tbne = ', tbne
          ps%ns(:,0) = zone_centered_profile(nprodt, tbne)
@@ -753,8 +750,6 @@ CONTAINS
 !
          read(lun22,*)  var_name, nprodt
          write (*,*) 'var_name = ', var_name
-
-!         read(lun22,'(5E16.9)')  tbte
          read(lun22,*)  tbte(1:nprodt)
          write (*,*) 'tbte = ', tbte
          ps%Ts(:,0) = zone_centered_profile(nprodt, tbte)
@@ -763,8 +758,6 @@ CONTAINS
 !
          read(lun22,*)  var_name, nprodt
          write (*,*) 'var_name = ', var_name
-!         read(lun22,'(A10,i4)')  var_name, nprodt
-!	     read(lun22,'(5E16.9)')  tbti(1:nprodt)
 	     read(lun22,*)  tbti(1:nprodt)
          write (*,*) 'tbti = ', tbti
 
