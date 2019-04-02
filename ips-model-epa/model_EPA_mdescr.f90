@@ -740,7 +740,6 @@ CONTAINS
 !  Reading the particle densities (hardwired ni = ne and one ion species)
 !
          read(lun22,*)  var_name, nprodt
-         write (*,*) 'var_name = ', var_name
          read(lun22, *)  tbne
          write (*,*) 'tbne = ', tbne
          ps%ns(:,0) = zone_centered_profile(nprodt, tbne)
@@ -749,7 +748,6 @@ CONTAINS
 !  Reading the electron temperature (units: keV)
 !
          read(lun22,*)  var_name, nprodt
-         write (*,*) 'var_name = ', var_name
          read(lun22,*)  tbte(1:nprodt)
          write (*,*) 'tbte = ', tbte
          ps%Ts(:,0) = zone_centered_profile(nprodt, tbte)
@@ -757,7 +755,6 @@ CONTAINS
 !  Reading the ion temperature
 !
          read(lun22,*)  var_name, nprodt
-         write (*,*) 'var_name = ', var_name
 	     read(lun22,*)  tbti(1:nprodt)
          write (*,*) 'tbti = ', tbti
 
