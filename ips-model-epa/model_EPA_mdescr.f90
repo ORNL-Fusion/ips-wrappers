@@ -755,7 +755,7 @@ CONTAINS
          write (*,*) 'var_name = ', var_name
 
 !         read(lun22,'(5E16.9)')  tbte
-         read(lun22,*)  tbte
+         read(lun22,*)  tbte(1:nprodt)
          write (*,*) 'tbte = ', tbte
          ps%Ts(:,0) = zone_centered_profile(nprodt, tbte)
 !
