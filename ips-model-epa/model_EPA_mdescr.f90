@@ -751,7 +751,7 @@ CONTAINS
 !
 !  Reading the electron temperature (units: keV)
 !
-         read(lun22,*)  var_name, tbte
+         read(lun22,*)  var_name, nprodt
          write (*,*) 'var_name = ', var_name
 
 !         read(lun22,'(5E16.9)')  tbte
@@ -761,7 +761,7 @@ CONTAINS
 !
 !  Reading the ion temperature
 !
-         read(lun22,*)  var_name, tbti
+         read(lun22,*)  var_name, nprodt
          write (*,*) 'var_name = ', var_name
 !         read(lun22,'(A10,i4)')  var_name, nprodt
 !	     read(lun22,'(5E16.9)')  tbti(1:nprodt)
