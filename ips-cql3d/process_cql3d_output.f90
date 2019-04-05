@@ -572,6 +572,7 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
       IF (file_exists) then
 		  WRITE (*,*) "About to call write_inchizz_inp"
 		  CALL write_inchizz_inp
+	  ENDIF
 
       endif  !On cql3d_output.eq.'LH'
 
