@@ -569,7 +569,8 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
 ! end of ptb diagnostics and hack
 
       INQUIRE(FILE='ImChizz.inp_template', EXIST=file_exists)
-      IF (file_exists) then
+      write (*,*) 'file_exists = ', file_exists
+      IF (file_exists .eq. .) then
 		  WRITE (*,*) "About to call write_inchizz_inp"
 		  CALL write_inchizz_inp
 	  ENDIF
