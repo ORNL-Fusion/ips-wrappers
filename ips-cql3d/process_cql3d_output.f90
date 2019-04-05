@@ -1,5 +1,10 @@
       program process_cql3d_output
 
+! (DBB 4/4/2019)
+! Added check to see if ImChizz.inp_template exists (i.e. input file for subroutine 
+! write_inchizz_inp).  Needed so this code can be used TORLH which needs ImChizz.inp
+! or with other codes which don't use ImChizz.inp. 
+!
 ! Modified to produce namelist needed by imchzz code (DBB and JL 5/9/2017)
 ! The way this is done is to call a contained subroutine write_inchizz_inp which writes the
 ! file.  The write_inchizz_inp subroutine uses the ImChizzrel_mod.F90 module, to read the
@@ -120,6 +125,7 @@
       integer :: r0dim_id, rdim
       character*256 ::  cur_state_file, cql3d_output_file
       character*8 cql3d_output
+      logical :: file_exists
 
 !------------------------------------
 !  local
@@ -562,8 +568,10 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
       write(*,*) 'power_lh_int = ', powerlh_int, 'currlh_int = ', currlh_int
 ! end of ptb diagnostics and hack
 
-      WRITE (*,*) "About to call write_inchizz_inp"
-      CALL write_inchizz_inp
+      INQUIRE(FILE='ImChizz.inp_template', EXIST=file_exists)
+      IF (file_exists) then
+		  WRITE (*,*) "About to call write_inchizz_inp"
+		  CALL write_inchizz_inp
 
       endif  !On cql3d_output.eq.'LH'
 
