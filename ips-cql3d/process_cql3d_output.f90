@@ -287,8 +287,8 @@ c F2003-syntax call get_command_argument(1,cql3d_output)
 
 !     allocate space for arrays to be read
       allocate (rya(lrz))  !the radial grid
-      allocate (density(ngen,lrz,nt))  !the density
-      allocate (temp(ngen,lrz,nt))  !the temperature
+      allocate (density(ntotal,lrz,nt))  !the density
+      allocate (temp(ntotal,lrz,nt))  !the temperature
       allocate (darea(lrz),dvol(lrz))
 c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
       allocate (powers(lrz, 13, ngen, nt))  
@@ -554,7 +554,7 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
 ! ptb checking interpolated quantities
          powerlh_int = 0.0
          currlh_int = 0.0
-      do l=1,ps%nrho_lhrf
+      do l=1,ps%nrho_lhrf-1
          powerlh_int = powerlh_int + ps%pelh(l)
          currlh_int = currlh_int + ps%curlh(l)
       enddo
