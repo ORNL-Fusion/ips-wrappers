@@ -19,14 +19,19 @@ c................................................................
      &  ,rpivot,zpivot,ranseed,fionx,nbinject
      &  ,xdebug
      &  ,a1rf,a2rf,wrfe,wrfi,nrfzon,rfzone,ichmod,betalm
+     &  ,beamplse,beampon,beampoff
 c     ONETWO DIVERGENCE
-     &  ,nimp,nprim,frmod,smooth,multiply,multiplyn,bmsprd,frplt
-     &  ,nfrplt,inubpat,npat
+     &  ,nimp,nprim,frmod,fr_gyro,smooth,multiply,multiplyn,bmsprd
+     &  ,frplt,nfrplt,inubpat,npat
      &  ,ibcur,ibcx,ibslow,iborb,iyoka,ishot,itime
      &  ,itrapfi
      &  ,iexcit,ilorent,mstate,izstrp,kdene
      &  ,kdeni,kdenz,ksvi,ksvz,ksve,krad,ngh,ngl,nouthx
      &  ,hdepsmth
+     &  ,birth_pts_files,nbirth_pts_files,nbirth_pts,read_birth_pts
+     &  ,ne_tk,ds_tk,fe_tk
+c     Remove NBI source at psi outside of psicutoff:     
+     +  ,psicutoff
 
 
 cRemoved namelist, not used, BH070308:

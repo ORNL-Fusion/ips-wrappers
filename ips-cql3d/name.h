@@ -14,18 +14,21 @@ c..................................................................
 
       namelist/setup/
      1  acoefne,acoefte,
+     1  ampfmod,nampfmax,nonampf,ampferr,
      1  bnumb,btor,bth,bootst,bootcalc,bootupdt,bootsign,nonboot,jhirsh,
      1  contrmin,constr,chang,colmodl,
      1  deltabdb,denpar,droptol,dtr,dtr1,
-     1  eegy,eparc,eperc,epar,eper,
+     1  eegy,eparc,eperc,simpbfac,epar,eper,
      1  elecfld,elpar0,enorm,enorme,enormi,eleccomp,
-     1  elecin,elecscal,enein,enescal,enloss,epsthet,
+     1  elecin,elecin_t,elecscal,enein,enein_t,ennin_t,
+     +  enescal,enloss,epsthet,
      1  enmin,enmax,ennb,ennin,ennl,ennscal,enmin_npa,enmax_npa,
-     1  eseswtch,esink,ephicc,esfac,eoved,
-     1  fds,fds_npa,fmass,
+     1  eseswtch,xsink,esink,ephicc,esfac,eoved,
+     1  fds,fds_npa,fmass,f4d_out,
+     1  tavg,tavg1,tavg2,
      1  gsla,gslb,gamaset,gamafac,gamegy,
-     1  iactst,ineg,idskf,idskrf,ichkpnt,
-     1  implct,iprone,iprote,iproti,iprozeff,iprovphi,iproelec,ipronn,
+     1  iactst,ineg,idskf,idskrf,ichkpnt,implct,
+     1  iprone,iprote,iproti,iprozeff,iprovphi,iproelec,ipronn,iprocur,
      1  tmdmeth,isigmas,isigtst,isigsgv1,isigsgv2,
      1  pltflux1,
      1  irzplt,izeff,ioutime,
@@ -42,6 +45,7 @@ c..................................................................
      1  nmax,ngen,nkconro,nplt3d,nrskip,nen,nv,nen_npa,nv_npa,
      1  npaproc,npa_process,
      1  nr_delta,nz_delta,nt_delta,
+     1  nr_f4d,nz_f4d,nv_f4d,nt_f4d,
      1  npwr,negy,ntorloss,njene,njte,njti,
      1  nstop,nondtr1,nplot,ncoef,nchec,ncont,nrstrt,nstps,nfpld,
      1  noncntrl,nonel,noffel,nonvphi,noffvphi,nonavgf,nofavgf,
@@ -49,11 +53,11 @@ c..................................................................
      1  numby,negyrg,
      1  oldiag,
      1  plt3d,pltvs,partner,paregy,peregy,pegy,
-     1  zeffin,zeffscal,vphiplin,vphiscal,
+     1  zeffin,zeffin_t,zeffscal,vphiplin,vphiplin_t,vphiscal,
      1  pltdn,pltvecal,pltvecc,pltvecrf,pltvece,
      1  pltstrm,pltflux,pltmag,pltsig,pltlim,pltlimm,
      1  pltrst,plturfb,pltvflu,pltra,pltfvs,pltd,pltprpp,pltfofv,pltlos,
-     1  profpsi,
+     1  pltrdc,profpsi,
      1  psimodel,pltpowe,pltend,pltinput,pltview,
      1  qsineut,trapmod,trapredc,scatmod,scatfrac,
      1  ryain,radmaj,radmin,rmirror,relativ,
@@ -61,7 +65,7 @@ c..................................................................
      1  rovera,rya,radcoord,
      1  sbdry,scheck,ndeltarho,softxry,npa_diag,symtrap,syncrad,
      1  bremsrad,brfac,brfac1,brfacgm3,sigmamod,sigvcx,sigvi,
-     1  soln_method,tauegy,taunew,tein,tescal,tiin,tiscal,
+     1  soln_method,tauegy,taunew,tein,tein_t,tescal,tiin,tiin_t,tiscal,
      1  tauloss,temp,temppar,
      1  tfac,tfacz,tbnd,tandem,
      1  thetd,torloss,thet1,thet2,x_sxr,z_sxr,
@@ -74,8 +78,8 @@ c..................................................................
      1  mpwrzeff,npwrzeff,mpwrvphi,npwrvphi,mpwrxj,npwrxj,
      1  mpwrelec,npwrelec,
      1  redenc,redenb,temp_den,tempc,tempb,zeffc,zeffb,elecc,elecb,
-     1  vphic,vphib,xjc,xjb,totcrt,efswtch,efswtchn,efiter,efflag,
-     1  curr_edge,efrelax,efrelax1,currerr,
+     1  vphic,vphib,xjc,xjb,xjin_t,totcrt,efswtch,efswtchn,
+     1  efiter,efflag,curr_edge,efrelax,efrelax1,currerr,
      1  bctime,nbctime,
      1  zmax,
      1  fow,outorb,nmu,npfi,nsteps_orb,nptsorb,i_orb_width,iorb2,
@@ -89,10 +93,12 @@ c..................................................................
       namelist/trsetup/
      1  advectr,
      1  difus_type,difusr,difus_rshape,difus_vshape,difin,
+     1  difus_io,difus_io_file,
+     1  difus_io_drrscale,difus_io_drscale,difus_io_t,
      1  pinch,
      1  relaxden,relaxtsp,
      1  transp,adimeth,nonadi,
-     1  nontran,nofftran,nonelpr,noffelpr
+     1  nontran,nofftran,nonelpr,noffelpr,ndifus_io_t
 
 
 c..................................................................
@@ -127,7 +133,7 @@ c..................................................................
      1  zbox
 
 c..................................................................
-c     Namelist (rfsetup) for "urf", "vlh", and "vlf" modules.
+c      Namelist (rfsetup) for "urf", "vlh", "vlf", rdcmod  modules.
 c..................................................................
 
       namelist/rfsetup/
@@ -137,7 +143,7 @@ c..................................................................
      1  ech, 
      1  fw,
      1  rftype,
-     1  rffile,rfread,
+     1  rffile,rdcfile,rfread,
      1  nharms,nharm1,nrfspecies,iurfcoll,iurfl,
      1  nbssltbl,nondamp,nrfstep1,nrfstep2,
      1  nrfpwr,nrfitr1,nrfitr2,nrfitr3,
@@ -150,8 +156,8 @@ c..................................................................
      1  vlhpolmx,vlfmod,vlfmodes,vlffreq,vlfnp,vlfdnp,vlfddnp,
      1  vlfeplus,vlfemin,vlfpol,vlfdpol,vlfddpol,vlfbes,vlfnpvar,
      1  vlfharms,vlfharm1,vlfnperp,vlfdnorm,
-     1  vlfparmn,vlfparmx,vlfprpmn,vlfprpmx,rdc_upar_sign,
-     1  rdcmod,rdc_clipping
+     1  vlfparmn,vlfparmx,vlfprpmn,vlfprpmx,rdc_upar_sign,nrdc,
+     1  rdcmod,rdc_clipping,nrdcspecies,rdcscale,rdc_netcdf
 
 
      
