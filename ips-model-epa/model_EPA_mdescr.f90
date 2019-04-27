@@ -700,7 +700,6 @@ CONTAINS
 !
 !  Reading the first variable name and the number of radial mesh points
 !
-!         read(lun22,'(A10,i4)')  var_name, nprodt
          read(lun22, *)  var_name, nprodt
          write (*,*) 'var_name = ', var_name, '  nprodt = ', nprodt
 !
