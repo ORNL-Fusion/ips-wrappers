@@ -1,5 +1,11 @@
 PROGRAM model_EPA_mdescr
 
+! Version 2.0 9/19/2018 (Batchelor)
+! Added source_powers_only flag so that profiles are not initialized or set,
+! only source powers are set. For now all sources are assumed to have the same power as
+! set in the /state_data/ namelist.  With source_powers_only == true 
+! nothing is initialized.  Use with fully allocated plasma state.
+!
 ! version 1.1 11/20/2017 (Batchelor)
 ! Reads cut down version of TORIC equidt.data file for thermal profiles
 
@@ -155,7 +161,7 @@ PROGRAM model_EPA_mdescr
 
     INTEGER :: nrho
     INTEGER :: isThermal
-    REAL(KIND=rspec) :: fracmin, power_ic, power_lh
+    REAL(KIND=rspec) :: fracmin, power_ic, power_lh, power_ec, power_nbi
     CHARACTER*32 kdens_rfmin
 
     !--------------------------------------------------------------------------
@@ -170,6 +176,7 @@ PROGRAM model_EPA_mdescr
     CHARACTER(len=32) :: ni_profile_model_name = 'fraction_of_electron'
     CHARACTER(len=32) :: T_min_profile_model_name = 'fraction_of_electron'
     CHARACTER(len=32) :: n_min_profile_model_name = 'fraction_of_electron'
+    CHARACTER(len=32) :: source_powers_only = 'false'
     
     ! namelist parameters for Power_Parabolic model:
     REAL(KIND=rspec) :: Te_0, Te_edge, alpha_Te_1, alpha_Te_2
@@ -199,7 +206,7 @@ PROGRAM model_EPA_mdescr
     !------------------------------------------------------------------------------------
 
     namelist /state_data/ &
-          nrho, kdens_rfmin, isThermal, fracmin, power_ic, power_lh
+          nrho, kdens_rfmin, isThermal, fracmin, power_ic, power_lh, power_ec, power_nbi
                        
     namelist /evolving_model_data/ &
           Te_profile_model_name, ne_profile_model_name, &
@@ -215,7 +222,7 @@ PROGRAM model_EPA_mdescr
           Zeff_profile_model_name, V_loop_profile_model_name, &
           Zeff_0, Zeff_edge, alpha_Zeff_1, alpha_Zeff_2, &
           V_loop_0, V_loop_edge, alpha_V_loop_1, alpha_V_loop_2, &
-          equidt_file_name
+          equidt_file_name, source_powers_only
     
     
 !------------------------------------------------------------------------------------
@@ -274,7 +281,9 @@ PROGRAM model_EPA_mdescr
 		WRITE (*, nml = evolving_model_data)
 		WRITE (*,*)
 	END IF
-
+    IF (TRIM(source_powers_only)=='FALSE') THEN  ! lower case it
+    	source_powers_only='false'
+    END IF
     !---------------------------------------------------------------------------------
     !  If getting thermal profile data from equidta.dat file (signaled by 
     !  ne_profile_model_name = 'equidt_profile' in evolving_model_data) read equidt.data file
@@ -303,35 +312,33 @@ PROGRAM model_EPA_mdescr
 !
 !------------------------------------------------------------------------------------
 
-IF (TRIM(mode) == 'INIT') THEN
-    
-    !--------------------------------------------------------------------------
-    !   Initialize and allocate species arrays and thermal profile grids
-    !--------------------------------------------------------------------------
-    
-        ps%nrho = nrho
-           
-        WRITE (*,*) 'model_EPA_mdescr: About to allocate thermal profile arrays'
-        CALL    ps_alloc_plasma_state(ierr)
-        WRITE (*,*) 'model_EPA_mdescr:  Thermal profile arrays allocated'
-		WRITE (*,*)
-        
-    !---------------------------------------------------------------------------------
-    ! ICRF minority ion profiles
-    !---------------------------------------------------------------------------------
-        ! If (kdens_rfmin .EQ. 'fraction') TORIC computes nmini = fracmin * ne
-        ! If kdens_rfmin .EQ. 'data' (not implemented here as of 4/2016) then nmini must 
-        ! be available in the PS, TORIC interpolates it from the rho-icrf grid onto the 
-        ! Toric radial grid.  But the rho_icrf grid must be allocated and initialized here.  
-        IF (ALLOCATED(ps%m_RFMIN)) THEN   
-			ps%kdens_rfmin = "fraction"
-			ps%fracmin(:) = fracmin
-			ps%isThermal(:) = 1
-			WRITE (*,*) 'model_EPA_mdescr: minority specification loaded'
+	IF ((TRIM(mode) == 'INIT').and.(TRIM(source_powers_only)=='false')) THEN
+		!--------------------------------------------------------------------------
+		!   Initialize and allocate species arrays and thermal profile grids
+		!--------------------------------------------------------------------------
+
+			ps%nrho = nrho
+	   
+			WRITE (*,*) 'model_EPA_mdescr: About to allocate thermal profile arrays'
+			CALL    ps_alloc_plasma_state(ierr)
+			WRITE (*,*) 'model_EPA_mdescr:  Thermal profile arrays allocated'
 			WRITE (*,*)
-		END IF
-                    
-END IF  ! End INIT function
+	
+		!---------------------------------------------------------------------------------
+		! ICRF minority ion profiles
+		!---------------------------------------------------------------------------------
+			! If (kdens_rfmin .EQ. 'fraction') TORIC computes nmini = fracmin * ne
+			! If kdens_rfmin .EQ. 'data' (not implemented here as of 4/2016) then nmini must 
+			! be available in the PS, TORIC interpolates it from the rho-icrf grid onto the 
+			! Toric radial grid.  But the rho_icrf grid must be allocated and initialized here.  
+			IF (ALLOCATED(ps%m_RFMIN)) THEN   
+				ps%kdens_rfmin = "fraction"
+				ps%fracmin(:) = fracmin
+				ps%isThermal(:) = 1
+				WRITE (*,*) 'model_EPA_mdescr: minority specification loaded'
+				WRITE (*,*)
+			END IF                    
+	END IF  ! End INIT function
 
 !------------------------------------------------------------------------------------
 !     
@@ -340,81 +347,81 @@ END IF  ! End INIT function
 !
 ! N.B. This section is also executed during INIT
 !------------------------------------------------------------------------------------
+WRITE(*,*)
 
-    WRITE(*,*)
-         
-    !---------------------------------------------------------------------------------
-    ! Thermal species profiles
-    !---------------------------------------------------------------------------------
-                    
-        CALL rho_grid(ps%nrho,ps%rho)
-        nzone = ps%nrho -1       
-        ALLOCATE( zone_center(nzone), stat=istat )
-        IF (istat /= 0 ) THEN
-            CALL SWIM_error ('allocation', 'model_epa' , 'zone_center')
-            ierr = istat
-        END IF  
-        zone_center = ( ps%rho(1:nrho-1) + ps%rho(2:nrho) )/2.
+!---------------------------------------------------------------------------------
+! Thermal species profiles
+!---------------------------------------------------------------------------------
+	IF (TRIM(source_powers_only) == 'false') THEN         
+				
+		CALL rho_grid(ps%nrho,ps%rho)
+		nzone = ps%nrho -1       
+		ALLOCATE( zone_center(nzone), stat=istat )
+		IF (istat /= 0 ) THEN
+			CALL SWIM_error ('allocation', 'model_epa' , 'zone_center')
+			ierr = istat
+		END IF  
+		zone_center = ( ps%rho(1:nrho-1) + ps%rho(2:nrho) )/2.
 
-        ! PowerParabolic models
-        
-        IF (TRIM(Te_profile_model_name) == 'Power_Parabolic') THEN
-            CALL Power_Parabolic(Te_0, Te_edge, alpha_Te_1, alpha_Te_2, zone_center, ps%Ts(:, 0))
-            WRITE (*,*) 'model_EPA_mdescr:  initial Te profile = ', ps%Ts(:, 0)
-            WRITE (*,*)
-        END IF
+		! PowerParabolic models
 
-        IF (TRIM(ne_profile_model_name) == 'Power_Parabolic') THEN
-            CALL Power_Parabolic(ne_0, ne_edge, alpha_ne_1, alpha_ne_2, zone_center, ps%ns(:, 0))
-            WRITE (*,*) 'model_EPA_mdescr:  initial ne profile = ', ps%ns(:, 0)
-            WRITE (*,*)
-        END IF
-        
-        ! Thermal ion profiles  N.B.  All thermal ion species at same temperature
-        IF (TRIM(Ti_profile_model_name) == 'Power_Parabolic') THEN
-            DO i = 1, ps%nspec_th
+		IF (TRIM(Te_profile_model_name) == 'Power_Parabolic') THEN
+			CALL Power_Parabolic(Te_0, Te_edge, alpha_Te_1, alpha_Te_2, zone_center, ps%Ts(:, 0))
+			WRITE (*,*) 'model_EPA_mdescr:  initial Te profile = ', ps%Ts(:, 0)
+			WRITE (*,*)
+		END IF
+
+		IF (TRIM(ne_profile_model_name) == 'Power_Parabolic') THEN
+			CALL Power_Parabolic(ne_0, ne_edge, alpha_ne_1, alpha_ne_2, zone_center, ps%ns(:, 0))
+			WRITE (*,*) 'model_EPA_mdescr:  initial ne profile = ', ps%ns(:, 0)
+			WRITE (*,*)
+		END IF
+
+		! Thermal ion profiles  N.B.  All thermal ion species at same temperature
+		IF (TRIM(Ti_profile_model_name) == 'Power_Parabolic') THEN
+			DO i = 1, ps%nspec_th
 				CALL Power_Parabolic(Ti_0, Ti_edge, alpha_Ti_1, alpha_Ti_2, zone_center, ps%Ts(:, i))
 				WRITE (*,*) 'model_EPA_mdescr:  initial Ti profile = ', ps%Ts(:, i)
 				WRITE (*,*)
-            END DO
-        END IF
+			END DO
+		END IF
 
-        ! Zeff profile
-        IF (TRIM(Zeff_profile_model_name) == 'Power_Parabolic') THEN
+		! Zeff profile
+		IF (TRIM(Zeff_profile_model_name) == 'Power_Parabolic') THEN
 			CALL Power_Parabolic(Zeff_0, Zeff_edge, alpha_Zeff_1, alpha_Zeff_2, zone_center, ps%Zeff(:))
 			WRITE (*,*) 'model_EPA_mdescr:  Zeff profile = ', ps%Zeff(:)
 			WRITE (*,*)
-        END IF
-        
-        ! V_loop profile
-        IF (TRIM(V_loop_profile_model_name) == 'Power_Parabolic') THEN
+		END IF
+
+		! V_loop profile
+		IF (TRIM(V_loop_profile_model_name) == 'Power_Parabolic') THEN
 			CALL Power_Parabolic(V_loop_0, V_loop_edge, alpha_V_loop_1, alpha_V_loop_2, zone_center, ps%V_loop(:))
 			WRITE (*,*) 'model_EPA_mdescr:  V_loop profile = ', ps%V_loop(:)
 			WRITE (*,*)
-        END IF
+		END IF
 
-        ! Fraction of electron models
-        
-        IF (TRIM(Ti_profile_model_name) == 'fraction_of_electron') THEN
-            DO i = 1, ps%nspec_th
-                ps%Ts(:,i) = frac_Ti(i)*ps%Ts(:, 0)
+		! Fraction of electron models
+
+		IF (TRIM(Ti_profile_model_name) == 'fraction_of_electron') THEN
+			DO i = 1, ps%nspec_th
+				ps%Ts(:,i) = frac_Ti(i)*ps%Ts(:, 0)
 				WRITE (*,*) 'model_EPA_mdescr:  initial Ti profile = ', ps%Ts(:, i)
 				WRITE (*,*)
-            END DO
-        END IF
+			END DO
+		END IF
 
-        IF (TRIM(ni_profile_model_name) == 'fraction_of_electron') THEN
-        
+		IF (TRIM(ni_profile_model_name) == 'fraction_of_electron') THEN
+
 			! NB: if minority ion density model is fraction of electron density  and if the 
 			! thermal ion model is also fraction of electrons then adjust fraction of
 			! thermal species 1 to give quasineutrality
 			! Define fraction of species #1 = 1.0 then subtract off minorities and other
 			! thermals.  (Also must subtract beams and fusion when they get put in)
-        	IF (ps%kdens_rfmin == "fraction") THEN
-        		frac_ni(1) = 1.0 
-        		DO i = 1, ps%nspec_rfmin
+			IF (ps%kdens_rfmin == "fraction") THEN
+				frac_ni(1) = 1.0 
+				DO i = 1, ps%nspec_rfmin
 					frac_ni(1) = frac_ni(1) - ps%q_RFMIN(i)*ps%fracmin(i)
-        		END DO
+				END DO
 				IF (ps%nspec_th .GE. 2) THEN
 					DO i = 2, ps%nspec_rfmin
 						frac_ni(1) = frac_ni(1) - ps%q_S(i)*frac_ni(i)
@@ -424,9 +431,9 @@ END IF  ! End INIT function
 					WRITE (*,*) 'model_EPA_mdescr INIT: frac_ni(1) < 0'
 					CALL EXIT(1)
 				ENDIF
-				
-        	END IF ! kdens_rfmin "fraction"
-			
+		
+			END IF ! kdens_rfmin "fraction"
+	
 			! NB: If minorities are not fraction_of_electron, the ion fractions are just those
 			! in the evolving_model_data namelist.  Some other mechanism must enforce charge
 			! neutrality.
@@ -435,35 +442,46 @@ END IF  ! End INIT function
 				WRITE (*,*) 'model_EPA_mdescr:  initial density profile for thermal ion #',i ,' = ', ps%ns(:, i)
 				WRITE (*,*)
 			END DO
-				
-        END IF  ! fraction_of_electron
-        
-        ! Load single Ti profile from multi-species Ts()
-        ps%Ti = ps%Ts(:, 1)
-        
-        ! read_equidt_file model
-        
+		
+		END IF  ! fraction_of_electron
+
+		! Load single Ti profile from multi-species Ts()
+		ps%Ti = ps%Ts(:, 1)
+
+		! read_equidt_file model
+
 		If (TRIM(ne_profile_model_name) == 'read_equidt_file') THEN
 			CALL equidt_to_PS(TRIM(equidt_file_name), 'STEP')
 		END IF
-        
-        ! Load single Ti profile from multi-species Ts()
-        ps%Ti = ps%Ts(:, 1)
 
+		! Load single Ti profile from multi-species Ts()
+		ps%Ti = ps%Ts(:, 1)
+	END IF ! End thermal profiles
+	
     !--------------------------------------------------------------------------    !
     ! Source powers
     !--------------------------------------------------------------------------
 		
-		! NB: For now assume power is the same on all ICRF sources
-        IF (ALLOCATED(ps%power_ic)) THEN   		       
-			ps%power_ic = power_ic
-        END IF
+	! NB: For now assume power is the same on all EC sources
+	IF (ALLOCATED(ps%power_ec)) THEN   		       
+		ps%power_ec = power_ec
+	END IF
+	
+	! NB: For now assume power is the same on all ICRF sources
+	IF (ALLOCATED(ps%power_ic)) THEN   		       
+		ps%power_ic = power_ic
+	END IF
+
+	! NB: For now assume power is the same on all LH sources
+	IF (ALLOCATED(ps%power_lh)) THEN   		       
+		ps%power_lh = power_lh
+	END IF
+
+	! NB: For now assume power is the same on all NBI sources
+	IF (ALLOCATED(ps%power_nbi)) THEN   		       
+		ps%power_ic = power_nbi
+	END IF
 		
-		! NB: For now assume power is the same on all LH sources
-        IF (ALLOCATED(ps%power_lh)) THEN   		       
-			ps%power_lh = power_lh
-        END IF
-            
 
     !-------------------------------------------------------------------------- 
     ! Store plasma state
@@ -682,7 +700,8 @@ CONTAINS
 !
 !  Reading the first variable name and the number of radial mesh points
 !
-         read(lun22,'(A10,i4)')  var_name, nprodt
+         read(lun22, *)  var_name, nprodt
+         write (*,*) 'var_name = ', var_name, '  nprodt = ', nprodt
 !
 ! On INIT just set nrho to nprodt and return (DBB)
 !
@@ -708,7 +727,8 @@ CONTAINS
 !  edge, and is linear in SQRT(Psi_poloidal). An equidistant
 !  mesh is required for the interpolation in toric.
 !
-         read(lun22,'(5E16.9)')  tbpsi
+         read(lun22, *)  tbpsi
+         write (*,*) 'tbpsi = ', tbpsi
 
          if(tbpsi(nprodt) .ne. 1._rspec)  then
             write(*,*) "warning profnt radial mesh does not end at 1"
@@ -718,21 +738,25 @@ CONTAINS
 !
 !  Reading the particle densities (hardwired ni = ne and one ion species)
 !
-         read(lun22,'(A10,i4)')  var_name, nprodt
-         read(lun22,'(5E16.9)')  tbne
+         read(lun22,*)  var_name, nprodt
+         read(lun22, *)  tbne
+         write (*,*) 'tbne = ', tbne
          ps%ns(:,0) = zone_centered_profile(nprodt, tbne)
          ps%ns(:,1) = ps%ns(:,0)
 !
 !  Reading the electron temperature (units: keV)
 !
-         read(lun22,'(A10,i4)')  var_name, nprodt
-         read(lun22,'(5E16.9)')  tbte
+         read(lun22,*)  var_name, nprodt
+         read(lun22,*)  tbte(1:nprodt)
+         write (*,*) 'tbte = ', tbte
          ps%Ts(:,0) = zone_centered_profile(nprodt, tbte)
 !
 !  Reading the ion temperature
 !
-         read(lun22,'(A10,i4)')  var_name, nprodt
-	     read(lun22,'(5E16.9)')  tbti(1:nprodt)
+         read(lun22,*)  var_name, nprodt
+	     read(lun22,*)  tbti(1:nprodt)
+         write (*,*) 'tbti = ', tbti
+
          ps%Ts(:,1) = zone_centered_profile(nprodt, tbti)
 
          write(*,*) 'finished reading profiles'
