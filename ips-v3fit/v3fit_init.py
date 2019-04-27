@@ -9,6 +9,7 @@
 
 from component import Component
 from utilities import ZipState
+from utilities import ScreenWriter
 import os
 
 #-------------------------------------------------------------------------------
@@ -18,19 +19,18 @@ import os
 #-------------------------------------------------------------------------------
 class v3fit_init(Component):
     def __init__(self, services, config):
-        print('v3fit_init: Construct')
         Component.__init__(self, services, config)
 
 #-------------------------------------------------------------------------------
 #
 #  V3FIT init Component init method. This method prepairs the namelist input
-#  file and creates a dummy out put file. This allows staging the plasma state
-#  files. In the v3fit namelist input file configure the v3fit namelist input
-#  with the task, internal vmec input name and optional name of the wout file.
+#  file and creates a dummy out put file. This allows staging the state files.
+#  In the v3fit namelist input file configure the v3fit namelist input with the
+#  task, internal vmec input name and optional name of the wout file.
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
-        print('v3fit_init: init')
+        ScreenWriter.screen_output(self, 'verbose', 'v3fit_init: init')
 
 #  Get config filenames.
         current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
@@ -40,19 +40,10 @@ class v3fit_init(Component):
         current_v3fit_namelist = self.services.get_config_param('V3FIT_NAMELIST_INPUT')
         current_v3fit_state = self.services.get_config_param('CURRENT_V3FIT_STATE')
 
-#  Stage input files. Remove an old namelist input if it exists.
-        if os.path.exists(current_v3fit_state):
-            os.remove(current_v3fit_state)
-        if os.path.exists(current_v3fit_namelist):
-            os.remove(current_v3fit_namelist)
-        if os.path.exists(current_siesta_state):
-            os.remove(current_siesta_state)
-        if os.path.exists(current_siesta_namelist):
-            os.remove(current_siesta_namelist)
-        if os.path.exists(current_vmec_state):
-            os.remove(current_vmec_state)
-        if os.path.exists(current_vmec_namelist):
-            os.remove(current_vmec_namelist)
+#  Remove old inputs. Stage input files.
+        for file in os.listdir('.'):
+            os.remove(file)
+        
         self.services.stage_input_files(self.INPUT_FILES)
 
 #  All v3fit runs require a vmec state at the minimum. Create a vmec state. If
@@ -75,10 +66,10 @@ class v3fit_init(Component):
 #  state.
                 zip_ref.write(current_vmec_state)
 
-#  Create plasma state from files. Input files can either be a new plasma state,
-#  namelist input file or both. If both files were staged, replace the namelist
-#  input file. If the namelist file is present flag the plasma state as needing
-#  to be updated.
+#  Create state from files. Input files can either be a new state, namelist
+#  input file or both. If both files were staged, replace the namelist input
+#  file. If the namelist file is present flag the state as needing to be
+#  updated.
         with ZipState.ZipState(current_v3fit_state, 'a') as zip_ref:
             if os.path.exists(current_v3fit_namelist):
                 zip_ref.write(current_v3fit_namelist)
@@ -91,7 +82,7 @@ class v3fit_init(Component):
             else:
                 zip_ref.write(current_vmec_state)
 
-        self.services.update_plasma_state()
+        self.services.update_state()
 
 #-------------------------------------------------------------------------------
 #
@@ -99,7 +90,7 @@ class v3fit_init(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        print('v3fit_init: step')
+        ScreenWriter.screen_output(self, 'verbose', 'v3fit_init: step')
 
 #-------------------------------------------------------------------------------
 #
@@ -107,4 +98,4 @@ class v3fit_init(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('v3fit_init: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'v3fit_init: finalize')

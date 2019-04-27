@@ -8,8 +8,22 @@ c     This file records changes in the code
 c
 c
 c***********************************************************************
-c[190] version="genray_v10.12_180529"
 
+c[192] version="genray_v10.12_180912"
+c[192] Fixed bugs related to MPI implementation 
+c[192] of ADJ-related subroutines (i_adj=1).
+c[192] The bugs resulted in zero current. 
+c[192] With this fix, the file 'adjout' (usually a large file)
+c[192] is only recordered by one core (myrank=0), and 
+c[192] read also by one core, and then MPI-broadcasted to other cores.
+c[192] See "write (iout5,...)" and "read (iout5,...)".
+c[192] YuP[2018-09-12].
+
+c[191] Fixed an argument list dimensioning in call to
+c[191] lh_bonoli_disp.f, which made no change in results for test7.1
+c[191] of this dispersion relation.  [BH180620]
+
+c[190] version="genray_v10.12_180529"
 c[190] Reversed changes made in [187]. 
 In the manual, the two cold plasma roots N**2 
 (for dispersion id=2) are described as
@@ -62,7 +76,7 @@ So, in applications like LH, Helicon or whistler waves
 it is advised to try different ib values,
 and try both ioxm=-1 and +1 cases,
 then compare the initial Nperp^2 values.
-Example of waves' launch in LH frequency range,
+Example of wave launch in LH frequency range,
 at omega_ce/omega ~ 20-30,
 omega_ci/omega ~ 0.005-0.008,
 and (omega_pe/omega)^2 ~ 100-700:

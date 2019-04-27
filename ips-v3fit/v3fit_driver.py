@@ -3,8 +3,7 @@
 #-------------------------------------------------------------------------------
 #
 #  IPS driver for V3FIT component. This driver only uses the VMEC component to
-#  stage in plasma state files. The v3fit components generate the actual wout
-#  file.
+#  stage in state files. The v3fit components generate the actual wout file.
 #
 #-------------------------------------------------------------------------------
 
@@ -12,6 +11,7 @@ from component import Component
 import os
 import shutil
 from utilities import ZipState
+from utilities import ScreenWriter
 
 #-------------------------------------------------------------------------------
 #
@@ -20,7 +20,6 @@ from utilities import ZipState
 #-------------------------------------------------------------------------------
 class v3fit_driver(Component):
     def __init__(self, services, config):
-        print('v3fit_driver: Construct')
         Component.__init__(self, services, config)
         self.eq_worker = {'sim_name': None, 'init': None, 'driver': None}
 
@@ -30,7 +29,7 @@ class v3fit_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0, **keywords):
-        print('v3fit_driver: init')
+        ScreenWriter.screen_output(self, 'verbose', 'v3fit_driver: init')
         
 #  Separate out the siesta, vmec and v3fit keywords.
         eq_keywords = {}
@@ -47,7 +46,7 @@ class v3fit_driver(Component):
         self.current_v3fit_state = self.services.get_config_param('CURRENT_V3FIT_STATE')
 
 #  We need to pass the inputs to the SIESTA or VMEC child workflow.
-        self.services.stage_plasma_state()
+        self.services.stage_state()
             
         zip_ref = ZipState.ZipState(self.current_v3fit_state, 'a')
 
@@ -65,6 +64,7 @@ class v3fit_driver(Component):
                         'USER_INPUT_FILES' : current_siesta_state,
                         'SIM_NAME'         : '{}_siesta'.format(self.services.get_config_param('SIM_NAME')),
                         'LOG_FILE'         : 'log.{}_siesta.warning'.format(self.services.get_config_param('SIM_NAME')),
+                        'OUTPUT_LEVEL'     : self.services.get_config_param('OUTPUT_LEVEL')
                        }
 
                 siesta_config = self.services.get_config_param('SIESTA_CONFIG')
@@ -80,6 +80,7 @@ class v3fit_driver(Component):
                         'USER_INPUT_FILES' : current_vmec_state,
                         'SIM_NAME'         : '{}_vmec'.format(self.services.get_config_param('SIM_NAME')),
                         'LOG_FILE'         : 'log.{}_vmec.warning'.format(self.services.get_config_param('SIM_NAME')),
+                        'OUTPUT_LEVEL'     : self.services.get_config_param('OUTPUT_LEVEL')
                        }
 
                 vmec_config = self.services.get_config_param('VMEC_CONFIG')
@@ -109,7 +110,7 @@ class v3fit_driver(Component):
         else:
             zip_ref.write(current_vmec_state)
         zip_ref.close()
-        self.services.update_plasma_state()
+        self.services.update_state()
 
 #  Initialize V3FIT.
         self.wait = self.services.call_nonblocking(self.v3fit_port, 'init',
@@ -121,21 +122,20 @@ class v3fit_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0, **keywords):
-        print('v3fit_driver: step')
+        ScreenWriter.screen_output(self, 'verbose', 'v3fit_driver: step')
 
 #  Run V3FIT.
         self.services.wait_call(self.wait, True)
         self.services.call(self.v3fit_port, 'step', timeStamp, **keywords)
 
 #  Prepare the output files for a super work flow. Need to remove any old output
-#  files first before staging the plasma state.
+#  files first before staging the state.
         if os.path.exists(self.OUTPUT_FILES):
             os.remove(self.OUTPUT_FILES)
-        self.services.stage_plasma_state()
+        self.services.stage_state()
         
 #  The super flow may need to rename the output file. Check is the current state
-#  matches if output file. If it does not rename the plasma state so it can be
-#  staged.
+#  matches if output file. If it does not rename the state so it can be staged.
         if not os.path.exists(self.OUTPUT_FILES):
             os.rename(self.current_v3fit_state, self.OUTPUT_FILES)
 
@@ -145,7 +145,7 @@ class v3fit_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('v3fit_driver: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'v3fit_driver: finalize')
         
         self.wait = [
                      self.services.call_nonblocking(self.eq_worker['init'], 'finalize', timeStamp),

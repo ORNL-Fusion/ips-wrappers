@@ -11,6 +11,8 @@ from component import Component
 import os
 from omfit.classes.omfit_namelist import OMFITnamelist
 from utilities import ZipState
+from utilities import ScreenWriter
+from utilities import NamelistItem
 
 #-------------------------------------------------------------------------------
 #
@@ -19,7 +21,6 @@ from utilities import ZipState
 #-------------------------------------------------------------------------------
 class siesta(Component):
     def __init__(self, services, config):
-        print('siesta: Construct')
         Component.__init__(self, services, config)
 
 #-------------------------------------------------------------------------------
@@ -28,8 +29,8 @@ class siesta(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0, **keywords):
-        print('siesta: init')
-        self.services.stage_plasma_state()
+        ScreenWriter.screen_output(self, 'verbose', 'siesta: init')
+        self.services.stage_state()
 
         self.current_siesta_namelist = self.services.get_config_param('SIESTA_NAMELIST_INPUT')
         self.current_siesta_state = self.services.get_config_param('CURRENT_SIESTA_STATE')
@@ -37,11 +38,10 @@ class siesta(Component):
         current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
         current_wout_file = 'wout_{}.nc'.format(current_vmec_namelist.replace('input.','',1))
     
-#  Stage plasma state.
-        self.services.stage_plasma_state()
+#  Stage state.
+        self.services.stage_state()
     
-#  Unzip files from the plasma state. Use mode a so files can be read and
-#  written to.
+#  Unzip files from the state. Use mode a so files can be read and written to.
         self.zip_ref = ZipState.ZipState(self.current_siesta_state, 'a')
         self.zip_ref.extract(self.current_siesta_namelist)
         self.zip_ref.extract(current_vmec_state)
@@ -61,7 +61,7 @@ class siesta(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        print('siesta: step')
+        ScreenWriter.screen_output(self, 'verbose', 'siesta: step')
         
         flags = self.zip_ref.get_state()
         
@@ -89,7 +89,7 @@ class siesta(Component):
             if (self.services.wait_task(self.task_wait) or not os.path.exists(self.restart_file)):
                 self.services.error('siesta: step failed.')
                 
-#  Add the restart file to the plasma state.
+#  Add the restart file to the state.
             self.zip_ref.write([self.current_siesta_namelist, self.restart_file])
         
         else:
@@ -97,7 +97,7 @@ class siesta(Component):
             self.zip_ref.set_state(state='unchanged')
         
         self.zip_ref.close()
-        self.services.update_plasma_state()
+        self.services.update_state()
                 
 #-------------------------------------------------------------------------------
 #
@@ -105,7 +105,7 @@ class siesta(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('siesta: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'siesta: finalize')
 
 #-------------------------------------------------------------------------------
 #
@@ -115,7 +115,12 @@ class siesta(Component):
 #-------------------------------------------------------------------------------
     def set_namelist(self, **keywords):
 #  Update parameters in the namelist.
-        namelist = OMFITnamelist(self.current_siesta_namelist)
+        namelist = OMFITnamelist(self.current_siesta_namelist,
+                                 collect_arrays={
+                                 'mres'     : {'default' : 0,   'shape' : (20,), 'offset' : (1,)},
+                                 'HelPert'  : {'default' : 0.0, 'shape' : (20,), 'offset' : (1,)},
+                                 'HelPertA' : {'default' : 0.0, 'shape' : (20,), 'offset' : (1,)}
+                                 })
         
         self.restart_file = 'siesta_{}.nc'.format(namelist['siesta_info']['restart_ext'])
         
@@ -128,6 +133,6 @@ class siesta(Component):
             self.zip_ref.set_state(state='needs_update')
         
             for key, value in keywords.iteritems():
-                namelist['siesta_info'][key] = value
+                NamelistItem.set(namelist['siesta_info'], key, value)
 
         namelist.save()

@@ -11,7 +11,10 @@ from component import Component
 from omfit.classes.omfit_namelist import OMFITnamelist
 from omfit.classes.omfit_nc import OMFITnc
 from utilities import ZipState
+from utilities import ScreenWriter
+from utilities import NamelistItem
 import json
+import os
 
 #-------------------------------------------------------------------------------
 #
@@ -20,7 +23,6 @@ import json
 #-------------------------------------------------------------------------------
 class v3fit(Component):
     def __init__(self, services, config):
-        print('v3fit: Construct')
         Component.__init__(self, services, config)
 
 #-------------------------------------------------------------------------------
@@ -29,8 +31,8 @@ class v3fit(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0, **keywords):
-        print('v3fit: init')
-        self.services.stage_plasma_state()
+        ScreenWriter.screen_output(self, 'verbose', 'v3fit: init')
+        self.services.stage_state()
 
 #  Get config filenames.
         self.current_v3fit_namelist = self.services.get_config_param('V3FIT_NAMELIST_INPUT')
@@ -42,11 +44,10 @@ class v3fit(Component):
         current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
         current_wout_file = 'wout_{}.nc'.format(current_vmec_namelist.replace('input.','',1))
 
-#  Stage plasma state.
-        self.services.stage_plasma_state()
-    
-#  Unzip files from the plasma state. Use mode a so files can be read and
-#  written to.
+#  Stage state.
+        self.services.stage_state()
+
+#  Unzip files from the state. Use mode a so files can be read and written to.
         self.zip_ref = ZipState.ZipState(self.current_v3fit_state, 'a')
         self.zip_ref.extract(self.current_v3fit_namelist)
         if self.result_file in self.zip_ref:
@@ -59,14 +60,14 @@ class v3fit(Component):
                 siesta_zip_ref.extract(current_siesta_namelist)
                 namelist = OMFITnamelist(current_siesta_namelist)
                 current_restart_file = 'siesta_{}.nc'.format(namelist['siesta_info']['restart_ext'])
-                
+
                 siesta_zip_ref.extract(current_restart_file)
                 flags = siesta_zip_ref.get_state()
                 if 'state' in flags and flags['state'] == 'updated':
                     self.zip_ref.set_state(state='needs_update')
-                        
+
                 siesta_zip_ref.extract(current_vmec_state)
-                
+
                 with ZipState.ZipState(current_vmec_state, 'r') as vmec_zip_ref:
                     vmec_zip_ref.extract(current_wout_file)
                     flags = vmec_zip_ref.get_state()
@@ -80,7 +81,7 @@ class v3fit(Component):
                 keywords['model_eq_type'] = 'siesta'
         else:
             self.zip_ref.extract(current_vmec_state)
-            
+
             with ZipState.ZipState(current_vmec_state, 'r') as vmec_zip_ref:
                 vmec_zip_ref.extract(current_wout_file)
                 vmec_zip_ref.extract(current_vmec_namelist)
@@ -94,17 +95,17 @@ class v3fit(Component):
 
 #  Update parameters in the namelist.
         self.set_namelist(**keywords)
-    
+
 #-------------------------------------------------------------------------------
 #
 #  V3FIT Component step method. This runs V3FIT.
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0, **keywords):
-        print('v3fit: step')
+        ScreenWriter.screen_output(self, 'verbose', 'v3fit: step')
 
         flags = self.zip_ref.get_state()
-    
+
         if 'state' in flags and flags['state'] == 'needs_update':
             self.set_namelist(my_task='v3post')
             self.task_wait = self.services.launch_task(self.NPROC,
@@ -119,10 +120,10 @@ class v3fit(Component):
 #  Wait for V3FIT to finish.
             if (self.services.wait_task(self.task_wait) and not os.path.exists(self.result_file)):
                 self.services.error('v3fit: step failed.')
-    
-#  Add the result file to the plasma state.
+
+#  Add the result file to the state.
             self.zip_ref.write([self.current_v3fit_namelist, self.result_file])
-            
+
         else:
 #  Update flags.
             self.zip_ref.set_state(state='unchanged')
@@ -136,7 +137,7 @@ class v3fit(Component):
             self.zip_ref.write(keywords['result_file'])
 
         self.zip_ref.close()
-        self.services.update_plasma_state()
+        self.services.update_state()
 
 #-------------------------------------------------------------------------------
 #
@@ -144,8 +145,8 @@ class v3fit(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('v3fit: finalize')
-    
+        ScreenWriter.screen_output(self, 'verbose', 'v3fit: finalize')
+
 #-------------------------------------------------------------------------------
 #
 #  V3FIT Component set_namelist method. This sets the namelist input file from
@@ -154,8 +155,99 @@ class v3fit(Component):
 #-------------------------------------------------------------------------------
     def set_namelist(self, **keywords):
 #  Update parameters in the namelist.
-        namelist = OMFITnamelist(self.current_v3fit_namelist)
-        
+        namelist = OMFITnamelist(self.current_v3fit_namelist,
+                                 collect_arrays={
+                                 'pp_ne_b'              : {'default' : 0.0,        'shape' : (22,),       'offset' : (0,),    'sparray' : True},
+                                 'pp_ne_as'             : {'default' : 0.0,        'shape' : (101,),      'offset' : (1,),    'sparray' : True},
+                                 'pp_ne_af'             : {'default' : 0.0,        'shape' : (101,),      'offset' : (1,),    'sparray' : True},
+                                 'pp_sxrem_b'           : {'default' : 0.0,        'shape' : (22,),       'offset' : (0,),    'sparray' : True},
+                                 'pp_sxrem_as'          : {'default' : 0.0,        'shape' : (101,),      'offset' : (1,),    'sparray' : True},
+                                 'pp_sxrem_af'          : {'default' : 0.0,        'shape' : (101,),      'offset' : (1,),    'sparray' : True},
+                                 #'pp_sxrem_ptype_a'     : {'default' : '',         'shape' : (10,),       'offset' : (1,)},
+                                 'pp_sxrem_b_a'         : {'default' : 0.0,        'shape' : (10, 22),    'offset' : (1,0),   'sparray' : True},
+                                 'pp_sxrem_as_a'        : {'default' : 0.0,        'shape' : (10, 101),   'offset' : (1,1),   'sparray' : True},
+                                 'pp_sxrem_af_a'        : {'default' : 0.0,        'shape' : (10, 101),   'offset' : (1,1),   'sparray' : True},
+                                 'pp_te_b'              : {'default' : 0.0,        'shape' : (22,),       'offset' : (0,),    'sparray' : True},
+                                 'pp_te_as'             : {'default' : 0.0,        'shape' : (101,),      'offset' : (1,),    'sparray' : True},
+                                 'pp_te_af'             : {'default' : 0.0,        'shape' : (101,),      'offset' : (1,),    'sparray' : True},
+                                 'pp_ti_b'              : {'default' : 0.0,        'shape' : (22,),       'offset' : (0,),    'sparray' : True},
+                                 'pp_ti_as'             : {'default' : 0.0,        'shape' : (101,),      'offset' : (1,),    'sparray' : True},
+                                 'pp_ti_af'             : {'default' : 0.0,        'shape' : (101,),      'offset' : (1,),    'sparray' : True},
+                                 'pp_ze_b'              : {'default' : 0.0,        'shape' : (22,),       'offset' : (0,),    'sparray' : True},
+                                 'pp_ze_as'             : {'default' : 0.0,        'shape' : (101,),      'offset' : (1,),    'sparray' : True},
+                                 'pp_ze_af'             : {'default' : 0.0,        'shape' : (101,),      'offset' : (1,),    'sparray' : True},
+                                 'sxrem_te_a'           : {'default' : 0.0,        'shape' : (101,),      'offset' : (1,),    'sparray' : True},
+                                 'sxrem_ratio_a'        : {'default' : 0.0,        'shape' : (101,),      'offset' : (1,),    'sparray' : True},
+                                 #'model_sxrem_type_a'   : {'default' : '',         'shape' : (10,),       'offset' : (1,)},
+                                 'sxrem_min'            : {'default' : 0.0,        'shape' : (10,),       'offset' : (1,),    'sparray' : True},
+                                 'coosig_wgts'          : {'default' : 0.0,        'shape' : (100,),      'offset' : (1,),    'sparray' : True},
+                                 #'rc_type'              : {'default' : '',         'shape' : (100,),      'offset' : (1,)},
+                                 'rc_index'             : {'default' : 0,          'shape' : (100,),      'offset' : (1,),    'sparray' : True},
+                                 'rc_value'             : {'default' : 0.0,        'shape' : (100,),      'offset' : (1,),    'sparray' : True},
+                                 #'dp_type'              : {'default' : '',         'shape' : (100,),      'offset' : (1,)},
+                                 'dp_index'             : {'default' : 0,          'shape' : (100,2),     'offset' : (1,1),   'sparray' : True},
+                                 #'rp_type'              : {'default' : '',         'shape' : (100,),      'offset' : (1,)},
+                                 'rp_index'             : {'default' : 0,          'shape' : (100,),      'offset' : (1,),    'sparray' : True},
+                                 'rp_index2'            : {'default' : 0,          'shape' : (100,),      'offset' : (1,),    'sparray' : True},
+                                 'rp_vrnc'              : {'default' : 0.0,        'shape' : (100,),      'offset' : (1,),    'sparray' : True},
+                                 #'rp_range_type'        : {'default' : 'infinity', 'shape' : (100,2),     'offset' : (1,1)},
+                                 'rp_range_value'       : {'default' : 0.0,        'shape' : (100,2),     'offset' : (1,1),   'sparray' : True},
+                                 'rp_range_index'       : {'default' : 0,          'shape' : (100,2,2),   'offset' : (1,1,1), 'sparray' : True},
+                                 #'lp_type'              : {'default' : '',         'shape' : (100,),      'offset' : (1,)},
+                                 'lp_index'             : {'default' : 0,          'shape' : (100,),      'offset' : (1,),    'sparray' : True},
+                                 'lp_index2'            : {'default' : 0,          'shape' : (100,),      'offset' : (1,),    'sparray' : True},
+                                 #'lp_sets'              : {'default' : '',         'shape' : (100,100),   'offset' : (1,1)},
+                                 'lp_sets_index'        : {'default' : 0,          'shape' : (100,100),   'offset' : (1,1),   'sparray' : True},
+                                 'lp_sets_index2'       : {'default' : 0,          'shape' : (100,100),   'offset' : (1,1),   'sparray' : True},
+                                 'lp_sets_coeff'        : {'default' : 0.0,        'shape' : (100,100),   'offset' : (1,1),   'sparray' : True},
+                                 'sdo_data_a'           : {'default' : 0.0,        'shape' : (4012,),     'offset' : (1,),    'sparray' : True},
+                                 'sdo_sigma_a'          : {'default' : 0.0,        'shape' : (4012,),     'offset' : (1,),    'sparray' : True},
+                                 'sdo_weight_a'         : {'default' : 0.0,        'shape' : (4012,),     'offset' : (1,),    'sparray' : True},
+                                 #'mag_a'                : {'default' : True,       'shape' : (1000,),     'offset' : (1,)},
+                                 #'mag_3d_a'             : {'default' : False,      'shape' : (1000,),     'offset' : (1,)},
+                                 'sdo_s_spec_imin'      : {'default' : 0,          'shape' : (150,),      'offset' : (1,),    'sparray' : True},
+                                 'sdo_s_spec_imax'      : {'default' : 0,          'shape' : (150,),      'offset' : (1,),    'sparray' : True},
+                                 'sdo_s_spec_floor'     : {'default' : 0.0,        'shape' : (150,),      'offset' : (1,),    'sparray' : True},
+                                 'sdo_s_spec_fraction'  : {'default' : 0.0,        'shape' : (150,),      'offset' : (1,),    'sparray' : True},
+                                 'sdo_w_spec_imin'      : {'default' : 0,          'shape' : (150,),      'offset' : (1,),    'sparray' : True},
+                                 'sdo_w_spec_imax'      : {'default' : 0,          'shape' : (150,),      'offset' : (1,),    'sparray' : True},
+                                 'sdo_w_spec_weight'    : {'default' : 0.0,        'shape' : (150,),      'offset' : (1,),    'sparray' : True},
+                                 'mag_spec_imin'        : {'default' : 0,          'shape' : (150,),      'offset' : (1,),    'sparray' : True},
+                                 'mag_spec_imax'        : {'default' : 0,          'shape' : (150,),      'offset' : (1,),    'sparray' : True},
+                                 #'mag_spec_use_induced' : {'default' : True,       'shape' : (150,),      'offset' : (1,)},
+                                 'sfactor_spec_imin'    : {'default' : 0,          'shape' : (150,),      'offset' : (1,),    'sparray' : True},
+                                 'sfactor_spec_imax'    : {'default' : 0,          'shape' : (150,),      'offset' : (1,),    'sparray' : True},
+                                 'sfactor_spec_fac'     : {'default' : 0.0,        'shape' : (150,),      'offset' : (1,),    'sparray' : True},
+                                 'soffset_spec_imin'    : {'default' : 0,          'shape' : (150,),      'offset' : (1,),    'sparray' : True},
+                                 'soffset_spec_imax'    : {'default' : 0,          'shape' : (150,),      'offset' : (1,),    'sparray' : True},
+                                 'soffset_spec_fac'     : {'default' : 0.0,        'shape' : (150,),      'offset' : (1,),    'sparray' : True},
+                                 'n_phi_lif'            : {'default' : 0,          'shape' : (1000,),     'offset' : (1,),    'sparray' : True},
+                                 'lif_arz'              : {'default' : 0.0,        'shape' : (1000,5,5),  'offset' : (1,0,0), 'sparray' : True},
+                                 'lif_rc'               : {'default' : 0.0,        'shape' : (1000,),     'offset' : (1,),    'sparray' : True},
+                                 'lif_zc'               : {'default' : 0.0,        'shape' : (1000,),     'offset' : (1,),    'sparray' : True},
+                                 'lif_sigma'            : {'default' : 0.001,      'shape' : (1000,),     'offset' : (1,),    'sparray' : True},
+                                 'lif_phi_degree'       : {'default' : 0.0,        'shape' : (1000,1000), 'offset' : (1,1),   'sparray' : True},
+                                 #'lif_on_edge'          : {'default' : False,      'shape' : (1000,),     'offset' : (1,)},
+                                 #'prior_name'           : {'default' : '',         'shape' : (1000,),     'offset' : (1,)},
+                                 #'prior_param_name'     : {'default' : '',         'shape' : (1000,),     'offset' : (1,)},
+                                 'prior_indices'        : {'default' : 0,          'shape' : (1000,2),    'offset' : (1,1),   'sparray' : True},
+                                 #'prior_units'          : {'default' : '',         'shape' : (1000,),     'offset' : (1,)},
+                                 'n_sig_coosig'         : {'default' : 0,          'shape' : (1000,),     'offset' : (1,),    'sparray' : True},
+                                 'coosig_indices'       : {'default' : 0,          'shape' : (1000,100),  'offset' : (1,1),   'sparray' : True},
+                                 'coosig_coeff'         : {'default' : 0.0,        'shape' : (1000,100),  'offset' : (1,1),   'sparray' : True},
+                                 #'coosig_type'          : {'default' : '',         'shape' : (1000,),     'offset' : (1,)},
+                                 #'coosig_name'          : {'default' : '',         'shape' : (1000,),     'offset' : (1,)},
+                                 #'coosig_units'         : {'default' : '',         'shape' : (1000,),     'offset' : (1,)},
+                                 'coosig_wgts_id'       : {'default' : -1,         'shape' : (1000,),     'offset' : (1,),    'sparray' : True},
+                                 'n_gp_signal'          : {'default' : 0,          'shape' : (12,),       'offset' : (1,),    'sparray' : True},
+                                 'gp_signal_indices'    : {'default' : 0,          'shape' : (12,4012),   'offset' : (1,1),   'sparray' : True},
+                                 #'gp_model_type'        : {'default' : '',         'shape' : (12,),       'offset' : (1,)},
+                                 'gp_model_index'       : {'default' : 0,          'shape' : (12,),       'offset' : (1,),    'sparray' : True},
+                                 'gp_param_vrnc'        : {'default' : 0.001,      'shape' : (12,100),    'offset' : (1,1),   'sparray' : True},
+                                 'gp_tolerance'         : {'default' : 1.0E-4,     'shape' : (12,),       'offset' : (1,),    'sparray' : True},
+                                 'gp_cholesky_fact'     : {'default' : 0.0,        'shape' : (12,),       'offset' : (1,),    'sparray' : True}
+                                 })
+
         if 'vmec_nli_filename' in keywords:
             namelist['v3fit_main_nli']['vmec_nli_filename'] = keywords['vmec_nli_filename']
             self.update = True
@@ -180,11 +272,11 @@ class v3fit(Component):
             namelist['v3fit_main_nli']['my_task'] = keywords['my_task']
             self.update = True
             del keywords['my_task']
-        
+
         if len(keywords) > 0:
             self.zip_ref.set_state(state='needs_update')
-        
+
             for key, value in keywords.iteritems():
-                namelist['v3fit_main_nli'][key] = value
+                NamelistItem.set(namelist['v3fit_main_nli'], key, value)
 
         namelist.save()

@@ -2,7 +2,8 @@
 
 #-------------------------------------------------------------------------------
 #
-#  IPS driver for VMEC component. This driver only runs the VMEC component.
+#  IPS driver for ML Train component. This driver only runs the ML Train
+#  component.
 #
 #-------------------------------------------------------------------------------
 
@@ -12,61 +13,62 @@ import os
 
 #-------------------------------------------------------------------------------
 #
-#  VMEC Driver Constructor
+#  ML Train Driver Constructor
 #
 #-------------------------------------------------------------------------------
-class vmec_driver(Component):
+class ml_train_driver(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
 
 #-------------------------------------------------------------------------------
 #
-#  VMEC Driver init method. This method prepairs the namelist input file.
+#  ML Train Driver init method.
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0, **keywords):
-        ScreenWriter.screen_output(self, 'verbose', 'vmec_driver: init')
+        ScreenWriter.screen_output(self, 'verbose', 'ml_train_driver: init')
 
-#  Separate out the vmec keywords.
-        vmec_keywords = {}
-        for key, value in keywords.iteritems():
-            if 'vmec__' in key:
-                vmec_keywords[key.replace('vmec__','',1)] = value
-    
-#  Initialize vmec.
-        self.vmec_port = self.services.get_port('VMEC')
-        self.wait = self.services.call_nonblocking(self.vmec_port, 'init',
-                                                   timeStamp, **vmec_keywords)
-    
+        current_ml_train_state = self.services.get_config_param('CURRENT_ML_TRAIN_STATE')
+        
+#  Initialize ml_train.
+        self.ml_train_port = self.services.get_port('ML_TRAIN')
+        self.wait = self.services.call_nonblocking(self.ml_train_port, 'init',
+                                                   timeStamp, **keywords)
+
+        self.stage_state()
+        with ZipState.ZipState(current_ml_train_state, 'a') as zip_ref:
+            
+
 #-------------------------------------------------------------------------------
 #
-#  VMEC Driver step method. This runs the vmec component.
+#  ML Train Driver step method. This runs the ml_train component.
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        ScreenWriter.screen_output(self, 'verbose', 'vmec_driver: step')
+        ScreenWriter.screen_output(self, 'verbose', 'ml_train_driver: step')
 
-#  Run vmec.
+#  Run ml_train.
         self.services.wait_call(self.wait, True)
-        self.services.call(self.vmec_port, 'step', timeStamp)
-    
+        self.services.call(self.ml_train_port, 'step', timeStamp)
+
 #  Prepare the output files for a super work flow. Need to remove any old output
-#  files first before staging the state.
+#  files first before staging the plasma state.
         if os.path.exists(self.OUTPUT_FILES):
             os.remove(self.OUTPUT_FILES)
         self.services.stage_state()
 
 #  The super flow may need to rename the output file. Check is the current state
-#  matches if output file. If it does not rename the state so it can be staged.
+#  matches if output file. If it does not rename the plasma state so it can be
+#  staged.
         if not os.path.exists(self.OUTPUT_FILES):
-            os.rename(self.services.get_config_param('CURRENT_VMEC_STATE'),
+            os.rename(self.services.get_config_param('CURRENT_ML_TRAIN_STATE'),
                       self.OUTPUT_FILES)
-    
+
 #-------------------------------------------------------------------------------
 #
-#  VMEC Driver finalize method. This cleans up afterwards. Not used.
+#  ML Train Driver finalize method. This cleans up afterwards.
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        ScreenWriter.screen_output(self, 'verbose', 'vmec_driver: finalize')
-        self.services.call(self.vmec_port, 'finalize', timeStamp)
+        ScreenWriter.screen_output(self, 'verbose', 'ml_train_driver: finalize')
+        self.services.call(self.ml_train_port, 'finalize', timeStamp)

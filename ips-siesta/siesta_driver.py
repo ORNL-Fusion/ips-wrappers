@@ -10,6 +10,7 @@ from component import Component
 import os
 import shutil
 from utilities import ZipState
+from utilities import ScreenWriter
 
 #-------------------------------------------------------------------------------
 #
@@ -18,7 +19,6 @@ from utilities import ZipState
 #-------------------------------------------------------------------------------
 class siesta_driver(Component):
     def __init__(self, services, config):
-        print('siesta_driver: Construct')
         Component.__init__(self, services, config)
         self.vmec_worker = {}
     
@@ -28,7 +28,7 @@ class siesta_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0, **keywords):
-        print('siesta_driver: init')
+        ScreenWriter.screen_output(self, 'verbose', 'siesta_driver: init')
     
 #  Separate out the siesta and vmec keywords.
         siesta_keywords = {}
@@ -44,7 +44,7 @@ class siesta_driver(Component):
         self.current_siesta_state = self.services.get_config_param('CURRENT_SIESTA_STATE')
 
 #  We need to pass the inputs to the VMEC child workflow.
-        self.services.stage_plasma_state()
+        self.services.stage_state()
         
         zip_ref = ZipState.ZipState(self.current_siesta_state, 'a')
         zip_ref.extract(current_vmec_state)
@@ -59,6 +59,7 @@ class siesta_driver(Component):
                     'SIM_NAME'         : '{}_vmec'.format(self.services.get_config_param('SIM_NAME')),
                     'USER_INPUT_FILES' : current_vmec_state,
                     'LOG_FILE'         : 'log.vmec.warning',
+                    'OUTPUT_LEVEL'     : self.services.get_config_param('OUTPUT_LEVEL')
                    }
             
             if os.path.exists('vmec_input_dir'):
@@ -84,7 +85,7 @@ class siesta_driver(Component):
         self.services.stage_subflow_output_files()
         zip_ref.write(current_vmec_state)
         zip_ref.close()
-        self.services.update_plasma_state()
+        self.services.update_state()
 
 #  Initialize SIESTA.
         self.wait = self.services.call_nonblocking(self.siesta_port, 'init',
@@ -96,20 +97,20 @@ class siesta_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        print('siesta_driver: step')
+        ScreenWriter.screen_output(self, 'verbose', 'siesta_driver: step')
 
 #  Run SIESTA.
         self.services.wait_call(self.wait, True)
         self.services.call(self.siesta_port, 'step', timeStamp)
 
 #  Prepare the output files for a super work flow. Need to remove any old output
-#  files first before staging the plasma state.
+#  files first before staging the state.
         if os.path.exists(self.OUTPUT_FILES):
             os.remove(self.OUTPUT_FILES)
-        self.services.stage_plasma_state()
+        self.services.stage_state()
 
 #  The super flow may need to rename the output file. Check is the current state
-#  matches if output file. If it does not rename the plasma state so it can be
+#  matches if output file. If it does not rename the state so it can be
 #  staged.
         if not os.path.exists(self.OUTPUT_FILES):
             os.rename(self.current_siesta_state, self.OUTPUT_FILES)
@@ -120,7 +121,7 @@ class siesta_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('siesta_driver: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'siesta_driver: finalize')
 
         self.wait = [
                      self.services.call_nonblocking(self.vmec_worker['init'], 'finalize', timeStamp),

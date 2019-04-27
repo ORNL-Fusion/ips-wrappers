@@ -8,6 +8,7 @@
 
 from component import Component
 from utilities import ZipState
+from utilities import ScreenWriter
 import os
 
 #-------------------------------------------------------------------------------
@@ -17,7 +18,6 @@ import os
 #-------------------------------------------------------------------------------
 class quasi_newton_init(Component):
     def __init__(self, services, config):
-        print('quasi_newton_init: Construct')
         Component.__init__(self, services, config)
 
 #-------------------------------------------------------------------------------
@@ -26,36 +26,33 @@ class quasi_newton_init(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
-        print('quasi_newton_init: init')
+        ScreenWriter.screen_output(self, 'verbose', 'quasi_newton_init: init')
     
 #  Get config filenames.
         current_model_state = self.services.get_config_param('MODEL_INPUT')
         quasi_newton_config = self.services.get_config_param('QUASI_NEWTON_CONFIG')
         current_quasi_newton_state = self.services.get_config_param('CURRENT_QUASI_NEWTON_STATE')
 
-#  State input files. Remove old files if they exist.
-        if os.path.exists(current_model_state):
-            os.remove(current_model_state)
-        if os.path.exists(quasi_newton_config):
-            os.remove(quasi_newton_config)
-        if os.path.exists(current_quasi_newton_state):
-            os.remove(current_quasi_newton_state)
+#  Remove old inputs. Stage input files.
+        for file in os.listdir('.'):
+            os.remove(file)
+
         self.services.stage_input_files(self.INPUT_FILES)
 
-#  Create plasma state from files.
+#  Create state from files.
         with ZipState.ZipState(current_quasi_newton_state, 'a') as zip_ref:
             zip_ref.write(quasi_newton_config)
             zip_ref.write(current_model_state)
 
-        self.services.update_plasma_state()
+        self.services.update_state()
 
 #-------------------------------------------------------------------------------
 #
-#  QUASI-NEWTON Init step method. This runs the vmec component.
+#  QUASI-NEWTON Init step method.
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        print('quasi_newton_init: step')
+        ScreenWriter.screen_output(self, 'verbose', 'quasi_newton_init: step')
 
 #-------------------------------------------------------------------------------
 #
@@ -63,4 +60,4 @@ class quasi_newton_init(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('quasi_newton_init: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'quasi_newton_init: finalize')

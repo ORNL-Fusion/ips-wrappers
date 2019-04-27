@@ -23,16 +23,16 @@ c.......................................................................
 
       character*8
      1  chang,
-     1  eqmod,eleccomp,
+     1  eqmod,eleccomp,f4d_out,tavg,
      1  iactst,ineg,idrop,idskf,idskrf,ichkpnt,implct,
      1  lbdry0,locquas,lrzdiff,lsdiff,taunew,
      1  machine,meshy,manymat,
      1  netcdfvecal,netcdfvecc,netcdfvece,netcdfvecrf,netcdfvecs,
      1  noplots,
-     1  psimodel,pltpowe,pltend,pltinput,pltlim,
+     1  psimodel,pltpowe,pltend,pltinput,pltlim,pltrdc,
      1  pltrst,plturfb,pltvflu,pltra,pltfvs,pltd,pltprpp,pltfofv,pltlos,
      1  pltdn,pltvecal,pltvecc,pltvecrf,pltvece,pltstrm,pltflux,
-     1  pltsig,
+     1  pltsig,pltdnpos,
      1  profpsi,
      1  qsineut,trapmod,scatmod,
      1  relativ,sigmamod,soln_method,
@@ -51,9 +51,9 @@ c.......................................................................
       common /readscal/
      1  btor,bth,
      1  contrmin,constr,chang,colmodl,
-     1  deltabdb,droptol,dtr,dtr0,
+     1  deltabdb,droptol,dtr,dtr0,xsink,
      1  esink,ephicc,esfac,eoved,enorm,enorme,enormi,eleccomp,
-     1  eqmod,
+     1  eqmod, f4d_out,tavg,
      1  gsla,gslb,gamaset,gamafac,
      1  iactst,ineg,idrop,idskf,idskrf,ichkpnt,implct,
      1  isigtst,isigsgv1,isigsgv2,
@@ -70,11 +70,11 @@ c.......................................................................
      1  nstop,ncoef,nchec,ncont,nrstrt,nstps,nfpld,
      1  noncntrl,nonel,noffel,nonvphi,noffvphi,nonloss,noffloss,
      1  numby,lnwidth,noplots,nmlstout,
-     1  psimodel,pltpowe,pltend,pltinput,pltlim,pltlimm,
+     1  psimodel,pltpowe,pltend,pltinput,pltlim,pltlimm,pltrdc,
      1  pltrst,plturfb,pltvflu,pltra,pltfvs,pltd,pltprpp,pltfofv,pltlos,
      1  pltdn,pltvecal,pltvecc,pltvecrf,pltvece,
      1  pltstrm,pltflux,pltmag,pltsig,profpsi,
-     1  xprpmax,
+     1  pltdnpos,xprpmax,
      1  qsineut,trapmod,trapredc,scatmod,scatfrac,
      1  radmaj,radmin,rmirror,relativ,
      1  sigvi,sigmamod,sigvcx,soln_method,
@@ -104,7 +104,7 @@ c..................................................................
      1  lbdry,lossmode,
      1  regy,
      1  torloss,
-     1  difus_type
+     1  difus_type,difus_io
 
       character*256  lossfile
 
@@ -128,7 +128,8 @@ c..................................................................
      1  xjc(nbctimea),xjb(nbctimea),
      1  totcrt(nbctimea),
      1  nplot(nplota),
-     1  difus_type(ngena)
+     1  difus_type(ngena),difus_io(ngena),
+     1  tavg1(ntavga),tavg2(ntavga)
 
 c..................................................................
 c     TWO DIMENSIONAL NAMELIST SETUP COMMON BLOCK.....
@@ -175,7 +176,7 @@ c..................................................................
 
       common /diskx/
      1  tauegy(ngena,0:lrza),eparc(ngena,0:lrza),
-     1  eperc(ngena,0:lrza),
+     1  eperc(ngena,0:lrza),simpbfac,
      1  isoucof,faccof
 
 c..................................................................
@@ -232,8 +233,9 @@ c*****************************************************************
       character*8
      1  urfmod,
      1  vlfmod,vlfbes,vlfnpvar,vlhmod,vprprop,vlhplse,vlhprprp,
-     1  rfread,rdcmod,rdc_clipping
+     1  rfread,rdcmod,rdc_clipping,rdc_netcdf
       character*256 rffile
+      character*256 rdcfile
 
       common /params/
      1  nrf
@@ -242,7 +244,7 @@ c*****************************************************************
      1  vlhplse,vlhpon,vlhpoff,
      1  vlfmod,vlfmodes,
      1  vlfbes,vlfnpvar,rdc_upar_sign,
-     1  rfread,rdcmod,rdc_clipping
+     1  rfread,rdcmod,rdc_clipping,rdc_netcdf
 
       common /readvec/
      1  nonrf(ngena),noffrf(ngena),
@@ -256,7 +258,8 @@ c*****************************************************************
      1  vlfnperp(nmodsa),vlfdnorm(nmodsa),
      1  vlfparmn(nmodsa),vlfparmx(nmodsa),
      1  vlfprpmn(nmodsa),vlfprpmx(nmodsa),
-     1  rffile(nmodsa)
+     1  rffile(nmodsa),
+     1  rdcfile(nrdca)
 
 
 
@@ -273,6 +276,13 @@ c..................................................................
      1  nplt3d(nplota)
 
       common/arr3d/
+     1  enein_t(njenea,ntotala,nbctimea),tein_t(njenea,nbctimea),
+     1  tiin_t(njenea,nbctimea),zeffin_t(njenea,nbctimea),
+     1  elecin_t(njenea,nbctimea),xjin_t(njenea,nbctimea),
+     1  vphiplin_t(njenea,nbctimea), 
+     1  ennin_t(njenea,nbctimea,npaproca) !neutrals,impurities,etc.
+
+      common/arr3d/
      1  sellm1z(ngena,nsoa,0:lrza),sellm2z(ngena,nsoa,0:lrza),
      1  seppm1z(ngena,nsoa,0:lrza),sem1z(ngena,nsoa,0:lrza),
      1  sem2z(ngena,nsoa,0:lrza),sthm1z(ngena,nsoa,0:lrza),
@@ -285,6 +295,7 @@ c****************************************************************
 c     BEGIN arrays for 3-d (td..) driver.
 c****************************************************************
 
+      common/params/ ndifus_io_t  !Max to be nbctimea
 
 c..................................................................
 c     scalars in input
@@ -292,22 +303,25 @@ c..................................................................
 
       character*8
      1  bootst,bootcalc,bootupdt,
-     1  iprone,iprote,iproti,iprozeff,iprovphi,iproelec,ipronn,
+     1  iprone,iprote,iproti,iprozeff,iprovphi,iproelec,ipronn,iprocur,
      1  tmdmeth,partner,pinch,plt3d,pltvs,radcoord,
      1  relaxtsp,rzset,
      1  ndeltarho,softxry,npa_diag,atten_npa,
      1  transp,adimeth,
      1  efswtch,efswtchn,efiter,efflag,npa_process
 
+      character*256 difus_io_file
+
       common /s3d/
-     1  difusr,advectr,
+     1  difusr,advectr,difus_io_file,
      1  enmin,enmax,bootst,bootcalc,bootupdt,bootsign,pinch,
      1  fds,
-     1  iprone,iprote,iproti,iprozeff,iprovphi,iproelec,ipronn,
+     1  iprone,iprote,iproti,iprozeff,iprovphi,iproelec,ipronn,iprocur,
      1  tmdmeth,kfrsou,
      1  mmsv,msxr,njene,njte,njti,nonboot,jhirsh,
      1  nrskip,nen,nv,nen_npa,nv_npa,npaproc,
      1  nr_delta,nz_delta,nt_delta,
+     1  nr_f4d,nz_f4d,nv_f4d,nt_f4d,
      1  plt3d,pltvs,partner,radcoord,
      1  rfacz,rzset,roveram,relaxden,relaxtsp,
      1  ndeltarho,softxry,npa_diag,
@@ -321,9 +335,10 @@ c..................................................................
      1  difus_rshape(8),difus_vshape(4),difin(njenea),
      1  rd(nva),thetd(nva),x_sxr(nva),z_sxr(nva),
      1  rd_npa(nva),thetd_npa(nva),x_npa(nva),z_npa(nva),
-     1  npa_process(npaproca)
-
-
+     1  npa_process(npaproca),
+     1  difus_io_drrscale(nbctimea,ngena), 
+     1  difus_io_drscale(nbctimea,ngena),
+     1  difus_io_t(nbctimea)
 
 c******************************************************************
 c     BEGIN arrays for EQUILIBRIUM MODEL (eq..) (NON-CIRCULAR CROSS
@@ -378,7 +393,8 @@ c*********************************************************************
      1  nbssltbl,nondamp,nrfstep2,
      1  nrfpwr,nrfitr1,nrfitr2,nrfitr3,
      1  scaleurf,urfrstrt,urfwrray,
-     1  urfdmp,urfmult
+     1  urfdmp,urfmult,
+     1  nrdc
 
       common/readvec/
      1  pwrscale(nmodsa),wdscale(nmodsa),nrfstep1(nmodsa),
@@ -388,6 +404,10 @@ c*********************************************************************
       common/readvec/
      1  pwrscale1(nbctimea),urftime(nbctimea)
 
+      common/readvec/
+     1  rdcscale(nrdca),nrdcspecies(nrdca)
+
+
 c-----------------------------------------------------------------------
 c     BEGIN variables for WP... modules for CQLP case
 c-----------------------------------------------------------------------
@@ -395,7 +415,7 @@ c-----------------------------------------------------------------------
       character*8  
      1  special_calls,cqlpmod,
      1  oldiag,
-     1  sbdry,scheck,eseswtch,
+     1  sbdry,scheck,ampfmod,eseswtch,
      1  updown
 
 c      logical
@@ -415,8 +435,8 @@ c      logical
      1  nontran, nofftran, nonelpr, noffelpr,
      1  nlrestrt,nlwritf,nummods,numixts,
      1  oldiag,
-     1  sbdry,scheck,eseswtch,
-     1  updown
+     1  sbdry,scheck,ampfmod,eseswtch,
+     1  updown,ampferr,nampfmax,nonampf
 
       common /readvec/
      1  denpar(ntotala,0:lza+1),
@@ -429,39 +449,30 @@ c      logical
 c.......................................................................
 c     Setup block for finite orbit width (FOW) calculations
 c.......................................................................
-
       character*8  fow
       character*16 outorb 
       character*38 file_fow_plt ! for saving data on orbit to a file
-      
       common/fow_control/fow,outorb,file_fow_plt, nmu,npfi,
      +                  nsteps_orb,nptsorb,i_orb_width,iorb2,
      +  j0_ini,j0_end,inc_j0, i0_ini,i0_end,inc_i0,
      +  j2_ini,j2_end,inc_j2, i2_ini,i2_end,inc_i2
-      
       ! fow= 'enabled' or 'disabled' 
-      
       ! outorb  ! 'detailed' or 'Not-detailed'
                 ! (saving/not-saving data to a file for plotting)  
-
       ! nmu     ! grid sizes for ad.ivariant mu 
       ! npfi    ! and canonical momentum Pfi; 
                 ! to setup COM->R lookup table.
-
       ! nsteps_orb ! Max.number of time steps for orbit integration.
                 ! Also used to trace Pfi=const levels for COM->R table
                 ! in order to find intersections with mu=const levels.
-      
       ! nptsorb ! Number of points on a complete orbit 
                 ! (ityp=0 "main" orbit)
                 ! from which ityp=1 "secondary" orbits are launched.
                 ! ityp=1 orbit is stopped when it reaches the midplane.
                 ! (Note: secondary orbits are not traced usually, 
                 ! see below, iorb2=0)
-
       ! i_orb_width ! 1 -> Normal finite-orbit-width calculations. 
                     ! 0 -> V_drift_perp is set to 0 (ZOW approximation)
-   	                     
       ! iorb2  ! set to 1 to perform Runge-Kutta integration for tracing
                ! SECONDARY orbits to midplane; 0 - no RK tracing.
                ! This option (1) can be used for plotting orbits

@@ -8,11 +8,6 @@ implemented for ECH, so far.
 """
 
 # Working notes:
-# 3/18/2019 DBB
-# Code to update state files in plasma_state work directory, but only cur_dql_file
-# if there is one. This way it will not overwrite the current partial plasma state that
-# was just merged
-
 
 # 9/3/2018 DBB
 # This version is adapted from the previous version genray_EC_p.py.  It retains the
@@ -129,7 +124,6 @@ from  component import Component
 from Numeric import *
 from netCDF4 import *
 from simple_file_editing_functions import get_lines, put_lines, edit_nml_file
-from get_IPS_config_parameters import get_global_param, get_component_param
 
 class genray(Component):
     def __init__(self, services, config):
@@ -299,26 +293,25 @@ class genray(Component):
         global programming, times_parameters_list
         
     # Get global configuration parameters
-        cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
-        cur_eqdsk_file = get_global_param(self, services, 'CURRENT_EQDSK')
-        cql_file = get_global_param(self, services, 'CURRENT_CQL', optional = True)
-        dql_file = get_global_param(self, services, 'CURRENT_DQL', optional = True)
+        cur_state_file = self.get_global_param(services, 'CURRENT_STATE')
+        cur_eqdsk_file = self.get_global_param(services, 'CURRENT_EQDSK')
+        cql_file = self.get_global_param(services, 'CURRENT_CQL', optional = True)
 
     # Get component-specific configuration parameters. Note: Not all of these are
     # used in 'init' but if any are missing we get an exception now instead of
     # later
-        NPROC = get_component_param(self, services, 'NPROC')
-        BIN_PATH = get_component_param(self, services, 'BIN_PATH')
-        INPUT_FILES = get_component_param(self, services, 'INPUT_FILES')
-        OUTPUT_FILES = get_component_param(self, services, 'OUTPUT_FILES')
-        RESTART_FILES = get_component_param(self, services, 'RESTART_FILES')
-        BIN_PATH = get_component_param(self, services, 'BIN_PATH')
-        GENRAY_BIN = get_component_param(self, services, 'GENRAY_BIN')
-        RFMODE = get_component_param(self, services, 'RFMODE')
-        ISOURCE_STRING = get_component_param(self, services, 'ISOURCE_STRING')
-        GENRAYNML = get_component_param(self, services, 'GENRAYNML')
-        ADJ_READ = get_component_param(self, services, 'ADJ_READ')
-        PS_ADD_NML = get_component_param(self, services, 'PS_ADD_NML')
+        NPROC = self.get_component_param( services, 'NPROC')
+        BIN_PATH = self.get_component_param( services, 'BIN_PATH')
+        INPUT_FILES = self.get_component_param( services, 'INPUT_FILES')
+        OUTPUT_FILES = self.get_component_param( services, 'OUTPUT_FILES')
+        RESTART_FILES = self.get_component_param( services, 'RESTART_FILES')
+        BIN_PATH = self.get_component_param( services, 'BIN_PATH')
+        GENRAY_BIN = self.get_component_param( services, 'GENRAY_BIN')
+        RFMODE = self.get_component_param( services, 'RFMODE')
+        ISOURCE_STRING = self.get_component_param( services, 'ISOURCE_STRING')
+        GENRAYNML = self.get_component_param( services, 'GENRAYNML')
+        ADJ_READ = self.get_component_param( services, 'ADJ_READ')
+        PS_ADD_NML = self.get_component_param( services, 'PS_ADD_NML')
 
         # Get [rf_genray_EC] programming configuration parameters, if present
         n_launchers = 0
@@ -543,45 +536,36 @@ class genray(Component):
 
 # Check if RF power is zero (or effectively zero).  If true don't run GENRAY just
 # run zero_RF_power fortran code
-        zero_rf_power_threshold = 0.001
         print 'cur_state_file = ', cur_state_file
         ps = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
         if rfmode == 'EC':
-            rf_power = ps.variables['power_ec'][:]
+            power_ec = ps.variables['power_ec'][:]
             ps.close()
-            total_rf_power = sum(rf_power)
-            print 'Total EC power = ', total_rf_power
-            zero_rf_power_bin_string = 'ZERO_EC_POWER_BIN'
-
-        # If EC parameters are programmed from config file, set parameters in genray.in
-            if programming == True:
-                # Get t0 from plasma state
-                ps = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
-                t0 = ps.variables['t0'].getValue()
-                ps.close()
-                # set parameters those for time = t0
-                self.set_genray_EC_parameters("genray.in", t0, times_parameters_list)
-            
-        if rfmode == 'LH':
-            rf_power = ps.variables['power_lh'][:]
+            print 'Total EC power = ', sum(power_ec)
+            if(sum(power_ec) < 0.001):
+                zero_RF_EC_power = get_component_param(self, services, 'ZERO_EC_POWER_BIN')
+                retcode = subprocess.call([zero_RF_EC_power, cur_state_file])
+                if (retcode != 0):
+                    print 'Error executing zero_RF_EC_power '
+                    self.services.error('Error executing zero_RF_EC_power')
+                    raise Exception, 'Error executing zero_RF_EC_power'
+        elif rfmode == 'LH':
+            power_lh = ps.variables['power_lh'][:]
             ps.close()
-            total_rf_power = sum(rf_power)
-            print 'Total LH power = ', total_rf_power
-            zero_rf_power_bin_string = 'ZERO_LH_POWER_BIN'
+            print 'Total LH power = ', sum(power_lh)
+            if(sum(power_ec) < 0.001):
+                zero_RF_LH_power = get_component_param(self, services, 'ZERO_LH_POWER_BIN')
+                retcode = subprocess.call([zero_RF_LH_power, cur_state_file])
+                if (retcode != 0):
+                    print 'Error executing zero_RF_LH_power '
+                    self.services.error('Error executing zero_RF_LH_power')
+                    raise Exception, 'Error executing zero_RF_LH_power'                 
+            else:
+                message = 'rf_genray.py: Unimplemented rfmode = ' + RFMODE
+                print message
+                services.exception(message)
+                raise
 
-        if rfmode not in ['EC', 'LH']:
-            message = 'rf_genray.py: Unimplemented rfmode = ' + rfmode
-            print message
-            services.exception(message)
-            raise
-
-        if(total_rf_power < zero_rf_power_threshold):
-            zero_RF_power = get_component_param(self, services, zero_rf_power_bin_string)
-            retcode = subprocess.call([zero_RF_power, cur_state_file])
-            if (retcode != 0):
-                message =  'Error executing ',zero_rf_power_bin
-                self.services.error(message)
-                raise Exception, message
 
             # N.B. zero_RF_power does not produce a complete set of GENRAY output
             #      files.  This causes an error in stage_output_files().  To
@@ -591,7 +575,7 @@ class genray(Component):
                 subprocess.call(['touch', file])
 
     # Or actually run GENRAY
-        if(total_rf_power > zero_rf_power_threshold):
+        else:
             # Call prepare_input - step
             print 'rf_genray step: calling prepare_input'
         
@@ -610,6 +594,15 @@ class genray(Component):
                 print 'Error executing genray: ', prepare_input_bin
                 services.error('Error executing genray prepare_input')
                 raise Exception, 'Error executing genray prepare_input'
+
+        # If parameters are programmed from config file set parameters in genray.in
+            if programming == True:
+                # Get t0 from plasma state
+                ps = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
+                t0 = ps.variables['t0'].getValue()
+                ps.close()
+                # set parameters those for time = t0
+                self.set_genray_EC_parameters("genray.in", t0, times_parameters_list)
         
     #     Launch genray - N.B: Path to executable is in config parameter GENRAY_BIN
             print 'rf_genray: launching genray'
@@ -639,12 +632,9 @@ class genray(Component):
                 services.error('Error executing genray process_output')
                 raise Exception, 'Error executing genray process_output'
         
-    # Copy generic genray output to  partial plasma state file
+    # Copy generic genray partial plasma state file -> EC_cur_state_file
         try:
-            cwd = services.get_working_dir()
             partial_file = cwd + '/RF_EC_' + cur_state_file
-            if rfmode == 'LH':
-                partial_file = cwd + '/RF_LH_' + cur_state_file
             shutil.copyfile('RF_GENRAY_PARTIAL_STATE', partial_file )
         except IOError, (errno, strerror):
             print 'Error copying file %s to %s' % ('cur_state.cdf', cur_state_file), strerror
@@ -659,19 +649,6 @@ class genray(Component):
             print 'Error in call to merge_current_plasma_state(' , partial_file, ')'
             self.services.error('Error in call to merge_current_plasma_state')
             raise Exception, 'Error in call to merge_current_plasma_state'
-
-      # Update plasma state files in plasma_state work directory, but only cur_dql_file
-      # if there is one. This way it will not overwrite the current partial plasma state that
-      # was just merged
-        dql_file = get_global_param(self, services, 'CURRENT_DQL', optional = True)
-        try:
-            if dql_file != None:
-                services.update_plasma_state([dql_file])
-        except Exception:
-            logMsg = 'Error in call to update_plasma_state ' + cur_dql_file
-            self.services.exception(logMsg)
-            raise 
-        
             
     # Archive output files
         try:
@@ -712,3 +689,45 @@ class genray(Component):
 
     def finalize(self, timestamp=0.0):
         print 'genray.finalize() called'
+# ------------------------------------------------------------------------------
+#
+# "Private"  methods
+#
+# ------------------------------------------------------------------------------
+
+
+    # Try to get config parameter - wraps the exception handling for get_config_parameter()
+    def get_global_param(self, services, param_name, optional=False):
+
+        try:
+            value = services.get_config_param(param_name)
+            print param_name, ' = ', value
+        except Exception:
+            if optional: 
+                print 'optional config parameter ', param_name, ' not found'
+                value = None
+            else:
+                message = 'required config parameter ', param_name, ' not found'
+                print message
+                services.exception(message)
+                raise
+        
+        return value
+
+    # Try to get component specific config parameter - wraps the exception handling
+    def get_component_param(self, services, param_name, optional=False):
+
+        if hasattr(self, param_name):
+            value = getattr(self, param_name)
+            print param_name, ' = ', value
+        elif optional:
+            print 'optional config parameter ', param_name, ' not found'
+            value = None
+        else:
+            message = 'required component config parameter ', param_name, ' not found'
+            print message
+            services.exception(message)
+            raise
+        
+        return value
+
