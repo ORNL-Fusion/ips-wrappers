@@ -195,10 +195,11 @@ driver['LOOP_TIME_STEP']))
 
 
         ### GITR RELATED PARAMETERS ###
-        
+
+        print('read GITR parameters (from file) : {}\n'.format(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE))
         self.gitr = {} #xolotl_param_handler.xolotl_params()
         self.gitr=param_handler.read(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE)
-        print('read GITR parameters (from file) : {}\n'.format(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE))
+        #print('read GITR parameters (from file) : {}\n'.format(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE))
 
         for k,v, in self.gitr.iteritems():
             print('{0} : {1}'.format(k, v))
@@ -276,7 +277,8 @@ driver['LOOP_TIME_STEP']))
         #other parameters
         self.spYield=[]
         self.rYield=[]
-        self.yieldMode=[]        
+        self.spYieldMode=[]        
+        self.rYieldMode=[]
         self.maxRangeXolotl=[]
         #files
         #given as string of 4 (name for W, He, D and T) -> split into list
@@ -331,10 +333,15 @@ driver['LOOP_TIME_STEP']))
             print ' '
             #AND MAYBE SOMETHING SIMILAR WITH ENERGIES?
 
-            if self.spYield[i]<0 or self.rYield[i]<0:
-                self.yieldMode.append('calculate')                
+            if self.spYield[i]<0:
+                self.spYieldMode.append('calculate')                
             else:
-                self.yieldMode.append('fixed')
+                self.spYieldMode.append('fixed')
+
+            if self.rYield[i]<0:
+                self.rYieldMode.append('calculate')
+            else:
+                self.rYieldMode.append('fixed')
 
             #FTRIDYN FILES
             #prepare input files; i.e., those transferred from FT init (generateInput) to FT step (run code)
@@ -579,8 +586,9 @@ driver['LOOP_TIME_STEP']))
                     print ' '
                     yields=get_yields.sputtering_and_reflection(ftridynOneOutOutput=ft_output_file, ftridynFolder=angleFolder, fNImpacts=self.ftridyn['nImpacts'], angle=self.angleIn[i], weightAngle=self.weightAngle[i], logFile=outFile)
                     #overwrite spY value if mode is 'calculate'
-                    if self.yieldMode[i]=='calculate':
+                    if self.spYieldMode[i]=='calculate':
                         self.spYield[i]=float(yields[0])
+                    if self.rYieldMode[i]=='calculate':
                         self.rYield[i]=float(yields[1])
 
                     #4) save tridyn.dat
