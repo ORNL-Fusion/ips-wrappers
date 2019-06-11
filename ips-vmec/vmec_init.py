@@ -8,7 +8,9 @@
 #-------------------------------------------------------------------------------
 
 from component import Component
-import shutil
+from utilities import ZipState
+from utilities import ScreenWriter
+import os
 
 #-------------------------------------------------------------------------------
 #
@@ -17,28 +19,37 @@ import shutil
 #-------------------------------------------------------------------------------
 class vmec_init(Component):
     def __init__(self, services, config):
-        print('vmec_init: Construct')
         Component.__init__(self, services, config)
 
 #-------------------------------------------------------------------------------
 #
-#  VMEC init Component init method. This method prepairs the namelist input
-#  file and creates a dummy out put file. This allows staging the plasma state
-#  files.
+#  VMEC init Component init method. This method prepairs the state. Input files
+#  can either be a new namelist input, a new state, or both.
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
-        print('vmec_init: init')
+        ScreenWriter.screen_output(self, 'verbose', 'vmec_init: init')
 
+#  Get config filenames.
+        current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
+        current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
+        
+#  Remove old inputs. Stage input files.
+        for file in os.listdir('.'):
+            os.remove(file)
+        
         self.services.stage_input_files(self.INPUT_FILES)
         
-        current_vmec_namelist = self.services.get_config_param('CURRENT_VMEC_NAMELIST')
-        shutil.copyfile(self.INPUT_FILES, current_vmec_namelist)
-        
-#  Create a dummy wout file so the plasma state has something to update to.
-        open(self.services.get_config_param('CURRENT_VMEC_WOUT_FILE'), 'a').close()
-        
-        self.services.update_plasma_state()
+#  Create state from files. Input files can either be a new state, namelist
+#  input file or both. If both file were staged, replace the namelist input
+#  file. If the namelist file is present flag the state as needing to be
+#  updated.
+        with ZipState.ZipState(current_vmec_state, 'a') as zip_ref:
+            if os.path.exists(current_vmec_namelist):
+                zip_ref.write(current_vmec_namelist)
+                zip_ref.set_state(state='needs_update')
+                    
+        self.services.update_state()
 
 #-------------------------------------------------------------------------------
 #
@@ -46,7 +57,7 @@ class vmec_init(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        print('vmec_init: step')
+        ScreenWriter.screen_output(self, 'verbose', 'vmec_init: step')
 
 #-------------------------------------------------------------------------------
 #
@@ -54,4 +65,4 @@ class vmec_init(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('vmec_init: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'vmec_init: finalize')

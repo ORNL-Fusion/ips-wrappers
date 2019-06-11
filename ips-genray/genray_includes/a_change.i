@@ -9,9 +9,208 @@ c
 c
 c***********************************************************************
 
+c[192] version="genray_v10.12_180912"
+c[192] Fixed bugs related to MPI implementation 
+c[192] of ADJ-related subroutines (i_adj=1).
+c[192] The bugs resulted in zero current. 
+c[192] With this fix, the file 'adjout' (usually a large file)
+c[192] is only recordered by one core (myrank=0), and 
+c[192] read also by one core, and then MPI-broadcasted to other cores.
+c[192] See "write (iout5,...)" and "read (iout5,...)".
+c[192] YuP[2018-09-12].
+
+c[191] Fixed an argument list dimensioning in call to
+c[191] lh_bonoli_disp.f, which made no change in results for test7.1
+c[191] of this dispersion relation.  [BH180620]
+
+c[190] version="genray_v10.12_180529"
+c[190] Reversed changes made in [187]. 
+In the manual, the two cold plasma roots N**2 
+(for dispersion id=2) are described as
+N2p= (-B +sqrt(B^2-4AC))/(2A)      (4.12a) 
+N2m= (-B -sqrt(B^2-4AC))/(2A)      (4.12b) 
+In the code, these equations are modified by
+multiplying each of A,B,C coeffs by a resonance 
+delta=(1-Y) factor (where Y=omega_c/omega)
+which cancels out with corresponding 1/(1-Y), so that
+a=A*delta, b=B*delta, c=C*delta do not contain 
+the diverging 1/(1-Y) factor (either at ECR or ICR).
+Then the equations (4.12) should cast into
+N2p= (-b +sign_del*sqrt(b^2-4ac))/(2a)      
+N2m= (-b -sign_del*sqrt(b^2-4ac))/(2a) 
+or, in general form,  
+N^2= (-b +ioxm*sign_del*sqrt(b^2-4ac))/(2a) 
+where sign_del= sign of (1-Y), and ioxm=+1 or -1.
+The sign of (1-Y) changes across the corresponding resonance
+(across ECR when ib=1, or across ICR 
+when ib=2 or some other value>1).
+In the code, the sign_del factor is omitted, 
+which looks like an error.
+However, a detailed analysis shows that 
+when sign_del is included,
+the solution (root) jumps from one branch to another
+after crossing the corresponding Y=1 resonance.
+So, it is better to keep it in the original form:
+N^2= (-b +ioxm*sqrt(b^2-4ac))/(2a)
+At the same time, it is important to keep in mind that
+the selection between two branches for N^2 depends on both 
+the value of ioxm and the value of ib.
+In general, for ECR frequency range, we should set ib=1.
+Then, ioxm=-1 selects the X-mode, and ioxm=+1 selects the O-mode.
+[But notice that if you keep ib=1 and go to the ICR range,
+there is a jump (switching) between ioxm=+1 
+and -1 branches across the ICR layer.]
+For the ICR region, we should set ib=2 
+(or corresponding ion species in case of nbulk>2).
+Then, ioxm=-1 selects the Fast wave, 
+and ioxm=+1 selects the Slow wave.
+[But notice that if you keep ib=2 and go to ECR range,
+there is a jump (switching) between ioxm=+1 
+and -1 branches across the ECR layer.]
+The most difficult is the case of omega_ci<omega<omega_ce.
+Both ib=1 and ib=2 could be selected, 
+if none of EC or IC resonances are accessible.
+However, depending on ib value, the ioxm value 
+corresponds to different branches.
+So, in applications like LH, Helicon or whistler waves
+it is advised to try different ib values,
+and try both ioxm=-1 and +1 cases,
+then compare the initial Nperp^2 values.
+Example of wave launch in LH frequency range,
+at omega_ce/omega ~ 20-30,
+omega_ci/omega ~ 0.005-0.008,
+and (omega_pe/omega)^2 ~ 100-700:
+The LH (Slow wave with large nperp~20-40) can be launched with
+  {ib=2, ioxm_n_npar=+1} 
+[ioxm value is not important when ioxm_n_npar is not 0] 
+or 
+  {ib=2, ioxm=-1}  [ioxm_n_npar should be set to 0].
+The Fast wave (smaller nperp~5-10) can be launched with
+  {ib=2, ioxm_n_npar=-1} [and ioxm value is not important] or 
+  {ib=1, ioxm=+1}  [ioxm_n_npar should be set to 0].
+
+c[189] Changed the STOP command in subr. GRPDE2, 
+c[189] when 'nper2 is too negative' (related to calc. 
+c[189] of group velocity) to setting vgrpdc=0.d0.
+c[189] It will stop the ray, but would not halt the run 
+c[189] as with the STOP command. This is particularly important 
+c[189] in MPI runs, when a STOP generated at one CPU core
+c[189] effectively hangs the run - other cores 
+c[189] (having no STOP for their rays) are waiting 
+c[189] until the wall time runs out.
+c[189] Also added ibmx=min(ib,nbulk) - 
+c[189] a safety check, not to exceed nbulk.
+c[189] YuP[2018-05-23]
+
+
+c[188] version="genray_v10.10_180518"
+
+c[188] Added a namelist variables for control/suppressing of printout,
+c[188] saving data and saving plots:
+c[188]  outnetcdf (to suppress writing data to *.nc)
+c[188]  outprint (to suppress printing to the screen)
+c[188]  outxdraw (to suppress saving files for xdraw).
+c[188] Many lines with printout are permanently commented out,
+c[188] which were used for debugging printout. For example, 
+c[188] see lines that start with 'cyup' in dinit.f. 
+c[188] Also added more detailed printout of cpu time spent
+c[188] in different parts of the code, like cpu_time(time_drkgs2_2).
+c[188] YuP[2018-01-17] 
+
+
+c[187] A problem noticed and fixed by YuP[07-2017] (later adjusted).
+c[187] In equation for the two roots [Eqn. numbers refer to Genray manual],    
+c[187]	    N2p=(-B +sqrt(B^2-4AC))/(2A)      (4.12a) (O)
+c[187]	    N2m=(-B -sqrt(B^2-4AC))/(2A)      (4.12b) (X)
+c[187] the sign in front of sqrt() [defined as ioxm] determines the mode: 
+c[187] '+' is for O-mode, '-' is for X-mode .
+c[187] However, after A,B,C are mult-ed by delib=(1-Yib) factor,
+c[187] to eliminate the resonance denominator in eps1 and eps2,
+c[187] the result depends on the sign of delib=(1-Yib).
+c[187] If (1-Yib) is positive, nothing changes 
+c[187] in correspondence of ioxm=+/-1 and the two modes. 
+c[187] But for the negative (1-Yib), e.g. (1-Yib)=-1, we get
+c[187]    (-b +ioxm*sqrt(b^2-4ac))/(2a) = [use a=(1-Yib)*A= -A, etc] 
+c[187]  = (+B +ioxm*sqrt(B^2-4AC))/(-2A)= 
+c[187]  = (-B -ioxm*sqrt(B^2-4AC))/(+2A)
+c[187] Thus, for ioxm=+1, we are getting the branch (4.12b), 
+c[187] which is the X mode. The meaning of modes is reversed !
+c[187] To correct this problem, we simply need to further adjust 
+c[187] the a,b,c cofficients:
+c[187]    sign_delib=sign(1.d0,delib) 
+c[187]    a=a*sign_delib 
+c[187]    b=b*sign_delib 
+c[187]    c=c*sign_delib 
+c[187] So, effectively, we use a=|1-Yib|*A, etc.
+c[187] Then, the meaning (mode type) defined through a,b,c
+c[187] will remain the same as that defined through the original A,B,C.
+c[187] This is done in many subroutines of cninit.f file,
+c[187] also in subr. abc, and also in dddrz1, rside1 and others where 
+c[187] the analytical derivatives of the dispersion equation (id=2)
+c[187] are setup. Now the LHCD type of runs DO NOT depend on value of
+c[187] ib variable (which corresponds to the species number   
+c[187] that can have ECR or ICR in plasma, 
+c[187] and which determines the (1-Yib) factor).
+c[187] Besides, the search of a launching wave type is more stable now.
+c[187] For the Fast wave / Slow wave selection, when the initial 
+c[187] value of Npar is given, it is recommended 
+c[187] to use ioxm_n_npar option instead of ioxm.
+c[187] Use ioxm_n_npar=-1 for FW, and +1 for SW.
+c[187] Search "YuP[07-2017]" for all corresponding changes. 
+
+
+
+c[186] version="genray_v10.10_170301"
+c[186] Small bugs fixed.  Netcdf output of w_dens_vs_r_nc units fixed.
+c[186] [BH and YuP, 170720].
+
+c[185] version="genray_v10.10_151110.2"
+c[185] Bug fix in prep3d.f, enabling i_ox=1 (optimized OX mode
+c[185] conversion, test4 to work). [BH160227].
+
+c[184] version="genray_v10.10_151110.1"
+c[184] Another bug fix for i_grill_npar_ntor_npol_mesh.eq.1 option
+c[184] for launching of rays from inside the plasma on a grill of
+c[184] ntor and npol values [See cShiraiwa151113].
+
+c[183] version="genray_v10.10_151110"
+c[183] Bug fix in grill_lh.f for i_grill_npar_ntor_npol_mesh.eq.1 option
+c[183] for launching of rays from inside the plasma on a grill of
+c[183] ntor and npol values [Shiraiwa151107, BH151110].
+
+c[182] version="genray_v10.10_151015"
+c[182] The EC current drive harmonic number may now be specified
+c[182] automatically through formula, origially given in TORBEAM.
+c[182] by specifying jwave=0 when ieffic=3 or 4.. See notes in prep3d.f.
+c[182] Addition proposed by Nicola Bertelli.  
+c[182] A bug in reading temperature profiles outside the LCFS when
+c[182] i_edge_dens_rz_mesh=2 was fixed, as proposed by Syunichi
+c[182] Shiraiwa  [BH151018].
+
+c[181] version="genray_v10.9_150615"
+c[181] YuP [06,2015] In files prep3d.f, lsc_approach.f, lh_ql_flux.f
+c[181] Added a check for rho_loc=0.d0 condition (can happen if a ray
+c[181] goes through the magnetic axis).
+c[181] If rho_loc=0.d0 is detected, the values of cos and sin 
+c[181] of pol.angle are set to 
+c[181] cos_theta_pol=1.d0 and sin_theta_pol=0.d0
+
+c[180] YuP[06,2015] In subroutine read_all_namelists :
+c[180] (In files read_write_genray_input.f  
+c[180]     and   read_write_genray_input_prep.f )
+c[180] Setting i_adj to 0 for all ieffic that do not need it.
+c[180] Otherwise some subroutines are called that are related to ADJ,
+c[180] and it may result in undefined values.
+c[180] So, now i_adj=1 is allowed only for (ieffic=5).or.(ieffic=6).
+
+c[179] YuP [June 2015] In subroutine CD_adj_LH_efficiency_1 :
+c[179] In some cases, b_ratio=0 (print-out: at rho_small=0)
+c[179] Skip calc. of current drive in such case.
+
+
 c[178] version="genray_v10.8_141024"
 c[178] MPI version: modified mpi.ins file (in /mpi/ folder).  Changed
-c[178]  real*4 wk_pwr_cur(5+NR*(6+nbulk))  to  
+c[178]  real*4 wk_pwr_cur(5+NR*(6+nbulk))  to
 c[178]  real wk_pwr_cur(5+NR*(6+nbulk))
 c[178] and changed  MPI_FLOAT to MPI_REAL .
 c[178] Before that, an error was triggered when using PathScale (PPPL)

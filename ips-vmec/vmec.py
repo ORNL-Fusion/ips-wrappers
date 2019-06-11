@@ -9,52 +9,10 @@
 
 from component import Component
 import os
-
-#-------------------------------------------------------------------------------
-#
-#  Helper function to detect the end of a namelist input file. This finds if the
-#  '/' character is found withing a string. However, this if this character is
-#  is located after a '!' character or between '\'' characters ignore it.
-#
-#-------------------------------------------------------------------------------
-def contains_end(line):
-    
-#  Check and remove every character after the !.
-    line = line.split('!')[0]
-    
-    if (line == ''):
-        return False, ''
-    
-    if (line[0] == '/'):
-        return True, ''
-
-    in_single_quote = line[0] == '\''
-    in_double_quote = line[0] == '\"'
-    
-    for i, c in enumerate(line[1:]):
-        
-#  Do not close the quote when a single quote is encounterd in the following
-#  situations.
-#
-#  '\''
-#  "'"
-        if ((c == '\'') and line[i - 1] != '\\' and not in_double_quote):
-            in_single_quote = not in_single_quote
-        
-#  Do not close the quote when a single quote is encounterd in the following
-#  situations.
-#
-#  "\""
-#  '"'
-        elif ((c == '\"') and line[i - 1] != '\\' and not in_single_quote):
-            in_double_quote = not in_double_quote
-        elif ((c == '/') and not in_double_quote and not in_single_quote):
-            return True, line[:i]
-        elif ((c == '&') and not in_double_quote and not in_single_quote):
-            if (i + 4 <= len(line)) and (line[i:i + 4] == '&end'):
-                return TRUE, line[:i]
-
-    return False, ''
+from omfit.classes.omfit_namelist import OMFITnamelist
+from utilities import ZipState
+from utilities import ScreenWriter
+from utilities import NamelistItem
 
 #-------------------------------------------------------------------------------
 #
@@ -63,10 +21,7 @@ def contains_end(line):
 #-------------------------------------------------------------------------------
 class vmec(Component):
     def __init__(self, services, config):
-        print('vmec: Construct')
         Component.__init__(self, services, config)
-        
-        self.vmec_exe = self.VMEC_EXE
 
 #-------------------------------------------------------------------------------
 #
@@ -74,46 +29,54 @@ class vmec(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0, **keywords):
-        print('vmec: init')
-        self.services.stage_plasma_state()
+        ScreenWriter.screen_output(self, 'verbose', 'vmec: init')
         
-        self.current_vmec_namelist = self.services.get_config_param('CURRENT_VMEC_NAMELIST')
-
-        params = keywords['name_list_params']
-
-#  Append the new parameters to the end of the namelist input file before the
-#  end. Mark the start of the dakota parameter with a comment. To avoid
-#  littering the namelist file. NAMELIST_FILE should reference a file in the
-#  plasma state.
+        self.current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
+        self.current_wout_file = 'wout_{}.nc'.format(self.current_vmec_namelist.replace('input.','',1))
+        current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
         
-        vmec_namelist = open(self.current_vmec_namelist, 'r')
-        vmec_namelist_lines = vmec_namelist.readlines()
-        vmec_namelist.close()
+#  Stage state.
+        self.services.stage_state()
 
-#  Reopen for writting.
-        vmec_namelist = open(self.current_vmec_namelist, 'w')
+#  Unzip files from the state. Use mode a so files can be read and written to.
+        self.zip_ref = ZipState.ZipState(current_vmec_state, 'a')
+        self.zip_ref.extract(self.current_vmec_namelist)
 
-        for line in vmec_namelist_lines:
-#  Name list input files can have strings containing path separators. Check for
-#  an equals sign to avoid these.
-            end_found, short_line = contains_end(line)
-            if (end_found):
-                vmec_namelist.write(short_line)
-                vmec_namelist.write('\n!  VMEC params\n')
-                for key, value in params.iteritems():
-                    vmec_namelist.write('%s = %s\n'%(key, value))
-                vmec_namelist.write('/\n')
-                break
-            elif ('!  VMEC params\n' in line):
-                vmec_namelist.write(line)
-                for key, value in params.iteritems():
-                    vmec_namelist.write('%s = %s\n'%(key, value))
-                vmec_namelist.write('/\n')
-                break
-            else:
-                vmec_namelist.write(line)
+        if len(keywords) > 0:
+            self.zip_ref.set_state(state='needs_update')
+        
+#  Update parameters in the namelist.
+            namelist = OMFITnamelist(self.current_vmec_namelist,
+                                     collect_arrays={
+                                     'ns_array'    : {'default' : 0, 'shape' : (100,),    'offset' : (1,),     'sparray' : True},
+                                     'niter_array' : {'default' : 0, 'shape' : (100,),    'offset' : (1,),     'sparray' : True},
+                                     'rbs'         : {'default' : 0, 'shape' : (203,101), 'offset' : (-101,0), 'sparray' : True},
+                                     'rbc'         : {'default' : 0, 'shape' : (203,101), 'offset' : (-101,0), 'sparray' : True},
+                                     'zbs'         : {'default' : 0, 'shape' : (203,101), 'offset' : (-101,0), 'sparray' : True},
+                                     'zbc'         : {'default' : 0, 'shape' : (203,101), 'offset' : (-101,0), 'sparray' : True},
+                                     'am'          : {'default' : 0, 'shape' : (21,),     'offset' : (0,),     'sparray' : True},
+                                     'ai'          : {'default' : 0, 'shape' : (21,),     'offset' : (0,),     'sparray' : True},
+                                     'ac'          : {'default' : 0, 'shape' : (21,),     'offset' : (0,),     'sparray' : True},
+                                     'am_aux_s'    : {'default' : 0, 'shape' : (10001,),  'offset' : (1,),     'sparray' : True},
+                                     'am_aux_f'    : {'default' : 0, 'shape' : (10001,),  'offset' : (1,),     'sparray' : True},
+                                     'ai_aux_s'    : {'default' : 0, 'shape' : (10001,),  'offset' : (1,),     'sparray' : True},
+                                     'ai_aux_f'    : {'default' : 0, 'shape' : (10001,),  'offset' : (1,),     'sparray' : True},
+                                     'ac_aux_s'    : {'default' : 0, 'shape' : (10001,),  'offset' : (1,),     'sparray' : True},
+                                     'ac_aux_f'    : {'default' : 0, 'shape' : (10001,),  'offset' : (1,),     'sparray' : True},
+                                     'raxis'       : {'default' : 0, 'shape' : (102,),    'offset' : (0,),     'sparray' : True},
+                                     'zaxis'       : {'default' : 0, 'shape' : (102,),    'offset' : (0,),     'sparray' : True},
+                                     'raxis_cc'    : {'default' : 0, 'shape' : (102,),    'offset' : (0,),     'sparray' : True},
+                                     'raxis_cs'    : {'default' : 0, 'shape' : (102,),    'offset' : (0,),     'sparray' : True},
+                                     'zaxis_cc'    : {'default' : 0, 'shape' : (102,),    'offset' : (0,),     'sparray' : True},
+                                     'zaxis_cs'    : {'default' : 0, 'shape' : (102,),    'offset' : (0,),     'sparray' : True},
+                                     'ftol_array'  : {'default' : 0, 'shape' : (100,),    'offset' : (1,),     'sparray' : True},
+                                     'extcur'      : {'default' : 0, 'shape' : (300,),    'offset' : (1,),     'sparray' : True}
+                                     })
 
-        vmec_namelist.close()
+            for key, value in keywords.iteritems():
+                NamelistItem.set(namelist['indata'], key, value)
+
+            namelist.save()
 
 #-------------------------------------------------------------------------------
 #
@@ -121,18 +84,34 @@ class vmec(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        print('vmec: step')
+        ScreenWriter.screen_output(self, 'verbose', 'vmec: step')
 
-        task_id = self.services.launch_task(self.NPROC,
-                                            self.services.get_working_dir(),
-                                            self.VMEC_EXE,
-                                            self.current_vmec_namelist,
-                                            logfile = 'vmec.log')
-    
-        if (self.services.wait_task(task_id)):
-            self.services.error('vmec: step failed.')
+        flags = self.zip_ref.get_state()
 
-        self.services.update_plasma_state()
+        if 'state' in flags and flags['state'] == 'needs_update':
+            task_wait = self.services.launch_task(self.NPROC,
+                                                  self.services.get_working_dir(),
+                                                  self.VMEC_EXE,
+                                                  self.current_vmec_namelist,
+                                                  logfile = 'vmec.log')
+
+#  Update flags.
+            self.zip_ref.set_state(state='updated')
+
+#  Wait for VMEC to finish.
+            if (self.services.wait_task(task_wait) and not os.path.exists(self.current_wout_file)):
+                self.services.error('vmec: step failed.')
+
+#  Add the wout file to the state.
+            self.zip_ref.write([self.current_vmec_namelist, self.current_wout_file])
+
+        else:
+#  Update flags.
+            self.zip_ref.set_state(state='unchanged')
+
+        self.zip_ref.close()
+            
+        self.services.update_state()
 
 #-------------------------------------------------------------------------------
 #
@@ -140,4 +119,4 @@ class vmec(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('vmec: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'vmec: finalize')

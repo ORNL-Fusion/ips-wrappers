@@ -1,5 +1,10 @@
       program process_cql3d_output
 
+! (DBB 4/4/2019)
+! Added check to see if ImChizz.inp_template exists (i.e. input file for subroutine 
+! write_inchizz_inp).  Needed so this code can be used TORLH which needs ImChizz.inp
+! or with other codes which don't use ImChizz.inp. 
+!
 ! Modified to produce namelist needed by imchzz code (DBB and JL 5/9/2017)
 ! The way this is done is to call a contained subroutine write_inchizz_inp which writes the
 ! file.  The write_inchizz_inp subroutine uses the ImChizzrel_mod.F90 module, to read the
@@ -120,6 +125,7 @@
       integer :: r0dim_id, rdim
       character*256 ::  cur_state_file, cql3d_output_file
       character*8 cql3d_output
+      logical :: file_exists
 
 !------------------------------------
 !  local
@@ -287,8 +293,8 @@ c F2003-syntax call get_command_argument(1,cql3d_output)
 
 !     allocate space for arrays to be read
       allocate (rya(lrz))  !the radial grid
-      allocate (density(ngen,lrz,nt))  !the density
-      allocate (temp(ngen,lrz,nt))  !the temperature
+      allocate (density(ntotal,lrz,nt))  !the density
+      allocate (temp(ntotal,lrz,nt))  !the temperature
       allocate (darea(lrz),dvol(lrz))
 c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
       allocate (powers(lrz, 13, ngen, nt))  
@@ -493,6 +499,7 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
          write(*,*) 'ps%rho_lhrf = ', ps%rho_lhrf
          write(*,*) 'rho_cql = ', rho_cql
          write(*,*) 'tmp_prof = ', tmp_prof
+         write(*,*) 'ps%pelh = ', ps%pelh
          
 !ptb         call ps_user_1dintrp_vec(ps%rho_lhrf, rya(1:lrz), tmp_prof,
 !ptb     &        ps%pelh, ierr, interp = 1)
@@ -553,7 +560,7 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
 ! ptb checking interpolated quantities
          powerlh_int = 0.0
          currlh_int = 0.0
-      do l=1,ps%nrho_lhrf
+      do l=1,ps%nrho_lhrf-1
          powerlh_int = powerlh_int + ps%pelh(l)
          currlh_int = currlh_int + ps%curlh(l)
       enddo
@@ -561,8 +568,12 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
       write(*,*) 'power_lh_int = ', powerlh_int, 'currlh_int = ', currlh_int
 ! end of ptb diagnostics and hack
 
-      WRITE (*,*) "About to call write_inchizz_inp"
-      CALL write_inchizz_inp
+      INQUIRE(FILE='ImChizz.inp_template', EXIST=file_exists)
+      write (*,*) 'file_exists = ', file_exists
+      IF (file_exists .eq. .TRUE.) then
+		  WRITE (*,*) "About to call write_inchizz_inp"
+		  CALL write_inchizz_inp
+	  ENDIF
 
       endif  !On cql3d_output.eq.'LH'
 

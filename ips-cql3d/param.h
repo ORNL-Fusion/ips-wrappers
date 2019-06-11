@@ -54,12 +54,14 @@ c..................................................................
 c     PARAMETERS CHOSEN BY USER FOLLOW
 
       character version*64
-      parameter(version="cql3d_cswim_131030_mpi")
+      parameter(version="cql3d_cswim_180101.2")
       character precursr*64
-      parameter(precursr="cql3d_cswim_130928_mpi")
+      parameter(precursr="cql3d_cswim_180101.1")
       parameter(machinea=2)
 cBH081218:  Present usage, machinea=2 works with 32- and 64-bit machines
       parameter(ngena=4)
+cBH120727:  Moved nmaxa up to 8, for SWIM Plasma State Abridged species 
+cBH120727:  list + elec.
       parameter(nmaxa=8)
 ccc      parameter(mxa=3)     YuP-101216: Not used anymore
 ccc      parameter(jxa=300)   YuP-101216: Not used anymore
@@ -69,6 +71,7 @@ ccc      parameter(noncha=2000) YuP-101221: Not used anymore
       parameter(ndtr1a=10)
       parameter(nplota=10)
       parameter(nefitera=10)
+      parameter(ntavga=16)
 
 c*******************************************************************
 c     BEGIN parameters for SOURCE routines
@@ -142,7 +145,7 @@ c     lrorsa should be equal to max of lrza and lsa
       
       parameter(nbanda=5)
       
-      parameter(nena=60,nva=32)
+      parameter(nena=60,nva=100)
       parameter(ntrmdera=4)
       parameter(njenea=256)
 
@@ -164,12 +167,12 @@ c      parameter(nnza=201)
       parameter(nnra=257)
       parameter(nnza=257)
       parameter(lfielda=250)
-c-YuP-> Grid size for storing the values 
-c     of equilibrium field (Beqr,Beqz,Beqphi, etc.)
-c     on req(1:nreqa),zeq(1:nzeqa) grid
-c     for finite-orbit-width (FOW) tracing.
-      parameter(nreqa=128, nzeqa=196)
-c-YuP-> Could be set to (nnra,nnza) ?
+c$$$P-> Grid size for storing the values 
+c$$$c     of equilibrium field (Beqr,Beqz,Beqphi, etc.)
+c$$$c     on req(1:nreqa),zeq(1:nzeqa) grid
+c$$$c     for finite-orbit-width (FOW) tracing.
+c$$$      parameter(nreqa=128, nzeqa=196)
+c$$$c-YuP-> Could be set to (nnra,nnza) ?
 
 
 c*******************************************************************
@@ -217,11 +220,18 @@ c     YuP 101122: nraya and nrayelta are not used anymore.
 c     YuP 101122: Instead, nrayn and nrayelts are determined 
 c     YuP 101122: in urfsetup by reading rays\' data files.
       
-      parameter (nmodsa=20)  !Suggest not using .le.3, unless check
+      parameter (nmodsa=155)  !Suggest not using .le.3, unless check
                              !cqlinput that some vestigial inputs
                              !are not set for index larger than nmodsa.
 ccc      parameter (nharma=1,nharm2a=nharma+2)
 c     YuP 101208: nharma is not used anymore.
+c
+c..................................................................
+c     rdcmod related
+c..................................................................
+      parameter(nrdca=10)   !Max number of diffusion coeff files, 
+                          !for rdcmod="format1"
+c
 c..................................................................
 c     NPA related:
       parameter(npaproca=5)
@@ -240,7 +250,15 @@ c     expansion for computing sigma-v (set to mx in aindflt.f)
 c
 c..................................................................
 
-      parameter (mtaba=1000)
+cBH150620  Found that energy increment delegy is much too large
+cBH150620  in a case with general species e,d,t,alpha.
+cBH150620  Suspect table controlled by electrons.
+cBH150620  Quick fix may be to increase mtaba by !mp/me
+cHB150620  With mtaba=1000000, still only get 31 nonzero entries in svtab()
+cBH150620  Needs further investigation/coding!
+cBH150620      parameter (mtaba=1000)
+      parameter (mtaba=1000000)
+
 ccc      parameter (mmsva=mxa)    YuP-101216: Not used anymore
 
 
@@ -254,7 +272,8 @@ c     Parameters defined just below should not be altered
 c     (with the possible exception of negyrga (used in plots)).
 c..................................................................
 
-      parameter(negyrga=3)
+cBH160911      parameter(negyrga=3)
+      parameter(negyrga=4)
       parameter(mbeta=10)
 ccc      parameter(mxp1a=mxa+1)  YuP-101216: Not used anymore
 ccc      parameter(ngenpa=ngena+1)  Not used anymore
@@ -285,10 +304,11 @@ c     parameter(nconteqa=nnra)
       parameter(kikj=ki*kj,kwork=3*(kj-1)+kj)
 
 c..................................................................
-c     kb is the maximum number of neutral injectors
+c     kb (presently =8) is the maximum number of neutral injectors
 c     ke (=3) is the number of beam energy states
 c     kf is the maximum number of flux zones (or volumes) used
-c     by FREYA, and HEX** routines (reaction rate routines).
+c       by FREYA, and HEX** routines (reaction rate routines).
+c     kz=kf-1
 c     nap is the number of source aperatures.
 c     kprim is the maximum allowable number of primary species
 c     kimp is the maximum number of impurities.
@@ -298,7 +318,7 @@ c..................................................................
       parameter(kprim=ntotala)
       parameter(kimp=ntotala)
       parameter(kion=ntotala)
-      parameter(kkq=kion+3,kbctim=11,kb=8,ke=3,kf=nconteqa+3,
+      parameter(kkq=kion+3,kbctim=11,kb=16,ke=3,kf=nconteqa+3,
      1  kz=kf-1,kzm1=kz-1)
 
 c..................................................................
@@ -335,7 +355,14 @@ ccc      parameter(ipack16a=jjxa/ibytes16*nrayelta*nraya)!->to urfalloc
 
 cBH070118      parameter (nrada=129,ninta=8,nint1a=ninta+1)
       parameter (nrada=nnra,ninta=8,nint1a=ninta+1)
-
+c
+c.......................................................................
+c     JK - new for addition of ADAS
+c.......................................................................
+      integer kcm, kcmp1 ! kcmp1 used in getsgxn, nbsgold, nbsgxn,
+                         ! wrap_xboley
+      integer kbe, ksge
+      parameter(kcm=3,kcmp1=kcm+1,kbe=kb*ke,ksge=20)
 c.......................................................................
 c     maximum number of options in tdoutput (for nlotp1,.. arrays)
 c.......................................................................

@@ -1,7 +1,19 @@
 #! /usr/bin/env python
 
 """
-monitor_comp.py 2-4-2014
+monitor_comp.py 10-11-2018
+
+Version 5.4 
+Runs PCMF each time step to generate pdf plots of the plasma state and pushes it out to the 
+w3 directory.  The bad news is that PCMF takes about 20 sec to run on Edison.  If this is
+too much of a burden, you can turn it off by putting a parameter GENERATE_PDF = False in
+the monitor section of the simulation config file.  The behavior is:
+    GENERATE_PDF = True, or is absent -> Run PCMF at each invocation of the monitor Component
+    GENERATE_PDF = False -> Run PCMF only on monitor 'finalize' i.e. plots only last monitor_file.nc
+    GENERATE_PDF = Never -> Doesn't even plot the last monitor_file.nc
+
+However you can always run PCMF.py
+on a monitor_file.nc from the command line separately.
 
 Version 5.3 picks up the simulation config file and pushes it out to the w3 directory.
 This is done in the init
@@ -58,10 +70,9 @@ file. That is one can select from a list of quantities to monitor.  N.B. This
 selecting between density, zone based, and cumulative profiles.  So far there has been
 no demand for selecting individual variables in the config file.
 
-This component has
-to know how to calculate the things it's requested to monitor, so there is at least some  
-custom programing required for each quantity that can be monitored.  To add a new
-variable to monitor there are three customizations that must be done:
+This component has to know how to calculate the things it's requested to monitor, so there
+is at least some custom programing required for each quantity that can be monitored.  
+To add a new variable to monitor there are three customizations that must be done:
 
 1) The name of the new variable, in the form you want the lable displayed, must be
    added to the 'requestedVars' list below.
@@ -81,8 +92,8 @@ init - defines the netcdf monitor file for monitor data then calls step to inser
 restart - unpickles the internal monitor data previously saved in file 'monitor_restart'
           and loads these global variables.
 step - writes monitor data for current time step to the monitor netcdf file and saves it
-finalize - sets the global netcdf attribute to tell ELViz to stop watching this
-           monitor file
+finalize -Even if self.GENERATE_PDF == False finalize goes ahead to make a pdf file anyway
+          for the last time step, unless 'GENERATE_PDF = Never' in the simulation config file.
 
 change log:
  1/21/09
@@ -138,17 +149,21 @@ change log:
               metadata.)  It made some sense when I thought monitor variables might be 
               specified from the config file. But no more.
 
-1/24/2014	Changed the test in function area_grid_interp() so that the validity test for
-			grids has a tolerance of 1.e-12.  The aorsa component was crashing the 
-			component because the the upper value of rho_icrf was not exactly 1.0.  So 
-			now the first and last rho values have to be within this tolerance of 0.0
-			and 1.0 respectively.  I only hope there are not other tests for exactly 0.0
-			and 1.0.
+1/24/2014   Changed the test in function area_grid_interp() so that the validity test for
+            grids has a tolerance of 1.e-12.  The aorsa component was crashing the 
+            component because the the upper value of rho_icrf was not exactly 1.0.  So 
+            now the first and last rho values have to be within this tolerance of 0.0
+            and 1.0 respectively.  I only hope there are not other tests for exactly 0.0
+            and 1.0.
 
 2/24/2014   Version 5.3 picks up the simulation config file and pushes it out to the w3 
             directory.  The portal run_id is prepended to the file name, like with the
             monitor file.  Also cleaned up a few bogus references to monitor_comp_4 in
             print statements.
+            
+1/4/2018    Commented out reference to PORTAL run_id due to demise of SWIM PORTAL
+
+1/30/2018   Replacing defunct PORTAL run_id with datetime() to distinguish between runs
 """
 
 # Note (4/2/12)
@@ -184,8 +199,10 @@ import subprocess
 import shutil
 import pickle
 import time
+import datetime
 
 from  component import Component
+from get_IPS_config_parameters import get_global_param, get_component_param
 
 # Import the necessary Numeric and netCDF modules
 from netCDF4 import *
@@ -206,6 +223,7 @@ include_zone_based_profiles = False
 include_cumulative_profiles = True
 
 monitor_fileName = 'monitor_file.nc'
+pdf_fileName = 'monitor_file.pdf'
 
 # List of requested variables to monitor (if dependencies are satisfied)
 # The list just below is the default containing everything.  In the component it can
@@ -613,15 +631,7 @@ class monitor(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
         print 'Created %s' % (self.__class__)
-        self.htmlText = """
-<applet code="sv/graph/ElVis.class"
-        codebase="http://w3.pppl.gov/swim/elvis/classes/"
-        archive="elvistru1.6.jar"
-        width="100%" height="100%">
-<param name="type" value="application/x-java-applet;version=1.5">
-<param name=netCDFMonitor value="@CDF_FILE@">
-</applet>
-"""
+
 
 #----------------------------------------------------------------------------------------------
 #
@@ -707,13 +717,13 @@ class monitor(Component):
         # Check validity of inputs
                 
         if abs(g1[0]) < 1.e-12:
-        	g1[0] = 0.
+            g1[0] = 0.
         if abs(g2[0]) < 1.e-12:
-        	g2[0] = 0.
+            g2[0] = 0.
         if abs(g1[-1] -1.0) < 1.e-12:
-        	g1[-1] = 1.0
+            g1[-1] = 1.0
         if abs(g2[-1] -1.0) < 1.e-12:
-        	g2[-1] = 1.0
+            g2[-1] = 1.0
         
         if g2[0] != 0.0 or g1[0] != 0.0 or g2[-1] != 1.0 or  g1[-1] != 1.0 :
             print 'Improper range for grids'
@@ -934,16 +944,26 @@ class monitor(Component):
 
         services = self.services
 
-        workdir = services.get_working_dir()
-        time.sleep(3)
-        run_id = services.get_config_param('PORTAL_RUNID')
-        monitor_file = 'monitor_file.nc'
-    #      print 'monitor file = ', monitor_file
+        time.sleep(5)
+        self.run_id = get_global_param(self, services,'PORTAL_RUNID')
+        print 'run_id = ', self.run_id
+        print 'monitor file = ', monitor_fileName
+        print 'monitor pdf file = ', pdf_fileName
 
-        self.cdfFile = run_id+'_monitor_file.nc'
+        self.cdfFile = self.run_id+'_' + monitor_fileName
+        self.pdfFile = self.run_id+'_' + pdf_fileName
         services.log('w3 monitor file = ' + self.cdfFile)
-        htmlFile = run_id +'.html'
+        services.log('state pdf file = ' + self.pdfFile)
 
+        BIN_PATH = get_component_param(self, services, 'BIN_PATH')
+        self.PCMF_bin = os.path.join(self.BIN_PATH, 'PCMF.py')
+        
+        self.GENERATE_PDF = get_component_param(self, services, 'GENERATE_PDF', optional = True)
+        if (self.GENERATE_PDF in [None, 'true', 'TRUE', 'True']):
+            self.GENERATE_PDF = True
+        if (self.GENERATE_PDF in ['false', 'FALSE', 'False']):
+            self.GENERATE_PDF = False
+        
     # Copy current state over to working directory
         services.stage_plasma_state()
 
@@ -958,30 +978,17 @@ class monitor(Component):
 
     # copy monitor file to w3 directory
         try:
-            shutil.copyfile(monitor_file,
+            shutil.copyfile(monitor_fileName,
                             os.path.join(self.W3_DIR, self.cdfFile))
         except IOError, (errno, strerror):
             print 'Error copying file %s to %s: %s' % \
                 (monitor_file, self.cdfFile, strerror)
 
-        htmlText = self.htmlText.replace('@CDF_FILE@',
-                           os.path.join(self.W3_BASEURL, self.cdfFile))
-        try:
-            f = open(os.path.join(self.W3_DIR, htmlFile), 'w')
-            f.write(htmlText)
-            f.close()
-        except IOError, (errno, strerror):
-            print 'Error writing to file %s : %s' % \
-                (htmlFile, strerror)
-            return
-        monitorURL = os.path.join(self.W3_BASEURL , htmlFile)
-        services.setMonitorURL(monitorURL)
-
     # Copy config file to w3 directory
         conf_file = services.get_config_param('SIMULATION_CONFIG_FILE')
         print 'conf_file = ', conf_file
         conf_file_name = os.path.split(conf_file)[1]
-        new_file_name = run_id + '_' + conf_file_name
+        new_file_name = self.run_id + '_' + conf_file_name
         new_full_path = os.path.join(self.W3_DIR, new_file_name)
         try:
             shutil.copyfile(conf_file, new_full_path)
@@ -1010,14 +1017,11 @@ class monitor(Component):
         services = self.services
         global monitorVars, ps_VarsList, monitorDefinition
         
-        workdir = services.get_working_dir()
-        run_id = services.get_config_param('PORTAL_RUNID')
-        monitor_file = 'monitor_file.nc'
-    #      print 'monitor file = ', monitor_file
+        self.run_id = get_global_param(self, services,'PORTAL_RUNID')
 
-        self.cdfFile = run_id+'_monitor_file.nc'
+        self.cdfFile = self.run_id+'_' + monitor_fileName
+        self.pdfFile = self.run_id+'_' + pdf_fileName
         services.log('w3 monitor file = ' + self.cdfFile)
-        htmlFile = run_id +'.html'
         
     # Get restart files listed in config file.        
         try:
@@ -1028,31 +1032,47 @@ class monitor(Component):
             print 'Error in call to get_restart_files()' , e
             raise
 
-        # copy monitor file to w3 directory
+    # copy monitor file to w3 directory
         try:
-            shutil.copyfile(monitor_file,
+            shutil.copyfile(monitor_fileName,
                             os.path.join(self.W3_DIR, self.cdfFile))
         except IOError, (errno, strerror):
             print 'Error copying file %s to %s: %s' % \
-                (monitor_file, self.cdfFile, strerror)
+                (monitor_fileName, self.cdfFile, strerror)
 
-        htmlText = self.htmlText.replace('@CDF_FILE@',
-                           os.path.join(self.W3_BASEURL, self.cdfFile))
-        try:
-            f = open(os.path.join(self.W3_DIR, htmlFile), 'w')
-            f.write(htmlText)
-            f.close()
-        except IOError, (errno, strerror):
-            print 'Error writing to file %s : %s' % \
-                (htmlFile, strerror)
-        monitorURL = os.path.join(self.W3_BASEURL , htmlFile)
-        self.services.setMonitorURL(monitorURL)
+        BIN_PATH = get_component_param(self, services, 'BIN_PATH')
+        self.PCMF_bin = os.path.join(self.BIN_PATH, 'PCMF.py')
+        
+        self.GENERATE_PDF = get_component_param(self, services, 'GENERATE_PDF', optional = True)
+        if (self.GENERATE_PDF in [None, 'true', 'TRUE', 'True']):
+            self.GENERATE_PDF = True
+        if (self.GENERATE_PDF in ['false', 'FALSE', 'False']):
+            self.GENERATE_PDF = False
+
+        if self.GENERATE_PDF == True:
+       # Generate pdf file with PCMF.py
+            cmd = [self.PCMF_bin, monitor_fileName]
+            print 'Executing = ', cmd
+            services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+              event_comment =  cmd)
+            retcode = subprocess.call(cmd)
+            if (retcode != 0):
+                logMsg = 'Error executing '.join(map(str, cmd))
+                self.services.error(logMsg)
+                raise Exception(logMsg)
+
+       # copy pdf file to w3 directory
+            try:
+                shutil.copyfile(pdf_fileName,
+                                os.path.join(self.W3_DIR, self.pdfFile))
+            except IOError, (errno, strerror):
+                print 'Error copying file %s to %s: %s' % \
+                    (pdf_fileName, self.pdfFile, strerror)
     
-        # Load monitorVars and ps_VarsList from pickle file "monitor_restart".
+    # Load monitorVars, monitorDefinition and ps_VarsList from pickle file "monitor_restart".
 
         pickleDict = {'monitorVars' : monitorVars, 'ps_VarsList': ps_VarsList,\
                      'monitorDefinition':monitorDefinition}
-#        pickleDict = {'monitorVars' : monitorVars, 'ps_VarsList': ps_VarsList}
         pickFile = open('monitor_restart', 'r')
         pickleDict = pickle.load(pickFile)
         pickFile.close()
@@ -1082,8 +1102,6 @@ class monitor(Component):
             print 'Error in monitor_comp: step() : no framework services'
             return 1
 
-        monitor_file = 'monitor_file.nc'
-
     # Copy current and prior state over to working directory
         services.stage_plasma_state()
         cur_state_file = services.get_config_param('CURRENT_STATE')
@@ -1099,14 +1117,33 @@ class monitor(Component):
     # "Archive" output files in history directory
         services.stage_output_files(timeStamp, self.OUTPUT_FILES)
 
-    # copy montor file to w3 directory
+    # copy monitor file to w3 directory
         try:
-            shutil.copyfile(monitor_file,
+            shutil.copyfile(monitor_fileName,
                             os.path.join(self.W3_DIR, self.cdfFile))
         except IOError, (errno, strerror):
             print 'Error copying file %s to %s: %s' % \
-                (monitor_file, self.W3_DIR, strerror)
-        return
+                (monitor_fileName, self.cdfFile, strerror)
+
+        if self.GENERATE_PDF == True:
+       # Generate pdf file with PCMF.py
+            cmd = [self.PCMF_bin, monitor_fileName]
+            print 'Executing = ', cmd
+            services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+              event_comment =  cmd)
+            retcode = subprocess.call(cmd)
+            if (retcode != 0):
+                logMsg = 'Error executing '.join(map(str, cmd))
+                self.services.error(logMsg)
+                raise Exception(logMsg)
+
+       # copy pdf file to w3 directory
+            try:
+                shutil.copyfile(pdf_fileName,
+                                os.path.join(self.W3_DIR, self.pdfFile))
+            except IOError, (errno, strerror):
+                print 'Error copying file %s to %s: %s' % \
+                    (pdf_fileName, self.pdfFile, strerror)
 
 # ------------------------------------------------------------------------------
 #
@@ -1126,21 +1163,35 @@ class monitor(Component):
 #
 # finalize function
 #
-# Calls monitor executable in "FINALIZE" mode which sets
-# 'running' atribute to false so Elvis will stop watching the monitor file.
+# If self.GENERATE_PDF == False go ahead and make a pdf file anyway for the last
+# time step.  To eliminate even this call to PCMF set 'GENERATE_PDF = Never' in simulation
+# config file.
 #
 # ------------------------------------------------------------------------------
 
     def finalize(self, timestamp=0.0):
 
-        # Open the monitor file for output
-        monitor_file = Dataset(monitor_fileName, 'r+', format = 'NETCDF3_CLASSIC')
+        services = self.services
 
-        # set 'running' attribute to tell ELVis to stop watching this file
-        setattr(monitor_file, 'running', 'false')
+        if self.GENERATE_PDF == False:
+       # Generate pdf file with PCMF.py
+			cmd = [self.PCMF_bin, monitor_fileName]
+			print 'Executing = ', cmd
+			services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+			  event_comment =  cmd)
+			retcode = subprocess.call(cmd)
+			if (retcode != 0):
+				logMsg = 'Error executing '.join(map(str, cmd))
+				self.services.error(logMsg)
+				raise Exception(logMsg)
 
-        # Close plasma_state
-        monitor_file.close()
+	   # copy pdf file to w3 directory
+			try:
+				shutil.copyfile(pdf_fileName,
+								os.path.join(self.W3_DIR, self.pdfFile))
+			except IOError, (errno, strerror):
+				print 'Error copying file %s to %s: %s' % \
+					(pdf_fileName, self.pdfFile, strerror)
 
         print 'monitor finalize finished'
         return 0
@@ -2160,13 +2211,13 @@ class monitor(Component):
             heating = self.calculate_MonitorVariable('Pe_OH_total', varDepsDict)
             
             if 'power_ec' in varDepsDict.keys():
-	            heating = heating + self.calculate_MonitorVariable('power_EC', varDepsDict)
+                heating = heating + self.calculate_MonitorVariable('power_EC', varDepsDict)
             if 'power_lh' in varDepsDict.keys():
-	            heating = heating + self.calculate_MonitorVariable('power_LH', varDepsDict)
+                heating = heating + self.calculate_MonitorVariable('power_LH', varDepsDict)
             if 'power_ic' in varDepsDict.keys():
-	            heating = heating + self.calculate_MonitorVariable('power_IC', varDepsDict)
+                heating = heating + self.calculate_MonitorVariable('power_IC', varDepsDict)
             if 'power_nbi' in varDepsDict.keys():
-	            heating = heating + self.calculate_MonitorVariable('power_NB', varDepsDict)
+                heating = heating + self.calculate_MonitorVariable('power_NB', varDepsDict)
             value = P_nuc_FUS/heating
     
         # ------------- ICRF power deposition ________________

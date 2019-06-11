@@ -1,4 +1,5 @@
-include Makefile.config
+#IPS_ROOT=$(shell cd ../../../../; pwd)
+include $(IPS_ROOT)/Makefile.config
 
 #F90_FREEFORM_SUFFIX1 = f95
 #F90_FREEFORM_SUFFIX2 = f90

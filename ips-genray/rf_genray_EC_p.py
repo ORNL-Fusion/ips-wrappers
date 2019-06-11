@@ -457,6 +457,10 @@ class genray_EC(Component):
         command = prepare_input_bin + ' ' + mode + ' ' +  rfmode + ' ' +\
         isource_string + ' ' + genraynml + ' ' + adj_read + ' ' + ps_add_nml
         
+        print 'running = ', command
+        services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+          event_comment =  command)
+
         retcode = subprocess.call(command.split(), stdout = log_file,\
                                   stderr = subprocess.STDOUT)
         if (retcode != 0):
@@ -577,7 +581,8 @@ class genray_EC(Component):
         global programming, times_parameters_list
 
         prepare_input_bin = os.path.join(self.BIN_PATH, 'prepare_genray_input')
-        process_output_bin  = os.path.join(self.BIN_PATH, 'process_genray_output_mcmd')
+#        process_output_bin  = os.path.join(self.BIN_PATH, 'process_genray_output_mcmd')
+        process_output_bin  = os.path.join(self.BIN_PATH, 'process_genray_output')
         genray_bin = os.path.join(self.BIN_PATH, 'genray')
 
     # Copy plasma state files over to working directory
@@ -618,7 +623,11 @@ class genray_EC(Component):
         log_file = open('log_prepare_genray_input_step', 'w')
         mode = 'step'
         command = prepare_input_bin + ' ' + mode + ' ' +  rfmode + ' ' +\
-        isource_string + ' ' + genraynml + ' ' + adj_read + ' ' + ps_add_nml
+          isource_string + ' ' + genraynml + ' ' + adj_read + ' ' + ps_add_nml
+
+        print 'running = ', command
+        services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+            event_comment =  command)
         
         retcode = subprocess.call(command.split(), stdout = log_file,\
                                   stderr = subprocess.STDOUT)
@@ -652,6 +661,10 @@ class genray_EC(Component):
         log_file = open('log_process_genray_output', 'w')
         mode = 'step'
         command = process_output_bin + ' ' +  rfmode + ' ' + isource_string
+
+        print 'running', command
+        services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+            event_comment =  command)
         
         retcode = subprocess.call(command.split(), stdout = log_file,\
                                   stderr = subprocess.STDOUT)                                  

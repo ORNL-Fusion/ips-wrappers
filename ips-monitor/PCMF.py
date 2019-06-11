@@ -336,7 +336,7 @@ if len(time) > 1:
 				
 				if debug:
 					print ylabel
-					print 'type(', var, ') = ', type(y)
+					print 'type(', var_name, ') = ', type(y)
 					print var, ' = ', y
 					
 				if single_file:

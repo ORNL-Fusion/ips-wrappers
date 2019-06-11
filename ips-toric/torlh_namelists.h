@@ -9,9 +9,9 @@
       integer :: nvrb=3       ! Generally three vector components
 ! Poloidal resolution
       integer :: ntt = 512
-      integer :: nmod =255     ! nmod will be set as nmod=ntt/2-1, 
+      integer :: nmod =255     ! nmod will be set as nmod=ntt/2-1,
                               ! unless user enters a non-zero positive value
-                              ! less than ntt/2-1 to conserve memory at 
+                              ! less than ntt/2-1 to conserve memory at
                               ! the cost of efficiency.
 ! Radial resolution: Number of radial elements in the plasma
       integer :: nelm = 540
@@ -41,12 +41,12 @@
       integer ::   imdedg=2   ! JPW pollution scheme for vacuum layer modelling
       integer ::   iezvac=1   ! Ez suppressed in vacuum
       integer ::   icoll=0    ! No collisions
-      integer ::   iclres=0   ! adds collisions around isolated ion-ion 
+      integer ::   iclres=0   ! adds collisions around isolated ion-ion
                               ! resonances. Use with care!
-      integer ::   iregax=1   ! turn on regularization at the magnetic axis 
+      integer ::   iregax=1   ! turn on regularization at the magnetic axis
                               ! (changes equil near axis a bit)
       integer ::   bscale=12  ! blocksize scaling factor for parallel runs only
-      logical ::   use_incore=.false. 
+      logical ::   use_incore=.false.
                               ! default is to use out-of-core memory
       integer ::   pcblock=4  !  number of processors used in poloidal pc mesh when MASTCH=2
 ! Namelist inputs for control of the output, most are off to avoid too much data dumped
@@ -55,12 +55,17 @@
 ! many of the parameters
       integer ::   io_ncdf = 1
 
-! Wave and antenna parameters (default values for now, later 
+! Namelist /TORICAINP/ inputs specifically for TORLH (added by DBB 8/22/16 re J. Lee)
+      integer :: IJRF = 2   !option for current drive estimation
+      integer :: IPWDIM = 2 ! output printing option of TORLH
+      integer :: ICLPLO = 1 ! output printing option of TORLH
+
+! Wave and antenna parameters (default values for now, later
 !   use ps%ant_model file for machine state)
 !      integer     :: nphi=10    ! anzedg is used for TORLH
       real     :: anzedg = -1.6 ! toroidal refractive index at the edge
       real(rspec) :: freqcy=4.6e9_rspec
-      integer  :: ibcant =1     !boundary condition for antenna. When ibcant<0, the grill antenna is used
+      integer  :: ibcant = -1     !boundary condition for antenna. When ibcant<0, the grill antenna is used
 
 !units are in cm for lengths
       real(rspec) :: antlen=6.0_rspec, antlc=1.0_rspec, &
@@ -95,7 +100,7 @@
 ! Namelist inputs for profile specification
 !  Density and temperature profiles - namelist and file inputs
 !
-      integer, parameter :: nspmx =30 
+      integer, parameter :: nspmx = 8
 ! NOTE: A maximum of 15 ion species allowed
 ! The place,nspec+1, is reserved for the electrons in mod_direl.
 ! mainsp is used to impose charge neutrality
@@ -109,14 +114,14 @@
       integer :: isThermal = 1
       character(24) :: rfmin_name = 'H_min', kdens_rfmin = 'fraction'
 
-! Note that for variables like rfmin_name and kdens_rfmin that will be put into the 
+! Note that for variables like rfmin_name and kdens_rfmin that will be put into the
 ! Plasma State that we do not want to use the construct of rfmin_name = '"H_min"' since
 ! this will try to place the string "H_min" inot the PS variable and double quotes
 ! apparently are not allowed !!!
 
 
       real(rspec), dimension(:) ::                                   &
-     &             aconc(nspmx)=0._rspec,     tempic(nspmx)=0._rspec,& 
+     &             aconc(nspmx)=0._rspec,     tempic(nspmx)=0._rspec,&
      &             tisepr(nspmx)=0._rspec,    glti(nspmx)=0._rspec,  &
      &             pptii(nspmx)=0._rspec,     pptie(nspmx)=0._rspec
 
@@ -129,7 +134,7 @@
 
 
 !TORIC namelist blocks (some variables are not written for simplification)
-!Most of these variables are described in man_toric and 
+!Most of these variables are described in man_toric and
 !initalized in t4_mod_public.F
 
 !originally in t4_aamain.F
@@ -139,17 +144,25 @@
 !originally in t4_torica.F
 !specifies general wave parameters, some numerical parameters
       namelist /toricainp/ &
-     &   nvrb,   nmod,   ntt,    nelm,   nptvac, mxmvac, &
+!     &   nvrb,   nmod,   ntt,    nelm,   nptvac, mxmvac, &
+!     &   freqcy, anzedg, ibcant, antlen, antlc,  theant, &
+!     &   iflr,   ibpol,  iqtor,  icoll,  enhcol, &
+!     &   imdedg, iezvac, ibweld, icosig, iregax, &
+!     &   isol,   mastch,         iout,   idlout, io_ncdf, &
+!     &   iwdisk, ipltht, zeff,   iclres, dnures, tnures, &
+!     &   timing_on, scratchpath, bscale, use_incore, pcblock
+     &   nmod,   ntt,    nelm,   nptvac, mxmvac, &
      &   freqcy, anzedg, ibcant, antlen, antlc,  theant, &
-     &   iflr,   ibpol,  iqtor,  icoll,  enhcol, &
-     &   imdedg, iezvac, ibweld, icosig, iregax, &
-     &   isol,   mastch,         iout,   idlout, io_ncdf, &
-     &   iwdisk, ipltht, zeff,   iclres, dnures, tnures, &
-     &   timing_on, scratchpath, bscale, use_incore, pcblock
- 
+     &   iflr,   ibpol,  icoll,  enhcol, &
+     &   iregax, &
+     &   isol,   mastch,         iout,   idlout, &
+     &   iwdisk, zeff, &
+     &   timing_on, scratchpath, use_incore, pcblock, inputpath, &
+     &   IJRF, IPWDIM, ICLPLO
+
       namelist /nonthermals/ &
      &   fracmin, q_rfmin, qatom_rfmin, m_rfmin, rfmin_name, &
-     &   kdens_rfmin, isThermal 
+     &   kdens_rfmin, isThermal
 
 
 !originally in t4_mod_toi2mex.F
@@ -161,8 +174,14 @@
 
 !originally in t4_mod_equil.F
 !specifies plasma equilibrium settings and profiles
+!      namelist/equidata/ igsmhd, intchb, idprof, &
+!     &   nspec,  mainsp, &
+!     &   atm,    azi, so_thickness, iudsym,&
+!     &   dist_plafars,   dist_plaant,    dist_plawall, &
+!     &   equil_file,     profnt_file
+
       namelist/equidata/ igsmhd, intchb, idprof, &
      &   nspec,  mainsp, &
-     &   atm,    azi, so_thickness, iudsym,&
+     &   atm,    azi, so_thickness, &
      &   dist_plafars,   dist_plaant,    dist_plawall, &
-     &   inputpath,      equil_file,     profnt_file
+     &   equil_file,     profnt_file
