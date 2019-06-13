@@ -29,7 +29,7 @@ def sputtering_and_reflection(ftridynOneOutOutput='He_WOUT.dat',
                   ):
 
     if logFile  is not None:
-        print ('redirect getYields output of to:', logFile)
+        print(('redirect getYields output of to:', logFile))
         outF = open(logFile, "a")
         sys.stdout = outF
 
@@ -37,8 +37,8 @@ def sputtering_and_reflection(ftridynOneOutOutput='He_WOUT.dat',
         print ('no log file defined in getYields')
         print ('print output to default sys.stdout')
         
-    print ' '
-    print 'getYields:'
+    print(' ')
+    print('getYields:')
 
     totalSpYield=0.0;
     totalRYield=0.0
@@ -46,16 +46,16 @@ def sputtering_and_reflection(ftridynOneOutOutput='He_WOUT.dat',
 
 
     if len(angle)>1:
-        print '\t reading the impact energy distribution for ', (len(angle)), ' angles' 
+        print('\t reading the impact energy distribution for ', (len(angle)), ' angles') 
     else:
-        print '\t single, fixed angle used'
+        print('\t single, fixed angle used')
 
     totalWeight=np.sum(weightAngle)
-    print '\t the sum of weights is ', totalWeight
+    print('\t the sum of weights is ', totalWeight)
     for a in np.arange(0,len(angle),1):
 
         if weightAngle[a]==0.0:
-            print '\t for angle ', angle[a], 'with weight = ', weightAngle[a], 'skipping all yields analysis'
+            print('\t for angle ', angle[a], 'with weight = ', weightAngle[a], 'skipping all yields analysis')
 
         elif weightAngle[a] >0.0:
             angleFolder=ftridynFolder+str(angle[a])
@@ -88,13 +88,13 @@ def sputtering_and_reflection(ftridynOneOutOutput='He_WOUT.dat',
             weightedRYield=reflectYield*weightAngle[a]/totalWeight
             totalRYield += weightedRYield
 
-            print '\t for angle ',angle[a],', weight = ',weightAngle[a],': spY = ',spYield,' ; weighted spY = ',weightedSpYield,' ; rY = ',reflectYield, ' ; weighted rY = ', weightedRYield
+            print('\t for angle ',angle[a],', weight = ',weightAngle[a],': spY = ',spYield,' ; weighted spY = ',weightedSpYield,' ; rY = ',reflectYield, ' ; weighted rY = ', weightedRYield)
             sys.stdout.flush()
 
-    print ' '
-    print "\t average sputtering yield is ", totalSpYield
+    print(' ')
+    print("\t average sputtering yield is ", totalSpYield)
     yields.append(totalSpYield)
-    print "\t average reflection yield is ", totalRYield
+    print("\t average reflection yield is ", totalRYield)
     yields.append(totalRYield)
 
     sys.stdout.flush()

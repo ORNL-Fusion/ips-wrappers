@@ -29,7 +29,7 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
                   ):
 
     if logFile  is not None:
-        print ('redirect tridynPlotting output of to:', logFile)
+        print(('redirect tridynPlotting output of to:', logFile))
         outF = open(logFile, "a")
         sys.stdout = outF
 
@@ -37,8 +37,8 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
         print ('no log file defined in tridynPlotting')
         print ('print output to default sys.stdout')
         
-    print ' '
-    print 'tridynPlotting:'
+    print(' ')
+    print('tridynPlotting:')
 
     totalSpYield=0.0;
     totalRYield=0.0
@@ -46,17 +46,17 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
 
 
     if len(angle)>1:
-        print '\t reading the impact energy distribution for ', (len(angle)), ' angles' 
+        print('\t reading the impact energy distribution for ', (len(angle)), ' angles') 
     else:
-        print '\t single, fixed angle used'
+        print('\t single, fixed angle used')
 
     totalWeight=np.sum(weightAngle)
-    print '\t the sum of weights is ', totalWeight, ' and projectile range', prjRange , ' [A]'
+    print('\t the sum of weights is ', totalWeight, ' and projectile range', prjRange , ' [A]')
     
     nonZeroAngle=0
     for a in np.arange(0,len(angle),1):
         if weightAngle[a]==0.0:
-            print '\t \t angle',a,' of weight ', weightAngle[a], ': skip all analysis with no contribution to implantation profile'
+            print('\t \t angle',a,' of weight ', weightAngle[a], ': skip all analysis with no contribution to implantation profile')
 
         elif weightAngle[a] >0.0:
             angleFolder=ftridynFolder+str(angle[a])
@@ -77,7 +77,7 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
             #print "reading file: %s" %(ftridynCurrentPrjOutput)
             num_lines_prj = sum(1 for line in open(ftridynCurrentPrjOutput))
             if num_lines_prj==0:
-                print "\t \t WARNING: prj file is empty for angle ", angle[a]
+                print("\t \t WARNING: prj file is empty for angle ", angle[a])
             else:
                 #print "TEST: calculate sputtering yield for angle ", angle[a]
                 nonZeroAngle+=1 #identify the first time that an angle contributes, to initialize n[]

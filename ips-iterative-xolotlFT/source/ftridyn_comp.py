@@ -14,13 +14,13 @@ import re
 import pickle
 import math
 
-print 'The generate_ftridyn_input path in ftridyn_comp is:'
-print os.path.abspath(generate_ftridyn_input.__file__) #TEST
+print('The generate_ftridyn_input path in ftridyn_comp is:')
+print(os.path.abspath(generate_ftridyn_input.__file__)) #TEST
 
 class ftridynWorker(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
         #get name of FTridyn executable from config file
         #This is actually a shell script that calls FTridyn and pipe the input to the executable
         self.ftridyn_exe = self.FTRIDYN_EXE
@@ -53,7 +53,7 @@ class ftridynWorker(Component):
         if 'output_file' in keywords:
             outFile=keywords['output_file']
             if outFile  is not None:
-                print ('redirect F-TRIDYN:init output of ', cwd , 'to:', outFile)
+                print(('redirect F-TRIDYN:init output of ', cwd , 'to:', outFile))
                 outF=open(outFile , 'a')
                 sys.stdout = outF
             else:
@@ -64,8 +64,8 @@ class ftridynWorker(Component):
         print('fridyn_worker: init \n')
 
         print('check that all arguments are read well by ftridyn-init \n')
-        for (k, v) in keywords.iteritems():
-            print('\t {0} = {1}'.format(k,v))
+        for (k, v) in keywords.items():
+            print(('\t {0} = {1}'.format(k,v)))
 
         if os.path.exists(self.ft_folder):
             shutil.rmtree(self.ft_folder)
@@ -75,7 +75,7 @@ class ftridynWorker(Component):
         for j in range(len(angleIn)):
 
             if (weightAngle[j] == 0.0):
-                print('\t weight of angle {0} is {1}, so skip generateInput'.format(angleIn[j],weightAngle[j])) 
+                print(('\t weight of angle {0} is {1}, so skip generateInput'.format(angleIn[j],weightAngle[j]))) 
 
             elif (weightAngle[j] > 0.0):
                 generate_ftridyn_input.Prj_Tg_xolotl(IQ0=ftridyn['iQ0'],number_layers=ftridyn['nDataPts'],depth=ftridyn['nTT'],number_histories=ftridyn['nImpacts'],incident_energy=energyIn,incident_angle=angleIn[j],projectile_name=str(prj),target1_name=str(tg[0]), target2_name=str(tg[1]),target3_name=str(tg[2]),target4_name=str(tg[3]))
@@ -112,7 +112,7 @@ class ftridynWorker(Component):
         if 'output_file' in keywords:
             outFile=keywords['output_file']
             if outFile  is not None:
-                print ('redirect F-TRIDYN:step output of ', cwd , 'to:', outFile)
+                print(('redirect F-TRIDYN:step output of ', cwd , 'to:', outFile))
                 outF=open(outFile , 'a')
                 sys.stdout = outF
             else:
@@ -123,8 +123,8 @@ class ftridynWorker(Component):
         print('ftridyn_worker: step \n')
 
         print('check that all arguments are read well by ftridyn-step \n')
-        for (k, v) in keywords.iteritems():
-            print('\t {0} = {1} '.format(k,v))
+        for (k, v) in keywords.items():
+            print(('\t {0} = {1} '.format(k,v)))
 
         #call shell script that runs FTridyn and pipes input file
         #task_id = self.services.launch_task(self.NPROC,
@@ -143,7 +143,7 @@ class ftridynWorker(Component):
         for j in range(len(angleIn)): #for i in range(len(energy)):
 
             if (weightAngle[j] == 0.0):
-                print('\t weight of angle {0} is {1}, so skip running F-Tridyn'.format(angleIn[j],weightAngle[j]))
+                print(('\t weight of angle {0} is {1}, so skip running F-Tridyn'.format(angleIn[j],weightAngle[j])))
 
             elif (weightAngle[j] > 0.0):
                 pathFolder = self.ft_folder+'/ANGLE'+str(angleIn[j])# + "_"+str(energyIn[j])
@@ -168,10 +168,10 @@ class ftridynWorker(Component):
                 #poolInput_ftx='FTridyn_angle'+str(angleIn[j])
                 self.services.add_task('pool_ftx', 'task'+str(i), nFTrunsPerNode, cwd, 'python',self.FTMPI_EXEC,str(i),str(nFTrunsPerNode),str(self.FTRIDYN_EXE),"FTridyn.IN",task_ppn= nFTrunsPerNode,logfile='task_pool'+str(i)+'.log' )
         ret_val = self.services.submit_tasks('pool_ftx')
-        print ' '
-        print('\t ret_val = {}'.format(ret_val))
+        print(' ')
+        print(('\t ret_val = {}'.format(ret_val)))
         exit_status = self.services.get_finished_tasks('pool_ftx')
-        print('{} \n'.format(exit_status))
+        print(('{} \n'.format(exit_status)))
         self.services.remove_task_pool('pool_ftx')
         
         #write the path to the current working directory, so the driver can access the data
@@ -181,8 +181,8 @@ class ftridynWorker(Component):
         outputPathFile.write('\n')
         outputPathFile.close()
 
-        print('path of FTRIDYNs output: {} '.format(cwd))
-        print('\t written to file: {} '.format(self.PWD_PATH))
+        print(('path of FTRIDYNs output: {} '.format(cwd)))
+        print(('\t written to file: {} '.format(self.PWD_PATH)))
         print('\n')
 
 

@@ -129,7 +129,7 @@ def write(file_handle, key, value):
         file_handle.write('\n')
     elif isinstance(value, dict):
         file_handle.write('{0:s}='.format(key))
-        for k, v in value.iteritems():
+        for k, v in value.items():
             if v != None:
                 if isinstance(v, int):                  
                     file_handle.write('{0:s} {1:d} '.format(k, v))
@@ -222,7 +222,7 @@ class xolotl_params:
     def write(self, file_name):
         file_handle = open(file_name, 'w')
         
-        for key, value in self.parameters.iteritems():
+        for key, value in self.parameters.items():
             write(file_handle, key, value)
 
         file_handle.close()

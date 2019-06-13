@@ -12,7 +12,7 @@ import numpy as np
 class xolotlWorker(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
         
 
     def init(self, timeStamp=0.0, **keywords):
@@ -33,7 +33,7 @@ class xolotlWorker(Component):
         if 'output_file' in keywords:
             outFile=keywords['output_file']
             if outFile  is not None:
-                print('redirect Xolotl:init output of ', cwd , 'to:', outFile)
+                print(('redirect Xolotl:init output of ', cwd , 'to:', outFile))
                 outF=open(outFile , 'a')
                 sys.stdout = outF
             else:
@@ -44,8 +44,8 @@ class xolotlWorker(Component):
         print('xolotl_worker: init')
 
         print('check that all arguments are read well by xolotl-init and write Xolotl input file (from dictionary)')
-        for (k, v) in keywords.iteritems():
-            print('\t {0} = {1}'.format(k, v))
+        for (k, v) in keywords.items():
+            print(('\t {0} = {1}'.format(k, v)))
 
         #write and store xolotls parameter for each loop 
         xp.write('params.txt')
@@ -65,27 +65,27 @@ class xolotlWorker(Component):
         xp_parameters=keywords['xParameters']
         outFile=keywords['output_file']
         
-        print ' '
+        print(' ')
         if 'output_file' in keywords:
             outFile=keywords['output_file']            
             if outFile  is not None:
-                print('redirect Xolotl:step output of ', cwd , 'to:', outFile)
+                print(('redirect Xolotl:step output of ', cwd , 'to:', outFile))
                 outF=open(outFile , 'a')
                 sys.stdout = outF
             else:
                 print ('no log file defined in keywords or config file')
                 print ('print output of Xolotl:step to default sys.stdout')
 
-        print ' '
+        print(' ')
         print('xolotl_worker: step ')
         print (' ')
 
 
         #asign a local variable to arguments used multiple times      
-        print 'checking that all arguments are read well by xolotl-step'
-        for (k, v) in keywords.iteritems():
-            print '\t', k, " = ", v 
-        print 'DONE checking that all arguments are read well by xolotl-step '
+        print('checking that all arguments are read well by xolotl-step')
+        for (k, v) in keywords.items():
+            print('\t', k, " = ", v) 
+        print('DONE checking that all arguments are read well by xolotl-step ')
         #print '\n'
 
         #xolotlLogFile='xolotl_t%f.log' %self.driverTime
@@ -115,13 +115,13 @@ class xolotlWorker(Component):
             statusFile=open(self.EXIT_STATUS, "r")
             exitStatus=statusFile.read().rstrip('\n')
             statusFile.close()
-            print "statusFile: ", exitStatus
+            print("statusFile: ", exitStatus)
             sys.stdout.flush()
             self.services.update_plasma_state()
 
             #if out of grid space, do not keep on trying
             if exitStatus=='overgrid':
-                print "aborting run, out of void space in grid: fix network file in next restart"
+                print("aborting run, out of void space in grid: fix network file in next restart")
                 break
 
             if (ret_val == 0):
@@ -146,7 +146,7 @@ class xolotlWorker(Component):
         #-> pass HDF5 file to binTRIDYN, will output text file
         #-> no need to delete or compress files
         newest = max(glob.iglob('TRIDYN_*.h5'), key=os.path.getctime)  
-        print('\t newest file {} \n'.format(newest))
+        print(('\t newest file {} \n'.format(newest)))
         shutil.copyfile(newest, 'last_TRIDYN_toBin.h5')
 
 
@@ -167,13 +167,13 @@ class xolotlWorker(Component):
             if petscHeConc:
                 heConcZipped='allHeliumConc_t%f.zip' %self.driverTime
                 zip_ouput='zipHeConcOuput.txt'
-                print('\t \t also save and zip output: {}, regardless of zipOutput \n'.format(heConcFiles))
+                print(('\t \t also save and zip output: {}, regardless of zipOutput \n'.format(heConcFiles)))
                 zipString='zip %s %s >> %s ' %(heConcZipped, heConcFiles, zip_ouput)
                 subprocess.call([zipString], shell=True)
                 rmString='rm '+heConcFiles
                 subprocess.call([rmString], shell=True)
             else:
-                print('\t \t no {} generated in this loop \n'.format(heConcFiles))
+                print(('\t \t no {} generated in this loop \n'.format(heConcFiles)))
                 
             print('\t \t rename output files as collapsed before trying again')
 
@@ -198,13 +198,13 @@ class xolotlWorker(Component):
             if petscHeConc:
                 heConcZipped='allHeliumConc_t%f.zip' %self.driverTime
                 zip_ouput='zipHeConcOuput.txt'
-                print('\t \t also save and zip output: {}, regardless of zipOutput \n'.format(heConcFiles))
+                print(('\t \t also save and zip output: {}, regardless of zipOutput \n'.format(heConcFiles)))
                 zipString='zip %s %s >> %s ' %(heConcZipped, heConcFiles, zip_ouput)
                 subprocess.call([zipString], shell=True)
                 rmString='rm '+heConcFiles
                 subprocess.call([rmString], shell=True)
             else:
-                print('\t \t no {} generated in this loop \n'.format(heConcFiles))
+                print(('\t \t no {} generated in this loop \n'.format(heConcFiles)))
 
             print('\t \t rename output files as overgrid before exiting')
 
@@ -239,18 +239,18 @@ class xolotlWorker(Component):
                 if zipOutput=='True':
                     heConcZipped='allHeliumConc_t%f.zip' %self.driverTime
                     zip_ouput='zipHeConcOuput.txt'                
-                    print('\t \t save and zip output: {} \n'.format(heConcFiles))
+                    print(('\t \t save and zip output: {} \n'.format(heConcFiles)))
                     zipString='zip %s %s >> %s ' %(heConcZipped, heConcFiles, zip_ouput)
                     subprocess.call([zipString], shell=True)
 
                 else:
-                    print('\t \t deleting {} (without saving compressed) \n'.format(heConcFiles))
+                    print(('\t \t deleting {} (without saving compressed) \n'.format(heConcFiles)))
 
                 rmString='rm '+heConcFiles
                 subprocess.call([rmString], shell=True)
 
             else:
-                print('\t \t no {} generated in this loop \n'.format(heConcFiles))
+                print(('\t \t no {} generated in this loop \n'.format(heConcFiles)))
 
         #updates plasma state Xolotl output files
         sys.stdout.flush()
