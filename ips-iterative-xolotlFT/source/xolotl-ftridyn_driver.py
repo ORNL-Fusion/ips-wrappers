@@ -569,6 +569,7 @@ driver['LOOP_TIME_STEP'])))
                         ft_output_file=self.ft_output_file[i]
                         #get implantation profile
                         translate_ftridyn_to_xolotl.ftridyn_to_xolotl(ftridynOnePrjOutput=ft_output_prj_file, ftridynFolder=angleFolder, angle=self.angleIn[i], weightAngle=self.weightAngle[i], prjRange=maxRange, nBins=self.xp.parameters['grid'][0], logFile=outFile) #gAngleDistrib=self.angleDistrFile[i]
+                        sys.stdout.flush()
 
                     else: #if len(maxDepth)==0
                         print("nothing was implanted. maxRange and profile = 0 ")

@@ -61,21 +61,11 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
         elif weightAngle[a] >0.0:
             angleFolder=ftridynFolder+str(angle[a])
             
-            #calculate the sputtering yield for each run and take the average
             ## Open files ("bla1" is not used but I could not figure out how to easily open a file without using two columns)
             ftridynCurrentPrjOutput=angleFolder+"/"+ftridynOnePrjOutput
-
-            #        nLines = sum(1 for line in open(ftridynCurrentPrjOutput,"r"))
-            #        if (a==1):
-            #            numLines=[]
-            
-            #        numLines.append = nLines
-            #        print "FTridyn's file has " , nLines, " lines"
-            #        if nLines==0:
-            #            continue
-            
             #print "reading file: %s" %(ftridynCurrentPrjOutput)
             num_lines_prj = sum(1 for line in open(ftridynCurrentPrjOutput))
+
             if num_lines_prj==0:
                 print("\t \t WARNING: prj file is empty for angle ", angle[a])
             else:
@@ -109,9 +99,10 @@ def ftridyn_to_xolotl(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
 
     ## Fit with polynomials
     fit = poly.polyfit(b, n, 15)
+
     ## Get the fit function
     fitFunc = poly.Polynomial(fit)
-    
+
     ## Open 'tridyn.dat' where results will be printed
     outputFile = open('tridyn.dat', 'w')
     
