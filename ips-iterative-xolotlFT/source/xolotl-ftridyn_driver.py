@@ -597,7 +597,7 @@ driver['LOOP_TIME_STEP'])))
                     ft_output_profile_final=self.FT_OUTPUT_PROFILE_FINAL+'_'+prj
                     tempfile = open(self.FT_OUTPUT_PROFILE_TEMP,"r")
                     f = open(ft_output_profile_final, "a")                    
-                    f.write('%s %s \n' %(tempfile.read().rstrip('\n'),self.maxRangeXolotl[i]))                    
+                    f.write('%s%s \n' %(tempfile.read().rstrip('\n'),self.maxRangeXolotl[i]))                    
                     f.close()
                     tempfile.close()
                     
