@@ -71,6 +71,15 @@ generic_ps_file_init.f90 to interact with the Plasma State. The fortran code is 
 in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true.
 
 """
+# Version 6.1 (Batchelor 8/26/2019)
+# A new version of netCDF4 module has broken the syntax for setting variables.  The symptom
+# is that the variables don't get set and the plasma state file is not updated on close().
+# Fix is: 
+# plasma_state.variables['tokamak_id'] = tokamak -> 
+#       plasma_state.variables['tokamak_id'][:] = stringtoarr(tokamak, 32)
+# plasma_state.variables['t0'] = t0 -> plasma_state.variables['t0'][0]
+# N.B. Apparently ps.variables['t0'].assignValue(float(tinit)) also works
+
 # Version 6.0 (Batchelor 9/17/2018)
 # Implemented INIT_MODE = mixed
 
@@ -409,13 +418,13 @@ class generic_ps_init (Component):
 
             # Put into current plasma state
             plasma_state = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
-            plasma_state.variables['tokamak_id'] = tokamak
-            plasma_state.variables['shot_number'] = shot_number
-            plasma_state.variables['run_id'] = run_id
-            plasma_state.variables['t0'] = t0
-            plasma_state.variables['t1'] = t1
-            plasma_state.variables['tinit'] = t0
-            plasma_state.variables['tfinal'] = tfinal
+            plasma_state.variables['tokamak_id'][:] = stringtoarr(tokamak, 32)
+            plasma_state.variables['run_id'][:] = stringtoarr(run_id, 32)
+            plasma_state.variables['shot_number'][0] = shot_number
+            plasma_state.variables['t0'][0] = t0
+            plasma_state.variables['t1'][0] = t1
+            plasma_state.variables['tinit'][0] = t0
+            plasma_state.variables['tfinal'][0] = tfinal
             plasma_state.close()
 
         # Preserve initial plasma state file
