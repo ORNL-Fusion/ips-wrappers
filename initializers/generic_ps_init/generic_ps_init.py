@@ -104,7 +104,7 @@ in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true
 #
 # This version supports both checkpoint and restart using framework functions
 # A checkpoint() function is provided that is called by the framework
-# services.checkpoint_components() fnction.  The restart priocess now uses framwork
+# services.checkpoint_components() fnction.  The restart process now uses framework
 # function get_restart_files() in 'step'.  There is no 'restart' function for the
 # INIT component.
 
@@ -419,7 +419,7 @@ class generic_ps_init (Component):
             # Put into current plasma state
             plasma_state = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
             plasma_state.variables['tokamak_id'][:] = stringtoarr(tokamak, 32)
-            plasma_state.variables['run_id'][:] = stringtoarr(run_id, 32)
+            plasma_state.variables['RunID'][:] = stringtoarr(run_id, 32)
             plasma_state.variables['shot_number'][0] = shot_number
             plasma_state.variables['t0'][0] = t0
             plasma_state.variables['t1'][0] = t1
