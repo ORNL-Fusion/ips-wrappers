@@ -71,6 +71,11 @@ generic_ps_file_init.f90 to interact with the Plasma State. The fortran code is 
 in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true.
 
 """
+# Version 6.2 (Batchelor 9/12/2019)
+# Eliminated import get_lines, put_lines, edit_nml_file, get_global_param, and
+# get_component_param.  Get these from /ips-wrappers/utilities.  Needs to be on 
+# PYTHON_PATH.
+
 # Version 6.1 (Batchelor 8/26/2019)
 # A new version of netCDF4 module has broken the syntax for setting variables.  The symptom
 # is that the variables don't get set and the plasma state file is not updated on close().
@@ -158,6 +163,8 @@ import string
 import datetime
 from  component import Component
 from netCDF4 import *
+from simple_file_editing_functions import put_lines
+from get_IPS_config_parameters import get_global_param, get_component_param
 
 component_dict = {'PLASMA':10, 'EQ':2, 'NBI':9, 'IC':6, 'LH':7, 'EC':2,\
              'RUNAWAY':13, 'FUS':4, 'RAD':11, 'GAS':5, 'LMHD':8, 'RIPPLE':12, 'ANOM':1}
@@ -472,53 +479,3 @@ class generic_ps_init (Component):
 
     def finalize(self, timestamp=0.0):
         print 'generic_ps_init.finalize() called'
-
-# ------------------------------------------------------------------------------
-#
-# "Private"  methods
-#
-# ------------------------------------------------------------------------------
-
-
-    # Try to get config parameter - wraps the exception handling for get_config_parameter()
-    def get_config_param(self, services, param_name, optional=False):
-
-        try:
-            value = services.get_config_param(param_name)
-            print param_name, ' = ', value
-        except Exception:
-            if optional:
-                print 'optional config parameter ', param_name, ' not found'
-                value = None
-            else:
-                message = 'required config parameter ', param_name, ' not found'
-                print message
-                services.exception(message)
-                raise
-
-        return value
-
-    # Try to get component specific config parameter - wraps the exception handling
-    def get_component_param(self, services, param_name, optional=False):
-
-        if hasattr(self, param_name):
-            value = getattr(self, param_name)
-            print param_name, ' = ', value
-        elif optional:
-            print 'optional config parameter ', param_name, ' not found'
-            value = None
-        else:
-            message = 'required component config parameter ', param_name, ' not found'
-            print message
-            services.exception(message)
-            raise
-
-        return value
-
-
-    #---------------------------------------------------------------------------------------
-    # Open an output file and write lines into it
-    def put_lines(self, filename, lines):
-        file = open(filename, 'w')
-        file.writelines(lines)
-        file.close()

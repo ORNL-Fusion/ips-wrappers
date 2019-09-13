@@ -1,5 +1,10 @@
 #! /usr/bin/env python
 
+# Version 1.1 (Batchelor 9-12-2019)
+# Eliminated import get_lines, put_lines, edit_nml_file, get_global_param, and
+# get_component_param.  Get these from /ips-wrappers/utilities.  Needs to be on 
+# PYTHON_PATH.
+
 # Version 1.0 of new model_RF_IC 3/6/2018 (Batchelor)
 # Eliminated a large number of previous versions of this component and reverted name from
 # model_RF_IC_3 to model_RF_IC. 
@@ -47,6 +52,7 @@ import getopt
 import shutil
 import string
 from component import Component
+from get_IPS_config_parameters import get_global_param, get_component_param
 
 class model_RF_IC (Component):
     def __init__(self, services, config):
@@ -271,46 +277,3 @@ class model_RF_IC (Component):
 
     def finalize(self, timestamp=0.0):
         print 'model_RF_IC finalize() called'
-
-# ------------------------------------------------------------------------------
-#
-# "Private"  methods
-#
-# ------------------------------------------------------------------------------
-
-
-    # Try to get config parameter - wraps the exception handling for get_config_parameter()
-    def get_config_param(self, services, param_name, optional=False):
-
-        try:
-            value = services.get_config_param(param_name)
-            print param_name, ' = ', value
-        except Exception :
-            if optional: 
-                print 'config parameter ', param_name, ' not found'
-                value = None
-            else:
-                message = 'required config parameter ', param_name, ' not found'
-                print message
-                services.exception(message)
-                raise
-        
-        return value
-
-    # Try to get component specific config parameter - wraps the exception handling
-    def get_component_param(self, services, param_name, optional=False):
-
-        if hasattr(self, param_name):
-            value = getattr(self, param_name)
-            print param_name, ' = ', value
-        elif optional:
-            print 'optional config parameter ', param_name, ' not found'
-            value = None
-        else:
-            message = 'required component config parameter ', param_name, ' not found'
-            print message
-            services.exception(message)
-            raise
-        
-        return value
-

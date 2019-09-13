@@ -1,5 +1,10 @@
 #! /usr/bin/env python
 
+# Version 10.5 (Batchelor 9-12-2019)
+# Eliminated import get_lines, put_lines, edit_nml_file, get_global_param, and
+# get_component_param.  Get these from /ips-wrappers/utilities.  Needs to be on 
+# PYTHON_PATH.
+
 # Version 10.4 (Batchelor 7/29/2018)
 # Eliminated all reference to NEXT_STATE
 
@@ -89,9 +94,9 @@ import getopt
 import shutil
 import math
 from component import Component
-#from Scientific.IO.NetCDF import *
 from netCDF4 import *
 import Numeric
+from get_IPS_config_parameters import get_global_param, get_component_param
 
 
 class generic_driver(Component):
@@ -429,44 +434,3 @@ class generic_driver(Component):
         print'generic_driver pre_step_logic: timeStamp = ', timeStamp
         
         return
-
-# ------------------------------------------------------------------------------
-#
-# "Private"  methods
-#
-# ------------------------------------------------------------------------------
-
-    # Try to get config parameter - wraps the exception handling for get_config_parameter()
-    def get_config_param(self, services, param_name, optional=False):
-
-        try:
-            value = services.get_config_param(param_name)
-            print param_name, ' = ', value
-        except Exception :
-            if optional: 
-                print 'optional config parameter ', param_name, ' not found'
-                value = None
-            else:
-                message = 'required config parameter ', param_name, ' not found'
-                print message
-                services.exception(message)
-                raise
-        
-        return value
-
-    # Try to get component specific config parameter - wraps the exception handling
-    def get_component_param(self, services, param_name, optional=False):
-
-        if hasattr(self, param_name):
-            value = getattr(self, param_name)
-            print param_name, ' = ', value
-        elif optional:
-            print 'optional config parameter ', param_name, ' not found'
-            value = None
-        else:
-            message = 'required component config parameter ', param_name, ' not found'
-            print message
-            services.exception(message)
-            raise
-        
-        return value
