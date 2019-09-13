@@ -95,7 +95,7 @@ import shutil
 import math
 from component import Component
 from netCDF4 import *
-import Numeric
+#import Numeric
 from get_IPS_config_parameters import get_global_param, get_component_param
 
 
