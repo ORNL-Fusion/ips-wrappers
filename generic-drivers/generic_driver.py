@@ -411,7 +411,7 @@ class generic_driver(Component):
     
     
     # Pre Step Logic
-    def pre_step_logic(self, timeStamp):
+    def pre_step_logic(self, services, timeStamp):
 
         cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
 
