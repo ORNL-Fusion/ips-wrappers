@@ -76,8 +76,8 @@ class model_RF_IC (Component):
         services = self.services
 
     # Get global configuration parameters
-        cur_state_file = self.get_config_param(services,'CURRENT_STATE')
-        cur_eqdsk_file = self.get_config_param(services,'CURRENT_EQDSK')
+        cur_state_file = self.get_global_param(services,'CURRENT_STATE')
+        cur_eqdsk_file = self.get_global_param(services,'CURRENT_EQDSK')
 
     # Get component-specific configuration parameters. Note: Not all of these are
     # used in 'init' but if any are missing we get an exception now instead of
@@ -156,8 +156,8 @@ class model_RF_IC (Component):
         workdir = services.get_working_dir()
 
         # Get restart files listed in config file.        
-        restart_root = self.get_config_param(services,'RESTART_ROOT')
-        restart_time = self.get_config_param(services,'RESTART_TIME')
+        restart_root = self.get_global_param(services,'RESTART_ROOT')
+        restart_time = self.get_global_param(services,'RESTART_TIME')
 
         try:
             services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
@@ -187,8 +187,8 @@ class model_RF_IC (Component):
         services = self.services
 
     # Get global configuration parameters
-        cur_state_file = self.get_config_param(services,'CURRENT_STATE')
-        cur_eqdsk_file = self.get_config_param(services,'CURRENT_EQDSK')
+        cur_state_file = self.get_global_param(services,'CURRENT_STATE')
+        cur_eqdsk_file = self.get_global_param(services,'CURRENT_EQDSK')
 
     # Get component-specific configuration parameters.
         BIN_PATH = self.get_component_param(services, 'BIN_PATH')

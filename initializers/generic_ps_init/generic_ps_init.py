@@ -210,7 +210,7 @@ class generic_ps_init (Component):
         tfinal  = tlist_str[-1]
 
 # Check if this is a restart simulation
-        simulation_mode = self.get_config_param(services, 'SIMULATION_MODE')
+        simulation_mode = self.get_global_param(services, 'SIMULATION_MODE')
 
         if simulation_mode == 'RESTART':
             print 'generic_ps_init: RESTART'
@@ -227,8 +227,8 @@ class generic_ps_init (Component):
 
         if simulation_mode == 'RESTART':
             # Get restart files listed in config file. Here just the plasma state files.
-            restart_root = self.get_config_param(services, 'RESTART_ROOT')
-            restart_time = self.get_config_param(services, 'RESTART_TIME')
+            restart_root = self.get_global_param(services, 'RESTART_ROOT')
+            restart_time = self.get_global_param(services, 'RESTART_TIME')
             try:
                  services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
             except:
@@ -236,7 +236,7 @@ class generic_ps_init (Component):
                 self.services.exception(logMsg)
                 raise
 
-            cur_state_file = self.services.get_config_param('CURRENT_STATE')
+            cur_state_file = self.services.get_global_param('CURRENT_STATE')
 
             # Update ps%t0, ps%t1 and ps%tfinal.
             # Note ps%tinit stays the same in the plasma state file,
@@ -257,7 +257,7 @@ class generic_ps_init (Component):
 
             print 'generic_ps_init: simulation mode NORMAL'
             nml_lines = ['&ps_init_nml\n']
-            ps_file_list = self.get_config_param(services, 'PLASMA_STATE_FILES').split(' ')
+            ps_file_list = self.get_global_param(services, 'PLASMA_STATE_FILES').split(' ')
 
 
             init_mode = self.get_component_param(services, 'INIT_MODE')
@@ -287,8 +287,8 @@ class generic_ps_init (Component):
                 services.exception(message)
                 raise
 
-            cur_state_file = self.get_config_param(services, 'CURRENT_STATE')
-            cur_eqdsk_file = self.get_config_param(services, 'CURRENT_EQDSK')
+            cur_state_file = self.get_global_param(services, 'CURRENT_STATE')
+            cur_eqdsk_file = self.get_global_param(services, 'CURRENT_EQDSK')
             nml_lines.append(' cur_state_file = ' + cur_state_file + '\n')
             nml_lines.append(' cur_eqdsk_file = ' + cur_eqdsk_file + '\n')
 
@@ -414,9 +414,9 @@ class generic_ps_init (Component):
             # For all init init modes insert run identifiers and time data
             # (do it here in python instead of in minimal_state_init.f90 as before)
             # For minimal mode this is the only data in initial state
-            tokamak = self.get_config_param(services, 'TOKAMAK_ID')
-            shot_number = self.get_config_param(services, 'SHOT_NUMBER')
-            run_id = self.get_config_param(services, 'RUN_ID')
+            tokamak = self.get_global_param(services, 'TOKAMAK_ID')
+            shot_number = self.get_global_param(services, 'SHOT_NUMBER')
+            run_id = self.get_global_param(services, 'RUN_ID')
 
             timeloop = services.get_time_loop()
             t0 = timeloop[0]

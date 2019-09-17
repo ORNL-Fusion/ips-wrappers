@@ -20,6 +20,7 @@ import getopt
 import shutil
 import string
 from  component import Component
+from get_IPS_config_parameters import get_global_param, get_component_param
 
 class model_NB (Component):
     def __init__(self, services, config):
@@ -43,8 +44,8 @@ class model_NB (Component):
 
     # Get global configuration parameters
         try:
-            cur_state_file = services.get_config_param('CURRENT_STATE')
-            cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
+            cur_state_file = services.get_global_param('CURRENT_STATE')
+            cur_eqdsk_file = services.get_global_param('CURRENT_EQDSK')
         except:
             print 'model_NB: error in getting config parameters'
             services.error('model_NB: error in getting config parameters')
@@ -124,8 +125,8 @@ class model_NB (Component):
 
     # Get restart files listed in config file.        
       try:
-            restart_root = services.get_config_param('RESTART_ROOT')
-            restart_time = services.get_config_param('RESTART_TIME')
+            restart_root = services.get_global_param('RESTART_ROOT')
+            restart_time = services.get_global_param('RESTART_TIME')
             services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
       except Exception, e:
             print 'Error in call to get_restart_files()' , e
@@ -151,8 +152,8 @@ class model_NB (Component):
 
     # Get global configuration parameters
         try:
-            cur_state_file = services.get_config_param('CURRENT_STATE')
-            cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
+            cur_state_file = services.get_global_param('CURRENT_STATE')
+            cur_eqdsk_file = services.get_global_param('CURRENT_EQDSK')
         except:
             print 'model_NB: error in getting config parameters'
             services.error('model_NB: error in getting config parameters')

@@ -95,7 +95,6 @@ import shutil
 import math
 from component import Component
 from netCDF4 import *
-#import Numeric
 from get_IPS_config_parameters import get_global_param, get_component_param
 
 
@@ -129,7 +128,7 @@ class generic_driver(Component):
 
       # get list of ports
 #        ports = services.getGlobalConfigParameter('PORTS')
-        ports = self.get_config_param(services,'PORTS')
+        ports = self.get_global_param(services,'PORTS')
         port_names = ports['NAMES'].split()
         print 'PORTS =', port_names
         port_dict = {}
@@ -221,7 +220,7 @@ class generic_driver(Component):
             print (' ')
 
       # Is this a simulation startup or restart
-        sim_mode = self.get_config_param(services,'SIMULATION_MODE')
+        sim_mode = self.get_global_param(services,'SIMULATION_MODE')
 
       # Get timeloop for simulation
         timeloop = services.get_time_loop()
@@ -260,11 +259,11 @@ class generic_driver(Component):
 
       # Get plasma state files into driver work directory and copy to psn if there is one
         services.stage_plasma_state()
-        cur_state_file = services.get_config_param('CURRENT_STATE')
+        cur_state_file = services.get_global_param('CURRENT_STATE')
 
        # Get Portal RUNID and save to a file
-        run_id = self.get_config_param(services,'PORTAL_RUNID')
-        sym_root = self.get_config_param(services,'SIM_ROOT')
+        run_id = self.get_global_param(services,'PORTAL_RUNID')
+        sym_root = self.get_global_param(services,'SIM_ROOT')
         path = os.path.join(sym_root, 'PORTAL_RUNID')
         runid_file = open(path, 'a')
         runid_file.writelines(run_id + '\n')
@@ -414,7 +413,7 @@ class generic_driver(Component):
     # Pre Step Logic
     def pre_step_logic(self, timeStamp):
 
-        cur_state_file = self.services.get_config_param('CURRENT_STATE')
+        cur_state_file = self.services.get_global_param('CURRENT_STATE')
 
       # Update time stamps
 
