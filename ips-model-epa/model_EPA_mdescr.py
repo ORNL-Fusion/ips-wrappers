@@ -157,8 +157,8 @@ class model_EPA_mdescr(Component):
 
 # Time evolution of parameters
         # get lines from namelist file
-        inputLines = self.get_lines('model_EPA_mdescr_input.nml')
-        initial_nml_Lines = self.get_lines('initial_input.nml')
+        inputLines = get_lines('model_EPA_mdescr_input.nml')
+        initial_nml_Lines = get_lines('initial_input.nml')
 
         evolution_models = {'linear_DT': self.linear_DT,\
                             'ramp_initial_to_final': self.ramp_initial_to_final}

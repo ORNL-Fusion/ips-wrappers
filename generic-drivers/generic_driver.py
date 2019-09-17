@@ -128,7 +128,7 @@ class generic_driver(Component):
 
       # get list of ports
 #        ports = services.getGlobalConfigParameter('PORTS')
-        ports = self.get_global_param(services,'PORTS')
+        ports = get_global_param(services,'PORTS')
         port_names = ports['NAMES'].split()
         print 'PORTS =', port_names
         port_dict = {}
@@ -220,7 +220,7 @@ class generic_driver(Component):
             print (' ')
 
       # Is this a simulation startup or restart
-        sim_mode = self.get_global_param(services,'SIMULATION_MODE')
+        sim_mode = get_global_param(services,'SIMULATION_MODE')
 
       # Get timeloop for simulation
         timeloop = services.get_time_loop()
@@ -262,8 +262,8 @@ class generic_driver(Component):
         cur_state_file = services.get_global_param('CURRENT_STATE')
 
        # Get Portal RUNID and save to a file
-        run_id = self.get_global_param(services,'PORTAL_RUNID')
-        sym_root = self.get_global_param(services,'SIM_ROOT')
+        run_id = get_global_param(services,'PORTAL_RUNID')
+        sym_root = get_global_param(services,'SIM_ROOT')
         path = os.path.join(sym_root, 'PORTAL_RUNID')
         runid_file = open(path, 'a')
         runid_file.writelines(run_id + '\n')
@@ -274,7 +274,7 @@ class generic_driver(Component):
 
         print ' init sequence complete--ready for time loop'
 
-        INIT_ONLY = self.get_component_param(services, 'INIT_ONLY', optional = True)
+        INIT_ONLY = get_component_param(services, 'INIT_ONLY', optional = True)
         if INIT_ONLY in [True, 'true', 'True', 'TRUE']:   
             message = 'INIT_ONLY: Intentional stop after INIT phase'
             print message

@@ -51,8 +51,8 @@ class model_FUS (Component):
 
     # Get global configuration parameters
         try:
-            cur_state_file = services.get_global_param('CURRENT_STATE')
-            cur_eqdsk_file = services.get_global_param('CURRENT_EQDSK')
+            cur_state_file = get_global_param('CURRENT_STATE')
+            cur_eqdsk_file = get_global_param('CURRENT_EQDSK')
         except:
             print 'model_FUS: error in getting config parameters'
             services.error('model_FUS: error in getting config parameters')
@@ -133,8 +133,8 @@ class model_FUS (Component):
 
     # Get restart files listed in config file.        
       try:
-            restart_root = services.get_global_param('RESTART_ROOT')
-            restart_time = services.get_global_param('RESTART_TIME')
+            restart_root = get_global_param('RESTART_ROOT')
+            restart_time = get_global_param('RESTART_TIME')
             services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
       except Exception, e:
             print 'Error in call to get_restart_files()' , e
@@ -160,8 +160,8 @@ class model_FUS (Component):
 
     # Get global configuration parameters
         try:
-            cur_state_file = services.get_global_param('CURRENT_STATE')
-            cur_eqdsk_file = services.get_global_param('CURRENT_EQDSK')
+            cur_state_file = get_global_param('CURRENT_STATE')
+            cur_eqdsk_file = get_global_param('CURRENT_EQDSK')
         except:
             print 'model_FUS: error in getting config parameters'
             services.error('model_FUS: error in getting config parameters')
