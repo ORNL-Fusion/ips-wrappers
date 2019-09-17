@@ -210,7 +210,7 @@ class generic_ps_init (Component):
         tfinal  = tlist_str[-1]
 
 # Check if this is a restart simulation
-        simulation_mode = get_global_param(services, 'SIMULATION_MODE')
+        simulation_mode = get_global_param(self, services, 'SIMULATION_MODE')
 
         if simulation_mode == 'RESTART':
             print 'generic_ps_init: RESTART'
@@ -227,8 +227,8 @@ class generic_ps_init (Component):
 
         if simulation_mode == 'RESTART':
             # Get restart files listed in config file. Here just the plasma state files.
-            restart_root = get_global_param(services, 'RESTART_ROOT')
-            restart_time = get_global_param(services, 'RESTART_TIME')
+            restart_root = get_global_param(self, services, 'RESTART_ROOT')
+            restart_time = get_global_param(self, services, 'RESTART_TIME')
             try:
                  services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
             except:
@@ -257,7 +257,7 @@ class generic_ps_init (Component):
 
             print 'generic_ps_init: simulation mode NORMAL'
             nml_lines = ['&ps_init_nml\n']
-            ps_file_list = get_global_param(services, 'PLASMA_STATE_FILES').split(' ')
+            ps_file_list = get_global_param(self, services, 'PLASMA_STATE_FILES').split(' ')
 
 
             init_mode = get_component_param(services, 'INIT_MODE')
@@ -287,8 +287,8 @@ class generic_ps_init (Component):
                 services.exception(message)
                 raise
 
-            cur_state_file = get_global_param(services, 'CURRENT_STATE')
-            cur_eqdsk_file = get_global_param(services, 'CURRENT_EQDSK')
+            cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
+            cur_eqdsk_file = get_global_param(self, services, 'CURRENT_EQDSK')
             nml_lines.append(' cur_state_file = ' + cur_state_file + '\n')
             nml_lines.append(' cur_eqdsk_file = ' + cur_eqdsk_file + '\n')
 
@@ -414,9 +414,9 @@ class generic_ps_init (Component):
             # For all init init modes insert run identifiers and time data
             # (do it here in python instead of in minimal_state_init.f90 as before)
             # For minimal mode this is the only data in initial state
-            tokamak = get_global_param(services, 'TOKAMAK_ID')
-            shot_number = get_global_param(services, 'SHOT_NUMBER')
-            run_id = get_global_param(services, 'RUN_ID')
+            tokamak = get_global_param(self, services, 'TOKAMAK_ID')
+            shot_number = get_global_param(self, services, 'SHOT_NUMBER')
+            run_id = get_global_param(self, services, 'RUN_ID')
 
             timeloop = services.get_time_loop()
             t0 = timeloop[0]
