@@ -260,7 +260,7 @@ class generic_ps_init (Component):
             ps_file_list = get_global_param(self, services, 'PLASMA_STATE_FILES').split(' ')
 
 
-            init_mode = get_component_param(services, 'INIT_MODE')
+            init_mode = get_component_param(self, services, 'INIT_MODE')
             nml_lines.append(' init_mode = ' + init_mode + '\n')
 
         # Generate state files as dummies so framework will have a complete set
@@ -292,7 +292,7 @@ class generic_ps_init (Component):
             nml_lines.append(' cur_state_file = ' + cur_state_file + '\n')
             nml_lines.append(' cur_eqdsk_file = ' + cur_eqdsk_file + '\n')
 
-            INPUT_EQDSK_FILE = get_component_param(services, 'INPUT_EQDSK_FILE', \
+            INPUT_EQDSK_FILE = get_component_param(self, services, 'INPUT_EQDSK_FILE', \
             optional = True)
             if (INPUT_EQDSK_FILE is None) or (len(INPUT_EQDSK_FILE) == 0):
                 INPUT_EQDSK_FILE = ' '
@@ -313,7 +313,7 @@ class generic_ps_init (Component):
 # ------------------------------------------------------------------------------
             # init from existing plasma state file
             if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE', 'mixed', 'MIXED'] :    
-                INPUT_STATE_FILE = get_component_param(services, 'INPUT_STATE_FILE')
+                INPUT_STATE_FILE = get_component_param(self, services, 'INPUT_STATE_FILE')
 
                 # Copy INPUT_STATE_FILE to current state file
                 try:
@@ -326,7 +326,7 @@ class generic_ps_init (Component):
                     raise
 
                 # Generate cur_eqdsk_file from cur_state_file if GENERATE_EQDSK is True
-                GENERATE_EQDSK = get_component_param(services, 'GENERATE_EQDSK', \
+                GENERATE_EQDSK = get_component_param(self, services, 'GENERATE_EQDSK', \
                 optional = True)
                 if GENERATE_EQDSK in ['true', 'TRUE', 'True']:
                     nml_lines.append(' generate_eqdsk = True')
@@ -355,9 +355,9 @@ class generic_ps_init (Component):
 # ------------------------------------------------------------------------------
             # init from machine description file and possibly sconfig file
             if init_mode in ['mdescr', 'MDESCR', 'mixed', 'MIXED'] :
-                MDESCR_FILE = get_component_param(services, 'MDESCR_FILE')
+                MDESCR_FILE = get_component_param(self, services, 'MDESCR_FILE')
                 nml_lines.append(' mdescr_file = ' + MDESCR_FILE + '\n')
-                SCONFIG_FILE = get_component_param(services, 'SCONFIG_FILE', \
+                SCONFIG_FILE = get_component_param(self, services, 'SCONFIG_FILE', \
                 optional = 'TRUE')
 
                 if (SCONFIG_FILE is None) or (len(SCONFIG_FILE) == 0):
@@ -365,7 +365,7 @@ class generic_ps_init (Component):
                 else:
                     nml_lines.append(' sconfig_file = ' + SCONFIG_FILE + '\n')
 
-                INPUT_EQDSK_FILE = get_component_param(services, 'INPUT_EQDSK_FILE', \
+                INPUT_EQDSK_FILE = get_component_param(self, services, 'INPUT_EQDSK_FILE', \
                 optional = True)
                 if (INPUT_EQDSK_FILE is None) or (len(INPUT_EQDSK_FILE) == 0):
                    INPUT_EQDSK_FILE = ' '
@@ -379,7 +379,7 @@ class generic_ps_init (Component):
                 
 				# Retrieve list of IPS components which are to be initialized from 
 				# mdescr/sconfig and construct cclist for generic_ps_init.f90
-                mdescr_components =  get_component_param(services, 'MDESCR_COMPONENTS')
+                mdescr_components =  get_component_param(self, services, 'MDESCR_COMPONENTS')
                 if isinstance(mdescr_components, type('str')):
                 	mdescr_components = [mdescr_components]
                 cclist = [0 for i in range(len(component_dict))]

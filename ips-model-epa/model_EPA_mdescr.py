@@ -104,7 +104,7 @@ class model_EPA_mdescr(Component):
         self.services.stage_plasma_state()
 
         self.services.stage_input_files(self.INPUT_FILES)
-        cur_state_file = self.services.get_config_param('CURRENT_STATE')
+        cur_state_file = get_global_param(self, services,'CURRENT_STATE')
         bin = os.path.join(self.BIN_PATH, 'model_EPA_mdescr')
 
         print 'Executing ', [bin, cur_state_file, 'INIT', timeStamp]
@@ -142,7 +142,7 @@ class model_EPA_mdescr(Component):
 
     def step(self, timeStamp):
         services = self.services
-        init_only = self.try_get_component_param(services, 'INIT_ONLY', optional = True)
+        init_only = get_component_param(self, services, 'INIT_ONLY', optional = True)
         if init_only in ['TRUE', 'True', 'true']: return
 
         print 'model_EPA_mdescr.step() called'
@@ -151,7 +151,7 @@ class model_EPA_mdescr(Component):
 
 # Copy current and prior state over to working directory
         services.stage_plasma_state()
-        cur_state_file = services.get_config_param('CURRENT_STATE')
+        cur_state_file = get_global_param(self, services,'CURRENT_STATE')
         ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
         tinit = ps.variables['tinit'].getValue()
 
@@ -169,7 +169,7 @@ class model_EPA_mdescr(Component):
         # arguments
         params_to_change = False
         for param in parameterList:
-            model_name = self.try_get_component_param(services, param + '_DT_model', \
+            model_name = get_component_param(self, services, param + '_DT_model', \
                 optional = True)
             if model_name != None:
                 model_name = model_name.strip()
@@ -177,7 +177,7 @@ class model_EPA_mdescr(Component):
         
                 if model_name == 'ramp_initial_to_final':
                     print 'model_EPA_mdescr: ramp_initial_to_final'
-                    DT_paramsList = self.try_get_component_param(services, param + '_DT_params').split()
+                    DT_paramsList = get_component_param(self, services, param + '_DT_params').split()
                     t_initial = float(DT_paramsList[0])
                     t_final = float(DT_paramsList[1])
                     
@@ -194,7 +194,7 @@ class model_EPA_mdescr(Component):
         
                 if model_name == 'exp_initial_to_final':
                     print 'model_EPA_mdescr: exp_initial_to_final'
-                    DT_paramsList = self.try_get_component_param(services, param + '_DT_params').split()
+                    DT_paramsList = get_component_param(self, services, param + '_DT_params').split()
                     t_initial = float(DT_paramsList[0])
                     tau = float(DT_paramsList[1])
                     Value_final = float(DT_paramsList[2])
