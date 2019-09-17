@@ -401,7 +401,7 @@ class generic_ps_init (Component):
             # helper code generic_ps_init.f90 and execute it
             if init_mode in ['minimal', 'MINIMAL', 'mdescr', 'MDESCR', 'mixed', 'MIXED'] :
                 nml_lines.append('/')
-                self.put_lines('generic_ps_init.nml', nml_lines)
+                put_lines(self, 'generic_ps_init.nml', nml_lines)
 
                 init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
                 print 'Executing ', init_bin
