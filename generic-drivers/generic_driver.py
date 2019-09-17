@@ -295,7 +295,7 @@ class generic_driver(Component):
 
         # call pre_step_logic
             services.stage_plasma_state()
-            self.pre_step_logic(float(t))
+            self.pre_step_logic(services, float(t))
             services.update_plasma_state()
             print (' ')
 
