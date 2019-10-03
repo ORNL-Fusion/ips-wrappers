@@ -29,7 +29,7 @@ class vmec_driver(Component):
 
 #  Separate out the vmec keywords.
         vmec_keywords = {}
-        for key, value in keywords.iteritems():
+        for key, value in keywords.items():
             if 'vmec__' in key:
                 vmec_keywords[key.replace('vmec__','',1)] = value
     
