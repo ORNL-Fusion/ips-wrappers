@@ -132,7 +132,7 @@ class siesta(Component):
         if len(keywords) > 0:
             self.zip_ref.set_state(state='needs_update')
         
-            for key, value in keywords.iteritems():
+            for key, value in keywords.items():
                 NamelistItem.set(namelist['siesta_info'], key, value)
 
         namelist.save()

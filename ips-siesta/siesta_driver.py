@@ -33,7 +33,7 @@ class siesta_driver(Component):
 #  Separate out the siesta and vmec keywords.
         siesta_keywords = {}
         vmec_keywords = {}
-        for key, value in keywords.iteritems():
+        for key, value in keywords.items():
             if 'vmec__' in key:
                 vmec_keywords[key] = value
             if 'siesta__' in key:
