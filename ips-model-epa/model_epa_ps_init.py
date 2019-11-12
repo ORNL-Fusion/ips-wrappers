@@ -49,9 +49,9 @@ class model_EPA(Component):
         self.services.stage_plasma_state()
 
         self.services.stage_input_files(self.INPUT_FILES)
-        cur_state_file = self.services.get_global_param('CURRENT_STATE')
-        next_state_file = self.services.get_global_param('NEXT_STATE')
-        cur_eqdsk_file = self.services.get_global_param('CURRENT_EQDSK')
+        cur_state_file = get_global_param(self, services,'CURRENT_STATE')
+        next_state_file = get_global_param(self, services,'NEXT_STATE')
+        cur_eqdsk_file = get_global_param(self, services,'CURRENT_EQDSK')
         
         model_epa_bin = os.path.join(self.BIN_PATH, 'model_epa_ps_file_init')
 
@@ -93,8 +93,8 @@ class model_EPA(Component):
         services.stage_plasma_state()
 
         cur_state_file = services.get_global_param('CURRENT_STATE')
-        next_state_file = self.services.get_global_param('NEXT_STATE')
-        cur_eqdsk_file = self.services.get_global_param('CURRENT_EQDSK')
+        next_state_file = get_global_param(self, services,'NEXT_STATE')
+        cur_eqdsk_file = get_global_param(self, services,'CURRENT_EQDSK')
 
 # Call model_epa
         model_epa_bin = os.path.join(self.BIN_PATH, 'model_epa_ps_file_init')
