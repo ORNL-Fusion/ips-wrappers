@@ -34,7 +34,7 @@ class v3fit_driver(Component):
 #  Separate out the siesta, vmec and v3fit keywords.
         eq_keywords = {}
         v3fit_keywords = {}
-        for key, value in keywords.iteritems():
+        for key, value in keywords.items():
             if 'vmec__' in key or 'siesta__' in key:
                 eq_keywords[key] = value
             if 'v3fit__' in key:

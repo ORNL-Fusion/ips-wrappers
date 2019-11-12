@@ -19,5 +19,5 @@
     "cut_dg2"         : 0.0,
     "max_step"        : 100.0,
     "max_step_try"    : 10,
-    "max_recon_steps" : 11
+    "max_recon_steps" : 20
 }

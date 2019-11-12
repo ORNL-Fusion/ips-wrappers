@@ -108,17 +108,17 @@ class v3fit(Component):
 
         if 'state' in flags and flags['state'] == 'needs_update':
             self.set_namelist(my_task='v3post')
-            self.task_wait = self.services.launch_task(self.NPROC,
-                                                       self.services.get_working_dir(),
-                                                       self.V3FIT_EXE,
-                                                       self.current_v3fit_namelist,
-                                                       logfile = 'v3fit.log')
+            task_wait = self.services.launch_task(self.NPROC,
+                                                  self.services.get_working_dir(),
+                                                  self.V3FIT_EXE,
+                                                  self.current_v3fit_namelist,
+                                                  logfile = 'v3fit.log')
 
 #  Update flags.
             self.zip_ref.set_state(state='updated')
 
 #  Wait for V3FIT to finish.
-            if (self.services.wait_task(self.task_wait) and not os.path.exists(self.result_file)):
+            if (self.services.wait_task(task_wait) and not os.path.exists(self.result_file)):
                 self.services.error('v3fit: step failed.')
 
 #  Add the result file to the state.
@@ -276,7 +276,7 @@ class v3fit(Component):
         if len(keywords) > 0:
             self.zip_ref.set_state(state='needs_update')
 
-            for key, value in keywords.iteritems():
+            for key, value in keywords.items():
                 NamelistItem.set(namelist['v3fit_main_nli'], key, value)
 
         namelist.save()

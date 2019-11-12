@@ -73,7 +73,7 @@ class vmec(Component):
                                      'extcur'      : {'default' : 0, 'shape' : (300,),    'offset' : (1,),     'sparray' : True}
                                      })
 
-            for key, value in keywords.iteritems():
+            for key, value in keywords.items():
                 NamelistItem.set(namelist['indata'], key, value)
 
             namelist.save()

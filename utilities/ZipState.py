@@ -38,7 +38,7 @@ class ZipState(zipfile.ZipFile):
     def write(self, files):
 #  The rest of the code assumes you are working with an array of file. If files
 #  is a single instance, wrap it in a list.
-        if isinstance(files, basestring):
+        if not isinstance(files, list):
             files = [files]
         
 #  Split files in the files to write and files to replace.
@@ -171,7 +171,7 @@ class ZipState(zipfile.ZipFile):
     def set_state(self, **keywords):
         flags = self.get_state()
         
-        for key, value in keywords.iteritems():
+        for key, value in keywords.items():
             flags[key] = value
 
         with open('flags.json', 'w') as flags_file:
