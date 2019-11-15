@@ -261,7 +261,7 @@ class generic_ps_init (Component):
 
 
             init_mode = get_component_param(self, services, 'INIT_MODE')
-            nml_lines.append(' init_mode = ' + init_mode + '\n')
+            nml_lines.append(' init_mode = \"' + init_mode + '\"\n')
 
         # Generate state files as dummies so framework will have a complete set
             for file in ps_file_list:
@@ -289,15 +289,15 @@ class generic_ps_init (Component):
 
             cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
             cur_eqdsk_file = get_global_param(self, services, 'CURRENT_EQDSK')
-            nml_lines.append(' cur_state_file = ' + cur_state_file + '\n')
-            nml_lines.append(' cur_eqdsk_file = ' + cur_eqdsk_file + '\n')
+            nml_lines.append(' cur_state_file = \"' + cur_state_file + '\"\n')
+            nml_lines.append(' cur_eqdsk_file = \"' + cur_eqdsk_file + '\"\n')
 
             INPUT_EQDSK_FILE = get_component_param(self, services, 'INPUT_EQDSK_FILE', \
             optional = True)
             if (INPUT_EQDSK_FILE is None) or (len(INPUT_EQDSK_FILE) == 0):
                 INPUT_EQDSK_FILE = ' '
             else:
-                nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
+                nml_lines.append(' input_eqdsk_file = \"' + INPUT_EQDSK_FILE + '\"\n')
 
                 # If there is an INPUT_EQDSK_FILE copy it to CURRENT_EQDSK although
                 # CURRENT_EQDSK will be overwritten with plasma state data if
@@ -329,8 +329,8 @@ class generic_ps_init (Component):
                 GENERATE_EQDSK = get_component_param(self, services, 'GENERATE_EQDSK', \
                 optional = True)
                 if GENERATE_EQDSK in ['true', 'TRUE', 'True']:
-                    nml_lines.append(' generate_eqdsk = True')
-                    nml_lines.append('/')
+                    nml_lines.append(' generate_eqdsk = \"True\"')
+                    nml_lines.append('/\n')
                     self.put_lines('generic_ps_init.nml', nml_lines)
 
                     init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
@@ -363,19 +363,19 @@ class generic_ps_init (Component):
                 if (SCONFIG_FILE is None) or (len(SCONFIG_FILE) == 0):
                    SCONFIG_FILE = ' '
                 else:
-                    nml_lines.append(' sconfig_file = ' + SCONFIG_FILE + '\n')
+                    nml_lines.append(' sconfig_file = \"' + SCONFIG_FILE + '\"\n')
 
                 INPUT_EQDSK_FILE = get_component_param(self, services, 'INPUT_EQDSK_FILE', \
                 optional = True)
                 if (INPUT_EQDSK_FILE is None) or (len(INPUT_EQDSK_FILE) == 0):
                    INPUT_EQDSK_FILE = ' '
                 else:
-                   nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
+                   nml_lines.append(' input_eqdsk_file = \"' + INPUT_EQDSK_FILE + '\"\n')
 
 # ------------------------------------------------------------------------------
 			# For init_mode = mixed add input_state_file to namelist			
             if init_mode in ['mixed', 'MIXED'] :
-                nml_lines.append(' input_state_file = ' + INPUT_STATE_FILE + '\n')
+                nml_lines.append(' input_state_file = \"' + INPUT_STATE_FILE + '\"\n')
                 
 				# Retrieve list of IPS components which are to be initialized from 
 				# mdescr/sconfig and construct cclist for generic_ps_init.f90
@@ -394,13 +394,13 @@ class generic_ps_init (Component):
                 cclist_string = ''
                 for i in range(len(cclist)):
                     cclist_string = cclist_string + str(cclist[i]) + ', '
-                nml_lines.append(' cclist = ' + cclist_string + '\n')
+                nml_lines.append(' cclist = \"' + cclist_string + '\"\n')
 
 # ------------------------------------------------------------------------------
             # For 'minimal', 'mdescr' and 'mixed' modes generate namelist for the fortran  
             # helper code generic_ps_init.f90 and execute it
             if init_mode in ['minimal', 'MINIMAL', 'mdescr', 'MDESCR', 'mixed', 'MIXED'] :
-                nml_lines.append('/')
+                nml_lines.append('/\n')
                 put_lines('generic_ps_init.nml', nml_lines)
 
                 init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
