@@ -71,6 +71,11 @@ generic_ps_file_init.f90 to interact with the Plasma State. The fortran code is 
 in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true.
 
 """
+# Version 6.2 (Batchelor 9/12/2019)
+# Eliminated import get_lines, put_lines, edit_nml_file, get_global_param, and
+# get_component_param.  Get these from /ips-wrappers/utilities.  Needs to be on 
+# PYTHON_PATH.
+
 # Version 6.1 (Batchelor 8/26/2019)
 # A new version of netCDF4 module has broken the syntax for setting variables.  The symptom
 # is that the variables don't get set and the plasma state file is not updated on close().
@@ -158,6 +163,8 @@ import string
 import datetime
 from  component import Component
 from netCDF4 import *
+from simple_file_editing_functions import put_lines
+from get_IPS_config_parameters import get_global_param, get_component_param
 
 component_dict = {'PLASMA':10, 'EQ':2, 'NBI':9, 'IC':6, 'LH':7, 'EC':2,\
              'RUNAWAY':13, 'FUS':4, 'RAD':11, 'GAS':5, 'LMHD':8, 'RIPPLE':12, 'ANOM':1}
@@ -203,7 +210,7 @@ class generic_ps_init (Component):
         tfinal  = tlist_str[-1]
 
 # Check if this is a restart simulation
-        simulation_mode = self.get_config_param(services, 'SIMULATION_MODE')
+        simulation_mode = get_global_param(self, services, 'SIMULATION_MODE')
 
         if simulation_mode == 'RESTART':
             print 'generic_ps_init: RESTART'
@@ -220,8 +227,8 @@ class generic_ps_init (Component):
 
         if simulation_mode == 'RESTART':
             # Get restart files listed in config file. Here just the plasma state files.
-            restart_root = self.get_config_param(services, 'RESTART_ROOT')
-            restart_time = self.get_config_param(services, 'RESTART_TIME')
+            restart_root = get_global_param(self, services, 'RESTART_ROOT')
+            restart_time = get_global_param(self, services, 'RESTART_TIME')
             try:
                  services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
             except:
@@ -229,7 +236,7 @@ class generic_ps_init (Component):
                 self.services.exception(logMsg)
                 raise
 
-            cur_state_file = self.services.get_config_param('CURRENT_STATE')
+            cur_state_file = self.services.get_global_param('CURRENT_STATE')
 
             # Update ps%t0, ps%t1 and ps%tfinal.
             # Note ps%tinit stays the same in the plasma state file,
@@ -250,11 +257,11 @@ class generic_ps_init (Component):
 
             print 'generic_ps_init: simulation mode NORMAL'
             nml_lines = ['&ps_init_nml\n']
-            ps_file_list = self.get_config_param(services, 'PLASMA_STATE_FILES').split(' ')
+            ps_file_list = get_global_param(self, services, 'PLASMA_STATE_FILES').split(' ')
 
 
-            init_mode = self.get_component_param(services, 'INIT_MODE')
-            nml_lines.append(' init_mode = ' + init_mode + '\n')
+            init_mode = get_component_param(self, services, 'INIT_MODE')
+            nml_lines.append(' init_mode = \"' + init_mode + '\"\n')
 
         # Generate state files as dummies so framework will have a complete set
             for file in ps_file_list:
@@ -280,17 +287,17 @@ class generic_ps_init (Component):
                 services.exception(message)
                 raise
 
-            cur_state_file = self.get_config_param(services, 'CURRENT_STATE')
-            cur_eqdsk_file = self.get_config_param(services, 'CURRENT_EQDSK')
-            nml_lines.append(' cur_state_file = ' + cur_state_file + '\n')
-            nml_lines.append(' cur_eqdsk_file = ' + cur_eqdsk_file + '\n')
+            cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
+            cur_eqdsk_file = get_global_param(self, services, 'CURRENT_EQDSK')
+            nml_lines.append(' cur_state_file = \"' + cur_state_file + '\"\n')
+            nml_lines.append(' cur_eqdsk_file = \"' + cur_eqdsk_file + '\"\n')
 
-            INPUT_EQDSK_FILE = self.get_component_param(services, 'INPUT_EQDSK_FILE', \
+            INPUT_EQDSK_FILE = get_component_param(self, services, 'INPUT_EQDSK_FILE', \
             optional = True)
             if (INPUT_EQDSK_FILE is None) or (len(INPUT_EQDSK_FILE) == 0):
                 INPUT_EQDSK_FILE = ' '
             else:
-                nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
+                nml_lines.append(' input_eqdsk_file = \"' + INPUT_EQDSK_FILE + '\"\n')
 
                 # If there is an INPUT_EQDSK_FILE copy it to CURRENT_EQDSK although
                 # CURRENT_EQDSK will be overwritten with plasma state data if
@@ -306,7 +313,7 @@ class generic_ps_init (Component):
 # ------------------------------------------------------------------------------
             # init from existing plasma state file
             if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE', 'mixed', 'MIXED'] :    
-                INPUT_STATE_FILE = self.get_component_param(services, 'INPUT_STATE_FILE')
+                INPUT_STATE_FILE = get_component_param(self, services, 'INPUT_STATE_FILE')
 
                 # Copy INPUT_STATE_FILE to current state file
                 try:
@@ -319,11 +326,11 @@ class generic_ps_init (Component):
                     raise
 
                 # Generate cur_eqdsk_file from cur_state_file if GENERATE_EQDSK is True
-                GENERATE_EQDSK = self.get_component_param(services, 'GENERATE_EQDSK', \
+                GENERATE_EQDSK = get_component_param(self, services, 'GENERATE_EQDSK', \
                 optional = True)
                 if GENERATE_EQDSK in ['true', 'TRUE', 'True']:
-                    nml_lines.append(' generate_eqdsk = True')
-                    nml_lines.append('/')
+                    nml_lines.append(' generate_eqdsk = \"True\"')
+                    nml_lines.append('/\n')
                     self.put_lines('generic_ps_init.nml', nml_lines)
 
                     init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
@@ -348,31 +355,31 @@ class generic_ps_init (Component):
 # ------------------------------------------------------------------------------
             # init from machine description file and possibly sconfig file
             if init_mode in ['mdescr', 'MDESCR', 'mixed', 'MIXED'] :
-                MDESCR_FILE = self.get_component_param(services, 'MDESCR_FILE')
+                MDESCR_FILE = get_component_param(self, services, 'MDESCR_FILE')
                 nml_lines.append(' mdescr_file = ' + MDESCR_FILE + '\n')
-                SCONFIG_FILE = self.get_component_param(services, 'SCONFIG_FILE', \
+                SCONFIG_FILE = get_component_param(self, services, 'SCONFIG_FILE', \
                 optional = 'TRUE')
 
                 if (SCONFIG_FILE is None) or (len(SCONFIG_FILE) == 0):
                    SCONFIG_FILE = ' '
                 else:
-                    nml_lines.append(' sconfig_file = ' + SCONFIG_FILE + '\n')
+                    nml_lines.append(' sconfig_file = \"' + SCONFIG_FILE + '\"\n')
 
-                INPUT_EQDSK_FILE = self.get_component_param(services, 'INPUT_EQDSK_FILE', \
+                INPUT_EQDSK_FILE = get_component_param(self, services, 'INPUT_EQDSK_FILE', \
                 optional = True)
                 if (INPUT_EQDSK_FILE is None) or (len(INPUT_EQDSK_FILE) == 0):
                    INPUT_EQDSK_FILE = ' '
                 else:
-                   nml_lines.append(' input_eqdsk_file = ' + INPUT_EQDSK_FILE + '\n')
+                   nml_lines.append(' input_eqdsk_file = \"' + INPUT_EQDSK_FILE + '\"\n')
 
 # ------------------------------------------------------------------------------
 			# For init_mode = mixed add input_state_file to namelist			
             if init_mode in ['mixed', 'MIXED'] :
-                nml_lines.append(' input_state_file = ' + INPUT_STATE_FILE + '\n')
+                nml_lines.append(' input_state_file = \"' + INPUT_STATE_FILE + '\"\n')
                 
 				# Retrieve list of IPS components which are to be initialized from 
 				# mdescr/sconfig and construct cclist for generic_ps_init.f90
-                mdescr_components =  self.get_component_param(services, 'MDESCR_COMPONENTS')
+                mdescr_components =  get_component_param(self, services, 'MDESCR_COMPONENTS')
                 if isinstance(mdescr_components, type('str')):
                 	mdescr_components = [mdescr_components]
                 cclist = [0 for i in range(len(component_dict))]
@@ -387,14 +394,14 @@ class generic_ps_init (Component):
                 cclist_string = ''
                 for i in range(len(cclist)):
                     cclist_string = cclist_string + str(cclist[i]) + ', '
-                nml_lines.append(' cclist = ' + cclist_string + '\n')
+                nml_lines.append(' cclist = \"' + cclist_string + '\"\n')
 
 # ------------------------------------------------------------------------------
             # For 'minimal', 'mdescr' and 'mixed' modes generate namelist for the fortran  
             # helper code generic_ps_init.f90 and execute it
             if init_mode in ['minimal', 'MINIMAL', 'mdescr', 'MDESCR', 'mixed', 'MIXED'] :
-                nml_lines.append('/')
-                self.put_lines('generic_ps_init.nml', nml_lines)
+                nml_lines.append('/\n')
+                put_lines('generic_ps_init.nml', nml_lines)
 
                 init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
                 print 'Executing ', init_bin
@@ -407,9 +414,9 @@ class generic_ps_init (Component):
             # For all init init modes insert run identifiers and time data
             # (do it here in python instead of in minimal_state_init.f90 as before)
             # For minimal mode this is the only data in initial state
-            tokamak = self.get_config_param(services, 'TOKAMAK_ID')
-            shot_number = self.get_config_param(services, 'SHOT_NUMBER')
-            run_id = self.get_config_param(services, 'RUN_ID')
+            tokamak = get_global_param(self, services, 'TOKAMAK_ID')
+            shot_number = get_global_param(self, services, 'SHOT_NUMBER')
+            run_id = get_global_param(self, services, 'RUN_ID')
 
             timeloop = services.get_time_loop()
             t0 = timeloop[0]
@@ -472,53 +479,3 @@ class generic_ps_init (Component):
 
     def finalize(self, timestamp=0.0):
         print 'generic_ps_init.finalize() called'
-
-# ------------------------------------------------------------------------------
-#
-# "Private"  methods
-#
-# ------------------------------------------------------------------------------
-
-
-    # Try to get config parameter - wraps the exception handling for get_config_parameter()
-    def get_config_param(self, services, param_name, optional=False):
-
-        try:
-            value = services.get_config_param(param_name)
-            print param_name, ' = ', value
-        except Exception:
-            if optional:
-                print 'optional config parameter ', param_name, ' not found'
-                value = None
-            else:
-                message = 'required config parameter ', param_name, ' not found'
-                print message
-                services.exception(message)
-                raise
-
-        return value
-
-    # Try to get component specific config parameter - wraps the exception handling
-    def get_component_param(self, services, param_name, optional=False):
-
-        if hasattr(self, param_name):
-            value = getattr(self, param_name)
-            print param_name, ' = ', value
-        elif optional:
-            print 'optional config parameter ', param_name, ' not found'
-            value = None
-        else:
-            message = 'required component config parameter ', param_name, ' not found'
-            print message
-            services.exception(message)
-            raise
-
-        return value
-
-
-    #---------------------------------------------------------------------------------------
-    # Open an output file and write lines into it
-    def put_lines(self, filename, lines):
-        file = open(filename, 'w')
-        file.writelines(lines)
-        file.close()
