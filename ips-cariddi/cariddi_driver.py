@@ -104,6 +104,8 @@ class cariddi_driver(Component):
 #  Reopen the zip file after the state has been updated.
             self.zip_ref = ZipState.ZipState(self.current_cariddi_state, 'a')
 
+            self.services.stage_output_files(timeStamp, self.current_cariddi_state)
+
             timeStamp += 1.0
 
 #-------------------------------------------------------------------------------
