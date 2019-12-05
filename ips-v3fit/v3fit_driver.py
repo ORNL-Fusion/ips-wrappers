@@ -67,6 +67,20 @@ class v3fit_driver(Component):
                         'OUTPUT_LEVEL'     : self.services.get_config_param('OUTPUT_LEVEL')
                        }
 
+                try:
+                    self.services.get_config_param('VMEC_NAMELIST_INPUT')
+                except:
+                    pass
+                else:
+                    keys['VMEC_NAMELIST_INPUT'] = self.services.get_config_param('VMEC_NAMELIST_INPUT')
+
+                try:
+                    self.services.get_config_param('SIESTA_NAMELIST_INPUT')
+                except:
+                    pass
+                else:
+                    keys['SIESTA_NAMELIST_INPUT'] = self.services.get_config_param('SIESTA_NAMELIST_INPUT')
+
                 siesta_config = self.services.get_config_param('SIESTA_CONFIG')
                     
                 (self.eq_worker['sim_name'],
@@ -82,6 +96,13 @@ class v3fit_driver(Component):
                         'LOG_FILE'         : 'log.{}_vmec.warning'.format(self.services.get_config_param('SIM_NAME')),
                         'OUTPUT_LEVEL'     : self.services.get_config_param('OUTPUT_LEVEL')
                        }
+
+                try:
+                    self.services.get_config_param('VMEC_NAMELIST_INPUT')
+                except:
+                    pass
+                else:
+                    keys['VMEC_NAMELIST_INPUT'] = self.services.get_config_param('VMEC_NAMELIST_INPUT')
 
                 vmec_config = self.services.get_config_param('VMEC_CONFIG')
                 

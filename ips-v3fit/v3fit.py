@@ -106,8 +106,7 @@ class v3fit(Component):
 
         flags = self.zip_ref.get_state()
 
-        if 'state' in flags and flags['state'] == 'needs_update':
-            self.set_namelist(my_task='v3post')
+        if 'state' in flags and flags['state'] == 'needs_update' or 'force_update' in keywords:
             task_wait = self.services.launch_task(self.NPROC,
                                                   self.services.get_working_dir(),
                                                   self.V3FIT_EXE,

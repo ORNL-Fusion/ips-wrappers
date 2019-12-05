@@ -1,5 +1,5 @@
 &v3fit_main_nli
-my_task = 'reconstruct',
+my_task = 'v3post',
 vmec_nli_filename = 'input.test.vmec',
 
 !  Model parameters
