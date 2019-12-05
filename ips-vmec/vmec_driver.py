@@ -43,12 +43,12 @@ class vmec_driver(Component):
 #  VMEC Driver step method. This runs the vmec component.
 #
 #-------------------------------------------------------------------------------
-    def step(self, timeStamp=0.0):
+    def step(self, timeStamp=0.0, **keywords):
         ScreenWriter.screen_output(self, 'verbose', 'vmec_driver: step')
 
 #  Run vmec.
         self.services.wait_call(self.wait, True)
-        self.services.call(self.vmec_port, 'step', timeStamp)
+        self.services.call(self.vmec_port, 'step', timeStamp, **keywords)
     
 #  Prepare the output files for a super work flow. Need to remove any old output
 #  files first before staging the state.

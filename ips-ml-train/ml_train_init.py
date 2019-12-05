@@ -45,8 +45,8 @@ class ml_train_init(Component):
 #  as needing to be updated.
         with ZipState.ZipState(current_ml_train_state, 'a') as zip_ref:
             if os.path.exists(current_ml_train_data):
-                os.rename(current_ml_train_data, 'training_data.dat')
-                zip_ref.write('training_data.dat')
+                os.rename(current_ml_train_data, 'training_data.json')
+                zip_ref.write('training_data.json')
                 zip_ref.set_state(state='needs_update')
 
         self.services.update_plasma_state()

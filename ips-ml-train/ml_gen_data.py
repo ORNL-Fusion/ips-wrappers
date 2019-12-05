@@ -43,6 +43,7 @@ class ml_gen_data(Component):
             current_ml_model_state = self.services.get_config_param('CURRENT_ML_MODEL_STATE')
 
             self.model_sim_config = self.services.get_config_param('MODEL_SIM_CONFIG')
+            self.massive_serial = self.services.get_config_param('MASSIVE_SERIAL')
 
             if not os.path.exists('inputs')
                 os.makedirs('inputs')
@@ -62,6 +63,8 @@ class ml_gen_data(Component):
             with open(self.current_ml_train_new_data, 'r') as new_data_ref:
                 new_data = json.load(new_data_ref)
 
+#  Write out training data to a input file for the massive serial run. Takes a
+#  random permutation to select a subset of the suggested new data.
                 with open('massive_input') as massive_ref:
                     for param in keywords['input_params']:
                         massive_ref.write('{prefix}:{name}:{type} '.format(param))
@@ -109,10 +112,32 @@ class ml_gen_data(Component):
         flags = self.zip_ref.get_state()
 
         if 'state' in flags and flags['state'] == 'needs_update':
-            process = subprocess.Popen([, massive_input, self.model_sim_config, , 1])
-            process.wait();
-        
-        
+            task_wait = self.services.launch_task(self.NPROC,
+                                                  self.services.get_working_dir(),
+                                                  python,
+                                                  self.massive_serial,
+                                                  'massive_input',
+                                                  self.model_sim_config,
+                                                  self.NPROC,
+                                                  1,
+                                                  logfile = 'ml_gen_data.log')
+
+#  Update flags.
+            self.zip_ref.set_state(state='updated')
+
+#  Wait for training data batch to finish.
+            if (self.services.wait_task(task_wait)):
+                self.services.error('ml_gen_data: step failed')
+
+#  Extract data from the massive serial and write it to a 
+            self.zip_ref.extract('training_data.json')
+            with open('training_data.json', 'a') as data_ref:
+                training_data = json.load(data_ref)
+
+                for i in range(self.NPROC)
+                    get_data(training_data, massive):
+
+                json.dump(training_data, data_ref)
 
         else:
 #  Update flags.

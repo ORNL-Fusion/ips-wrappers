@@ -83,12 +83,12 @@ class vmec(Component):
 #  VMEC Component step method. This runs vmec.
 #
 #-------------------------------------------------------------------------------
-    def step(self, timeStamp=0.0):
+    def step(self, timeStamp=0.0, **keywords):
         ScreenWriter.screen_output(self, 'verbose', 'vmec: step')
 
         flags = self.zip_ref.get_state()
 
-        if 'state' in flags and flags['state'] == 'needs_update':
+        if 'state' in flags and flags['state'] == 'needs_update' or 'force_update' in keywords:
             task_wait = self.services.launch_task(self.NPROC,
                                                   self.services.get_working_dir(),
                                                   self.VMEC_EXE,

@@ -35,7 +35,7 @@ class ml_train(Component):
 #  Unzip files from the current state. Use mode a so files can be read and
 #  written to.
         self.zip_ref = ZipState.ZipState(current_ml_train_state, 'a')
-        self.zip_ref.extract('training_data.dat')
+        self.zip_ref.extract('training_data.json')
 
 #-------------------------------------------------------------------------------
 #
