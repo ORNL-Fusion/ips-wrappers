@@ -11,6 +11,7 @@ from utilities import ScreenWriter
 from utilities import ZipState
 import os
 import shutil
+import netCDF4
 
 #-------------------------------------------------------------------------------
 #
@@ -41,7 +42,10 @@ class cariddi_driver(Component):
 #  If this is the first call, set up the V3FIT sub workflow.
         if timeStamp == 0.0:
             self.current_v3fit_state = self.services.get_config_param('CURRENT_V3FIT_STATE')
-
+            self.current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
+            current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
+            self.current_wout_file = 'wout_{}.nc'.format(current_vmec_namelist.replace('input.','',1))
+            
             if os.path.exists('eq_input_dir'):
                 shutil.rmtree('eq_input_dir')
             os.mkdir('eq_input_dir')
@@ -86,7 +90,10 @@ class cariddi_driver(Component):
         ScreenWriter.screen_output(self, 'verbose', 'cariddi_driver: step')
 
 #  FIXME: Choose some stopping criteria for the loop..
-        for i in range(10):
+        magnetic_axis = 0
+        delta_magnetic_axis = 100
+
+        while delta_magnetic_axis > 1.0E-6:
             self.services.call(self.cariddi_port, 'init', timeStamp)
             self.services.call(self.cariddi_port, 'step', timeStamp)
 
@@ -94,7 +101,18 @@ class cariddi_driver(Component):
 #  external to the namelist input, force an update to the V3FIT state.
             if timeStamp > 0.0:
                 self.services.call(self.eq_worker['driver'], 'init', timeStamp)
+
             self.services.call(self.eq_worker['driver'], 'step', timeStamp, force_update=True)
+            if timeStamp > 0.0:
+                with ZipState.ZipState(self.current_v3fit_state, 'r') as v3fit_ref:
+                    v3fit_ref.extract(self.current_vmec_state)
+                    with ZipState.ZipState(self.current_vmec_state, 'r') as vmec_ref:
+                        vmec_ref.extract(self.current_wout_file)
+
+                        data = netCDF4.Dataset(self.current_wout_file)
+                        new_magnetic_axis = data.variables['rmnc'][1,1]
+                        delta_magnetic_axis = abs(new_magnetic_axis - magnetic_axis)
+                        magnetic_axis = new_magnetic_axis
 
 #  After the equilibrium has run update the state.
             self.services.stage_subflow_output_files()
