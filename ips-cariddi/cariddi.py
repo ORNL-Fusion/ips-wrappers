@@ -38,6 +38,8 @@ class cariddi(Component):
             self.cariddi_matrix_path = self.services.get_config_param('CARIDDI_MATRIX_PATH')
             self.current_cariddi_state = self.services.get_config_param('CURRENT_CARIDDI_STATE')
 
+            self.current_v3fit_state = self.services.get_config_param('CURRENT_V3FIT_STATE')
+
             self.current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
             current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
             self.current_wout_file = 'wout_{}.nc'.format(current_vmec_namelist.replace('input.','',1))
@@ -49,6 +51,9 @@ class cariddi(Component):
 
 # Extract input files.
         with ZipState.ZipState(self.current_cariddi_state, 'r') as zip_ref:
+            zip_ref.extract(self.current_v3fit_state)
+
+        with ZipState.ZipState(self.current_v3fit_state, 'r') as zip_ref:
             zip_ref.extract(self.current_vmec_state)
 
         with ZipState.ZipState(self.current_vmec_state, 'r') as zip_ref:
@@ -63,7 +68,7 @@ class cariddi(Component):
     def step(self, timeStamp=0.0):
         ScreenWriter.screen_output(self, 'verbose', 'cariddi: step')
 
-        if os.path.exists(self.current_wout_file):
+        if timeStamp > 0.0:
 #  Get the surface current.
             task_wait = self.services.launch_task(self.NPROC,
                                                   self.services.get_working_dir(),

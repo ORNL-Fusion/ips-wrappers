@@ -1,7 +1,7 @@
 import zipfile
 import os
 import json
-from io import BytesIO
+import shutil
 
 #-------------------------------------------------------------------------------
 #
@@ -100,7 +100,7 @@ class ZipState(zipfile.ZipFile):
     def remove(self, files):
 #  The rest of the code assumes you are working with an array of file. If files
 #  is a single instance, wrap it in a list.
-        if isinstance(files, basestring):
+        if isinstance(files, str):
             files = [files]
 
 #  Check all the files for the first existing file. If at least one file exists
@@ -132,14 +132,17 @@ class ZipState(zipfile.ZipFile):
 #
 #-------------------------------------------------------------------------------
     def merge(self, files):
+#  Make a temporary sub directory and change the working directory to that
+#  directory.
+        os.mkdir('temp_dir')
+        os.chdir('temp_dir')
+
         for file in files:
 #  Rename the new file to a temp and extract the old archive.
-            temp_file = '{}_temp'.format(file)
-            os.rename(file, temp_file)
             super(ZipState, self).extract(file)
 
 #  Extract all files from the new archive and write them to the old archive.
-            with zipfile.ZipFile(temp_file, 'a') as new_zip_ref:
+            with zipfile.ZipFile('../{}'.format(file), 'a') as new_zip_ref:
                 new_zip_ref.extractall()
                 with ZipState(file, 'a') as old_zip_ref:
                     old_zip_ref.write(new_zip_ref.namelist())
@@ -147,7 +150,13 @@ class ZipState(zipfile.ZipFile):
 #  Clean up all the files extracted from the new file and remove the temp file.
                 for file2 in new_zip_ref.namelist():
                     os.remove(file2)
-            os.remove(temp_file)
+
+#  Copy the current file back to the parent directory.
+            shutil.copy2(file, '../')
+
+#  Change working directory back to the parent.
+        os.chdir('../')
+        shutil.rmtree('temp_dir')
 
 #-------------------------------------------------------------------------------
 #

@@ -41,8 +41,8 @@ class v3fit(Component):
         current_siesta_namelist = self.services.get_config_param('SIESTA_NAMELIST_INPUT')
         current_siesta_state = self.services.get_config_param('CURRENT_SIESTA_STATE')
         current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
-        current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
-        current_wout_file = 'wout_{}.nc'.format(current_vmec_namelist.replace('input.','',1))
+        self.current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
+        self.current_wout_file = 'wout_{}.nc'.format(current_vmec_namelist.replace('input.','',1))
 
 #  Stage state.
         self.services.stage_state()
@@ -66,10 +66,10 @@ class v3fit(Component):
                 if 'state' in flags and flags['state'] == 'updated':
                     self.zip_ref.set_state(state='needs_update')
 
-                siesta_zip_ref.extract(current_vmec_state)
+                siesta_zip_ref.extract(self.current_vmec_state)
 
-                with ZipState.ZipState(current_vmec_state, 'r') as vmec_zip_ref:
-                    vmec_zip_ref.extract(current_wout_file)
+                with ZipState.ZipState(self.current_vmec_state, 'r') as vmec_zip_ref:
+                    vmec_zip_ref.extract(self.current_wout_file)
                     flags = vmec_zip_ref.get_state()
                     if 'state' in flags and flags['state'] == 'updated':
                         self.zip_ref.set_state(state='needs_update')
@@ -77,20 +77,20 @@ class v3fit(Component):
                 keywords['siesta_nli_filename'] = current_siesta_namelist
                 keywords['siesta_restart_filename'] = current_restart_file
                 keywords['vmec_nli_filename'] = current_vmec_namelist
-                keywords['vmec_wout_input'] = current_wout_file
+                keywords['vmec_wout_input'] = self.current_wout_file
                 keywords['model_eq_type'] = 'siesta'
         else:
-            self.zip_ref.extract(current_vmec_state)
+            self.zip_ref.extract(self.current_vmec_state)
 
-            with ZipState.ZipState(current_vmec_state, 'r') as vmec_zip_ref:
-                vmec_zip_ref.extract(current_wout_file)
+            with ZipState.ZipState(self.current_vmec_state, 'r') as vmec_zip_ref:
+                vmec_zip_ref.extract(self.current_wout_file)
                 vmec_zip_ref.extract(current_vmec_namelist)
                 flags = vmec_zip_ref.get_state()
                 if 'state' in flags and flags['state'] == 'updated':
                     self.zip_ref.set_state(state='needs_update')
 
             keywords['vmec_nli_filename'] = current_vmec_namelist
-            keywords['vmec_wout_input'] = current_wout_file
+            keywords['vmec_wout_input'] = self.current_wout_file
             keywords['model_eq_type'] = 'vmec'
 
 #  Update parameters in the namelist.
@@ -119,6 +119,11 @@ class v3fit(Component):
 #  Wait for V3FIT to finish.
             if (self.services.wait_task(task_wait) and not os.path.exists(self.result_file)):
                 self.services.error('v3fit: step failed.')
+
+            if 'force_update' in keywords:
+                with ZipState.ZipState(self.current_vmec_state, 'a') as vmec_zip_ref:
+                    vmec_zip_ref.write(self.current_wout_file)
+                self.zip_ref.write(self.current_vmec_state)
 
 #  Add the result file to the state.
             self.zip_ref.write([self.current_v3fit_namelist, self.result_file])
@@ -251,7 +256,7 @@ class v3fit(Component):
             namelist['v3fit_main_nli']['vmec_nli_filename'] = keywords['vmec_nli_filename']
             self.update = True
             del keywords['vmec_nli_filename']
-        if 'vmec_wout_input' in keywords:
+        if 'my_task' in keywords and keywords['my_task'] == 'v3post' and 'vmec_wout_input' in keywords:
             namelist['v3fit_main_nli']['vmec_wout_input'] = keywords['vmec_wout_input']
             self.update = True
             del keywords['vmec_wout_input']
@@ -277,5 +282,8 @@ class v3fit(Component):
 
             for key, value in keywords.items():
                 NamelistItem.set(namelist['v3fit_main_nli'], key, value)
+
+        if namelist['v3fit_main_nli']['my_task'] == 'reconstruct' or namelist['v3fit_main_nli']['my_task'] == 'reconstruct_a1':
+            del namelist['v3fit_main_nli']['vmec_wout_input']
 
         namelist.save()

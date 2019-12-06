@@ -1,0 +1,48 @@
+&v3fit_main_nli
+vmec_nli_filename = 'input.simple_cq.vmec',
+
+! Reconstruction Controls
+my_task = 'reconstruct_a1',
+nrstep = 20,
+dg2_stop = 0.01,
+cut_svd = 2.0E-5,
+cut_eff = 1.0E-4,
+cut_marg_eff = 0.0,
+cut_delta_a = 0.0,
+cut_dg2 = 0.0,
+astep_max = 100.0,
+step_type = 'lm',
+
+use_central_diff = F,
+
+! Model Specification
+
+
+! Reconstruction Parameters
+n_rp = 1,
+rp_type(1) = 'phiedge',
+rp_vrnc(1) = 5.0E-4,
+rp_index(1) = 0,
+rp_index2(1) = 0,
+
+! Reconstruction Signals
+
+! Magnetic Diagnostics
+
+! Circular Limiter
+lif_on_edge(1) = T,
+n_phi_lif(1) = 1,
+lif_phi_degree(1,:) = 0.0,
+lif_sigma(1) = 0.001,
+lif_rc(1) = 1.0,
+lif_zc(1) = 0.0,
+lif_arz(1,0,0) = -0.0407998,
+lif_arz(1,2,0) = 1,
+lif_arz(1,0,2) = 1,
+
+! Total Signals
+n_lif = 1,
+n_sdata_o = 1,
+/
+&END
+
