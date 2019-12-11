@@ -36,7 +36,7 @@ lif_phi_degree(1,:) = 0.0,
 lif_sigma(1) = 0.001,
 lif_rc(1) = 1.0,
 lif_zc(1) = 0.0,
-lif_arz(1,0,0) = -0.0407998,
+lif_arz(1,0,0) = -0.04,
 lif_arz(1,2,0) = 1,
 lif_arz(1,0,2) = 1,
 
