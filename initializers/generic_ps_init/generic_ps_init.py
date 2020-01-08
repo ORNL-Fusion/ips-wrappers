@@ -394,7 +394,7 @@ class generic_ps_init (Component):
                 cclist_string = ''
                 for i in range(len(cclist)):
                     cclist_string = cclist_string + str(cclist[i]) + ', '
-                nml_lines.append(' cclist = \"' + cclist_string + '\"\n')
+                nml_lines.append(' cclist = ' + cclist_string + '\n')
 
 # ------------------------------------------------------------------------------
             # For 'minimal', 'mdescr' and 'mixed' modes generate namelist for the fortran  
