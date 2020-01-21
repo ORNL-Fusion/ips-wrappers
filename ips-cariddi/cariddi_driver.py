@@ -93,6 +93,18 @@ class cariddi_driver(Component):
         magnetic_axis = 0
         delta_magnetic_axis = 100
 
+#  Start the time step. The number before the decimal point represents the time
+#  step of the outer loop. The outer loop runs sequentially. The number after
+#  the decimat point is the inner loop timestep. The inner loops runs to
+#  convergence or until a maximum number of iterations is reached. Iterations
+#  limited to 99 tries in the inner loop to avoid over flowing the outer loop
+#  counter.
+#
+#  Start t = 0.0
+#
+#  Initialy at t=0, the eddy current contribution of the vacuum field needs to
+#  be zeroed out. Then the first VMEC namelist input must be setup.
+
         while delta_magnetic_axis > 1.0E-6:
             self.services.call(self.cariddi_port, 'init', timeStamp)
             self.services.call(self.cariddi_port, 'step', timeStamp)

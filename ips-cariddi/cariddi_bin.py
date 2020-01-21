@@ -113,9 +113,7 @@ if 'vmec_current' in args:
     print('\ncomputing magnetic field on vaccum grid for VMEC ...\n')
 
     #need to use the proper ordering of indexes for the matrix multiplication
-#    inds = copy(data['is'])
-#    inds = numpy.asarray( [int(x-1) for x in inds] )
-    k_vmec = numpy.zeros(1500) #(1500)
+    k_vmec = numpy.zeros(1500) #(1500) # FIXME: Matrix sizes hard coded.
     for i in range(500):
         k_vmec[i]        = currents['k_x1'][i] - currents['k_x0'][i]
         k_vmec[i + 500]  = currents['k_y1'][i] - currents['k_y0'][i]
