@@ -97,6 +97,14 @@ class cariddi_driver(Component):
             self.services.call(self.cariddi_port, 'init', timeStamp)
             self.services.call(self.cariddi_port, 'step', timeStamp)
 
+#  The cariddi port updated the plasma state. Stage it to get the current eddy
+#  surface currents.
+            self.zip_ref.close()
+            self.services.stage_state()
+
+#  Reopen the zip file after the state has been updated.
+            self.zip_ref = ZipState.ZipState(self.current_cariddi_state, 'a')
+
 #  Run the equilibrium. Replace values in the V3FIT state. Since the changes are
 #  external to the namelist input, force an update to the V3FIT state.
             if timeStamp > 0.0:

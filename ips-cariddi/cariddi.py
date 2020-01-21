@@ -46,19 +46,20 @@ class cariddi(Component):
 
             self.mgrid_file = self.services.get_config_param('MGRID_FILE')
 
-            with ZipState.ZipState(self.current_cariddi_state, 'r') as zip_ref:
-                zip_ref.extract(self.current_cariddi_input)
+            self.zip_ref = ZipState.ZipState(self.current_cariddi_state, 'a')
+            self.zip_ref.extract(self.current_cariddi_input)
+        else:
+            self.zip_ref = ZipState.ZipState(self.current_cariddi_state, 'a')
 
 # Extract input files.
-        with ZipState.ZipState(self.current_cariddi_state, 'r') as zip_ref:
-            zip_ref.extract(self.current_v3fit_state)
+        self.zip_ref.extract(self.current_v3fit_state)
 
-        with ZipState.ZipState(self.current_v3fit_state, 'r') as zip_ref:
-            zip_ref.extract(self.current_vmec_state)
+        with ZipState.ZipState(self.current_v3fit_state, 'r') as v3fit_zip_ref:
+            v3fit_zip_ref.extract(self.current_vmec_state)
 
-        with ZipState.ZipState(self.current_vmec_state, 'r') as zip_ref:
-            if self.current_wout_file in zip_ref:
-                zip_ref.extract(self.current_wout_file)
+        with ZipState.ZipState(self.current_vmec_state, 'r') as vmec_zip_ref:
+            if self.current_wout_file in vmec_zip_ref:
+                vmec_zip_ref.extract(self.current_wout_file)
 
 #-------------------------------------------------------------------------------
 #
@@ -81,6 +82,9 @@ class cariddi(Component):
 #  Wait for SURFACE to finish.
             self.services.wait_task(task_wait)
 
+            self.zip_ref.write(self.current_cariddi_input)
+            self.zip_ref.set_state(state='updated')
+
             task_wait = self.services.launch_task(self.NPROC,
                                                   self.services.get_working_dir(),
                                                   self.CARIDDI_EXE,
@@ -98,6 +102,9 @@ class cariddi(Component):
                                                   logfile = 'cariddi.log')
 
         self.services.wait_task(task_wait)
+
+        self.zip_ref.close()
+        self.services.update_state()
 
 #-------------------------------------------------------------------------------
 #
