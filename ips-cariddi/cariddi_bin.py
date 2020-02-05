@@ -1,147 +1,185 @@
 import netCDF4
 import numpy
-from scipy.interpolate import griddata
-from copy import *
 import argparse
 
+#-------------------------------------------------------------------------------
+#  Class to represent an carriddi file.
+#-------------------------------------------------------------------------------
+class carriddi_file:
+#*******************************************************************************
+#  CONSTRUCTORS
+#*******************************************************************************
+#-------------------------------------------------------------------------------
+#  Initialize a carriddi file.
+#
+#  param[inout] self      A carriddi file instance.
+#  param[in]    file_name Path to the file.
+#-------------------------------------------------------------------------------
+    def __init__(self, file_name):
+        self.data = netCDF4.Dataset(file_name, 'a')
 
-#routine to read cariddi matrices and write the field into mgrid file.
-command_line_parser = argparse.ArgumentParser()
-command_line_parser.add_argument('-m',
-                                 '--mgrid_file',
-                                 required=True,
-                                 action='store',
-                                 dest='mgrid_file',
-                                 help='Path to the mgrid file.',
-                                 metavar='MGIRD_FILE')
-command_line_parser.add_argument('-p',
-                                 '--matrix_path',
-                                 required=True,
-                                 action='store',
-                                 dest='matrix_path',
-                                 help='Path to the folder containing the matrices.',
-                                 metavar='MATRIX_PATH')
-command_line_parser.add_argument('-v',
-                                 '--vmec_current',
-                                 action='store',
-                                 dest='vmec_current',
-                                 help='Path to the file containing the vmec current',
-                                 metavar='VMEC_CURRENT')
-args = vars(command_line_parser.parse_args())
+#*******************************************************************************
+#  CONSTRUCTORS
+#*******************************************************************************
+#-------------------------------------------------------------------------------
+#  Destruct a cariddi file instance.
+#
+#  param[inout] self A mgrid file instance.
+#-------------------------------------------------------------------------------
+    def __del__(self):
+        self.data.close()
 
-#  Remove empty arguments
-for key in [key for key in args if args[key] == None]:
-    del args[key]
+#-------------------------------------------------------------------------------
+#  Class to represent an eddy current file.
+#-------------------------------------------------------------------------------
+class eddy(carriddi_file):
+#*******************************************************************************
+#  CONSTRUCTORS
+#*******************************************************************************
+    def __init__(self, file_name):
+        super(eddy, self).__init__(file_name)
 
-mgridfile = args['mgrid_file']
+        self.dx = self.data.variables['dx'][:].data
+        self.dy = self.data.variables['dy'][:].data
+        self.dz = self.data.variables['dz'][:].data
 
-percorso = args['matrix_path']
-filesIn = ['eddy.nc']
-filesJ = ['J0.nc']
+        self.K1x = self.data.variables['K1x'][:].data
+        self.K1y = self.data.variables['K1y'][:].data
+        self.K1z = self.data.variables['K1z'][:].data
 
-print('reading data from fields in {}'.format(percorso))
+#-------------------------------------------------------------------------------
+#  Class to represent an vmec current file.
+#-------------------------------------------------------------------------------
+class vmec_current(carriddi_file):
+#*******************************************************************************
+#  CONSTRUCTORS
+#*******************************************************************************
+    def __init__(self, file_name):
+        super(vmec_current, self).__init__(file_name)
 
-#write mgrid data
-print('writing data in {}'.format(mgridfile))
-print('reshaping data for mgrid file ...')
+        k_x = self.data.variables['k_x'][:].data
+        k_y = self.data.variables['k_y'][:].data
+        k_z = self.data.variables['k_z'][:].data
 
-mgriddata = netCDF4.Dataset(mgridfile, 'a')
-nr = numpy.array( mgriddata.variables['ir'] )
-nz = numpy.array( mgriddata.variables['jz'] )
-nphi = numpy.array( mgriddata.variables['kp'] )
-nextcur = numpy.array( mgriddata.variables['nextcur'] )
+        k_vmec = numpy.empty(3*len(k_x))
+        k_vmec[0:len(k_x)]            = k_x[:]
+        k_vmec[len(k_x):2*len(k_x)]   = k_y[:]
+        k_vmec[2*len(k_x):3*len(k_x)] = k_z[:]
 
-#names of variables to write
-br_str = 'br_{:03d}'.format(nextcur)
-bp_str = 'bp_{:03d}'.format(nextcur)
-bz_str = 'bz_{:03d}'.format(nextcur)
+#-------------------------------------------------------------------------------
+#  Class to represent an mgrid file.
+#-------------------------------------------------------------------------------
+class mgrid(carriddi_file):
+#*******************************************************************************
+#  CONSTRUCTORS
+#*******************************************************************************
+#-------------------------------------------------------------------------------
+#  Initialize a mgrid file.
+#
+#  param[inout] self      A mgrid file instance.
+#  param[in]    file_name Path to the mgrid file.
+#-------------------------------------------------------------------------------
+    def __init__(self, file_name):
+        super(mgrid, self).__init__(file_name)
 
-br_mgrid = mgriddata.variables[br_str]
-bp_mgrid = mgriddata.variables[bp_str]
-bz_mgrid = mgriddata.variables[bz_str]
+        self.nr = self.data.variables['ir'][:].data
+        self.nz = self.data.variables['jz'][:].data
+        self.nphi = self.data.variables['kp'][:].data
+        nextcur = self.data.variables['nextcur'][:].data
 
-if 'vmec_current' in args:
-    data = {}
-    for fileIn in filesIn:
-        print('reading {}/{} ...'.format(percorso, fileIn))
-        src = netCDF4.Dataset('{}/{}'.format(percorso, fileIn))
-        # read all variables
-        for name, variable in src.variables.items():
-            data[name] = numpy.asarray(src.variables[name][:])
-            data[name] = data[name].squeeze()
-            print('  -> variable = {} - shape = '.format(name, data[name].shape))
+        self.br = self.data.variables['br_{:03d}'.format(nextcur)]
+        self.bp = self.data.variables['bp_{:03d}'.format(nextcur)]
+        self.bz = self.data.variables['bz_{:03d}'.format(nextcur)]
 
-        src.close()
+        self.br[:,:,:] = 0
+        self.bp[:,:,:] = 0
+        self.bz[:,:,:] = 0
 
-    cnt = 0
-    currents = {}
-    for fileIn in filesJ:
-        print('reading {}/{} ...'.format(percorso, fileIn))
-        src = netCDF4.Dataset('{}/{}'.format(percorso, fileIn))
-        # read all variables
-        for name, variable in src.variables.items():
-            namecnt = '{}{}'.format(name, cnt)
-            currents[namecnt] = numpy.asarray( src.variables[name][:] )
-            currents[namecnt] = currents[namecnt].squeeze()
-            print('  -> variable = {}  - shape = {}'.format(namecnt, currents[namecnt].shape))
+        print('writing data in {}'.format(file_name))
+        print('reshaping data for mgrid file ...')
 
-        src.close()
-        cnt += 1
+#*******************************************************************************
+#  SETTERS
+#*******************************************************************************
+#-------------------------------------------------------------------------------
+#  Set eddy current contribution to the VMEC fields.
+#
+#  param[inout] self         A mgrid file instance.
+#  param[in]    matrix_path  Path to the matrix file.
+#  param[in]    vmec_current Path to the vmec current file.
+#-------------------------------------------------------------------------------
+    def set_fields(self, matrix_path, vmec_current):
+        print('\ncomputing magnetic field on vaccum grid for VMEC ...\n')
+        eddyfile = eddy('{}/eddy.nc'.format(matrix_path))
 
-    print('reading {} ...'.format(args['vmec_current']))
-    src = netCDF4.Dataset(args['vmec_current'])
-    # read all variables
-    for name, variable in src.variables.items():
-        namecnt = '{}{}'.format(name, cnt)
-        currents[namecnt] = numpy.asarray( src.variables[name][:] )
-        currents[namecnt] = currents[namecnt].squeeze()
-        print('  -> variable = {} - shape = {}'.format(namecnt, currents[namecnt].shape))
-    src.close()
+        j1file = vmec_current(vmec_current)
 
-    #copiamo i dati della griglia
-    data['xs'] = copy(currents['x0'])
-    data['ys'] = copy(currents['y0'])
-    data['zs'] = copy(currents['z0'])
+#  Need to use the proper ordering of indexes for the matrix multiplication.
+        k_vmec = numpy.empty(3*len(j1file.k_x))
+        k_vmec[0:len(j1file.k_x)]                   = j1file.k_x[:]
+        k_vmec[len(j1file.k_x):2*len(j1file.k_x)]   = j1file.k_y[:]
+        k_vmec[2*len(j1file.k_x):3*len(j1file.k_x)] = j1file.k_z[:]
 
-    print('matrices in dictionary: data')
-    print(data.keys())
-    print('currents in dictionary: currents')
-    print(currents.keys())
+#  Use Fortran ordering in reshaping.
+        br = (eddyfile.K1x.dot(k_vmec) + eddyfile.dx).reshape((self.nr,self.nz), order='F')
+        bp = (eddyfile.K1y.dot(k_vmec) + eddyfile.dy).reshape((self.nr,self.nz), order='F')
+        bz = (eddyfile.K1z.dot(k_vmec) + eddyfile.dz).reshape((self.nr,self.nz), order='F')
 
-    #compute magnetic field on vaccum grid for VMEC
+        print('writing data into mgrid file ...')
 
-    print('\ncomputing magnetic field on vaccum grid for VMEC ...\n')
+#  FIXME: Assumes axisymmetry?
+        for k in range(self.nphi):
+            self.br[k,:,:] = br
+            self.bp[k,:,:] = bp
+            self.bz[k,:,:] = bz
 
-    #need to use the proper ordering of indexes for the matrix multiplication
-    k_vmec = numpy.zeros(1500) #(1500) # FIXME: Matrix sizes hard coded.
-    for i in range(500):
-        k_vmec[i]        = currents['k_x1'][i] - currents['k_x0'][i]
-        k_vmec[i + 500]  = currents['k_y1'][i] - currents['k_y0'][i]
-        k_vmec[i + 1000] = currents['k_z1'][i] - currents['k_z0'][i]
+#-------------------------------------------------------------------------------
+#  Main routine
+#
+#  This routine runs a number of different tasks based on the command line
+#  arguments set.
+#
+#  param[in] args Dictionary of commandline arguments.
+#-------------------------------------------------------------------------------
+def main(**args):
+    mgridfile = mgrid(args['mgrid_file'])
 
-    K1x = copy(data['K1x'])   #(10201,1500)
-    K1y = copy(data['K1y'])   #(10201,1500)
-    K1z = copy(data['K1z'])   #(10201,1500)
+    if 'current_path' in args:
+        mgridfile.set_fields(args['matrix_path'],
+                             args['current_path'])
 
-    Bx = K1x.dot(k_vmec) + data['dx']
-    By = K1y.dot(k_vmec) + data['dy']
-    Bz = K1z.dot(k_vmec) + data['dz']
+#-------------------------------------------------------------------------------
+#  Parse commandline arguments.
+#-------------------------------------------------------------------------------
+if __name__ == '__main__':
+    command_line_parser = argparse.ArgumentParser()
+    command_line_parser.add_argument('-m',
+                                     '--mgrid_file',
+                                     required=True,
+                                     action='store',
+                                     dest='mgrid_file',
+                                     help='Path to the mgrid file.',
+                                     metavar='MGIRD_FILE')
+    command_line_parser.add_argument('-p',
+                                     '--matrix_path',
+                                     action='store',
+                                     dest='matrix_path',
+                                     help='Path to the folder containing the matrices.',
+                                     metavar='MATRIX_PATH')
+    command_line_parser.add_argument('-c',
+                                     '--vmec_current',
+                                     action='store',
+                                     dest='vmec_current',
+                                     help='Path to the file containing the vmec current.',
+                                     metavar='VMEC_CURRENT')
+    args = vars(command_line_parser.parse_args())
 
-    br = Bx.reshape((nr,nz), order='F')    #use Fortran ordering in reshaping
-    bp = By.reshape((nr,nz), order='F')    #use Fortran ordering in reshaping
-    bz = Bz.reshape((nr,nz), order='F')    #use Fortran ordering in reshaping
+    #  Remove empty arguments
+    for key in [key for key in args if args[key] == None]:
+        del args[key]
 
-    print('writing data into mgrid file ...')
+    if 'current_path' in args and 'matrix_path' not in args:
+        print('Faital error: "matrix_path" must be set when using the "current_path" flag.')
+        exit(1)
 
-    for k in range(nphi):
-        br_mgrid[k,:,:] = br
-        bp_mgrid[k,:,:] = bp
-        bz_mgrid[k,:,:] = bz
-else:
-    br_mgrid[:,:,:] = 0
-    bp_mgrid[:,:,:] = 0
-    bz_mgrid[:,:,:] = 0
-
-    mgriddata.close()
-
-    print('DONE!')
+    main(**args)
