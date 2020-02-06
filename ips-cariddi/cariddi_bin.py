@@ -61,10 +61,11 @@ class vmec_current(carriddi_file):
         k_y = self.data.variables['k_y'][:].data
         k_z = self.data.variables['k_z'][:].data
 
-        k_vmec = numpy.empty(3*len(k_x))
-        k_vmec[0:len(k_x)]            = k_x[:]
-        k_vmec[len(k_x):2*len(k_x)]   = k_y[:]
-        k_vmec[2*len(k_x):3*len(k_x)] = k_z[:]
+#  Need to use the proper ordering of indexes for the matrix multiplication.
+        self.k_vmec = numpy.empty(3*len(k_x))
+        self.k_vmec[0:len(k_x)]            = k_x[:]
+        self.k_vmec[len(k_x):2*len(k_x)]   = k_y[:]
+        self.k_vmec[2*len(k_x):3*len(k_x)] = k_z[:]
 
 #-------------------------------------------------------------------------------
 #  Class to represent an mgrid file.
@@ -104,26 +105,20 @@ class mgrid(carriddi_file):
 #-------------------------------------------------------------------------------
 #  Set eddy current contribution to the VMEC fields.
 #
-#  param[inout] self         A mgrid file instance.
-#  param[in]    matrix_path  Path to the matrix file.
-#  param[in]    vmec_current Path to the vmec current file.
+#  param[inout] self              A mgrid file instance.
+#  param[in]    matrix_path       Path to the matrix file.
+#  param[in]    vmec_current_path Path to the vmec current file.
 #-------------------------------------------------------------------------------
-    def set_fields(self, matrix_path, vmec_current):
+    def set_fields(self, matrix_path, vmec_current_path):
         print('\ncomputing magnetic field on vaccum grid for VMEC ...\n')
         eddyfile = eddy('{}/eddy.nc'.format(matrix_path))
 
-        j1file = vmec_current(vmec_current)
-
-#  Need to use the proper ordering of indexes for the matrix multiplication.
-        k_vmec = numpy.empty(3*len(j1file.k_x))
-        k_vmec[0:len(j1file.k_x)]                   = j1file.k_x[:]
-        k_vmec[len(j1file.k_x):2*len(j1file.k_x)]   = j1file.k_y[:]
-        k_vmec[2*len(j1file.k_x):3*len(j1file.k_x)] = j1file.k_z[:]
+        j1file = vmec_current(vmec_current_path)
 
 #  Use Fortran ordering in reshaping.
-        br = (eddyfile.K1x.dot(k_vmec) + eddyfile.dx).reshape((self.nr,self.nz), order='F')
-        bp = (eddyfile.K1y.dot(k_vmec) + eddyfile.dy).reshape((self.nr,self.nz), order='F')
-        bz = (eddyfile.K1z.dot(k_vmec) + eddyfile.dz).reshape((self.nr,self.nz), order='F')
+        br = (eddyfile.K1x.dot(j1file.k_vmec) + eddyfile.dx).reshape((self.nr,self.nz), order='F')
+        bp = (eddyfile.K1y.dot(j1file.k_vmec) + eddyfile.dy).reshape((self.nr,self.nz), order='F')
+        bz = (eddyfile.K1z.dot(j1file.k_vmec) + eddyfile.dz).reshape((self.nr,self.nz), order='F')
 
         print('writing data into mgrid file ...')
 
@@ -144,9 +139,9 @@ class mgrid(carriddi_file):
 def main(**args):
     mgridfile = mgrid(args['mgrid_file'])
 
-    if 'current_path' in args:
+    if 'vmec_current' in args:
         mgridfile.set_fields(args['matrix_path'],
-                             args['current_path'])
+                             args['vmec_current'])
 
 #-------------------------------------------------------------------------------
 #  Parse commandline arguments.

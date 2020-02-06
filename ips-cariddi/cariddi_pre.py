@@ -339,13 +339,13 @@ class eddy:
 #  FIXME: Size of this matrix is hard coded.
         I0A = numpy.zeros(484)
         if time_index != 0:
-            I0A = self.c1.dot(J0.k_vmec) + self.c
+            I0A = self.c1[:,:].data.dot(J0.k_vmec) + self.c[:].data
 
 #  Compute updated quantities.
-        self.c[:]  = -self.c1.dot(J0.k_vmec) + self.c2.dot(I0A)
-        self.dx[:] = -self.k1x.dot(J0.k_vmec) + self.k2x.dot(I0A)
-        self.dy[:] = -self.k1y.dot(J0.k_vmec) + self.k2y.dot(I0A)
-        self.dz[:] = -self.k1z.dot(J0.k_vmec) + self.k2z.dot(I0A)
+        self.c[:]  = -self.c1[:,:].data.dot(J0.k_vmec)  + self.c2[:,:].data.dot(I0A)
+        self.dx[:] = -self.k1x[:,:].data.dot(J0.k_vmec) + self.k2x[:,:].data.dot(I0A)
+        self.dy[:] = -self.k1y[:,:].data.dot(J0.k_vmec) + self.k2y[:,:].data.dot(I0A)
+        self.dz[:] = -self.k1z[:,:].data.dot(J0.k_vmec) + self.k2z[:,:].data.dot(I0A)
 
 #-------------------------------------------------------------------------------
 #  Extract profile parameters for the time index.
@@ -377,18 +377,18 @@ def set_namelist_parameters(percorso, time_index, vmec_input):
 
     profile_changes = {}
 
-    profile_changes['pmass_type'] = 'akima_spline'
-    profile_changes['pcurr_type'] = 'akima_spline_I'
+    profile_changes['vmec__pmass_type'] = 'akima_spline'
+    profile_changes['vmec__pcurr_type'] = 'akima_spline_I'
     for i, s in enumerate(ss):
-        profile_changes['ac_aux_s({})'.format(i)] = s
-        profile_changes['am_aux_s({})'.format(i)] = s
+        profile_changes['vmec__ac_aux_s({})'.format(i + 1)] = s
+        profile_changes['vmec__am_aux_s({})'.format(i + 1)] = s
     for i, c in enumerate(II_tor):
-        profile_changes['ac_aux_f({})'.format(i)] = c
+        profile_changes['vmec__ac_aux_f({})'.format(i + 1)] = c
     for i, p in enumerate(pp):
-        profile_changes['am_aux_f({})'.format(i)] = p
+        profile_changes['vmec__am_aux_f({})'.format(i + 1)] = p
 
-    profile_changes['phiedge'] = phi_tot[-1]
-    profile_changes['curtor'] = I_tor[-1]
+    profile_changes['vmec__phiedge'] = phi_tot[-1]
+    profile_changes['vmec__curtor'] = I_tor[-1]
 
     with open(vmec_input, 'w') as json_ref:
         json.dump(profile_changes, json_ref, indent=4)
