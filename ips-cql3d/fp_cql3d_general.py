@@ -359,7 +359,6 @@ class cql3d(Component):
         cur_cql_file = get_global_param(self, services,'CURRENT_CQL', optional = True)
         cur_ImChizz_inp_file = get_global_param(self, services,'CURRENT_ImChizz_inp', optional = True)
         
-        print 'CURRENT_CQL = ', cur_cql_file
     # Copy current plasma state file to generic name -> cur_state.cdf
         try:
             shutil.copyfile(cur_state_file, 'cur_state.cdf')
