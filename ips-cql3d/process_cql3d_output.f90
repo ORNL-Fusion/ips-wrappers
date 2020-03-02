@@ -80,8 +80,19 @@
 !      implicit none
       implicit integer (i-n), real*8 (a-h,o-z)
 
+       include 'netcdf.inc'
+
+!      implicit none
+      implicit integer (i-n), real*8 (a-h,o-z)
+
+!.......................................................................
+!     NAMELISTS AND THEIR STORAGE, from GENRAY FILES
+!.......................................................................
+
       include 'param.h'
-      include 'netcdf.inc'
+c----------------------------------------
+c     type declaration and storage of all namelists variables
+c-----------------------------------
       include 'name.h'
       include 'name_decl.h'
       include 'frname.h'
