@@ -77,7 +77,9 @@
 !           output netcdf file (mnemonic.nc) and putting it into the state
 
  
-      implicit none
+!      implicit none
+      implicit integer (i-n), real*8 (a-h,o-z)
+
       include 'param.h'
       include 'netcdf.inc'
       include 'name.h'
