@@ -344,7 +344,7 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
       allocate (curr(lrz,nt))   !for rw cases
       allocate (rovsc(lrz,nt)) ! added by ptb
       allocate (sptzrp(lrz,nt)) ! added by ptb
-      allocate (elecfld(lrz+1,nt))  ! added by ptb
+!      allocate (elecfld(lrz+1,nt))  ! added by ptb
 
       allocate (powrf(lrz,nmods,nt))
       allocate (powrfc(lrz,nmods,nt))
