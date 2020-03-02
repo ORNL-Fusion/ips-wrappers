@@ -78,7 +78,7 @@
 
  
       implicit none
-
+      include 'param.h'
       include 'netcdf.inc'
       include 'name.h'
       include 'name_decl.h'
