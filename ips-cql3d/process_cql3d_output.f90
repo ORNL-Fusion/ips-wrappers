@@ -82,9 +82,6 @@
 
        include 'netcdf.inc'
 
-!      implicit none
-      implicit integer (i-n), real*8 (a-h,o-z)
-
 !.......................................................................
 !     NAMELISTS AND THEIR STORAGE, from GENRAY FILES
 !.......................................................................
@@ -104,7 +101,7 @@ c-----------------------------------
 
 !     Storage for cql3d netcdf file elements and retrieval
 !     Do ncdump on an cql3d netCDF output file to get documentation
-      real*8, allocatable, dimension(:)   :: rya   ! radial grid--bin centers
+!      real*8, allocatable, dimension(:)   :: rya   ! radial grid--bin centers
       ! note that mesh in not uniform
       real*8, allocatable, dimension(:)   :: darea,dvol   ! bin areas/volumes   
       real*8, allocatable, dimension(:,:) :: wperp   !perp energy/particle
@@ -113,7 +110,7 @@ c-----------------------------------
                                                       !tdim, rdim
       real*8, allocatable, dimension(:,:,:) :: density !density of all species
                                                       !tdim, r0dim, species dim
-      real*8, allocatable, dimension(:,:,:) :: temp !temperature of all species
+!      real*8, allocatable, dimension(:,:,:) :: temp !temperature of all species
                                                       !tdim, r0dim, species dim
       real*8, allocatable, dimension(:,:,:,:) :: powers !collection of power flows
 
@@ -122,7 +119,7 @@ c-----------------------------------
       real*8, allocatable, dimension(:,:) :: ccurtor !just printout for now
       real*8, allocatable, dimension(:,:) :: denra
       real*8, allocatable, dimension(:,:) :: curra
-      real*8, allocatable, dimension(:,:) :: elecfld ! added by ptb
+!      real*8, allocatable, dimension(:,:) :: elecfld ! added by ptb
       real*8, allocatable, dimension(:,:) :: curr, sptzrp, rovsc ! added by ptb
       real*8, allocatable, dimension(:)   :: tmp_prof, rho_cql   ! added by ptb
       real*8 :: powerlh, currlh, powerlh_int, currlh_int ! added by ptb:
@@ -131,7 +128,7 @@ c-----------------------------------
       !dimensions tdim,nmodsdim,rdim
       real*8, allocatable, dimension(:,:,:) :: powrf,powrfc,powrfl
       real*8, allocatable, dimension(:,:) :: powrft   !tdim,rdim
-      character*8 radcoord
+!      character*8 radcoord
       integer :: l
 
       integer :: ncid,vid,istatus
@@ -332,9 +329,9 @@ c F2003-syntax call get_command_argument(1,cql3d_output)
 
 
 !     allocate space for arrays to be read
-      allocate (rya(lrz))  !the radial grid
+!      allocate (rya(lrz))  !the radial grid
       allocate (density(ntotal,lrz,nt))  !the density
-      allocate (temp(ntotal,lrz,nt))  !the temperature
+!      allocate (temp(ntotal,lrz,nt))  !the temperature
       allocate (darea(lrz),dvol(lrz))
 c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
       allocate (powers(lrz, 13, ngen, nt))  
