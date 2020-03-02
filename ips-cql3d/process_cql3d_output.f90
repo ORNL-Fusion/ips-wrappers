@@ -82,7 +82,9 @@
       include 'netcdf.inc'
       include 'name.h'
       include 'name_decl.h'
-    
+      include 'frname.h'
+      include 'frname_decl.h'
+   
       integer, parameter :: swim_string_length = 256 !for compatibility LAB
       integer :: nnoderho, r0dim, vid_
       integer :: iarg
