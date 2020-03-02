@@ -1,5 +1,9 @@
       program process_cql3d_output
 
+! (DBB 3/2/2020)
+! Removed code that hardwired "cql3d.nc" as the cql3d output file name.  Inserted coding
+! to pickup cql3d_output_file from cqlinput namelist variable mnemonic.
+!
 ! (DBB 4/4/2019)
 ! Added check to see if ImChizz.inp_template exists (i.e. input file for subroutine 
 ! write_inchizz_inp).  Needed so this code can be used TORLH which needs ImChizz.inp
@@ -76,6 +80,8 @@
       implicit none
 
       include 'netcdf.inc'
+      include 'name.h'
+      include 'name_decl.h'
     
       integer, parameter :: swim_string_length = 256 !for compatibility LAB
       integer :: nnoderho, r0dim, vid_
@@ -137,12 +143,31 @@
 ! ptb:      cur_state_file='/cur_state.cdf'
       cur_state_file='./cur_state.cdf'
 ! ptb:      cql3d_output_file="./mnemonic.nc"  !Set up by cql3d/fp_cql3d.py
-      cql3d_output_file="./cql3d.nc"  !Set up by cql3d/fp_cql3d.py
-      cql3d_output='LH'
+! DBB      cql3d_output_file="./cql3d.nc"  !Set up by cql3d/fp_cql3d.py
+! DBB      cql3d_output='LH'
 cBH131016:  Note: evidently, must have mnemonic='cql3d' in the cqlinput
 cBH131016:  file used by cql3d.  
 cBH131016:  Note also:  Why is cql3d_output specified here, when
 cBH131016:  are forced to give 1 argument below at line 155?
+
+c-----------------------------------------------------------------------
+c     Read the setup0 namelist just for the purpose of getting mnemonic file name
+c-----------------------------------------------------------------------
+
+      open(unit=2, file = 'cqlinput', delim='apostrophe',
+     1     status = 'old', form = 'formatted', iostat = ierr)
+      if(ierr .ne. 0) stop 'cannot open cqlinput cql3d namelist file'
+
+      read(2,setup0,iostat=istat)
+      if (istat.ne.0) then
+         write(*,*)
+         write(*,*)
+     1   'No setup0?: Check have new setup0/setup namelist structure.'
+         write(*,*)
+         STOP 1
+      endif
+      cql3d_output_file= trim(mnemonic)//".nc"
+      write (*,*) "cql3d_output_file = ", cql3d_output_file
 
 c-----------------------------------------------------------------------
 c     Caveats
