@@ -1,5 +1,9 @@
 #! /usr/bin/env python
 
+# fp_cql3d_general.py, Version 0.5 Batchelor 3-2-2020
+# Added coding to read the cqlinput file, extract mnemonic <--> cql3d_output_file and
+# add that as a command line argument to process_cql3d_output.f90
+
 # fp_cql3d_general.py, Version 0.4 Batchelor 2-19-2020
 # Removed coding which did caused cql3d not to run if the LH power was zero.  Three good
 # reasons: 1) It was a latent bug since it only tested for zero power on LH, not the other
@@ -100,6 +104,7 @@ from  component import Component
 from Numeric import *                        #Use numpy instead?? BH
 from Scientific.IO.NetCDF import *           #Use scipy.io.netcdf implentation??  BH
 from get_IPS_config_parameters import get_global_param, get_component_param
+from simple_file_editing_functions import get_lines, lines_to_variable_dict
 
 class cql3d(Component):
     def __init__(self, services, config):
@@ -447,11 +452,16 @@ class cql3d(Component):
 
 # Call process_output - step
         print 'fp_cql3d step: calling process_output'
-      
+
+# Get cql3d_output_file file name <--> mnemonic from cqlinput file
+        lines = get_lines('cqlinput')
+        cql3d_output_file = lines_to_variable_dict(lines)['mnemonic']
+        print 'cql3d_output_file = ', cql3d_output_file
+  
         log_file = open('log_process_cql3d_output', 'w')
         mode = 'step'
 # ptb;          command = process_output_bin + ' ' +  cql3d_mode
-        command = process_output_bin + ' ' +  cql3d_output    
+        command = process_output_bin + ' ' +  cql3d_output+ ' ' +  cql3d_output_file   
 
         print 'running', command
         services.send_portal_event(event_type = 'COMPONENT_EVENT',\
