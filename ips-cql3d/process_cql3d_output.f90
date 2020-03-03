@@ -1,9 +1,5 @@
       program process_cql3d_output
 
-! (DBB 3/2/2020)
-! Removed code that hardwired "cql3d.nc" as the cql3d output file name.  Inserted coding
-! to pickup cql3d_output_file from cqlinput namelist variable mnemonic.
-!
 ! (DBB 4/4/2019)
 ! Added check to see if ImChizz.inp_template exists (i.e. input file for subroutine 
 ! write_inchizz_inp).  Needed so this code can be used TORLH which needs ImChizz.inp
@@ -77,31 +73,17 @@
 !           output netcdf file (mnemonic.nc) and putting it into the state
 
  
-!      implicit none
-      implicit integer (i-n), real*8 (a-h,o-z)
+      implicit none
 
-       include 'netcdf.inc'
-
-!.......................................................................
-!     NAMELISTS AND THEIR STORAGE, from GENRAY FILES
-!.......................................................................
-
-      include 'param.h'
-c----------------------------------------
-c     type declaration and storage of all namelists variables
-c-----------------------------------
-      include 'name.h'
-      include 'name_decl.h'
-      include 'frname.h'
-      include 'frname_decl.h'
-   
+      include 'netcdf.inc'
+    
       integer, parameter :: swim_string_length = 256 !for compatibility LAB
       integer :: nnoderho, r0dim, vid_
       integer :: iarg
 
 !     Storage for cql3d netcdf file elements and retrieval
 !     Do ncdump on an cql3d netCDF output file to get documentation
-!      real*8, allocatable, dimension(:)   :: rya   ! radial grid--bin centers
+      real*8, allocatable, dimension(:)   :: rya   ! radial grid--bin centers
       ! note that mesh in not uniform
       real*8, allocatable, dimension(:)   :: darea,dvol   ! bin areas/volumes   
       real*8, allocatable, dimension(:,:) :: wperp   !perp energy/particle
@@ -110,7 +92,7 @@ c-----------------------------------
                                                       !tdim, rdim
       real*8, allocatable, dimension(:,:,:) :: density !density of all species
                                                       !tdim, r0dim, species dim
-!      real*8, allocatable, dimension(:,:,:) :: temp !temperature of all species
+      real*8, allocatable, dimension(:,:,:) :: temp !temperature of all species
                                                       !tdim, r0dim, species dim
       real*8, allocatable, dimension(:,:,:,:) :: powers !collection of power flows
 
@@ -119,7 +101,7 @@ c-----------------------------------
       real*8, allocatable, dimension(:,:) :: ccurtor !just printout for now
       real*8, allocatable, dimension(:,:) :: denra
       real*8, allocatable, dimension(:,:) :: curra
-!      real*8, allocatable, dimension(:,:) :: elecfld ! added by ptb
+      real*8, allocatable, dimension(:,:) :: elecfld ! added by ptb
       real*8, allocatable, dimension(:,:) :: curr, sptzrp, rovsc ! added by ptb
       real*8, allocatable, dimension(:)   :: tmp_prof, rho_cql   ! added by ptb
       real*8 :: powerlh, currlh, powerlh_int, currlh_int ! added by ptb:
@@ -128,7 +110,7 @@ c-----------------------------------
       !dimensions tdim,nmodsdim,rdim
       real*8, allocatable, dimension(:,:,:) :: powrf,powrfc,powrfl
       real*8, allocatable, dimension(:,:) :: powrft   !tdim,rdim
-!      character*8 radcoord
+      character*8 radcoord
       integer :: l
 
       integer :: ncid,vid,istatus
@@ -155,31 +137,12 @@ c-----------------------------------
 ! ptb:      cur_state_file='/cur_state.cdf'
       cur_state_file='./cur_state.cdf'
 ! ptb:      cql3d_output_file="./mnemonic.nc"  !Set up by cql3d/fp_cql3d.py
-! DBB      cql3d_output_file="./cql3d.nc"  !Set up by cql3d/fp_cql3d.py
-! DBB      cql3d_output='LH'
+      cql3d_output_file="./cql3d.nc"  !Set up by cql3d/fp_cql3d.py
+      cql3d_output='LH'
 cBH131016:  Note: evidently, must have mnemonic='cql3d' in the cqlinput
 cBH131016:  file used by cql3d.  
 cBH131016:  Note also:  Why is cql3d_output specified here, when
 cBH131016:  are forced to give 1 argument below at line 155?
-
-c-----------------------------------------------------------------------
-c     Read the setup0 namelist just for the purpose of getting mnemonic file name
-c-----------------------------------------------------------------------
-
-      open(unit=2, file = 'cqlinput', delim='apostrophe',
-     1     status = 'old', form = 'formatted', iostat = ierr)
-      if(ierr .ne. 0) stop 'cannot open cqlinput cql3d namelist file'
-
-      read(2,setup0,iostat=istat)
-      if (istat.ne.0) then
-         write(*,*)
-         write(*,*)
-     1   'No setup0?: Check have new setup0/setup namelist structure.'
-         write(*,*)
-         STOP 1
-      endif
-      cql3d_output_file= trim(mnemonic)//".nc"
-      write (*,*) "cql3d_output_file = ", cql3d_output_file
 
 c-----------------------------------------------------------------------
 c     Caveats
@@ -329,9 +292,9 @@ c F2003-syntax call get_command_argument(1,cql3d_output)
 
 
 !     allocate space for arrays to be read
-!      allocate (rya(lrz))  !the radial grid
+      allocate (rya(lrz))  !the radial grid
       allocate (density(ntotal,lrz,nt))  !the density
-!      allocate (temp(ntotal,lrz,nt))  !the temperature
+      allocate (temp(ntotal,lrz,nt))  !the temperature
       allocate (darea(lrz),dvol(lrz))
 c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
       allocate (powers(lrz, 13, ngen, nt))  
@@ -344,7 +307,7 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
       allocate (curr(lrz,nt))   !for rw cases
       allocate (rovsc(lrz,nt)) ! added by ptb
       allocate (sptzrp(lrz,nt)) ! added by ptb
-!      allocate (elecfld(lrz+1,nt))  ! added by ptb
+      allocate (elecfld(lrz+1,nt))  ! added by ptb
 
       allocate (powrf(lrz,nmods,nt))
       allocate (powrfc(lrz,nmods,nt))
