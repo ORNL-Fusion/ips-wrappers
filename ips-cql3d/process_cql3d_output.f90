@@ -1,5 +1,9 @@
       program process_cql3d_output
 
+! (DBB 3/2/2020)
+! Removed code that hardwired "cql3d.nc" as the cql3d output file name.  Inserted coding
+! to get cql3d_output_file from a command line argument.
+
 ! (DBB 4/4/2019)
 ! Added check to see if ImChizz.inp_template exists (i.e. input file for subroutine 
 ! write_inchizz_inp).  Needed so this code can be used TORLH which needs ImChizz.inp
@@ -136,9 +140,10 @@
       
 ! ptb:      cur_state_file='/cur_state.cdf'
       cur_state_file='./cur_state.cdf'
+      
 ! ptb:      cql3d_output_file="./mnemonic.nc"  !Set up by cql3d/fp_cql3d.py
-      cql3d_output_file="./cql3d.nc"  !Set up by cql3d/fp_cql3d.py
-      cql3d_output='LH'
+!      cql3d_output_file="./cql3d.nc"  !Set up by cql3d/fp_cql3d.py
+!      cql3d_output='LH'
 cBH131016:  Note: evidently, must have mnemonic='cql3d' in the cqlinput
 cBH131016:  file used by cql3d.  
 cBH131016:  Note also:  Why is cql3d_output specified here, when
@@ -169,14 +174,16 @@ c-----------------------------------------------------------------------
 c F2003 syntax      iargs=command_argument_count()
 c Here, use portlib routines (also used by PS module)
       call get_arg_count(iarg)
-      if(iarg .ne.1) then 
-         print*, 'only one command line argument:'
-         print*, 'usage: process_cql3d_output: cql3d_output'
+      if(iarg .ne.2) then 
+         print*, 'usage: process_cql3d_output: '
+         print*, 'Two command line arguments required: ql3d_output, cql3d_output_file'
      	 stop 1
       end if
 c F2003-syntax call get_command_argument(1,cql3d_output)
       call get_arg(1, cql3d_output)
       write(*,*)  'cql3d_output = ', trim(cql3d_output)
+      call get_arg(2, cql3d_output_file)
+      write(*,*)  'cql3d_output_file = ', trim(cql3d_output_file)
 
 
 ! this call retrieves the plasma state at the present ps%, and
