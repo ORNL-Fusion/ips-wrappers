@@ -515,8 +515,9 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
          currec = 0.0
       do l=1,lrz
          powerec = powerec + powrft(l,nt)*dvol(l)
-         currec = (curr(l,nt) - elecfld(l+1,nt)/
-     &       (rovsc(l,nt)*sptzrp(l,nt)*9.0E+11)) * darea(l) + currec
+         currec = curr(l,nt)
+!          currec = (curr(l,nt) - elecfld(l+1,nt)/
+!      &       (rovsc(l,nt)*sptzrp(l,nt)*9.0E+11)) * darea(l) + currec
       enddo
 ! ptb checking interpolated quantities
          powerec_int = 0.0
