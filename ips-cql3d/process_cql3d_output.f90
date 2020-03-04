@@ -490,15 +490,19 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
 
          if(ierr .ne. 0) stop 'error interpolating CQL3D powers onto PS Grid ps%nrho_ecrf and ps%peech'
          ps%peech_src(:,1) = ps%peech(:)
-!         write(*,*) 'elecfld(l,nt) = ', elecfld(1:lrz+1,nt)
+         write(*,*) 'elecfld(l,nt) = ', elecfld(1:lrz+1,nt)
   
          do l=1,lrz
          tmp_prof(l) = (curr(l,nt) - elecfld(l+1,nt)/
      &       (rovsc(l,nt)*sptzrp(l,nt)*9.0E+11)) * darea(l)
          enddo
+         
+         write(*,*) 'tmp_prof = ', tmp_prof(:)
 
          call ps_user_rezone1(rho_cql, ps%rho_ecrf, tmp_prof, 
      &        ps%curech, ierr, nonorm = .TRUE., zonesmoo = .TRUE.)
+
+         write(*,*) 'rezoned ps%curech = ', ps%curech
 
          if(ierr .ne. 0) stop 'error interpolating CQL3D powrft onto PS Grid ps%nrho_ecrf and ps%curech'
 
