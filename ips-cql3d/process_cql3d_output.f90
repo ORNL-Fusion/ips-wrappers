@@ -498,6 +498,7 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
 !      &       (rovsc(l,nt)*sptzrp(l,nt)*9.0E+11)) * darea(l)
          enddo
          
+         write(*,*) 'curr(l,nt) = ', curr(:,nt)
          write(*,*) 'tmp_prof = ', tmp_prof(:)
 
          call ps_user_rezone1(rho_cql, ps%rho_ecrf, tmp_prof, 
