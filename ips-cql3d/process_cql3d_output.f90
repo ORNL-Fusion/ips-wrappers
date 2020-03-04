@@ -493,8 +493,9 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
          write(*,*) 'elecfld(l,nt) = ', elecfld(1:lrz+1,nt)
   
          do l=1,lrz
-         tmp_prof(l) = (curr(l,nt) - elecfld(l+1,nt)/
-     &       (rovsc(l,nt)*sptzrp(l,nt)*9.0E+11)) * darea(l)
+          tmp_prof(l) = curr(l,nt)
+!          tmp_prof(l) = (curr(l,nt) - elecfld(l+1,nt)/
+!      &       (rovsc(l,nt)*sptzrp(l,nt)*9.0E+11)) * darea(l)
          enddo
          
          write(*,*) 'tmp_prof = ', tmp_prof(:)
