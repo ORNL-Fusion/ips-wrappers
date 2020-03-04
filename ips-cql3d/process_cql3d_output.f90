@@ -1,8 +1,8 @@
       program process_cql3d_output
 
 ! (DBB 3/4/2020)
-!  Copied coding from LH section to EC section which interpolates CQL3D grid onto Plasma
-!  State grid for ps%peech and ps%curech.
+! Copied coding from LH section to EC section which interpolates CQL3D grid onto Plasma 
+! State grid for ps%peech and ps%curech.
 
 ! (DBB 3/2/2020)
 ! Removed code that hardwired "cql3d.nc" as the cql3d output file name.  Inserted coding
@@ -480,12 +480,12 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
          !tmp_prof(1:lrz) = powrft(:,nt) * dvol(:)
          tmp_prof(1:lrz) = powers(:,5,1,nt) * dvol(:)
 
-         write(*,*) 'ps%nrho_ecrf = ', ps%nrho_ecrf
+         write(*,*) 'ps%rho_ecrf = ', ps%rho_ecrf
          write(*,*) 'rho_cql = ', rho_cql
          write(*,*) 'tmp_prof = ', tmp_prof
          write(*,*) 'ps%peech = ', ps%peech
          
-         call ps_user_rezone1(rho_cql, ps%nrho_ecrf, tmp_prof, 
+         call ps_user_rezone1(rho_cql, ps%rho_ecrf, tmp_prof, 
      &        ps%peech, ierr, nonorm = .TRUE., zonesmoo = .TRUE.)
 
          if(ierr .ne. 0) stop 'error interpolating CQL3D powers onto PS Grid ps%nrho_ecrf and ps%peech'
@@ -497,7 +497,7 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
      &       (rovsc(l,nt)*sptzrp(l,nt)*9.0E+11)) * darea(l)
          enddo
 
-         call ps_user_rezone1(rho_cql, ps%nrho_ecrf, tmp_prof, 
+         call ps_user_rezone1(rho_cql, ps%rho_ecrf, tmp_prof, 
      &        ps%curech, ierr, nonorm = .TRUE., zonesmoo = .TRUE.)
 
          if(ierr .ne. 0) stop 'error interpolating CQL3D powrft onto PS Grid ps%nrho_ecrf and ps%curech'
@@ -515,12 +515,12 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
 ! ptb checking interpolated quantities
          powerec_int = 0.0
          currec_int = 0.0
-      do l=1,ps%nnrho_ecrf-1
+      do l=1,ps%nrho_ecrf-1
          powerec_int = powerec_int + ps%peech(l)
          currec_int = currec_int + ps%curech(l)
       enddo
-      write(*,*) 'power_lh = ', powerec, 'currec = ', currec
-      write(*,*) 'power_lh_int = ', powerec_int, 'currec_int = ', currec_int
+      write(*,*) 'power_ec = ', powerec, 'currec = ', currec
+      write(*,*) 'power_ec_int = ', powerec_int, 'currec_int = ', currec_int
          
       endif  !On cql3d_output.eq.'EC'
 
