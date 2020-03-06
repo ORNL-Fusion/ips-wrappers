@@ -883,13 +883,11 @@ c     Check that no more than 1 nbi source (Else need to adjust code.)
 !              pwrscale(1)=ps%power_lh(1)*1.d-6
               pwrscale(1)=1.d0
 
-! ptb         elseif (rfmode.eq.'IC') then
          elseif (cql3d_output.eq.'IC') then
             
 !              pwrscale(1)=ps%power_ic(1)*1.d-6
               pwrscale(1)=1.d0
 
-! ptb         elseif (rfmode.eq.'NBI') then
          elseif (cql3d_output.eq.'NBI') then
             
               if (ps%nbeam.ne.1) then
@@ -899,7 +897,6 @@ c     Check that no more than 1 nbi source (Else need to adjust code.)
               endif
               bptor(1)=ps%power_nbi(1)
 
-! ptb         elseif (rfmode.eq.'NBI+IC') then
          elseif (cql3d_output.eq.'NBI+IC') then
  
               if (ps%nbeam.ne.1) then
@@ -1270,9 +1267,6 @@ c     and zeff.
      
       do k=1,ntotal
          if (k.eq.kelecg .or. k.eq.kelecm) then
-!            call ps_rho_rezone(rho_bdy_rezon, ps%id_ns(0), enein(1,k),
-! ptb            call ps_rho_rezone(rho_bdy_rezon, ps%id_ns(0), enein(:,k),
-! ptb     +                         ierr, zonesmoo=.TRUE.)
             call ps_rho_rezone(rho_bdy_rezon, ps%id_ns(0), enein(1:nj,k),
      +                         ierr, zonesmoo=.TRUE.)
             write(*,*)'after ps_rho_rezone: ierr=',ierr
@@ -1280,21 +1274,15 @@ c     and zeff.
          endif
       enddo
 
-! ptb      call ps_rho_rezone(rho_bdy_rezon, ps%id_Ts(0), tein(:), ierr,
-! ptb     +     zonesmoo=.TRUE.)
       call ps_rho_rezone(rho_bdy_rezon, ps%id_Ts(0), tein(1:nj), ierr,
      +     zonesmoo=.TRUE.)
       call ckerr('ps_rho_rezone (U2)',ierr)
 
 c     iden_sa species (above) is main ion species:
-! ptb      call ps_rho_rezone(rho_bdy_rezon, ps%id_Ts(iden_sa), tiin(:), ierr,
-! ptb     +     zonesmoo=.TRUE.)
       call ps_rho_rezone(rho_bdy_rezon, ps%id_Ts(iden_sa), tiin(1:nj), ierr,
      +     zonesmoo=.TRUE.)
       call ckerr('ps_rho_rezone (U2)',ierr)
 
-! ptb      call ps_rho_rezone(rho_bdy_rezon, ps%id_Zeff, zeffin(:), ierr,
-! ptb     +     zonesmoo=.TRUE.)
       call ps_rho_rezone(rho_bdy_rezon, ps%id_Zeff, zeffin(1:nj), ierr,
      +     zonesmoo=.TRUE.)
       call ckerr('ps_rho_rezone (U2)',ierr)
@@ -1867,12 +1855,6 @@ c
       write(*,*)'transcribe: inquire on ',genraynml,', opened=',logic1,
      1   'iostat=',kiostat,'unit=',inumber
       
-! ptb      if (trim(genraynml).eq.'genray.in' .or.
-! ptb     +    trim(genraynml).eq.'./genray.in') then
-! ptb         write(*,*)'transcribe: genray.in already exists'
-! ptb         return
-! ptb      endif
-
       if (trim(genraynml).eq.'cqlinput' .or.
      +    trim(genraynml).eq.'./cqlinput') then
          write(*,*)'transcribe: cqlinput already exists'
@@ -1887,9 +1869,6 @@ cHB131030: Use 'none' here, for formated read/write
       if (kiostat.ne.0) write(*,*)'transcribe: kiostat=',kiostat
       if (kiostat.ne.0) STOP 'transcribe: prblm with genraynml'
 
-! ptb      open(unit=21,file='genray.in',status='replace',iostat=kiostat)
-! ptb      if (kiostat.ne.0) write(*,*)'transcribe: kiostat=',kiostat
-! ptb      if (kiostat.ne.0) STOP 'transcribe: prblm with opening genray.in'
 
 !PTB 11-14-2013      open(unit=21,file='cqlinput',delim='apostrophe',
       open(unit=21,file='cqlinput',delim='none',
