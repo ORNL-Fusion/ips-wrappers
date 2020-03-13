@@ -179,7 +179,7 @@ class solps_iter(Component):
             boundary_parameters = {}
             transport_inputfile = {}
 
-            for key, value in keywords.iteritems():
+            for key, value in keywords.items():
                 if 'tr__' in key:
                     transport_parameters[key.replace('tr__','',1)] = value
                 if 'nu__' in key:
@@ -195,7 +195,7 @@ class solps_iter(Component):
                 if os.path.exists(file) and len(keywords) > 0:
                     nl_file  = OMFITnamelist(file)
 
-                    for key, value in keywords.iteritems():
+                    for key, value in keywords.items():
                         nl_file[name][key] = value
 
                     nl_file.save()
