@@ -3,10 +3,10 @@
 from  component import Component
 import os
 
-class iter_data_driver(Component):
+class solps_iter_data_driver(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
 
     def init(self, timeStamp=0.0):
 
@@ -23,14 +23,14 @@ class iter_data_driver(Component):
         return
 
     def step(self, timeStamp=0.0):
-        print 'solss-iter-data-driver: beginning step call' 
+        print('solss-iter-data-driver: beginning step call') 
         try:
             worker_comp = self.services.get_port('WORKER')
         except Exception:
             self.services.exception('Error accessing worker component')
             raise
         self.services.call(worker_comp, 'step', 0.0)
-        print 'solps-iter-data-driver: finished worker call' 
+        print('solps-iter-data-driver: finished worker call') 
         return
 
     def finalize(self, timeStamp=0.0):
