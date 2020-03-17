@@ -68,8 +68,11 @@
       integer  :: ibcant = -1     !boundary condition for antenna. When ibcant<0, the grill antenna is used
 
 !units are in cm for lengths
-      real(rspec) :: antlen=6.0_rspec, antlc=1.0_rspec, &
-         theant=0.0_rspec
+      real(rspec) :: antlen=6.0_rspec, antlc=1.0_rspec
+      real(rspec), dimension(:) :: theant(8)=                          &
+     &  (/0.0_rspec,0.0_rspec,0.0_rspec,0.0_rspec,0.0_rspec,0.0_rspec, &
+     &  0.0_rspec,0.0_rspec/)
+      integer :: nant=1
 
 ! Parameters for Ehst-Karney current drive estimate and collisions
       real(rspec) ::  zeff=1._rspec, enhcol=1
@@ -152,8 +155,8 @@
 !     &   iwdisk, ipltht, zeff,   iclres, dnures, tnures, &
 !     &   timing_on, scratchpath, bscale, use_incore, pcblock
      &   nmod,   ntt,    nelm,   nptvac, mxmvac, &
-     &   freqcy, anzedg, ibcant, antlen, antlc,  theant, &
-     &   iflr,   ibpol,  icoll,  enhcol, &
+     &   freqcy, anzedg, ibcant, antlen, antlc, nant, &
+     &   theant, iflr,   ibpol,  icoll,  enhcol, &
      &   iregax, &
      &   isol,   mastch,         iout,   idlout, &
      &   iwdisk, zeff, &

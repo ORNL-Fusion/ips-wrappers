@@ -67,6 +67,7 @@ class ftridynWorker(Component):
 	d['nA'] = int(self.NA)
 	d['nR'] = int(self.NR)
 	d['nEdist'] = int(self.NEDIST)
+	d['nEdist_ref'] = int(self.NEDIST_REF)
 	d['nAdist'] = int(self.NADIST)
 	d['nH']= int(self.NH)
         
@@ -77,6 +78,7 @@ class ftridynWorker(Component):
 	d['roughness_start']=float(self.R_START)
 	d['roughness_end']=float(self.R_END)
 	d['maxEdist']=float(self.MAXEDIST)
+	d['maxEdist_ref']=float(self.MAXEDIST_REF)
 	#f = open('ipsFTmpi.pkl', 'w')
         #pickle.dump(d,f)
 	#f.close()
@@ -90,7 +92,7 @@ class ftridynWorker(Component):
 	ftMpiFile.close()	
         task_id = self.services.launch_task(self.NPROC,
                                             self.services.get_working_dir(),
-                                            'python -m mpi4py',self.FTMPI,#'--dictionary=ipsFTmpi.pkl',
+                                            'python',self.FTMPI,task_ppn=self.TASK_PPN,#'--dictionary=ipsFTmpi.pkl',
                                             logfile='ftmpi.log') #,ppn=1)
         
 	#monitor task until complete

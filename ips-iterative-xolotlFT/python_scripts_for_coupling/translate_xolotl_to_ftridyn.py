@@ -1,8 +1,21 @@
-from __future__ import print_function
+
 import numpy as np
+import sys
 #import matplotlib.pyplot as plt
  
-def xolotlToLay(tridynFile='last_TRIDYN.dat', totalDepth=0.0):
+def xolotlToLay(tridynFile='last_TRIDYN.dat', totalDepth=0.0, logFile=None):
+
+  if logFile  is not None:
+    print(('redirect tridynPlotting output of to:', logFile))
+    outF = open(logFile, "a")
+    sys.stdout = outF
+    
+  else:
+    print ('no log file defined in tridynPlotting')
+    print ('print output to default sys.stdout')
+    
+  print(' ')
+  print('xolotlToLay:')
 
   DNS_W_A3_0 = 0.06306
  
@@ -30,6 +43,7 @@ def xolotlToLay(tridynFile='last_TRIDYN.dat', totalDepth=0.0):
   #plt.plot(depthnm*10.0,C_T_A3)
   #plt.plot(depthnm*10.0,C_W_A3)
 
+
 #if totalDepth>0.0, add pure W layers until 'totalDepth'  
   if (totalDepth>0.0):
     min_number_lines = int(totalDepth / dx)
@@ -52,11 +66,16 @@ def xolotlToLay(tridynFile='last_TRIDYN.dat', totalDepth=0.0):
       C_prj_A3[i] = 0.0
     print(C_prj_A3[i],C_W_A3[i],C_He_A3[i],C_D_A3[i],C_T_A3[i],file=output)
   #end for
-#end def main
 
   nlines=np.size(C_W_A3)
-
+  
+  #test in transition to python3:
+  print('from translate_xolotl_to_ftridyn, nlines', nlines)
+  sys.stdout.flush()
+  
   return nlines
+
+#end def main
 
 if __name__ == '__main__':
   xolotlToLay()

@@ -8,7 +8,9 @@
 #-------------------------------------------------------------------------------
 
 from component import Component
-import shutil
+from utilities import ZipState
+from utilities import ScreenWriter
+import os
 
 #-------------------------------------------------------------------------------
 #
@@ -17,59 +19,50 @@ import shutil
 #-------------------------------------------------------------------------------
 class siesta_init(Component):
     def __init__(self, services, config):
-        print('siesta_init: Construct')
         Component.__init__(self, services, config)
 
 #-------------------------------------------------------------------------------
 #
 #  SIESTA init Component init method. This method prepairs the namelist input
-#  file and creates a dummy out put file. This allows staging the plasma state
-#  files.
+#  file and creates a dummy out put file. This allows staging the state files.
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
-        print('siesta_init: init')
+        ScreenWriter.screen_output(self, 'verbose', 'siesta_init: init')
 
+#  Get config filenames.
+        current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
+        current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
+        current_siesta_namelist = self.services.get_config_param('SIESTA_NAMELIST_INPUT')
+        current_siesta_state = self.services.get_config_param('CURRENT_SIESTA_STATE')
+
+#  Remove old inputs. Stage input files.
+        for file in os.listdir('.'):
+            os.remove(file)
+                        
         self.services.stage_input_files(self.INPUT_FILES)
- 
-#  Currently SIESTA has the namelist input file hard coded. This could change in the future.  
-        current_siesta_namelist = self.services.get_config_param('CURRENT_SIESTA_NAMELIST')
-#        shutil.copyfile(self.INPUT_FILES, current_siesta_namelist)
-        
-#  Create a dummy restart file so the plasma state has something to update to.
-        open(self.services.get_config_param('CURRENT_SIESTA_RESTART_FILE'), 'a').close()
-        
-#  Need to set and reset some values in the siest namelist input file. Primarily
-#  the vmec wout file name input needs to be reset to the to the internal name..
-        current_vmec_wout_file = self.services.get_config_param('CURRENT_VMEC_WOUT_FILE')
 
-#  Start by reading in all the lines and closing the file.
-        siesta_namelist = open(current_siesta_namelist, 'r')
-        siesta_namelist_lines = siesta_namelist.readlines()
-        siesta_namelist.close()
-        
-        siesta_vmec_wout_set = False
-        
-#  Reopen the file for writing.
-        siesta_namelist = open(current_siesta_namelist, 'w')
-        for line in siesta_namelist_lines:
-            if ('WOUT_FILE' in line):
-                siesta_namelist.write('WOUT_FILE = \'%s\'\n'%(current_vmec_wout_file))
-                siesta_vmec_wout_set = True
+#  Create a vmec state. If the vmec namelist file exists add the namelist input
+#  file.
+        with ZipState.ZipState(current_vmec_state, 'a') as zip_ref:
+            if os.path.exists(current_vmec_namelist):
+                zip_ref.write(current_vmec_namelist)
+                zip_ref.set_state(state='needs_update')
+
+#  Create state from files. Input files can either be a new state, namelist
+#  input file or both. If both files were staged, replace the namelist input
+#  file. If the namelist file is present flag the state as needing to be
+#  updated. Sub states will automatically merge.
+        with ZipState.ZipState(current_siesta_state, 'a') as zip_ref:
+            if os.path.exists(current_siesta_namelist):
+                zip_ref.write(current_siesta_namelist)
+                zip_ref.set_state(state='needs_update')
+
+#  The vmec state will be merged with any existing vmec state in the siesta
+#  state.
+            zip_ref.write(current_vmec_state)
             
-#  The siesta namelist input files contains strings that may have path
-#  separators in them. Check for an equal sign to avoid these cases.
-            elif (('/' in line) and ('=' not in line)):
-                if (not siesta_vmec_wout_set):
-                    siesta_namelist.write('WOUT_FILE = \'%s\'\n'%(current_vmec_wout_file))
-                siesta_namelist.write('/\n')
-            else:
-                siesta_namelist.write(line)
-    
-        siesta_namelist.close()
-    
-        self.services.update_plasma_state()
-
+        self.services.update_state()
 
 #-------------------------------------------------------------------------------
 #
@@ -77,7 +70,7 @@ class siesta_init(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        print('siesta_init: step')
+        ScreenWriter.screen_output(self, 'verbose', 'siesta_init: step')
 
 #-------------------------------------------------------------------------------
 #
@@ -85,4 +78,4 @@ class siesta_init(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('siesta_init: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'siesta_init: finalize')

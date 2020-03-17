@@ -1,7 +1,8 @@
 #! /usr/bin/env python
-# Version 1 (Batchelor 7/23/2017)
-# Driver for torlh/cql3d iteration with logic exposed here rather than buried in the 
-# components.  Adapted from generic_driver.py
+""" Version 1 (Batchelor 7/23/2017)
+Driver for torlh/cql3d iteration with logic exposed here rather than buried in the 
+ components.  Adapted from generic_driver.py
+"""
 
 import sys
 import os
@@ -248,6 +249,9 @@ class generic_driver(Component):
        # Call step for each component
 
             print (' ')
+
+            if 'EPA' in port_names:
+                self.component_call(services, 'EPA', epaComp, 'step', t)
 
             try:
                 services.call(fpComp, 'step', t)

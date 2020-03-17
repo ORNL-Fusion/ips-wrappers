@@ -4,6 +4,19 @@
 TORLH component.  Adapted from rf_lh_torlh.py. (7-24-2015)
 
 """
+# Working notes:  DBB 10-5-2017 
+# Because of random crashes on EDISON, we had previously introduced config parameter 
+# TORLH_TIME_LIMIT so that if TORLH does crash it won't just sit there and burn up the 
+# whole allocation.  Now making that an optional config parameter.
+# Also now adding capability to do multiple tries of TORLH if it crashes or times out.
+# To use this set optional config parameter NUM_TORLH_TRIES > 1.
+
+# Working notes:  DBB 9-22-2017
+# Added config parameter NPROC_QLDCE so that torlh can run in qldce mode with different
+# number of processors than in toric mode.  Added config parameter TORLH_TIME_LIMIT to set
+# a time limit for an individual run of TORLH using Wael's new optional arguments to 
+# services.wait_task()
+#
 # Working notes: DBB 7-28-2017
 # TORLH runs in either of two modes.  
 # toric_Mode = 'toric' -> normal torlh run that solves wave equation
@@ -124,10 +137,19 @@ class torlh (Component):
         BIN_PATH = self.try_get_component_param(services,'BIN_PATH')
         RESTART_FILES = self.try_get_component_param(services,'RESTART_FILES')
         NPROC = self.try_get_component_param(services,'NPROC')
-        global CQL_COUPLE_MODE
-        CQL_COUPLE_MODE = self.try_get_component_param(services,'CQL_COUPLE_MODE', \
+        NPROC_QLDCE = self.try_get_component_param(services,'NPROC_QLDCE', \
                                 optional = True)
 
+        self.TORLH_TIME_LIMIT = self.try_get_component_param(services,'TORLH_TIME_LIMIT', \
+                                optional = True)
+        if self.TORLH_TIME_LIMIT == None: 
+            self.TORLH_TIME_LIMIT = -1
+            
+        self.NUM_TORLH_TRIES = self.try_get_component_param(services,'NUM_TORLH_TRIES', \
+                                optional = True)
+        if self.NUM_TORLH_TRIES == None: 
+            self.NUM_TORLH_TRIES = 1
+        
         torlh_log = os.path.join(workdir, 'log.torlh')
 
       # Copy plasma state files over to working directory
@@ -426,14 +448,34 @@ class torlh (Component):
 
 
             # Launch torlh executable
-            print 'torlh processors = ', self.NPROC
             cwd = services.get_working_dir()
-            task_id = services.launch_task(self.NPROC, cwd, torlh_bin, logfile=torlh_log)
-            retcode = services.wait_task(task_id)
-            if (retcode != 0):
-                logMsg = 'Error executing command: ' + torlh_bin
-                self.services.error(logMsg)
-                raise Exception(logMsg)
+            # Set number of processors depending on toric_mode
+            run_nproc = self.NPROC
+            if arg_toric_Mode == 'qldce':
+                run_nproc = self.NPROC_QLDCE
+
+            print 'arg_toric_Mode = ', arg_toric_Mode, '   torlh processors = ', run_nproc
+            time_limit = float(self.TORLH_TIME_LIMIT)
+            # Try to launch TORLH multiple times if TORLH_TRIES > 1 in config file
+            for i in range(int(self.NUM_TORLH_TRIES)):
+                print ' TORLH try number ', i + 1
+                task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
+                retcode = services.wait_task(task_id, timeout = time_limit, delay = 60.)
+                if (retcode == 0):
+                    break
+            else:
+                services.error("TORLH failed after %d trials" % int(self.NUM_TORLH_TRIES))
+                raise Exception("TORLH failed after %d trials" % int(self.NUM_TORLH_TRIES))
+
+
+#             print 'arg_toric_Mode = ', arg_toric_Mode, '   torlh processors = ', run_nproc
+#             task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
+#             time_limit = float(self.TORLH_TIME_LIMIT)
+#             retcode = services.wait_task(task_id, timeout = time_limit, delay = 60.)
+#             if (retcode != 0):
+#                 logMsg = 'Error executing command: ' + torlh_bin
+#                 self.services.error(logMsg)
+#                 raise Exception(logMsg)
                 
             # Preserve torica.out from run to distinguish toric mode = 'toric' from 'qldce'
             new_file_name = 'torica_' + arg_toric_Mode + '.out'

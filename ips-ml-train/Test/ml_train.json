@@ -1,0 +1,14 @@
+{
+    "input_params" : [
+        {"name" : "WIDTH", "prefix" : "modeleq_contraint_perturb", "type" : "float", "upper_range" : 0.3, "lower_range"  : 0.3},
+        {"name" : "JPERT", "prefix" : "modeleq_contraint_perturb", "type" : "float", "upper_range" : 0.02, "lower_range" : -0.02},
+        {"name" : "PPERT", "prefix" : "modeleq_contraint_perturb", "type" : "float", "upper_range" : 0.02, "lower_range" : -0.02}
+    ],
+    "output_params" : [
+        {"name" : "Lq",     "prefix" : "critical_deltap", "type" : "float"},
+        {"name" : "Lp",     "prefix" : "critical_deltap", "type" : "float"},
+        {"name" : "deltap", "prefix" : "critical_deltap", "type" : "float"}
+    ],
+    "batch_size" : 10,
+    "extract"    : True
+}

@@ -54,7 +54,7 @@ distclean:
 	$(RM) .depend
 
 .depend: $(F90MOD_SRC) $(F90_SRC) $(F95_SRC)
-#	touch .depend
+	touch .depend
 	$(MAKEDEPF90) -b . $(F90MOD_SRC) $(F90_SRC) $(F95_SRC) > $@
 
 -include .depend

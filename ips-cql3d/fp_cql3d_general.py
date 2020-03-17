@@ -1,5 +1,9 @@
 #! /usr/bin/env python
 
+# fp_cql3d_general.py, Version 0.3 Batchelor 1-22-2019
+# Added coding to make enorm and cur_ImChizz_inp_file (needed for TORLH/CQL3D iteration)
+# optional config config parameters
+
 # fp_cql3d_general.py, Version 0.2 Batchelor 5-16-2017
 # Added code to pick up enorm from global parameter in config file and add to argument list
 # of prepare_cql3d_input.f90
@@ -85,6 +89,7 @@ import string
 from  component import Component
 from Numeric import *                        #Use numpy instead?? BH
 from Scientific.IO.NetCDF import *           #Use scipy.io.netcdf implentation??  BH
+from get_IPS_config_parameters import get_global_param, get_component_param
 
 class cql3d(Component):
     def __init__(self, services, config):
@@ -106,44 +111,32 @@ class cql3d(Component):
         services = self.services
 
     # Get global configuration parameters
-        try:
-            cur_state_file = services.get_config_param('CURRENT_STATE')
-            cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
-            cur_dql_file = services.get_config_param('CURRENT_DQL')
-            cur_cql_file = services.get_config_param('CURRENT_CQL')
-            cur_ImChizz_inp_file = services.get_config_param('CURRENT_ImChizz_inp')
-        except:
-            print 'fp_cql3d_general: error getting config parameters CURRENT_STATE CURRENT_EQDSK'
-            services.error('fp_cql3d_general: error getting config parameters CURRENT_STATE CURRENT_EQDSK')
-            raise Exception, 'rf_ic_gneray: error getting config parameters CURRENT_STATE CURRENT_EQDSK'
+        cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
+        cur_eqdsk_file = get_global_param(self, services, 'CURRENT_EQDSK')
+        cur_dql_file = get_global_param(self, services, 'CURRENT_DQL')
+        cur_cql_file = get_global_param(self, services,'CURRENT_CQL')
+        cur_ImChizz_inp_file = get_global_param(self, services,'CURRENT_ImChizz_inp', optional = True)
 
     # Get component-specific configuration parameters. Note: Not all of these are
     # used in 'init' but if any are missing we get an exception now instead of
     # later
-        try:
-            NPROC = self.NPROC
-            BIN_PATH = self.BIN_PATH
-            INPUT_FILES = self.INPUT_FILES
-            OUTPUT_FILES = self.OUTPUT_FILES
-            RESTART_FILES = self.RESTART_FILES
-            BIN_PATH = self.BIN_PATH
-            CQL3D_BIN = self.CQL3D_BIN
-            CQL3D_MODE = self.CQL3D_MODE
-            CQL3D_OUTPUT = self.CQL3D_OUTPUT
-            CQL3D_NML = self.CQL3D_NML
-            NSTEPS_STR = self.NSTEPS_STR
-            DELTAT_STR = self.DELTAT_STR
-            PS_ADD_NML = self.PS_ADD_NML
-        except:
-            print 'fp_cql3d_general init: error getting cql3d-specific config parameters'
-            services.error('fp_cql3d_general: error getting cql3d-specific\
-            config parameters')
-            raise Exception, 'fp_cql3d_general: error getting cql3d-specific\
-            config parameters'
+
+        NPROC = get_component_param(self, services, 'NPROC')
+        BIN_PATH = get_component_param(self, services, 'BIN_PATH')
+        INPUT_FILES = get_component_param(self, services, 'INPUT_FILES')
+        OUTPUT_FILES = get_component_param(self, services, 'OUTPUT_FILES')
+        RESTART_FILES = get_component_param(self, services, 'RESTART_FILES')
+        BIN_PATH = get_component_param(self, services, 'BIN_PATH')
+        CQL3D_BIN = get_component_param(self, services, 'CQL3D_BIN')
+        cql3d_mode = get_component_param(self, services, 'CQL3D_MODE')
+        cql3d_output = get_component_param(self, services, 'CQL3D_OUTPUT')
+        cql3d_nml = get_component_param(self, services, 'CQL3D_NML')
+        nsteps_str = get_component_param(self, services, 'NSTEPS_STR')
+        deltat_str = get_component_param(self, services, 'DELTAT_STR')
+        ps_add_nml = get_component_param(self, services, 'PS_ADD_NML')
 
         # enorm which is used here and in cql3d
-        arg_enorm = 'None'
-        arg_enorm = self.try_get_config_param(services,'ENORM', optional = True)
+        arg_enorm = get_component_param(self, services, 'ENORM', optional = True)
 
     # Copy plasma state files over to working directory
         try:
@@ -203,21 +196,15 @@ class cql3d(Component):
             raise Exception, 'Error copying cur_eqdsk_file -> eqdsk'
 
     # Copy current Dql file to generic name -> genray.nc
-        try:
-            shutil.copyfile(cur_dql_file, 'genray.nc')
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror)
-            services.error('Error copying cur_dql_file -> genray.nc')
-            raise Exception, 'Error copying cur_dql_file -> genray.nc'
+        if cur_dql_file != 'genray.nc':
+            try:
+                shutil.copyfile(cur_dql_file, 'genray.nc')
+            except IOError, (errno, strerror):
+                print 'Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror)
+                services.error('Error copying cur_dql_file -> genray.nc')
+                raise Exception, 'Error copying cur_dql_file -> genray.nc'
 
         prepare_input_bin = os.path.join(self.BIN_PATH, 'prepare_cql3d_input')
-
-        cql3d_mode = self.CQL3D_MODE
-        cql3d_output = self.CQL3D_OUTPUT
-        cql3d_nml = self.CQL3D_NML
-        nsteps_str = self.NSTEPS_STR
-        deltat_str = self.DELTAT_STR
-        ps_add_nml = self.PS_ADD_NML
 
     # Call prepare_input - init
         print 'fp_cql3d: calling prepare_input init'        
@@ -241,7 +228,9 @@ class cql3d(Component):
     # ptb:    cql3d_output + ' ' + cql3d_nml + ' ' + nsteps_str + ' ' + ps_add_nml
         command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
         cql3d_output + ' ' + cql3d_nml + ' ' + restart + ' ' + nsteps_str + ' ' +\
-        ' ' + deltat_str + ' ' + ps_add_nml + ' ' + arg_enorm
+        ' ' + deltat_str + ' ' + ps_add_nml
+        if arg_enorm != None:
+            command = command  + ' ' + arg_enorm
         
         print 'running = ', command
         services.send_portal_event(event_type = 'COMPONENT_EVENT',\
@@ -353,11 +342,13 @@ class cql3d(Component):
           services.error('Error in call to stage_plasma_state()')
           raise Exception, 'Error in call to stage_plasma_state()'
 
-        cur_state_file = services.get_config_param('CURRENT_STATE')
-        cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
-        cur_dql_file = services.get_config_param('CURRENT_DQL')
-        cur_cql_file = services.get_config_param('CURRENT_CQL')
-        cur_ImChizz_inp_file = services.get_config_param('CURRENT_ImChizz_inp')
+    # Get global configuration parameters
+        cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
+        cur_eqdsk_file = get_global_param(self, services, 'CURRENT_EQDSK')
+        cur_dql_file = get_global_param(self, services, 'CURRENT_DQL')
+        cur_cql_file = get_global_param(self, services,'CURRENT_CQL')
+        cur_ImChizz_inp_file = get_global_param(self, services,'CURRENT_ImChizz_inp', optional = True)
+        
         print 'CURRENT_CQL = ', cur_cql_file
     # Copy current plasma state file to generic name -> cur_state.cdf
         try:
@@ -383,23 +374,24 @@ class cql3d(Component):
         if(power_lh > 1.0E-04):
 
     # Copy current Dql file to generic name -> genray.nc
-          try:
-              shutil.copyfile(cur_dql_file, 'genray.nc')
-          except IOError, (errno, strerror):
-              print 'Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror)
-              services.error('Error copying cur_dql_file -> genray.nc')
-              raise Exception, 'Error copying cur_dql_file -> genray.nc'
+          if cur_dql_file != 'genray.nc':
+            try:
+                shutil.copyfile(cur_dql_file, 'genray.nc')
+            except IOError, (errno, strerror):
+                print 'Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror)
+                services.error('Error copying cur_dql_file -> genray.nc')
+                raise Exception, 'Error copying cur_dql_file -> genray.nc'
 
-          cql3d_mode = self.CQL3D_MODE
-          cql3d_output = self.CQL3D_OUTPUT
-          cql3d_nml = self.CQL3D_NML
-          nsteps_str = self.NSTEPS_STR
-          deltat_str = self.DELTAT_STR
-          ps_add_nml = self.PS_ADD_NML
+          cql3d_mode = get_component_param(self, services, 'CQL3D_MODE')
+          cql3d_output = get_component_param(self, services, 'CQL3D_OUTPUT')
+          cql3d_nml = get_component_param(self, services, 'CQL3D_NML')
+          nsteps_str = get_component_param(self, services, 'NSTEPS_STR')
+          deltat_str = get_component_param(self, services, 'DELTAT_STR')
+          ps_add_nml = get_component_param(self, services, 'PS_ADD_NML')
+          cur_ImChizz_inp_file = get_global_param(self, services,'CURRENT_ImChizz_inp', optional = True)
 
         # enorm which is used here and in cql3d
-          arg_enorm = 'None'
-          arg_enorm = self.try_get_config_param(services,'ENORM', optional = True)
+          arg_enorm = get_component_param(self, services, 'ENORM', optional = True)
           
     # Call prepare_input - step
           print 'fp_cql3d step: calling prepare_input'
@@ -425,7 +417,9 @@ class cql3d(Component):
     # ptb:    cql3d_output + ' ' + cql3d_nml + ' ' + nsteps_str + ' ' + ps_add_nml
           command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
           cql3d_output + ' ' + cql3d_nml + ' ' + restart + ' ' + nsteps_str + ' ' +\
-          ' ' + deltat_str + ' ' + ps_add_nml+ ' ' + arg_enorm
+          ' ' + deltat_str + ' ' + ps_add_nml
+          if arg_enorm != None:
+            command = command  + ' ' + arg_enorm
 
           print 'running', command
           services.send_portal_event(event_type = 'COMPONENT_EVENT',\
@@ -488,11 +482,14 @@ class cql3d(Component):
              raise Exception, 'Error in call to merge_current_plasma_state'
 
       # Update plasma state files in plasma_state work directory, but only cur_cql_file
+      # and cur_ImChizz_inp_file if there is one.
       # This way it can be used concurrently without overwriting other plasma state files.
           print 'CURRENT_CQL = ', cur_cql_file
           try:
-#            services.update_plasma_state(plasma_state_files = cur_cql_file)
-            services.update_plasma_state([cur_cql_file, cur_ImChizz_inp_file])
+            if cur_ImChizz_inp_file != None:
+                services.update_plasma_state([cur_cql_file, cur_ImChizz_inp_file])
+            else:
+                services.update_plasma_state([cur_cql_file])
           except Exception:
             logMsg = 'Error in call to update_plasma_state()'
             self.services.exception(logMsg)
@@ -573,43 +570,3 @@ class cql3d(Component):
         ofd.close()
         fd.close()
         return
-
-# ------------------------------------------------------------------------------
-#
-# "Private"  methods
-#
-# ------------------------------------------------------------------------------
-
-    def try_get_config_param(self, services, param_name, optional=False):
-
-        try:
-            value = services.get_config_param(param_name)
-            print param_name, ' = ', value
-        except Exception:
-            if optional:
-                print 'config parameter ', param_name, ' not found'
-                value = None
-            else:
-                message = 'required config parameter ', param_name, ' not found'
-                print message
-                services.exception(message)
-                raise
-
-        return value
-
-    # Try to get component specific config parameter - wraps the exception handling
-    def try_get_component_param(self, services, param_name, optional=False):
-
-        if hasattr(self, param_name):
-            value = getattr(self, param_name)
-            print param_name, ' = ', value
-        elif optional:
-            print 'optional config parameter ', param_name, ' not found'
-            value = None
-        else:
-            message = 'required component config parameter ', param_name, ' not found'
-            print message
-            services.exception(message)
-            raise
-
-        return value

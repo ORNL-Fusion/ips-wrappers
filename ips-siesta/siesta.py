@@ -9,52 +9,10 @@
 
 from component import Component
 import os
-
-#-------------------------------------------------------------------------------
-#
-#  Helper function to detect the end of a namelist input file. This finds if the
-#  '/' character is found withing a string. However, this if this character is
-#  is located after a '!' character or between '\'' characters ignore it.
-#
-#-------------------------------------------------------------------------------
-def contains_end(line):
-    
-#  Check and remove every character after the !.
-    line = line.split('!')[0]
-    
-    if (line == ''):
-        return False, ''
-    
-    if (line[0] == '/'):
-        return True, ''
-
-    in_single_quote = line[0] == '\''
-    in_double_quote = line[0] == '\"'
-    
-    for i, c in enumerate(line[1:]):
-        
-#  Do not close the quote when a single quote is encounterd in the following
-#  situations.
-#
-#  '\''
-#  "'"
-        if ((c == '\'') and line[i - 1] != '\\' and not in_double_quote):
-            in_single_quote = not in_single_quote
-        
-#  Do not close the quote when a single quote is encounterd in the following
-#  situations.
-#
-#  "\""
-#  '"'
-        elif ((c == '\"') and line[i - 1] != '\\' and not in_single_quote):
-            in_double_quote = not in_double_quote
-        elif ((c == '/') and not in_double_quote and not in_single_quote):
-            return True, line[:i]
-        elif ((c == '&') and not in_double_quote and not in_single_quote):
-            if (i + 4 <= len(line)) and (line[i:i + 4] == '&end'):
-                return TRUE, line[:i]
-    
-    return False, ''
+from omfit.classes.omfit_namelist import OMFITnamelist
+from utilities import ZipState
+from utilities import ScreenWriter
+from utilities import NamelistItem
 
 #-------------------------------------------------------------------------------
 #
@@ -63,10 +21,7 @@ def contains_end(line):
 #-------------------------------------------------------------------------------
 class siesta(Component):
     def __init__(self, services, config):
-        print('siesta: Construct')
         Component.__init__(self, services, config)
-        
-        self.siesta_exe = self.SIESTA_EXE
 
 #-------------------------------------------------------------------------------
 #
@@ -74,48 +29,31 @@ class siesta(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0, **keywords):
-        print('siesta: init')
-        self.services.stage_plasma_state()
+        ScreenWriter.screen_output(self, 'verbose', 'siesta: init')
+        self.services.stage_state()
 
-        current_siesta_namelist = self.services.get_config_param('CURRENT_SIESTA_NAMELIST')
+        self.current_siesta_namelist = self.services.get_config_param('SIESTA_NAMELIST_INPUT')
+        self.current_siesta_state = self.services.get_config_param('CURRENT_SIESTA_STATE')
+        current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
+        current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
+        current_wout_file = 'wout_{}.nc'.format(current_vmec_namelist.replace('input.','',1))
     
-        params = keywords['name_list_params']
+#  Stage state.
+        self.services.stage_state()
     
-#  Need to set the run parameters.
-    
-#  Start by reading in all the lines and closing the file.
-        siesta_namelist = open(current_siesta_namelist, 'r')
-        siesta_namelist_lines = siesta_namelist.readlines()
-        siesta_namelist.close()
-        
-        siesta_ladd_pert = False
-        siesta_lresistive = False
-        siesta_lrestart = False
-        
-        #  Reopen for writting.
-        siesta_namelist = open(current_siesta_namelist, 'w')
-        
-        for line in siesta_namelist_lines:
-#  Name list input files can have strings containing path separators. Check for
-#  an equals sign to avoid these.
-            end_found, short_line = contains_end(line)
-            if (end_found):
-                siesta_namelist.write(short_line)
-                siesta_namelist.write('\n!  SIESTA params\n')
-                for key, value in params.iteritems():
-                    siesta_namelist.write('%s = %s\n'%(key, value))
-                siesta_namelist.write('/\n')
-                break
-            elif ('!  SIESTA params\n' in line):
-                siesta_namelist.write(line)
-                for key, value in params.iteritems():
-                    siesta_namelist.write('%s = %s\n'%(key, value))
-                siesta_namelist.write('/\n')
-                break
-            else:
-                siesta_namelist.write(line)
-        
-        siesta_namelist.close()
+#  Unzip files from the state. Use mode a so files can be read and written to.
+        self.zip_ref = ZipState.ZipState(self.current_siesta_state, 'a')
+        self.zip_ref.extract(self.current_siesta_namelist)
+        self.zip_ref.extract(current_vmec_state)
+
+        with ZipState.ZipState(current_vmec_state, 'r') as vmec_zip_ref:
+            vmec_zip_ref.extract(current_wout_file)
+            flags = vmec_zip_ref.get_state()
+            if 'state' in flags and flags['state'] == 'updated':
+                self.zip_ref.set_state(state='needs_update')
+
+#  Update parameters in the namelist.
+        self.set_namelist(wout_file=current_wout_file, **keywords)
 
 #-------------------------------------------------------------------------------
 #
@@ -123,22 +61,78 @@ class siesta(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        print('siesta: step')
+        ScreenWriter.screen_output(self, 'verbose', 'siesta: step')
         
-        task_id = self.services.launch_task(self.NPROC,
-                                            self.services.get_working_dir(),
-                                            self.SIESTA_EXE,
-                                            logfile = 'siesta.log')
-    
-        if (self.services.wait_task(task_id)):
-            self.services.error('siesta: step failed.')
+        flags = self.zip_ref.get_state()
+        
+        if 'state' in flags and flags['state'] == 'needs_update':
+            self.set_namelist(ladd_pert=True, lrestart=False)
 
-        self.services.update_plasma_state()
+            self.task_wait = self.services.launch_task(self.NPROC,
+                                                       self.services.get_working_dir(),
+                                                       self.SIESTA_EXE,
+                                                       logfile = 'siesta1.log')
 
+#  Update flags.
+            self.zip_ref.set_state(state='updated')
+            
+#  Restart siesta to ensure convergence.
+            self.services.wait_task(self.task_wait)
+            
+            self.set_namelist(ladd_pert=False, lrestart=True)
+            self.task_wait = self.services.launch_task(self.NPROC,
+                                                       self.services.get_working_dir(),
+                                                       self.SIESTA_EXE,
+                                                       logfile = 'siesta2.log')
+                
+#  Wait for SIESTA to finish.
+            if (self.services.wait_task(self.task_wait) or not os.path.exists(self.restart_file)):
+                self.services.error('siesta: step failed.')
+                
+#  Add the restart file to the state.
+            self.zip_ref.write([self.current_siesta_namelist, self.restart_file])
+        
+        else:
+#  Update flags.
+            self.zip_ref.set_state(state='unchanged')
+        
+        self.zip_ref.close()
+        self.services.update_state()
+                
 #-------------------------------------------------------------------------------
 #
 #  SIESTA Component finalize method. This cleans up afterwards. Not used.
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        print('siesta: finalize')
+        ScreenWriter.screen_output(self, 'verbose', 'siesta: finalize')
+
+#-------------------------------------------------------------------------------
+#
+#  SIESTA Component set_namelist method. This sets the namelist input file from
+#  the keywords.
+#
+#-------------------------------------------------------------------------------
+    def set_namelist(self, **keywords):
+#  Update parameters in the namelist.
+        namelist = OMFITnamelist(self.current_siesta_namelist,
+                                 collect_arrays={
+                                 'mres'     : {'default' : 0,   'shape' : (20,), 'offset' : (1,)},
+                                 'HelPert'  : {'default' : 0.0, 'shape' : (20,), 'offset' : (1,)},
+                                 'HelPertA' : {'default' : 0.0, 'shape' : (20,), 'offset' : (1,)}
+                                 })
+        
+        self.restart_file = 'siesta_{}.nc'.format(namelist['siesta_info']['restart_ext'])
+        
+        if 'wout_file' in keywords:
+            namelist['siesta_info']['wout_file'] = keywords['wout_file']
+            self.update = True
+            del keywords['wout_file']
+        
+        if len(keywords) > 0:
+            self.zip_ref.set_state(state='needs_update')
+        
+            for key, value in keywords.iteritems():
+                NamelistItem.set(namelist['siesta_info'], key, value)
+
+        namelist.save()
