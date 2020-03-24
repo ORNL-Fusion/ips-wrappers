@@ -11,30 +11,30 @@ import hpic
 class gitr_comp(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
 
     def init(self, timeStamp=0.0):
         #Set up input deck
-        print('input dir and cwd this now', self.BASE_DIR, ' ', os.getcwd())
+        print(('input dir and cwd this now', self.BASE_DIR, ' ', os.getcwd()))
         gitr.copy_folder(self.GITR_INPUT_DIR,os.getcwd())
         gitr.modifyInputParam(nT=int(self.NT),nP=int(self.NP))
         return
 
     def step(self, timeStamp=0.0):
-        print 'Hello from gitr_comp'
+        print('Hello from gitr_comp')
         self.services.stage_plasma_state()
         locations_rmrs = [float(numeric_string) for numeric_string in self.LOCATIONS_RMRS.split()]
-	if os.path.exists('bField.nc'):
+        if os.path.exists('bField.nc'):
             shutil.copyfile('bField.nc','input/bField.nc')
-	if os.path.exists('ftridynSelf.nc'):
+        if os.path.exists('ftridynSelf.nc'):
             shutil.copyfile('ftridynSelf.nc','input/ftridynSelf.nc')
-	if os.path.exists('profiles.nc'):
+        if os.path.exists('profiles.nc'):
             shutil.copyfile('profiles.nc','input/profiles.nc')
         hpic.plot_hpic_ieadDavide(solps_path=str(self.HPIC_SOLPS_FILE),HpicDataFolder=str(self.HPIC_DATA_DIR))
         hpic.computeSputtYld()
         bgFlux,flux_fracs = hpic.printBackgroundDist(rmrsPoints=locations_rmrs)
         fluxPerParticle = gitrParticleSource.particleSource(geomFile=str(self.GEOM_FILE),nParticles=int(self.NP)) 
-	if os.path.exists('particleSource.nc'):
+        if os.path.exists('particleSource.nc'):
             shutil.copyfile('particleSource.nc','input/particleSource.nc')
         os.environ['OMP_NUM_THREADS'] = self.THREADS_PER_TASK
         task_id = self.services.launch_task(self.NPROC,
@@ -46,8 +46,8 @@ class gitr_comp(Component):
             self.services.error('gitr_comp: step failed.')
         
         #gitr.piscesProcessing(path=self.BASE_DIR)
-	#gitr.iter2dProcessing()
-	nLocations = gitr.iter3dProcessingQ4(nParticles=int(self.NP),totalParticleRate=fluxPerParticle,path = '',locRmRs=locations_rmrs,flux_fracs =flux_fracs,locWidth = 0.02)
+        #gitr.iter2dProcessing()
+        nLocations = gitr.iter3dProcessingQ4(nParticles=int(self.NP),totalParticleRate=fluxPerParticle,path = '',locRmRs=locations_rmrs,flux_fracs =flux_fracs,locWidth = 0.02)
         self.services.update_plasma_state()         
         for i in range(nLocations):
             shutil.copyfile('gitrOut'+str(i)+'.txt',self.BASE_DIR+'/gitrOut'+str(i)+'.txt')

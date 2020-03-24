@@ -4,6 +4,7 @@ from  component import Component
 import fileinput
 import numpy as np
 import solps
+import gitr
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -48,6 +49,7 @@ class solps_iter_data_worker(Component):
         print('solps-data arguments ', arguments)
         
         dict['solps_equilibrium'] = self.SOLPS_EQUILIBRIUM 
+        dict['solps_mesh'] = self.SOLPS_MESH 
         dict['gitr_geometry'] = self.GITR_GEOMETRY 
         print('Regridding SOLPS Data from %s file using solps geometry %s' %(dict['solps_state'], dict['solps_geometry']))
         print('Making use of data from %s equilibrium file' %(dict['solps_equilibrium']))
@@ -63,6 +65,11 @@ class solps_iter_data_worker(Component):
         
         solps.process_solps_output_for_gitr(dakota_filename = dict['dakota_result'], \
                                   nR = dict['numr'], nZ = dict['numz'], plot_variables=1)
+        
+        gitr.make_gitr_geometry_from_solps(gitr_geometry_filename=dict['gitr_geometry'], \
+                                  solps_mesh_extra=dict['solps_mesh'], \
+                                  right_target_file=dict['right_target'], \
+                                  left_target_file=dict['left_target'])
        
         self.services.update_state()
 

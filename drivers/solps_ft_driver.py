@@ -6,11 +6,11 @@ import os
 class solps_ft_driver(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
 
     def init(self, timeStamp=0.0):
 
-        solps_plasma_state_files = self.services.get_config_param('PLASMA_STATE_FILES')
+        solps_plasma_state_files = self.services.get_config_param('STATE_FILES')
         ##split filenames into a list of strings
         file_list = solps_plasma_state_files.split()
         ##loop over file names and create dummy files in ftridynInit work area
@@ -23,7 +23,7 @@ class solps_ft_driver(Component):
         return
 
     def step(self, timeStamp=0.0):
-        print 'solps-iter-data-driver: beginning step call' 
+        print('solps-iter-data-driver: beginning step call') 
         try:
             worker_comp = self.services.get_port('WORKER')
             fworker_comp = self.services.get_port('FWORKER')
@@ -31,9 +31,9 @@ class solps_ft_driver(Component):
             self.services.exception('Error accessing worker component')
             raise
         self.services.call(worker_comp, 'step', 0.0)
-        print 'solps-iter-data-driver: finished worker call' 
+        print('solps-iter-data-driver: finished worker call') 
         self.services.call(fworker_comp, 'step', 0.0)
-        print 'solpsft-driver: finished worker call' 
+        print('solpsft-driver: finished worker call') 
         return
 
     def finalize(self, timeStamp=0.0):
