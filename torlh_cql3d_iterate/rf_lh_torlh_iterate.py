@@ -4,6 +4,7 @@
 TORLH component.  Adapted from rf_lh_torlh.py. (7-24-2015)
 
 """
+from __future__ import print_function
 # Working notes:  DBB 10-5-2017 
 # Because of random crashes on EDISON, we had previously introduced config parameter 
 # TORLH_TIME_LIMIT so that if TORLH does crash it won't just sit there and burn up the 
@@ -96,6 +97,7 @@ TORLH component.  Adapted from rf_lh_torlh.py. (7-24-2015)
 #      For now this code lives in: /ips/trunk//components/rf/model_RF_LH and it gets built and
 #      installed by the Makefile there.
 
+from builtins import range
 import sys
 import os
 import subprocess
@@ -110,7 +112,7 @@ class torlh (Component):
 
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
 
 # ------------------------------------------------------------------------------
 #
@@ -120,7 +122,7 @@ class torlh (Component):
 
 
     def init(self, timeStamp=0):
-        print '\ntorlh.init() called'
+        print('\ntorlh.init() called')
 
         services = self.services
         workdir = services.get_working_dir()
@@ -154,7 +156,7 @@ class torlh (Component):
 
       # Copy plasma state files over to working directory
         try:
-            services.stage_plasma_state()
+            services.stage_state()
         except Exception:
             logMsg = 'Error in call to stage_plasma_state()'
             self.services.exception(logMsg)
@@ -175,7 +177,7 @@ class torlh (Component):
             have_suffix = True
         # If suffix is not empty put an underscore in front of it.
             if len(suffix) > 0:
-                print 'INPUT_SUFFIX = ', suffix
+                print('INPUT_SUFFIX = ', suffix)
                 suffix = '_' + suffix
         # If suffix is empty you don't really have one
             else:
@@ -188,8 +190,9 @@ class torlh (Component):
         if have_suffix:
             try:
                 shutil.copyfile('machine.inp' + suffix, 'machine.inp')
-            except IOError, (errno, strerror):
-                print 'Error copying file %s to %s' % ('machine.inp' + suffix, 'machine.inp', strerror)
+            except IOError as xxx_todo_changeme:
+                (errno, strerror) = xxx_todo_changeme.args
+                print('Error copying file %s to %s' % ('machine.inp' + suffix, 'machine.inp', strerror))
                 logMsg = 'Error copying machine.inp_<suffix> -> machine.inp'
                 services.exception(logMsg)
                 raise
@@ -203,7 +206,7 @@ class torlh (Component):
             
       # Update plasma state files in plasma_state work directory
         try:
-            services.update_plasma_state()
+            services.update_state()
         except Exception:
             logMsg = 'Error in call to update_plasma_state()'
             self.services.exception(logMsg)
@@ -215,7 +218,7 @@ class torlh (Component):
       #       solve this we generate a dummy set of output files here with
       #       system call 'touch'
         for file in self.OUTPUT_FILES.split():
-            print 'touching ', file
+            print('touching ', file)
             subprocess.call(['touch', file])
       # Now stage them
         try:
@@ -236,7 +239,7 @@ class torlh (Component):
 # ------------------------------------------------------------------------------
 
     def restart(self, timeStamp):
-        print '\ntorlh.restart() called'
+        print('\ntorlh.restart() called')
 
         services = self.services
         workdir = services.get_working_dir()
@@ -271,7 +274,7 @@ class torlh (Component):
 
     def step(self, timeStamp, **kwargs):
         """Take a step for the torlh component.  Really a complete run."""
-        print '\ntorlh.step() called'
+        print('\ntorlh.step() called')
 
         if (self.services == None):
             logMsg = 'Error in torlh: step (): No self.services'
@@ -282,7 +285,7 @@ class torlh (Component):
 
       # Copy plasma state files over to working directory
         try:
-            services.stage_plasma_state()
+            services.stage_state()
         except:
             logMsg = 'Error in call to stage_plasma_state()'
             self.services.exception(logMsg)
@@ -303,7 +306,7 @@ class torlh (Component):
             have_suffix = True
         # If suffix is not empty put an underscore in front of it.
             if len(suffix) > 0:
-                print 'INPUT_SUFFIX = ', suffix
+                print('INPUT_SUFFIX = ', suffix)
                 suffix = '_' + suffix
         # If suffix is empty you don't really have one
             else:
@@ -316,9 +319,10 @@ class torlh (Component):
         if have_suffix:
             try:
                 shutil.copyfile('machine.inp' + suffix, 'machine.inp')
-            except IOError, (errno, strerror):
-                print 'Error copying file %s to %s' % ('machine.inp' + suffix,
-                'machine.inp', strerror)
+            except IOError as xxx_todo_changeme1:
+                (errno, strerror) = xxx_todo_changeme1.args
+                print('Error copying file %s to %s' % ('machine.inp' + suffix,
+                'machine.inp', strerror))
                 logMsg = 'Error copying machine.inp_<suffix> -> machine.inp'
                 services.exception(logMsg)
                 raise 
@@ -344,7 +348,7 @@ class torlh (Component):
 
 # Check if LH power is zero (or effectively zero).  If true don't run torlh just
 # run zero_RF_LH_power fortran code
-        print 'cur_state_file = ', cur_state_file
+        print('cur_state_file = ', cur_state_file)
 #         ps = NetCDFFile(cur_state_file, 'r')
 #         power_lh = ps.variables['power_lh'].getValue()[0]
 #         ps.close()
@@ -352,9 +356,9 @@ class torlh (Component):
         power_lh = ps.variables['power_lh'][0]
         ps.close()
         
-        print 'power = ', power_lh
+        print('power = ', power_lh)
         if(-0.02 < power_lh < 0.02):
-            print zero_RF_LH_power
+            print(zero_RF_LH_power)
             services.send_portal_event(event_type = 'COMPONENT_EVENT',\
               event_comment =  'running ' + zero_RF_LH_power)
             retcode = subprocess.call([zero_RF_LH_power, cur_state_file])
@@ -375,7 +379,7 @@ class torlh (Component):
 # However power_lh needs to be reset back to positive
 
         elif( power_lh < -0.02):
-            print 'continuing power from previous time step'
+            print('continuing power from previous time step')
             ps.variables['power_lh'].assignValue(-power_lh)
             ps.close()
 # ------------------------------------------------------------------------------                
@@ -399,7 +403,7 @@ class torlh (Component):
             cmd_prepare_input = [prepare_input, cur_state_file, arg_toric_Mode,\
                       arg_inumin_Mode,arg_isol_Mode, arg_enorm]
                       
-            print 'running = ', cmd_prepare_input
+            print('running = ', cmd_prepare_input)
             services.send_portal_event(event_type = 'COMPONENT_EVENT',\
               event_comment =  cmd_prepare_input)
             retcode = subprocess.call(cmd_prepare_input)
@@ -411,7 +415,7 @@ class torlh (Component):
             # Call xeqdsk_setup to generate eqdsk.out file
             cmd_eqdsk = [prepare_eqdsk, '@equigs_gen', '/g_filename='+cur_eqdsk_file,\
                                        '/equigs_filename=equigs.data']
-            print 'running', cmd_eqdsk
+            print('running', cmd_eqdsk)
             services.send_portal_event(event_type = 'COMPONENT_EVENT',\
               event_comment =  cmd_eqdsk)
             retcode = subprocess.call(cmd_eqdsk)
@@ -422,12 +426,12 @@ class torlh (Component):
 
             # For toric mode and nonMaxwellian run ImChizz
             if arg_toric_Mode == 'toric' and arg_inumin_Mode == 'nonMaxwell':
-                print '\nRunning ImChizz'
+                print('\nRunning ImChizz')
                 try:
                     subprocess.call(['cp', cur_cql_file, 'cql3d.cdf' ])
                 except Exception:
                     message = 'generic_ps_init: Error copying CURRENT_CQL_FILE to cql3d.cdf'
-                    print message
+                    print(message)
                     services.exception(message)
                     raise              
                 imchzz_bin = self.ImChizz_BIN
@@ -441,10 +445,10 @@ class torlh (Component):
                    logMsg = "Error executing" + cmd_imchizz
                    self.services.error(logMsg)
                    raise
-                print P.communicate("b\n")
+                print(P.communicate("b\n"))
                 
                 #P.wait()
-                print 'Finished ImChizz'
+                print('Finished ImChizz')
 
 
             # Launch torlh executable
@@ -454,11 +458,11 @@ class torlh (Component):
             if arg_toric_Mode == 'qldce':
                 run_nproc = self.NPROC_QLDCE
 
-            print 'arg_toric_Mode = ', arg_toric_Mode, '   torlh processors = ', run_nproc
+            print('arg_toric_Mode = ', arg_toric_Mode, '   torlh processors = ', run_nproc)
             time_limit = float(self.TORLH_TIME_LIMIT)
             # Try to launch TORLH multiple times if TORLH_TRIES > 1 in config file
             for i in range(int(self.NUM_TORLH_TRIES)):
-                print ' TORLH try number ', i + 1
+                print(' TORLH try number ', i + 1)
                 task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
                 retcode = services.wait_task(task_id, timeout = time_limit, delay = 60.)
                 if (retcode == 0):
@@ -481,17 +485,18 @@ class torlh (Component):
             new_file_name = 'torica_' + arg_toric_Mode + '.out'
             try:
                 shutil.copyfile('torica.out', new_file_name)
-            except IOError, (errno, strerror):
+            except IOError as xxx_todo_changeme2:
+                (errno, strerror) = xxx_todo_changeme2.args
                 logMsg =  'Error copying file %s to %s' % ('torica.out', new_file_name\
                         , strerror)
-                print logMsg
+                print(logMsg)
                 services.exception(logMsg)
                 raise 
             
             # For qldce mode need to also run mapin
             if arg_toric_Mode == 'qldce':
                 mapin_bin = self.try_get_component_param(services,'MAPIN_BIN')
-                print '\nRunning ' + mapin_bin
+                print('\nRunning ' + mapin_bin)
                 services.send_portal_event(event_type = 'COMPONENT_EVENT', \
                      event_comment = 'running ' + mapin_bin)
                 retcode = subprocess.call([mapin_bin])
@@ -507,7 +512,7 @@ class torlh (Component):
                 # No process_output code yet
                 #services.merge_current_plasma_state(partial_file, logfile='log.update_state')
                 #print 'merged torlh plasma state data ', partial_file
-                print 'No process_output code yet, so no plasma state merge'
+                print('No process_output code yet, so no plasma state merge')
             except:
                 logMsg = 'Error in call to merge_current_plasma_state(' + partial_file + ')'
                 self.services.exception(logMsg)
@@ -515,7 +520,7 @@ class torlh (Component):
 
       # Update plasma state files in plasma_state work directory
         try:
-            services.update_plasma_state()
+            services.update_state()
         except Exception:
             logMsg = 'Error in call to update_plasma_state()'
             self.services.exception(logMsg)
@@ -529,6 +534,11 @@ class torlh (Component):
             self.services.exception(logMsg)
             raise 
 
+        if 'last_pwr' in kwargs:
+            ps = Dataset(cur_state_file, 'w', format = 'NETCDF3_CLASSIC')
+            ps.variables['power_lh'][0] = saved_pwr
+            ps.close()
+
         return 0
 
 # ------------------------------------------------------------------------------
@@ -539,7 +549,7 @@ class torlh (Component):
 # ------------------------------------------------------------------------------
 
     def checkpoint(self, timestamp=0.0):
-        print 'RF_LH_torlh.checkpoint() called'
+        print('RF_LH_torlh.checkpoint() called')
         services = self.services
         services.save_restart_files(timestamp, self.RESTART_FILES)
 
@@ -552,7 +562,7 @@ class torlh (Component):
 # ------------------------------------------------------------------------------
 
     def finalize(self, timestamp=0.0):
-        print 'torlh.finalize() called'
+        print('torlh.finalize() called')
 
 
 # ------------------------------------------------------------------------------
@@ -565,14 +575,14 @@ class torlh (Component):
 
         try:
             value = services.get_config_param(param_name)
-            print param_name, ' = ', value
+            print(param_name, ' = ', value)
         except Exception:
             if optional:
-                print 'config parameter ', param_name, ' not found'
+                print('config parameter ', param_name, ' not found')
                 value = None
             else:
                 message = 'required config parameter ', param_name, ' not found'
-                print message
+                print(message)
                 services.exception(message)
                 raise
 
@@ -583,13 +593,13 @@ class torlh (Component):
 
         if hasattr(self, param_name):
             value = getattr(self, param_name)
-            print param_name, ' = ', value
+            print(param_name, ' = ', value)
         elif optional:
-            print 'optional config parameter ', param_name, ' not found'
+            print('optional config parameter ', param_name, ' not found')
             value = None
         else:
             message = 'required component config parameter ', param_name, ' not found'
-            print message
+            print(message)
             services.exception(message)
             raise
 

@@ -131,8 +131,9 @@
       character(80), dimension(:) :: files_toric(max_runs)
       character(80) :: path, file_felice
       integer :: num_runs, nfel_nphi, iread_felice
-      integer :: ntres=64
-      real(rspec) :: d_u, d_psi, enorm=0._rspec, unorm, uasp=1.0, pwtot=1.0
+      integer :: nteq, nch, iairy, inotres, iwrite=0
+      real(rspec) :: d_u, d_psi, enorm=0._rspec, uasp=1.0, pwtot=1.0
+      real(rspec) :: deltapsi, iphaseref
       real(rspec) :: psi_min, psi_max
       real(rspec) :: u_extr = 10._rspec
       real(rspec):: uperp0
@@ -262,7 +263,9 @@
 ! originally in t0_mod_qldce.F
       namelist /qldceinp/ &
      &     num_runs, path, iread_felice, files_toric, file_felice, &
-     &     d_u, u_extr, d_psi, psi_min, psi_max, enorm, ntres, uasp, pwtot
+     &     d_u, u_extr, d_psi, psi_min, psi_max, enorm, iwrite,  &
+     &     nteq, nch, inotres, iairy, deltapsi, uasp, pwtot,  &
+     &     iphaseref
 !uasp yet to be validated, do not use this option in production JCW 22 JUNE 2011
 !enorm if non zero puts qldce on a momentum space mesh as used by CQL3D
 !otherwise qldce is on a v/vte mesh.
@@ -527,9 +530,12 @@
          call get_arg(3,arg_inumin_Mode)
          call get_arg(4,arg_isol_Mode)
          call get_arg(5,arg_enorm)
-
+         
          toricmode = trim(arg_toric_Mode)
-
+         if (toricmode == 'qldce') then
+            toricmode = 'qldce2'
+         endif
+         
 		 if (trim(arg_inumin_Mode) == 'Maxwell') then
 			inumin = INUMIN_Maxwell
 		 else if (trim(arg_inumin_Mode) == 'nonMaxwell') then
@@ -601,7 +607,7 @@
               form='formatted')
       INQUIRE(inp_unit, exist=lex)
       IF (lex) THEN
-         IF (trim(toricmode) == 'qldce') THEN
+         IF (trim(toricmode) == 'qldce2') THEN
              write (*,*) 'reading namelist qldceinp'
        			 read(inp_unit, nml = qldceinp)
        			 !WRITE (*, nml = qldceinp)

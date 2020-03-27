@@ -164,6 +164,7 @@ class cql3d(Component):
             CQL3D_MODE = self.CQL3D_MODE
             CQL3D_OUTPUT = self.CQL3D_OUTPUT
             CQL3D_NML = self.CQL3D_NML
+            STEP_MODEL = self.STEP_MODEL
             NSTEPS_STR = self.NSTEPS_STR
             DELTAT_STR = self.DELTAT_STR
             PS_ADD_NML = self.PS_ADD_NML
@@ -252,6 +253,7 @@ class cql3d(Component):
         cql3d_mode = self.CQL3D_MODE
         cql3d_output = self.CQL3D_OUTPUT
         cql3d_nml = self.CQL3D_NML
+        STEP_MODEL = self.STEP_MODEL
         nsteps_str = self.NSTEPS_STR
         deltat_str = self.DELTAT_STR
         ps_add_nml = self.PS_ADD_NML
@@ -434,6 +436,7 @@ class cql3d(Component):
           cql3d_mode = self.CQL3D_MODE
           cql3d_output = self.CQL3D_OUTPUT
           cql3d_nml = self.CQL3D_NML
+          step_model = self.STEP_MODEL
           nsteps_str = self.NSTEPS_STR
           deltat_str = self.DELTAT_STR
           ps_add_nml = self.PS_ADD_NML
@@ -444,7 +447,32 @@ class cql3d(Component):
           
     # Call prepare_input - step
           print('fp_cql3d step: calling prepare_input')
-          
+
+          t0 = float(timeStamp)
+          if(step_model == 'LHCD_RAMP'):
+              if(t0 == 1.0):
+                  deltat_str = '0.000001'
+              elif(t0 == 2.0):
+                  deltat_str = '0.000001'
+              elif(t0 == 3.0):
+                  deltat_str = '0.00001'
+              elif(t0 == 4.0):
+                  deltat_str = '0.00001'
+              elif(t0 == 5.0):
+                  deltat_str = '0.0001'
+              elif(t0 == 6.0):
+                  deltat_str = '0.0001'
+              elif(t0 == 7.0):
+                  deltat_str = '0.0002'
+              elif(t0 == 8.0):
+                  deltat_str = '0.0002'
+              elif(t0 == 9.0):
+                  deltat_str = '0.001'
+              elif(t0 == 10.0):
+                  deltat_str = '0.001'
+              else:
+                  deltat_str = '0.005'
+
           log_file = open('log_prepare_cql3d_input_step', 'w')
           ips_mode = 'step'
 

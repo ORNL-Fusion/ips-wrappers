@@ -3,6 +3,7 @@
 Driver for torlh/cql3d iteration with logic exposed here rather than buried in the 
  components.  Adapted from generic_driver.py
 """
+from __future__ import print_function
 
 import sys
 import os
@@ -19,7 +20,7 @@ class generic_driver(Component):
 
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
 
 # ------------------------------------------------------------------------------
 #
@@ -40,13 +41,13 @@ class generic_driver(Component):
     def step(self, timestamp=0):
 
         services = self.services
-        services.stage_plasma_state()
+        services.stage_state()
         services.stage_input_files(self.INPUT_FILES)
 
       # get list of ports
         ports = services.getGlobalConfigParameter('PORTS')
         port_names = ports['NAMES'].split()
-        print 'PORTS =', port_names
+        print('PORTS =', port_names)
         port_dict = {}
         port_id_list = []
 
@@ -57,7 +58,7 @@ class generic_driver(Component):
         if 'INIT' in port_names:
             initComp = services.get_port('INIT') 
             if(initComp == None):
-                print 'Error accessing INIT component'
+                print('Error accessing INIT component')
                 raise
             port_dict['INIT'] = initComp
             port_id_list.append(initComp)
@@ -66,7 +67,7 @@ class generic_driver(Component):
         if 'EPA' in port_names:
             epaComp = services.get_port('EPA')
             if(epaComp == None):
-                print 'Error accessing EPA component'
+                print('Error accessing EPA component')
                 raise
             port_dict['EPA'] = epaComp
             port_id_list.append(epaComp)
@@ -75,7 +76,7 @@ class generic_driver(Component):
         if 'RF_EC' in port_names:
             rf_ecComp = services.get_port('RF_EC')
             if(rf_ecComp == None):
-                print 'Error accessing RF_EC component'
+                print('Error accessing RF_EC component')
                 raise
             port_dict['RF_EC'] = rf_ecComp
             port_id_list.append(rf_ecComp)
@@ -84,7 +85,7 @@ class generic_driver(Component):
         if 'RF_IC' in port_names:
             rf_icComp = services.get_port('RF_IC')
             if(rf_icComp == None):
-                print 'Error accessing RF_IC component'
+                print('Error accessing RF_IC component')
                 raise
             port_dict['RF_IC'] = rf_icComp
             port_id_list.append(rf_icComp)
@@ -93,7 +94,7 @@ class generic_driver(Component):
         if 'RF_LH' in port_names:
             rf_lhComp = services.get_port('RF_LH')
             if(rf_lhComp == None):
-                print 'Error accessing RF_LH component'
+                print('Error accessing RF_LH component')
                 raise
             port_dict['RF_LH'] = rf_lhComp
             port_id_list.append(rf_lhComp)
@@ -102,7 +103,7 @@ class generic_driver(Component):
         if 'NB' in port_names:
             nbComp = services.get_port('NB')
             if(nbComp == None):
-                print 'Error accessing NB component'
+                print('Error accessing NB component')
                 raise
             port_dict['NB'] = nbComp
             port_id_list.append(nbComp)
@@ -111,7 +112,7 @@ class generic_driver(Component):
         if 'FUS' in port_names:
             fusComp = services.get_port('FUS')
             if(fusComp == None):
-                print 'Error accessing FUS component'
+                print('Error accessing FUS component')
                 raise
             port_dict['FUS'] = fusComp
             port_id_list.append(fusComp)
@@ -120,7 +121,7 @@ class generic_driver(Component):
         if 'FP' in port_names:
             fpComp = services.get_port('FP')
             if(fpComp == None):
-                print 'Error accessing FP component'
+                print('Error accessing FP component')
                 raise
             port_dict['FP'] = fpComp
             port_id_list.append(fpComp)
@@ -129,7 +130,7 @@ class generic_driver(Component):
         if 'MONITOR' in port_names:
             monitorComp = services.get_port('MONITOR')
             if(monitorComp == None):
-                print 'Error accessing MONITOR component'
+                print('Error accessing MONITOR component')
                 raise       
             port_dict['MONITOR'] = monitorComp
             port_id_list.append(monitorComp)
@@ -137,7 +138,7 @@ class generic_driver(Component):
 
       # Is this a simulation startup or restart
         sim_mode = services.getGlobalConfigParameter('SIMULATION_MODE')
-        print 'SIMULATION_MODE =', sim_mode
+        print('SIMULATION_MODE =', sim_mode)
 
       # Get timeloop for simulation
         timeloop = services.get_time_loop()
@@ -175,14 +176,14 @@ class generic_driver(Component):
             self.component_call(services, 'MONITOR', monitorComp, init_mode, t)
 
       # Get plasma state files into driver work directory and copy to psn if there is one
-        services.stage_plasma_state()
+        services.stage_state()
         cur_state_file = services.get_config_param('CURRENT_STATE')
         try:
             next_state_file = services.get_config_param('NEXT_STATE')
             shutil.copyfile(cur_state_file, next_state_file)
-        except Exception, e:
-            print 'generic_driver: No NEXT_STATE file ', e        
-        services.update_plasma_state()
+        except Exception as e:
+            print('generic_driver: No NEXT_STATE file ', e)        
+        services.update_state()
 
        # Get Portal RUNID and save to a file
         run_id = services.get_config_param('PORTAL_RUNID')
@@ -195,12 +196,12 @@ class generic_driver(Component):
        # Post init processing: stage plasma state, stage output
         services.stage_output_files(t, self.OUTPUT_FILES)
 
-        print ' init sequence complete'
+        print(' init sequence complete')
 
         INIT_ONLY = self.get_component_param(services, 'INIT_ONLY', optional = True)
         if INIT_ONLY in [True, 'true', 'True', 'TRUE']:   
             message = 'INIT_ONLY: Intentional stop after INIT phase'
-            print message
+            print(message)
             return
 
 # ------------------------------------------------------------------------------
@@ -210,18 +211,18 @@ class generic_driver(Component):
 # ------------------------------------------------------------------------------
 
 
-        print ' \nZeroth step - Run torlh only in toric mode and qldce mode for Maxwellian'
+        print(' \nZeroth step - Run torlh only in toric mode and qldce mode for Maxwellian')
         if sim_mode == 'NORMAL' :   # i.e. not RESTART do Maxwellian runs
             t = tlist_str[0]
             print (' ')
-            print '\nDriver: starting iteration ', t
+            print('\nDriver: starting iteration ', t)
             services.update_time_stamp(t)
 
             try:
                 services.call(rf_lhComp, 'step', t, toric_Mode = 'toric', inumin_Mode = 'Maxwell' , isol_Mode = '1')
             except Exception:
                 message = 'RF_LH toric mode step failed'
-                print message
+                print(message)
                 services.exception(message)
                 raise 
 
@@ -230,20 +231,20 @@ class generic_driver(Component):
                 inumin_Mode = 'Maxwell' , isol_Mode = '1')
             except Exception:
                 message = 'RF_LH qldce mode step failed'
-                print message
+                print(message)
                 services.exception(message)
                 raise 
 
         # Iterate through the timeloop, or in this case iteration loop
         for t in tlist_str[1:len(timeloop)]:
             print (' ')
-            print '\nDriver: starting iteration ', t
+            print('\nDriver: starting iteration ', t)
             services.update_time_stamp(t)
 
         # call pre_step_logic
-            services.stage_plasma_state()
+            services.stage_state()
             self.pre_step_logic(float(t))
-            services.update_plasma_state()
+            services.update_state()
             print (' ')
 
        # Call step for each component
@@ -257,7 +258,7 @@ class generic_driver(Component):
                 services.call(fpComp, 'step', t)
             except Exception:
                 message = 'FP step failed'
-                print message
+                print(message)
                 services.exception(message)
                 raise 
 
@@ -266,7 +267,7 @@ class generic_driver(Component):
                 inumin_Mode = 'nonMaxwell' , isol_Mode = '1')
             except Exception:
                 message = 'RF_LH toric mode step failed'
-                print message
+                print(message)
                 services.exception(message)
                 raise 
 
@@ -275,14 +276,14 @@ class generic_driver(Component):
                 inumin_Mode = 'nonMaxwell' , isol_Mode = '1')
             except Exception:
                 message = 'RF_LH qldce mode step failed'
-                print message
+                print(message)
                 services.exception(message)
                 raise 
 
             if 'MONITOR' in port_names:
                 self.component_call(services, 'MONITOR', monitorComp, 'step', t)
 
-            services.stage_plasma_state()
+            services.stage_state()
 
          # Post step processing: stage plasma state, checkpoint components and self
             services.stage_output_files(t, self.OUTPUT_FILES)
@@ -334,7 +335,7 @@ class generic_driver(Component):
 # ------------------------------------------------------------------------------
 
     def checkpoint(self, timestamp=0.0):
-        print 'generic_driver.checkpoint() called'
+        print('generic_driver.checkpoint() called')
         
 
 # ------------------------------------------------------------------------------
@@ -358,7 +359,7 @@ class generic_driver(Component):
                 services.call(comp, mode, time)
             except Exception:
                 message = comp_mode_string + ' failed'
-                print message
+                print(message)
                 services.exception(message)
                 raise 
             
@@ -374,7 +375,7 @@ class generic_driver(Component):
         try:
             next_state_file = services.get_config_param('NEXT_STATE')
             shutil.copyfile(next_state_file, cur_state_file)
-        except Exception, e:
+        except Exception as e:
             pass
 
       # Update time stamps
@@ -386,9 +387,9 @@ class generic_driver(Component):
         self.services.log('ps%t1 = ', t1)
 
         power_ic = 0.0
-        if ('power_ic' in ps.variables.keys()):
+        if ('power_ic' in list(ps.variables.keys())):
             power_ic = ps.variables['power_ic'][:]
-            print'generic_driver pre_step_logic: power_ic = ', power_ic
+            print('generic_driver pre_step_logic: power_ic = ', power_ic)
 
         ps.close()
         
@@ -396,10 +397,10 @@ class generic_driver(Component):
         try:
             prior_state_file = self.services.get_config_param('PRIOR_STATE')
             shutil.copyfile(cur_state_file, prior_state_file)
-        except Exception, e:
+        except Exception as e:
             pass       
         
-        print'generic_driver pre_step_logic: timeStamp = ', timeStamp
+        print('generic_driver pre_step_logic: timeStamp = ', timeStamp)
         
         return
 
@@ -414,14 +415,14 @@ class generic_driver(Component):
 
         try:
             value = services.get_config_param(param_name)
-            print param_name, ' = ', value
+            print(param_name, ' = ', value)
         except Exception :
             if optional: 
-                print 'config parameter ', param_name, ' not found'
+                print('config parameter ', param_name, ' not found')
                 value = None
             else:
                 message = 'required config parameter ', param_name, ' not found'
-                print message
+                print(message)
                 services.exception(message)
                 raise
         
@@ -432,13 +433,13 @@ class generic_driver(Component):
 
         if hasattr(self, param_name):
             value = getattr(self, param_name)
-            print param_name, ' = ', value
+            print(param_name, ' = ', value)
         elif optional:
-            print 'optional config parameter ', param_name, ' not found'
+            print('optional config parameter ', param_name, ' not found')
             value = None
         else:
             message = 'required component config parameter ', param_name, ' not found'
-            print message
+            print(message)
             services.exception(message)
             raise
         
