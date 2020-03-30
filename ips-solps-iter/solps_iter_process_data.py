@@ -64,7 +64,8 @@ class solps_iter_data_worker(Component):
             return
         
         solps.process_solps_output_for_gitr(dakota_filename = dict['dakota_result'], \
-                                  nR = dict['numr'], nZ = dict['numz'], plot_variables=1)
+                                  nR = dict['numr'], nZ = dict['numz'], plot_variables=1, \
+                                  b2fstate_filename = dict['solps_state'])
         
         gitr.make_gitr_geometry_from_solps(gitr_geometry_filename=dict['gitr_geometry'], \
                                   solps_mesh_extra=dict['solps_mesh'], \
