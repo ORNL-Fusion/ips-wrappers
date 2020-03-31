@@ -69,9 +69,11 @@ class solps_iter_data_worker(Component):
         
         gitr.make_gitr_geometry_from_solps(gitr_geometry_filename=dict['gitr_geometry'], \
                                   solps_mesh_extra=dict['solps_mesh'], \
-                                  right_target_file=dict['right_target'], \
-                                  left_target_file=dict['left_target'])
-       
+                                  solps_geom=dict['solps_geometry'])
+        
+        solps.make_solps_targ_file(gitr_geom_filename=dict['gitr_geometry'], \
+                                   solps_geom  = dict['solps_geometry']) 
+        
         self.services.update_state()
 
         return
