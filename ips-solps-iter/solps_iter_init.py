@@ -36,6 +36,7 @@ class solps_iter_init(Component):
         eirene_nodes = self.services.get_config_param('EIRENE_NODES')
         eirene_cells = self.services.get_config_param('EIRENE_CELLS')
         eirene_links = self.services.get_config_param('EIRENE_LINKS')
+        eirene_grid = self.services.get_config_param('EIRENE_GRID')
 
 #  Remove old inputs. Stage input files.
         for file in os.listdir('.'):
@@ -83,6 +84,10 @@ class solps_iter_init(Component):
             if os.path.exists(eirene_input_dat):
                 os.rename(eirene_input_dat, 'fort.1')
                 zip_ref.write('fort.1')
+                zip_ref.set_state(state='needs_update')
+            if os.path.exists(eirene_grid):
+                os.rename(eirene_grid, 'fort30')
+                zip_ref.write('fort30')
                 zip_ref.set_state(state='needs_update')
             if os.path.exists(eirene_nodes):
                 os.rename(eirene_nodes, 'fort.33')
