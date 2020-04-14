@@ -38,7 +38,7 @@
 ! In general, the necessary PS storage will have already been set up by
 ! prepare_genray_input.f90/other rf prep, or by prepare_cql3d_input.f90.
 ! 
-!     prepare_cql3d_input takes 1 optional command line argument:
+!     process_cql3d_output takes 2 command line arguments:
 !                  1st: cql3d_output, gives types of output power 
 !                       depostion and currents
 !                       (One of 'LH', 'EC' 'IC' 'NBI' 'RW' 
@@ -48,6 +48,9 @@
 !                       'RW', 'LH+RW'.  
 !                       (Future: dimension cql3d_output
 !                       and add number of elements to treat simultaneously.)
+!                  2nd: cql3d_output_file is file name of cql3d netcdf output file. 
+!                       It was previously hard wired to "cql3d.nc".  It is set in
+!                       the cql3d input file, namelist "setup" 
 ! 
 
 ! define state object and interface...
@@ -358,7 +361,7 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
       istatus = nf_inq_varid(ncid, 'radcoord', vid)
       istatus = nf_get_var_text(ncid, vid, radcoord)
       if (radcoord.ne.'sqtorflx') then
-         write(*,*)'STOP: problem with cql3d radial coord type'
+         write(*,*)'STOP: problem with cql3d radial coord type, not sqtorflx'
          stop
       endif
       ! the grid
@@ -533,23 +536,13 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
 
 
        if (cql3d_output.eq.'LH') then
-! ptb Don't check this stuff anymore because we are keeping rho_lhrf set to
-! what it was for genray, which is not in general equal to lrz+1
-!      if(ps%nrho_lhrf.ne.(lrz+1)) then
-!         write(*,*)'STOP: problem with PS LH setup'
-!         write(*,*)'ps%nrho_lhrf,(lrz+1)= ',ps%nrho_lhrf,(lrz+1)
-!         stop
-!      endif
+
 ! ptb Need to map powrft and curr from the cql3d radial grid (rya) to the 
 ! pelh, pelh_srfc, curlh, and curlh_src radial grid (rho_lhrf) which was set 
 ! in genray. Assume only one source for this operation (for now).
-         write(*,*) 'Advanced into interpolation of cql3d profiles onto PS grid'
 !N.B.    size(f_target) = size(rho_target) - 1; this is checked.
-!ptb&SS         rho_cql(1) = 0.0
-!ptb&SS         rho_cql(2:lrz+1) = rya(1:lrz)
-!ptb&SS         rho_cql(lrz+2) = 1.0
-!ptb&SS         tmp_prof(2:lrz+1) = powrft(:,nt) * dvol(:)
-!ptb&SS         tmp_prof(1) = tmp_prof(2)
+
+         write(*,*) 'Advanced into interpolation of cql3d profiles onto PS grid'
          do l=1,lrz-1
             rho_cql(l+1) = 0.5*(rya(l)+rya(l+1))
          enddo
@@ -563,11 +556,8 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
          write(*,*) 'tmp_prof = ', tmp_prof
          write(*,*) 'ps%pelh = ', ps%pelh
          
-!ptb         call ps_user_1dintrp_vec(ps%rho_lhrf, rya(1:lrz), tmp_prof,
-!ptb     &        ps%pelh, ierr, interp = 1)
          call ps_user_rezone1(rho_cql, ps%rho_lhrf, tmp_prof, 
      &        ps%pelh, ierr, nonorm = .TRUE., zonesmoo = .TRUE.)
-!ptb&SS     &                        ps%pelh, ierr, nonorm = .TRUE.)
          if(ierr .ne. 0) stop 'error interpolating CQL3D powers onto PS Grid ps%rho_lhrf and ps%pelh'
          ps%pelh_src(:,1) = ps%pelh(:)
          write(*,*) 'elecfld(l,nt) = ', elecfld(1:lrz+1,nt)
@@ -592,17 +582,12 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
 !N.B.    elecfld(2:lrz+1).
   
          do l=1,lrz
-!ptb         tmp_prof(l+1) = (curr(l,nt) - elecfld(l+1,nt)/
          tmp_prof(l) = (curr(l,nt) - elecfld(l+1,nt)/
      &       (rovsc(l,nt)*sptzrp(l,nt)*9.0E+11)) * darea(l)
          enddo
-!ptb         tmp_prof(1) = tmp_prof(2)
-         
-!ptb         call ps_user_1dintrp_vec(ps%rho_lhrf, rya(1:lrz), tmp_prof,
-!ptb     &        ps%curlh, ierr, interp = 1)
+
          call ps_user_rezone1(rho_cql, ps%rho_lhrf, tmp_prof, 
      &        ps%curlh, ierr, nonorm = .TRUE., zonesmoo = .TRUE.)
-!ptb&SS     &                        ps%curlh, ierr, nonorm = .TRUE.)
 
          if(ierr .ne. 0) stop 'error interpolating CQL3D powrft onto PS Grid ps%rho_lhrf and ps%curlh'
 
