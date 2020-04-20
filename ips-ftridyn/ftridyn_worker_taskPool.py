@@ -13,13 +13,13 @@ import netCDF4
 import pickle
 import math
 
-print 'The generate_ftridyn_input path in ftridyn_worker_taskpool is: '
-print os.path.abspath(generate_ftridyn_input_gitr.__file__)
+print('The generate_ftridyn_input path in ftridyn_worker_taskpool is: ')
+print(os.path.abspath(generate_ftridyn_input_gitr.__file__))
 
 class ftridynWorker(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
         #get name of FTridyn executable from config file
         #This is actually a shell script that calls FTridyn and pipes
         #the input to the executable
@@ -119,20 +119,20 @@ class ftridynWorker(Component):
         for i in range(nFTpoolTasks):
             self.services.add_task('pool', 'task'+str(i), nFTrunsPerNode, cwd, 'python',self.FTMPI_EXEC,str(i), str(nFTrunsPerNode),str(self.FTRIDYN_EXE),"W_W_0001.IN",task_ppn= nFTrunsPerNode,logfile='task_pool'+str(i)+'.log' )
         ret_val = self.services.submit_tasks('pool')
-        print 'ret_val = ', ret_val
+        print('ret_val = ', ret_val)
         exit_status = self.services.get_finished_tasks('pool')
-        print exit_status
+        print(exit_status)
         self.services.remove_task_pool('pool')
 
         exec_time = time.time()
-        print("Execution of FTRIDYN Cases took --- %s seconds ---" % (exec_time - start_time))
+        print(("Execution of FTRIDYN Cases took --- %s seconds ---" % (exec_time - start_time)))
         pool_py = self.services.create_task_pool('pool_py')
         for i in range(nFTpoolTasks):
             self.services.add_task('pool_py', 'task'+str(i), nFTrunsPerNode, cwd, 'python',self.FTMPI,str(i), str(nFTrunsPerNode),task_ppn= nFTrunsPerNode,logfile='task_'+str(i)+'.log' )
         ret_val = self.services.submit_tasks('pool_py')
-        print 'ret_val = ', ret_val
+        print('ret_val = ', ret_val)
         exit_status = self.services.get_finished_tasks('pool_py')
-        print exit_status
+        print(exit_status)
         self.services.remove_task_pool('pool_py')
 
         #task_id = self.services.launch_task(self.FTMPI_TASKS,self.services.get_working_dir(),'python',self.FTMPI,task_ppn=self.FTMPI_PPN)
@@ -223,7 +223,7 @@ class ftridynWorker(Component):
         edistref[:] = eDistributionRef
         rootgrp.close()
         post_time = time.time()
-        print("Processing of FTRIDYN Cases took --- %s seconds ---" % (post_time - exec_time))
+        print(("Processing of FTRIDYN Cases took --- %s seconds ---" % (post_time - exec_time)))
         #updates plasma state FTridyn output files
         self.services.update_plasma_state()
   

@@ -5,13 +5,26 @@
 import numpy as np
 import math
 import h5py
+import sys
+import os.path
+from os import path
 #from   pylab import *
 
 def binTridyn(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat'):
 
+    print(' ')
+    print('from binTRIDYN, called with input')
+    print(inFile)
+    sys.stdout.flush()
+
+    print ("File exists:"+str(path.exists(inFile)))
+    
 ## Open the files
     f = h5py.File(inFile, 'r')    
+    print('from binTRIDYN, opened inFile to read')
     concDset = f['concs']
+    print('read concDset')
+    sys.stdout.flush()
 
 ## Bin the concentrations
     depthBin = []
@@ -24,6 +37,10 @@ def binTridyn(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat'):
 
     nBins=int(math.floor(concDset[len(concDset)-1][0] * 2.0)+1)
 
+    print('from binTRIDYN, initialized bins')
+    print('calculated bins')
+    sys.stdout.flush()
+    
     for k in range (0, nBins):#200):
         depthBin.append(k/2.0)
         heBin.append(0.0)
@@ -33,6 +50,9 @@ def binTridyn(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat'):
         iBin.append(0.0)
         TBin.append(0.0)
 
+    print('from binTRIDYN, zeros in bins')
+    sys.stdout.flush()
+        
     oldIndice = -10
     i = 0
 
@@ -57,10 +77,17 @@ def binTridyn(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat'):
         vBin[indice] = vBin[indice] + concDset[k][4]
         iBin[indice] = iBin[indice] + concDset[k][5]
         TBin[indice] = TBin[indice] + concDset[k][6]
-            
+
+    print('from binTRIDYN, rebinned values')
+    print('end of loop')
+    sys.stdout.flush()
+        
 ## Open 'outputFile.dat' where results will be printed
     outputFile = open(outFile, 'w')
 
+    print('from binTRIDYN, write output to output file')
+    sys.stdout.flush()
+    
 ## Loop on all the elements
     for i in range(0, len(depthBin)):
     
@@ -71,4 +98,10 @@ def binTridyn(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat'):
 ## Close the output file
     outputFile.close()
 
+    print(' ... ')
+    print('successfully produced output file')
+    print(outFile)
+    print(' ')
+    sys.stdout.flush()
+    
     return

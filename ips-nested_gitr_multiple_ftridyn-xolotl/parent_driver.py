@@ -41,11 +41,11 @@ class parent_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
-        print ' '
+        print(' ')
         print('parent_driver: init')
  
         import sys
-        print 'running python ', sys.version_info
+        print('running python ', sys.version_info)
    
         num_children = int(self.services.get_config_param('NUM_CHILDREN'))
         child_conf = self.services.get_config_param('CHILD_COMPONENT_CONF')
@@ -66,17 +66,17 @@ class parent_driver(Component):
         #CREATE FT-GITR SUB-WORKFLOW: 
         
         self.nested_components['component_a'] = {'sim_name': None, 'init': None, 'driver': None, 'sub_working_dir': 'component_a_init'}
-        print(self.nested_components['component_a'])
-        print(self.nested_components['component_a']['sub_working_dir'])
+        print((self.nested_components['component_a']))
+        print((self.nested_components['component_a']['sub_working_dir']))
 
         os.mkdir(self.nested_components['component_a']['sub_working_dir'])
         #shutil.copy2(self.services.get_config_param('COMPONENT_A_NAMELIST_INPUT'), self.child_components['component_a']['sub_working_dir'])
-        print 'Creating sub workflo with: '
-        print '\t name: component_a'
-        print '\t config: ', self.services.get_config_param('COMPONENT_A_CONF')
-        print '\t PWD: ', self.services.get_config_param('PWD')
-        print '\t COMPONENT_A_NAMELIST_INPUT ', self.services.get_config_param('COMPONENT_A_NAMELIST_INPUT')
-        print '\t LOG_FILE: log.component_a.warning'
+        print('Creating sub workflo with: ')
+        print('\t name: component_a')
+        print('\t config: ', self.services.get_config_param('COMPONENT_A_CONF'))
+        print('\t PWD: ', self.services.get_config_param('PWD'))
+        print('\t COMPONENT_A_NAMELIST_INPUT ', self.services.get_config_param('COMPONENT_A_NAMELIST_INPUT'))
+        print('\t LOG_FILE: log.component_a.warning')
 
         (self.nested_components['component_a']['sim_name'],
          self.nested_components['component_a']['init'],
@@ -87,7 +87,7 @@ class parent_driver(Component):
                                                                                               'COMPONENT_A_NAMELIST_INPUT' : self.services.get_config_param('COMPONENT_A_NAMELIST_INPUT'),
                                                                                               'LOG_FILE' : 'log.component_a.warning'})
 
-        print 'creating first sub-workflow DONE!'
+        print('creating first sub-workflow DONE!')
 
 
         ## CREATE SUB-WORKFLOW FOR MULTIPLE (num_children) FTRIDYN-XOLOTL RUNS, IN PARALLEL ##
@@ -110,8 +110,8 @@ class parent_driver(Component):
         
 #  Input files will be staged from this directory.
 
-            print 'In directory', os.getcwd()
-            print '\t create input directory: ', self.child_components[child_comp]['INPUT_DIR']
+            print('In directory', os.getcwd())
+            print('\t create input directory: ', self.child_components[child_comp]['INPUT_DIR'])
 
             if os.path.exists(self.child_components[child_comp]['INPUT_DIR']):
                 shutil.rmtree(self.child_components[child_comp]['INPUT_DIR'])
@@ -120,19 +120,19 @@ class parent_driver(Component):
             #  Copy files to the created directory.
             #UPDATE: by hand at first --> turn this into loop over input files now
             input_file_list=keys['INPUT_FILES'].split()
-            print '\t and copy input files:' , input_file_list #self.child_components[child_comp]['INPUT_FILES']
+            print('\t and copy input files:' , input_file_list) #self.child_components[child_comp]['INPUT_FILES']
             for input_file in input_file_list: #self.child_components[child_comp]['INPUT_FILES'])):
-                print '\t \t', input_file , ' from ', self.SUBMIT_DIR, ' to ', self.child_components[child_comp]['INPUT_DIR']
+                print('\t \t', input_file , ' from ', self.SUBMIT_DIR, ' to ', self.child_components[child_comp]['INPUT_DIR'])
                 shutil.copyfile(self.SUBMIT_DIR+'/'+input_file,self.child_components[child_comp]['INPUT_DIR']+'/'+input_file)
-            print '\t ...done copying input files'
+            print('\t ...done copying input files')
 
-            print ' '
-            print 'Create_sub_workflow with parameters:'
-            print '\t child_comp = ', child_comp
-            print '\t child_conf = ', child_conf
-            print '\t keys = ', keys
-            print '\t self.child_components[child_comp][INPUT_DIR] = ', self.child_components[child_comp]['INPUT_DIR']
-            print '\n'
+            print(' ')
+            print('Create_sub_workflow with parameters:')
+            print('\t child_comp = ', child_comp)
+            print('\t child_conf = ', child_conf)
+            print('\t keys = ', keys)
+            print('\t self.child_components[child_comp][INPUT_DIR] = ', self.child_components[child_comp]['INPUT_DIR'])
+            print('\n')
             (self.child_components[child_comp]['sim_name'],
              self.child_components[child_comp]['init'],
              self.child_components[child_comp]['driver']) = self.services.create_sub_workflow(child_comp, 
@@ -169,11 +169,11 @@ class parent_driver(Component):
         print(' COMPLETED FTRIDYN-GITR:step')
         print('\n')
 
-        for child_comp, child in self.child_components.items():
-            i=int(filter(str.isdigit, child_comp))
-            print 'index of ', child_comp, ' is ', i
+        for child_comp, child in list(self.child_components.items()):
+            i=int(list(filter(str.isdigit, child_comp)))
+            print('index of ', child_comp, ' is ', i)
             sedOutFile=self.SUBMIT_DIR+'/gitrOut'+str(i)+'.txt'
-            print 'copying gitr file from ', sedOutFile, 'to ', self.child_components[child_comp]['INPUT_DIR']+'/gitrOut.txt'
+            print('copying gitr file from ', sedOutFile, 'to ', self.child_components[child_comp]['INPUT_DIR']+'/gitrOut.txt')
             shutil.copyfile(sedOutFile,self.child_components[child_comp]['INPUT_DIR']+'/gitrOut.txt')
 
         #RUN init AND step OF CHILD (FT-X) SUB-WORKFLOW
@@ -185,24 +185,24 @@ class parent_driver(Component):
         print('\n')
 
         #  Loop over the children and all the initize component.
-        for child_comp, child in self.child_components.items():
-            print ' '
-            print 'Call driver:init for child ', child_comp
-            print '\t with dictionary ', child
+        for child_comp, child in list(self.child_components.items()):
+            print(' ')
+            print('Call driver:init for child ', child_comp)
+            print('\t with dictionary ', child)
             self.running_components['{}:driver:init'.format(child['sim_name'])] = self.services.call_nonblocking(child['driver'],
                                                                                                                  'init',
                                                                                                                  timeStamp,
                                                                                                                  **child) #**keys
-        print ' '
+        print(' ')
         #  Loop over the children and all the initize driver component.
-        for child_comp, child in self.child_components.items(): #.values():
+        for child_comp, child in list(self.child_components.items()): #.values():
 
-            print ' '
-            print 'for child ', child_comp, ' with sim_name ', child['sim_name'] 
-            print '\t Wait for driver:init to be done'
+            print(' ')
+            print('for child ', child_comp, ' with sim_name ', child['sim_name']) 
+            print('\t Wait for driver:init to be done')
             self.services.wait_call(self.running_components['{}:driver:init'.format(child['sim_name'])], True)
-            print '\t Done waiting for driver:init'
-            print '\t Call driver:step now'
+            print('\t Done waiting for driver:init')
+            print('\t Call driver:step now')
 
             #child['LOG_FILE']='log.step.{}'.format(child_comp)
             self.running_components['{}:driver:step'.format(child['sim_name'])] = self.services.call_nonblocking(child['driver'],
@@ -211,7 +211,7 @@ class parent_driver(Component):
                                                                                                                  **child) #**keys)
             del self.running_components['{}:driver:init'.format(child['sim_name'])]
 
-        print ' '
+        print(' ')
 #-------------------------------------------------------------------------------
 #
 #  parent_driver Component finalize method.
@@ -221,23 +221,23 @@ class parent_driver(Component):
         print('parent_driver: finalize')
 
 #  Wait until all the dependent components are finished.
-        self.services.wait_call_list(self.running_components.values(), True)
+        self.services.wait_call_list(list(self.running_components.values()), True)
         self.running_components = {}
 
 #  Call finalize on all components. Need to manually call finalize on init components.
 
-        print 'finalize FTRIDYN-GITR'
+        print('finalize FTRIDYN-GITR')
         self.async_queue['component_a:driver:finalize'] = self.services.call_nonblocking(self.nested_components['component_a']['driver'], 'finalize', timeStamp)
 
-        print 'finalize FTRIDYN-Xolotl'
-        for child_comp, child in self.child_components.items():
+        print('finalize FTRIDYN-Xolotl')
+        for child_comp, child in list(self.child_components.items()):
             self.running_components['{}:driver:finalize'.format(child['sim_name'])] = self.services.call_nonblocking(child['driver'],
                                                                                                                      'finalize', timeStamp)
 
-            print ' '
-            print '\t Child ', child_comp, ' FINALIZED!'
-            print ' '
+            print(' ')
+            print('\t Child ', child_comp, ' FINALIZED!')
+            print(' ')
 
 
 #  Wait until all the dependent components are finished.
-        self.services.wait_call_list(self.running_components.values(), True)
+        self.services.wait_call_list(list(self.running_components.values()), True)

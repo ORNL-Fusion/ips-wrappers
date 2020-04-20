@@ -826,7 +826,9 @@ driver['LOOP_TIME_STEP'])))
             #UPDATE: Xolotl generates HDF5 file of TRIDYN, copied as 'last_TRIDYN_toBin.h5'
             #thus no need to copy it; and binTRIDYN will transform it to text file, 'last_TRIDYN.dat' 
             #shutil.copyfile('last_TRIDYN.dat', 'last_TRIDYN_toBin.dat')
+            print('bin Xolotls output')
             binTRIDYN.binTridyn()
+            print('...succesfull')
             
             #store xolotls profile output for each loop (not plasma state)          
             #UPDATE: 'toBin' is .h5 format instead of .dat

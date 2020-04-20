@@ -46,8 +46,8 @@ class nested_driver(Component):
 #  argument of create sub workflow doesn't appear to do anything.
 
         self.nested_components['component_a'] = {'sim_name': None, 'init': None, 'driver': None, 'sub_working_dir': 'component_a_init'}
-        print(self.nested_components['component_a'])
-        print(self.nested_components['component_a']['sub_working_dir'])
+        print((self.nested_components['component_a']))
+        print((self.nested_components['component_a']['sub_working_dir']))
  
         os.mkdir(self.nested_components['component_a']['sub_working_dir'])
         #shutil.copy2(self.services.get_config_param('COMPONENT_A_NAMELIST_INPUT'), self.nested_components['component_a']['sub_working_dir'])
@@ -114,11 +114,11 @@ class nested_driver(Component):
 
 
         gitrOutFile=self.services.get_config_param('GITR_OUTPUT')
-        print ' '
-        print 'Copy GITRs output ', gitrOutFile
-        print '\t from ', self.SUBMIT_DIR  
-        print '\t to ', self.nested_components['component_ftx']['sub_working_dir']
-        print ' '
+        print(' ')
+        print('Copy GITRs output ', gitrOutFile)
+        print('\t from ', self.SUBMIT_DIR)  
+        print('\t to ', self.nested_components['component_ftx']['sub_working_dir'])
+        print(' ')
         shutil.copy2(self.SUBMIT_DIR+'/'+gitrOutFile, self.nested_components['component_ftx']['sub_working_dir'])
 
 
@@ -147,7 +147,7 @@ class nested_driver(Component):
         print('nested_driver: finalize')
 
 #  Wait until everything is finished before finalizing.
-        self.services.wait_call_list(self.async_queue.values(), True)
+        self.services.wait_call_list(list(self.async_queue.values()), True)
         self.async_queue = {}
 
 #  Call the finalize methods.
@@ -155,5 +155,5 @@ class nested_driver(Component):
         self.async_queue['component_ftx:driver:finalize'] = self.services.call_nonblocking(self.nested_components['component_ftx']['driver'], 'finalize', timeStamp)
 
 #  Wait until everything is finished before finalizing.
-        self.services.wait_call_list(self.async_queue.values(), True)
+        self.services.wait_call_list(list(self.async_queue.values()), True)
         self.async_queue = {}
