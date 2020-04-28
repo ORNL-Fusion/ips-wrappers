@@ -72,7 +72,8 @@ class solps_iter_data_worker(Component):
                                   solps_geom=dict['solps_geometry'])
         
         solps.make_solps_targ_file(gitr_geom_filename=dict['gitr_geometry'], \
-                                   solps_geom  = dict['solps_geometry']) 
+                                   solps_geom  = dict['solps_geometry'], \
+                                   right_target_filename = dict['right_target']) 
         
         self.services.update_state()
 

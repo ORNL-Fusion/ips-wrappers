@@ -10,6 +10,7 @@
 from component import Component
 import shutil
 import os
+import ftMPI
 #-------------------------------------------------------------------------------
 #
 #  FTridyn init Component Constructor
@@ -18,7 +19,7 @@ import os
 class ftridynInit(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
 
 #-------------------------------------------------------------------------------
 #
@@ -57,8 +58,25 @@ class ftridynInit(Component):
         print('ftridyn_init: step')
 
         #call generateInput.py
-        os.system(' '.join(['python', self.INPUT_SCRIPT, '-R 1 -s 0']))
-        
+        dict = {'target':self.TARGET,
+                'beam':self.BEAM,
+                'nHistories':int(self.N_HISTORIES),
+                'incident_energy':float(self.INCIDENT_ENERGY),
+                'incident_angle':float(self.ANGLE),
+                'data_file':self.DATA_FILE}
+        name1 = ''
+        name2 = ''
+        if(len(dict['beam'])>1):
+            name1 = dict['beam']
+        else:
+            name1 = dict['beam']+'_'
+        if(len(dict['target'])>1):
+            name2 = dict['target']
+        else:
+            name2 = '_'+dict['target']
+
+        ftMPI.beam_and_target(name1+name2,dict['beam'],dict['target'],sim_number=1,number_histories=dict['nHistories'], incident_energy=dict['incident_energy'],depth=200.0,incident_angle=dict['incident_angle'],fluence=1.0E-16,dataFile=dict['data_file']) 
+        shutil.copyfile(name1+name2+'0001.IN', self.COPY_FILES)
         #get name of FTridyn input file from config file to copy newly generated files to
         current_ftridyn_namelist = self.services.get_config_param('FTRIDYN_INPUT_FILE')
         #this may be more than one file, not sure yet - need to learn more about FTridyn I/O
@@ -67,8 +85,8 @@ class ftridynInit(Component):
 
         #copy newly generated files to names specified in config file
         for index in range(0,1): #range(len(file_list)): this may need to be changed
-            print('copying ', from_file_list[index], ' to ', file_list[index])
-            shutil.copyfile(from_file_list[index], file_list[index])
+            print(('copying ', from_file_list[index], ' to ', file_list[index]))
+        #    shutil.copyfile(from_file_list[index], file_list[index])
 
         #update plasma state files with relevant files from ftridynInit work directory
         self.services.update_plasma_state()

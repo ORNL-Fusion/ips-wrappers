@@ -15,12 +15,12 @@ import math
 from collections import defaultdict
 
 print('The generate_ftridyn_input path in ftridyn_worker_taskpool is: ')
-print(os.path.abspath(generate_ftridyn_input.__file__))
+print((os.path.abspath(generate_ftridyn_input.__file__)))
 
 class ftridynWorker(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print('Created %s' % (self.__class__))
+        print(('Created %s' % (self.__class__)))
         
         self.ftridyn_exe = self.FTRIDYN_EXE
 
@@ -35,9 +35,9 @@ class ftridynWorker(Component):
         if(int(self.GET_SPECIES)):
             specZs=[];
         specList = np.loadtxt('speciesList.txt', dtype='float', skiprows=1)
-        print( specList, len(specList))
+        print(( specList, len(specList)))
         for i in range(len(specList)):
-            print("0",specZs)
+            print(("0",specZs))
             if ((specList[i,1] ==1.0) and (specList[i,3]>0.0)):
                 if(specList[i,1] == 1.0 and specList[i,2]==1.0):
                     d['beam'].append('H')
