@@ -14,7 +14,7 @@ X = config.get_component_param(self, services, 'X', optional=True, verbose=False
 # 
 
 # Try to get config parameter - wraps the exception handling for get_config_parameter()
-def get_config_param(self, services, param_name, optional=False, verbose = True):
+def get_global_param(self, services, param_name, optional=False, verbose = True):
 
 	try:
 		value = services.get_config_param(param_name)
