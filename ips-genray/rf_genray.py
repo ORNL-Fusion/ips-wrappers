@@ -126,7 +126,7 @@ import getopt
 import shutil
 import string
 from  component import Component
-from Numeric import *
+#from Numeric import *
 from netCDF4 import *
 from simple_file_editing_functions import get_lines, put_lines, edit_nml_file
 from get_IPS_config_parameters import get_global_param, get_component_param
