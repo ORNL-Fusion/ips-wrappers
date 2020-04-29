@@ -113,11 +113,11 @@ def  n_evenly_spaced_integers(n, Length):
 # course the returned list won't be exactly evenly spaced unless n divides Length.
 
     if (type(n) != int) or (type(Length) != int) or (Length < 1):
-        print 'error n_evenly_spaced_integers: arguments must be positive integers',\
-              ' n = ', n, 'Length = ', Length
+        print('error n_evenly_spaced_integers: arguments must be positive integers',\
+              ' n = ', n, 'Length = ', Length)
               
     if n >= Length:
-        return range(Length)
+        return list(range(Length))
     elif n == 0:
         return [0]
     elif n == -1:
@@ -132,14 +132,14 @@ def select_nearest_points(points, selectors):
 # From list of real numbers -> 'points' find the indices in the list of the points nearest
 # the values in the list -> 'selectors'.  That way you don't have to know exactly what's in
 # points to get something close ot what you want.
-	
-	indices = []
-	for target in selectors:
-		diffs = map(lambda x: abs(x - target), points)
-		i = diffs.index(min(diffs))
-		indices.append(i)
-	return indices
-	
+    
+    indices = []
+    for target in selectors:
+        diffs = [abs(x - target) for x in points]
+        i = diffs.index(min(diffs))
+        indices.append(i)
+    return indices
+    
 
 #----------------------------------------------------------------------------------------------
 # Set up
@@ -147,75 +147,75 @@ def select_nearest_points(points, selectors):
 
 # get the command line -> .config or .nc file name
 if len(sys.argv) != 2:
-    print ' sys.argv = ', sys.argv
-    print 'Usage: this script takes one command line argument -> a monitor\
-           or config file name'
-    raise Exception, 'Usage: this script takes one command line argument -> a monitor\
-           or config file name'
+    print(' sys.argv = ', sys.argv)
+    print('Usage: this script takes one command line argument -> a monitor\
+           or config file name')
+    raise Exception('Usage: this script takes one command line argument -> a monitor\
+           or config file name')
 
 # get the configuration -> plot file name, monitor files to compare + other stuff
 if sys.argv[1][-7:] == '.config':
-	config_file_name = sys.argv[1]
-	config = simple_config(config_file_name)
-	
-	# Get the monitor file names and monitor file directory path if provided
-	monitor_file_names = config.MONITOR_FILE_NAMES
-	monitor_file_dir = os.getcwd()
-	try:
-		monitor_file_dir = config.MONITOR_FILE_DIR
-	except Exception:
-		print 'No MONITOR_FILE_DIR provided. Using current working directory'
-	
-	# Determine if monitor_file_names is a single file (i.e. a string) or a list
-	if type(monitor_file_names) == str:
-		single_file = True
-		monitor_file_names = [monitor_file_names]   # Make it into a length 1 list
-	
-	elif type(monitor_file_names) == list:
-		single_file = False
-		
-		# Generate a list of lables for the curves indicating which monitor file goes with which curve.
-		curve_labels = monitor_file_names       # Default is to use the file names.
-		
-		# If a list of curve labels is provided use that instead.
-		curve_label_dict = {}
-		try:
-			curve_labels = config.CURVE_LABELS
-			for i in range( len(monitor_file_names) ):
-				curve_label_dict[ monitor_file_names[i] ] = curve_labels[i]
-		except Exception:
-			print 'No labels provided.  Using file names'
-			for i in range( len(monitor_file_names) ):
-				curve_label_dict[ monitor_file_names[i] ] = monitor_file_names[i][: -3]
-	
-	# Get plot file name and open file for plotting
-	try:
-		plot_file_name = config.PLOT_FILE_NAME + '.pdf'
-		given_plot_file_name = True
-		print 'plot_file_name = ', plot_file_name
-		if plot_file_name.strip() == '.pdf':	# PLOT_FILE_NAME parameter is present but blank
-			given_plot_file_name = False
-	except Exception:
-		given_plot_file_name = False
-	
-	if given_plot_file_name == False:	# Generate default plot_file_name	
-		if single_file:
-			plot_file_name = monitor_file_names[0].partition('.nc')[0] + '.pdf'
-		else:
-			plot_file_name = config_file_name.partition('.config')[0] + '.pdf'			
-		print 'No plot_file_name provided.  Using default name = ', plot_file_name
+    config_file_name = sys.argv[1]
+    config = simple_config(config_file_name)
+    
+    # Get the monitor file names and monitor file directory path if provided
+    monitor_file_names = config.MONITOR_FILE_NAMES
+    monitor_file_dir = os.getcwd()
+    try:
+        monitor_file_dir = config.MONITOR_FILE_DIR
+    except Exception:
+        print('No MONITOR_FILE_DIR provided. Using current working directory')
+    
+    # Determine if monitor_file_names is a single file (i.e. a string) or a list
+    if type(monitor_file_names) == str:
+        single_file = True
+        monitor_file_names = [monitor_file_names]   # Make it into a length 1 list
+    
+    elif type(monitor_file_names) == list:
+        single_file = False
+        
+        # Generate a list of lables for the curves indicating which monitor file goes with which curve.
+        curve_labels = monitor_file_names       # Default is to use the file names.
+        
+        # If a list of curve labels is provided use that instead.
+        curve_label_dict = {}
+        try:
+            curve_labels = config.CURVE_LABELS
+            for i in range( len(monitor_file_names) ):
+                curve_label_dict[ monitor_file_names[i] ] = curve_labels[i]
+        except Exception:
+            print('No labels provided.  Using file names')
+            for i in range( len(monitor_file_names) ):
+                curve_label_dict[ monitor_file_names[i] ] = monitor_file_names[i][: -3]
+    
+    # Get plot file name and open file for plotting
+    try:
+        plot_file_name = config.PLOT_FILE_NAME + '.pdf'
+        given_plot_file_name = True
+        print('plot_file_name = ', plot_file_name)
+        if plot_file_name.strip() == '.pdf':    # PLOT_FILE_NAME parameter is present but blank
+            given_plot_file_name = False
+    except Exception:
+        given_plot_file_name = False
+    
+    if given_plot_file_name == False:   # Generate default plot_file_name   
+        if single_file:
+            plot_file_name = monitor_file_names[0].partition('.nc')[0] + '.pdf'
+        else:
+            plot_file_name = config_file_name.partition('.config')[0] + '.pdf'          
+        print('No plot_file_name provided.  Using default name = ', plot_file_name)
 
 # If single monitor file, define monitor_file_names list
 elif sys.argv[1][-3:] == '.nc':
-	monitor_file_names = [ sys.argv[1] ]
-	monitor_file_dir = os.getcwd()
-	single_file = True
-	plot_file_name = monitor_file_names[0][:-3] + '.pdf'
-	print 'plot_file_name = ', plot_file_name
-	
+    monitor_file_names = [ sys.argv[1] ]
+    monitor_file_dir = os.getcwd()
+    single_file = True
+    plot_file_name = monitor_file_names[0][:-3] + '.pdf'
+    print('plot_file_name = ', plot_file_name)
+    
 else:
-	print 'Unrecognized cammand line argument.  Should be a .nc or .config file'
-	raise exception, 'Unrecognized cammand line argument.  Should be a .nc or .config file'
+    print('Unrecognized cammand line argument.  Should be a .nc or .config file')
+    raise exception('Unrecognized cammand line argument.  Should be a .nc or .config file')
 
 open_file_XY_Curves_Fig(plot_file_name)
 
@@ -230,14 +230,14 @@ plot_count = 0
 
 
 for file in monitor_file_names:
-    print 'Processing monitor file ', file
+    print('Processing monitor file ', file)
     full_path = os.path.join(monitor_file_dir, file)
     monitor = Dataset(full_path, 'r', format = 'NETCDF3_CLASSIC')
     
     plot_count = plot_count +1
-    monitor_dim_names = monitor.dimensions.keys()
+    monitor_dim_names = list(monitor.dimensions.keys())
     monitor_dims = monitor.dimensions
-    monitor_var_names = monitor.variables.keys()
+    monitor_var_names = list(monitor.variables.keys())
 
     # Compile list of all variables in all files. Add new variable first time it appears.
     # Determine if scalar or profile.  Record variable dimensions.
@@ -250,8 +250,8 @@ for file in monitor_file_names:
             var_dimensions = monitor.variables[var_name].dimensions
 
             if debug:
-                print var_name, ' shape =  ', var_shape
-                print var_name, ' dim names =  ', monitor.variables[var_name].dimensions
+                print(var_name, ' shape =  ', var_shape)
+                print(var_name, ' dim names =  ', monitor.variables[var_name].dimensions)
                     
             # Only consider time based variables i.e. first dim == timeDim
             first_dim = var_dimensions[0]
@@ -274,20 +274,20 @@ for file in monitor_file_names:
                           ['tokamak id = ', tokamak_id], ['shot number = ', str(shot_number)] ]
     
     if debug:
-        print 'Global_label = ', Global_label
-        print 'RunID = ', RunID
-        print 'tokamak_id = ', tokamak_id
-        print 'shot_number = ', shot_number
-        print ' '
+        print('Global_label = ', Global_label)
+        print('RunID = ', RunID)
+        print('tokamak_id = ', tokamak_id)
+        print('shot_number = ', shot_number)
+        print(' ')
         monitor_dim_names.sort()
-        print 'monitor_dims = ', monitor_dim_names
-        print ' '
+        print('monitor_dims = ', monitor_dim_names)
+        print(' ')
         monitor_var_names.sort()
-        print 'monitor_var_names = ', monitor_var_names
-        print ' '
+        print('monitor_var_names = ', monitor_var_names)
+        print(' ')
         #monitor_dims.sort()
-        print 'monitor_dims = ', monitor_dims
-        print ' '
+        print('monitor_dims = ', monitor_dims)
+        print(' ')
     
     summary ={'file_name':file , 'global_attributes': global_attributes}
     plot_summary(summary)
@@ -296,7 +296,7 @@ for file in monitor_file_names:
         
     # Get time points for this monitor file
     time = monitor.variables['time'][:]
-    print 'time = ', time
+    print('time = ', time)
 
     this_monitor_file_dict = {'globals': global_attributes, 'time': time,\
                               'variables': monitor_var_names, 'file': monitor}
@@ -306,79 +306,79 @@ for file in monitor_file_names:
 # Plot all scalars versus time, if there is more than one time point
 #----------------------------------------------------------------------------------------------
 
-if len(time) > 1:	
-	print 'Plotting scalars \n'
-	
-	for var_name in scalar_names:
-		if debug:
-			print 'var_name = ', var_name
-	
-		title = var_name
-		xlabel = 'time (sec)'
-		
-		ylabel = var_name
-		units = dimensions_dict[var_name]
-		if units != ' ' and units != '':
-			ylabel = var_name + ' (' + units + ') '
-	
-		# Add a curve from each monitor file that contains this variable
-		curve_list = []
-		for file_name in monitor_file_names: 
-			this_monitor_file_dict = all_monitor_files_dict[file_name]
-			monitor = this_monitor_file_dict['file']
-			time = this_monitor_file_dict['time']
-			variables = this_monitor_file_dict['variables']
-			
-			# Check if var_name is in this monitor file.
-			if var_name in variables:
-				var = monitor.variables[var_name]
-				y = var[:]
-				
-				if debug:
-					print ylabel
-					print 'type(', var_name, ') = ', type(y)
-					print var, ' = ', y
-					
-				if single_file:
-					curve_list.append( XY_curve(time, y) )
-				else:
-					curve_list.append( XY_curve(time, y, label = curve_label_dict[file_name]) )
-	
-		plot1 = XY_Curves_Fig(curve_list, title, xlabel, ylabel)
-		plot_XY_Curves_Fig(plot1)
-		plot_count = plot_count + 1
-		index.append([plot_count, title])
-	
+if len(time) > 1:   
+    print('Plotting scalars \n')
+    
+    for var_name in scalar_names:
+        if debug:
+            print('var_name = ', var_name)
+    
+        title = var_name
+        xlabel = 'time (sec)'
+        
+        ylabel = var_name
+        units = dimensions_dict[var_name]
+        if units != ' ' and units != '':
+            ylabel = var_name + ' (' + units + ') '
+    
+        # Add a curve from each monitor file that contains this variable
+        curve_list = []
+        for file_name in monitor_file_names: 
+            this_monitor_file_dict = all_monitor_files_dict[file_name]
+            monitor = this_monitor_file_dict['file']
+            time = this_monitor_file_dict['time']
+            variables = this_monitor_file_dict['variables']
+            
+            # Check if var_name is in this monitor file.
+            if var_name in variables:
+                var = monitor.variables[var_name]
+                y = var[:]
+                
+                if debug:
+                    print(ylabel)
+                    print('type(', var_name, ') = ', type(y))
+                    print(var, ' = ', y)
+                    
+                if single_file:
+                    curve_list.append( XY_curve(time, y) )
+                else:
+                    curve_list.append( XY_curve(time, y, label = curve_label_dict[file_name]) )
+    
+        plot1 = XY_Curves_Fig(curve_list, title, xlabel, ylabel)
+        plot_XY_Curves_Fig(plot1)
+        plot_count = plot_count + 1
+        index.append([plot_count, title])
+    
 #----------------------------------------------------------------------------------------------
 # Plot all profiles versus rho, at an evenly spaced set of time points -> n_time_points
 #----------------------------------------------------------------------------------------------
-print 'Plotting profiles \n'
+print('Plotting profiles \n')
 
 # get the configuration -> time points
 if sys.argv[1][-7:] == '.config':
-	
-	# Get config parameters defining time points to be plotted
-	time_point_mode = config.TIME_POINT_MODE
-	
-	if time_point_mode == 'REGULAR':
-		n_time_points = int(config.N_TIME_POINTS)
-		time_point_indices =  n_evenly_spaced_integers(n_time_points, len(time))
-	
-	if time_point_mode == 'EXPLICIT':
-		requested_time_points_str = config.TIME_POINTS
-		requested_time_points = map(float, requested_time_points_str)
-		time_point_indices = select_nearest_points(time, requested_time_points)
+    
+    # Get config parameters defining time points to be plotted
+    time_point_mode = config.TIME_POINT_MODE
+    
+    if time_point_mode == 'REGULAR':
+        n_time_points = int(config.N_TIME_POINTS)
+        time_point_indices =  n_evenly_spaced_integers(n_time_points, len(time))
+    
+    if time_point_mode == 'EXPLICIT':
+        requested_time_points_str = config.TIME_POINTS
+        requested_time_points = list(map(float, requested_time_points_str))
+        time_point_indices = select_nearest_points(time, requested_time_points)
 
 # If single monitor file, use default n_time_points defined at top
 elif sys.argv[1][-3:] == '.nc':
-		time_point_indices = n_evenly_spaced_integers(n_time_points, len(time))
+        time_point_indices = n_evenly_spaced_integers(n_time_points, len(time))
 
-print 'n_time_points = ', n_time_points, '   time_point_indices = ', time_point_indices
-print 'time_points = ', [time[i] for i in time_point_indices]
+print('n_time_points = ', n_time_points, '   time_point_indices = ', time_point_indices)
+print('time_points = ', [time[i] for i in time_point_indices])
 
 for var_name in profile_names:
     if debug:
-        print 'var_name = ', var_name
+        print('var_name = ', var_name)
 
     xlabel = 'rho'    
     ylabel = var_name
@@ -390,7 +390,7 @@ for var_name in profile_names:
     if var_name == 'rlim' or var_name == 'zlim':
         continue
     if debug:
-        print 'var_name = ', var_name
+        print('var_name = ', var_name)
 
     curve_list = []
 
@@ -400,8 +400,8 @@ for var_name in profile_names:
         #Generate title
         title = var_name
         if not single_file:
-			time_label = 't = ' + str(time[i])
-			title = var_name + '    ' + time_label
+            time_label = 't = ' + str(time[i])
+            title = var_name + '    ' + time_label
         
 
         # Add a curve from each monitor file that contains this variable
@@ -418,9 +418,9 @@ for var_name in profile_names:
                 y = var[:]
                 
                 if debug:
-                    print ylabel
-                    print 'type(', var, ') = ', type(y)
-                    print var, ' = ', y
+                    print(ylabel)
+                    print('type(', var, ') = ', type(y))
+                    print(var, ' = ', y)
                 
                 # Get the grid variable from the dimension name    
                 # Also determine if this is a zone based grid, indicated by prefix "dm1_n', if so 
@@ -434,11 +434,11 @@ for var_name in profile_names:
                     grid = monitor.variables[grid_name][:]
                 else:
                     message = 'This dimension name -> ' + grid_name + ' does not correspond to a grid'
-                    print message
-                    raise Exception,  message
+                    print(message)
+                    raise Exception(message)
             
                 if debug:
-                    print 'grid = ', grid
+                    print('grid = ', grid)
                     
                 if single_file:
                     lbl = 't = ' + str(time[i])
@@ -467,4 +467,4 @@ plot_index(index, 1)
 close_file_XY_Curves_Fig()
 
 if debug:
-    print 'index = ', index
+    print('index = ', index)
