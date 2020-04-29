@@ -134,7 +134,7 @@ from get_IPS_config_parameters import get_global_param, get_component_param
 class genray(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
 
 #----------------------------------------------------------------------------------------------        
 # Utility functions
@@ -200,10 +200,10 @@ class genray(Component):
                 str_time_points = eval(time_expr)
             except:
                 message = 'error in getting EC_launcher config parameters ' + name
-                print message
+                print(message)
                 self.services.error(message)
-                raise Exception, message
-            print name, ' = ', str_time_points
+                raise Exception(message)
+            print(name, ' = ', str_time_points)
 
             # get alfasts for this launcher
             name = launcher_name + '_alfast'
@@ -212,10 +212,10 @@ class genray(Component):
                 str_alfast = eval(expr)
             except:
                 message = 'error in getting EC_launcher config parameters ' + name
-                print message
+                print(message)
                 self.services.error(message)
-                raise Exception, message
-            print name, ' = ', str_alfast
+                raise Exception(message)
+            print(name, ' = ', str_alfast)
  
             # get betasts for this launcher
             name = launcher_name + '_betast'
@@ -224,10 +224,10 @@ class genray(Component):
                 str_betast = eval(expr)
             except:
                 message = 'error in getting EC_launcher config parameters ' + name
-                print message
+                print(message)
                 self.services.error(message)
-                raise Exception, message
-            print name, ' = ', str_betast
+                raise Exception(message)
+            print(name, ' = ', str_betast)
 
             # get powtots for this launcher
             name = launcher_name + '_powtot_MW'
@@ -236,18 +236,18 @@ class genray(Component):
                 str_powtot_MW = eval(expr)
             except:
                 message = 'error in getting EC_launcher config parameters ' + name
-                print message
+                print(message)
                 self.services.error(message)
-                raise Exception, message
-            print name, ' = ', str_powtot_MW
+                raise Exception(message)
+            print(name, ' = ', str_powtot_MW)
                 
             # check that times and parameters have same length
             if len(str_time_points) != len(str_powtot_MW):
                 message = 'error: ', launcher_name, \
                 ' time points and parameters have different lengths' 
-                print message
+                print(message)
                 self.services.error(message)
-                raise Exception, message
+                raise Exception(message)
                 
             # Convert to float, convert powers to Watts, and append to full lists
             times_list.append([float(x) for x in str_time_points])
@@ -293,7 +293,7 @@ class genray(Component):
 # ------------------------------------------------------------------------------
 
     def init(self, timeStamp=0):
-        print 'genray.init() called'
+        print('genray.init() called')
 
         services = self.services
         global programming, times_parameters_list
@@ -326,47 +326,49 @@ class genray(Component):
         try:
             n_launchers = int(self.N_LAUNCHERS_PROGRAMMED)
         except:
-            print '\nNo launcher programming in config file'
+            print('\nNo launcher programming in config file')
 
         if n_launchers > 0: 
             programming = True
-            print 'Programming for ', n_launchers, ' launchers'
+            print('Programming for ', n_launchers, ' launchers')
             times_parameters_list = self.time_points_and_parameters(n_launchers)
         else:
-            print '\nUsing launcher parmeters in plasma state'
+            print('\nUsing launcher parmeters in plasma state')
 
 
     # Copy plasma state files over to working directory
         try:
           services.stage_plasma_state()
-        except Exception, e:
-          print 'Error in call to stage_plasma_state()' , e
+        except Exception as e:
+          print('Error in call to stage_plasma_state()' , e)
           services.error('Error in call to stage_plasma_state()')
-          raise Exception, 'Error in call to stage_plasma_state()'
+          raise Exception('Error in call to stage_plasma_state()')
         
     # Get input files  
         try:
           services.stage_input_files(INPUT_FILES)
-        except Exception, e:
-          print 'Error in call to stageInputFiles()' , e
+        except Exception as e:
+          print('Error in call to stageInputFiles()' , e)
           services.error('Error in call to stageInputFiles()')
-          raise Exception, 'Error in call to stageInputFiles()'
+          raise Exception('Error in call to stageInputFiles()')
             
     # Copy current plasma state file to generic name -> cur_state.cdf
         try:
             shutil.copyfile(cur_state_file, 'cur_state.cdf')
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s' % (cur_state_file, 'cur_state.cdf'), strerror
+        except IOError as xxx_todo_changeme:
+            (errno, strerror) = xxx_todo_changeme.args
+            print('Error copying file %s to %s' % (cur_state_file, 'cur_state.cdf'), strerror)
             services.error('Error copying cur_state_file -> cur_state.cdf')
-            raise Exception, 'Error copying cur_state_file -> cur_state.cdf'
+            raise Exception('Error copying cur_state_file -> cur_state.cdf')
 
     # Copy current eqdsk file to generic name -> eqdsk
         try:
             shutil.copyfile(cur_eqdsk_file, 'eqdsk')
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s' % (cur_eqdsk_file, 'eqdsk'), strerror
+        except IOError as xxx_todo_changeme1:
+            (errno, strerror) = xxx_todo_changeme1.args
+            print('Error copying file %s to %s' % (cur_eqdsk_file, 'eqdsk'), strerror)
             services.error('Error copying cur_eqdsk_file -> eqdsk')
-            raise Exception, 'Error copying cur_eqdsk_file -> eqdsk'
+            raise Exception('Error copying cur_eqdsk_file -> eqdsk')
 
         prepare_input_bin = os.path.join(self.BIN_PATH, 'prepare_genray_input')
 
@@ -377,22 +379,22 @@ class genray(Component):
         ps_add_nml = self.PS_ADD_NML
 
     # Call prepare_input - init
-        print 'rf_genray: calling prepare_input init'        
+        print('rf_genray: calling prepare_input init')        
         log_file = open('log_prepare_genray_input_init', 'w')
         mode = 'init'
         command = prepare_input_bin + ' ' + mode + ' ' +  rfmode + ' ' +\
         isource_string + ' ' + genraynml + ' ' + adj_read + ' ' + ps_add_nml
         
-        print 'running = ', command
+        print('running = ', command)
         services.send_portal_event(event_type = 'COMPONENT_EVENT',\
           event_comment =  command)
 
         retcode = subprocess.call(command.split(), stdout = log_file,\
                                   stderr = subprocess.STDOUT)
         if (retcode != 0):
-            print 'Error executing genray init ', prepare_input_bin
+            print('Error executing genray init ', prepare_input_bin)
             services.error('Error executing genray init')
-            raise Exception, 'Error executing genray init'
+            raise Exception('Error executing genray init')
 
     # If parameters are programmed from config file set parameters in genray.in
         if programming == True:
@@ -406,18 +408,19 @@ class genray(Component):
     # Copy generic cur_state.cdf -> current plasma state file
         try:
             shutil.copyfile('cur_state.cdf', cur_state_file)
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s' % ('cur_state.cdf', cur_state_file), strerror
+        except IOError as xxx_todo_changeme2:
+            (errno, strerror) = xxx_todo_changeme2.args
+            print('Error copying file %s to %s' % ('cur_state.cdf', cur_state_file), strerror)
             services.error('Error copying cur_state.cdf -> cur_state_file')
-            raise Exception, 'Error copying cur_state.cdf -> cur_state_file'
+            raise Exception('Error copying cur_state.cdf -> cur_state_file')
 
     # Update plasma state files in plasma_state work directory
         try:
           services.update_plasma_state()
-        except Exception, e:
-          print 'Error in call to update_plasma_state()', e
+        except Exception as e:
+          print('Error in call to update_plasma_state()', e)
           services.error('Error in call to update_plasma_state()')
-          raise Exception, 'Error in call to update_plasma_state()'
+          raise Exception('Error in call to update_plasma_state()')
      
     # Archive output files
     # N.B.  prepare_genray_input in init mode does not produce a complete set 
@@ -425,15 +428,15 @@ class genray(Component):
     #       To solve this we generate a dummy set of output files here with 
     #       system call 'touch'
         for file in self.OUTPUT_FILES.split():
-          print 'touching ', file
+          print('touching ', file)
           subprocess.call(['touch', file])
     # Now stage them      
         try:
           services.stage_output_files(timeStamp, self.OUTPUT_FILES)
-        except Exception, e:
-          print 'Error in call to stage_output_files()', e
+        except Exception as e:
+          print('Error in call to stage_output_files()', e)
           services.error('Error in call to stage_output_files()')
-          raise Exception, 'Error in call to stage_output_files()'
+          raise Exception('Error in call to stage_output_files()')
 
         return 0
 # ------------------------------------------------------------------------------
@@ -445,12 +448,12 @@ class genray(Component):
 # ------------------------------------------------------------------------------
         
     def restart(self, timeStamp):
-      print 'genray.restart() called'
-      print 'rf_genray_EC_p'
+      print('genray.restart() called')
+      print('rf_genray_EC_p')
 
       if (self.services == None) :
-         print 'Error in genray: step (): No services'
-         raise Exception, 'Error in genray: step (): No services'
+         print('Error in genray: step (): No services')
+         raise Exception('Error in genray: step (): No services')
       services = self.services
       global programming, times_parameters_list
 
@@ -459,19 +462,19 @@ class genray(Component):
             restart_root = services.get_config_param( 'RESTART_ROOT')
             restart_time = services.get_config_param( 'RESTART_TIME')
             services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
-      except Exception, e:
-            print 'Error in call to get_restart_files()' , e
+      except Exception as e:
+            print('Error in call to get_restart_files()' , e)
             services.error('genray: error in call to get_restart_files()')
-            raise Exception, 'genray: error in call to get_restart_files()'
+            raise Exception('genray: error in call to get_restart_files()')
 
     # Get global configuration parameters
       try:
             self.plasma_state_file = services.get_config_param( 'CURRENT_STATE')
             self.eqdsk_file = services.get_config_param( 'CURRENT_EQDSK')
       except:
-            print 'genray restart: error in getting config parameters'
+            print('genray restart: error in getting config parameters')
             services.error('genray restart: error in getting config parameters')
-            raise Exception, 'genray restart: error in getting config parameters'
+            raise Exception('genray restart: error in getting config parameters')
 
         # Get [rf_genray_EC] programming configuration parameters, if present
       n_launchers = 0
@@ -479,13 +482,13 @@ class genray(Component):
       try:
           n_launchers = int(self.N_LAUNCHERS_PROGRAMMED)
       except:
-          print '\nCould not get launcher programming from config file'
+          print('\nCould not get launcher programming from config file')
 
       if n_launchers > 0: 
           programming = True
           times_parameters_list = self.time_points_and_parameters(n_launchers)
       else:
-          print '\nUsing ECH launcher parmeters in plasma state'
+          print('\nUsing ECH launcher parmeters in plasma state')
 
 
       return 0
@@ -497,11 +500,11 @@ class genray(Component):
 # ------------------------------------------------------------------------------
 
     def step(self, timeStamp):
-        print 'genray.step() called'
+        print('genray.step() called')
 
         if (self.services == None) :
-           print 'Error in genray: step (): No services'
-           raise Exception, 'Error in genray: step (): No services'
+           print('Error in genray: step (): No services')
+           raise Exception('Error in genray: step (): No services')
         services = self.services
         global programming, times_parameters_list
 
@@ -512,10 +515,10 @@ class genray(Component):
     # Copy plasma state files over to working directory
         try:
           services.stage_plasma_state()
-        except Exception, e:
-          print 'Error in call to stage_plasma_state()' , e
+        except Exception as e:
+          print('Error in call to stage_plasma_state()' , e)
           services.error('Error in call to stage_plasma_state()')
-          raise Exception, 'Error in call to stage_plasma_state()'
+          raise Exception('Error in call to stage_plasma_state()')
 
         cur_state_file = services.get_config_param( 'CURRENT_STATE')
         cur_eqdsk_file = services.get_config_param( 'CURRENT_EQDSK')
@@ -523,17 +526,19 @@ class genray(Component):
     # Copy current plasma state file to generic name -> cur_state.cdf
         try:
             shutil.copyfile(cur_state_file, 'cur_state.cdf')
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s' % (cur_state_file, 'cur_state.cdf'), strerror
+        except IOError as xxx_todo_changeme3:
+            (errno, strerror) = xxx_todo_changeme3.args
+            print('Error copying file %s to %s' % (cur_state_file, 'cur_state.cdf'), strerror)
             raise
 
     # Copy current eqdsk file to generic name -> eqdsk
         try:
             shutil.copyfile(cur_eqdsk_file, 'eqdsk')
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s' % (cur_eqdsk_file, 'eqdsk'), strerror
+        except IOError as xxx_todo_changeme4:
+            (errno, strerror) = xxx_todo_changeme4.args
+            print('Error copying file %s to %s' % (cur_eqdsk_file, 'eqdsk'), strerror)
             services.error('Error copying cur_eqdsk_file -> eqdsk')
-            raise Exception, 'Error copying cur_eqdsk_file -> eqdsk'
+            raise Exception('Error copying cur_eqdsk_file -> eqdsk')
 
         rfmode = self.RFMODE
         isource_string = self.ISOURCE_STRING
@@ -544,13 +549,13 @@ class genray(Component):
 # Check if RF power is zero (or effectively zero).  If true don't run GENRAY just
 # run zero_RF_power fortran code
         zero_rf_power_threshold = 0.001
-        print 'cur_state_file = ', cur_state_file
+        print('cur_state_file = ', cur_state_file)
         ps = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
         if rfmode == 'EC':
             rf_power = ps.variables['power_ec'][:]
             ps.close()
             total_rf_power = sum(rf_power)
-            print 'Total EC power = ', total_rf_power
+            print('Total EC power = ', total_rf_power)
             zero_rf_power_bin_string = 'ZERO_EC_POWER_BIN'
 
         # If EC parameters are programmed from config file, set parameters in genray.in
@@ -566,12 +571,12 @@ class genray(Component):
             rf_power = ps.variables['power_lh'][:]
             ps.close()
             total_rf_power = sum(rf_power)
-            print 'Total LH power = ', total_rf_power
+            print('Total LH power = ', total_rf_power)
             zero_rf_power_bin_string = 'ZERO_LH_POWER_BIN'
 
         if rfmode not in ['EC', 'LH']:
             message = 'rf_genray.py: Unimplemented rfmode = ' + rfmode
-            print message
+            print(message)
             services.exception(message)
             raise
 
@@ -581,7 +586,7 @@ class genray(Component):
             if (retcode != 0):
                 message =  'Error executing ',zero_rf_power_bin
                 self.services.error(message)
-                raise Exception, message
+                raise Exception(message)
 
             # N.B. zero_RF_power does not produce a complete set of GENRAY output
             #      files.  This causes an error in stage_output_files().  To
@@ -593,51 +598,51 @@ class genray(Component):
     # Or actually run GENRAY
         if(total_rf_power > zero_rf_power_threshold):
             # Call prepare_input - step
-            print 'rf_genray step: calling prepare_input'
+            print('rf_genray step: calling prepare_input')
         
             log_file = open('log_prepare_genray_input_step', 'w')
             mode = 'step'
             command = prepare_input_bin + ' ' + mode + ' ' +  rfmode + ' ' +\
               isource_string + ' ' + genraynml + ' ' + adj_read + ' ' + ps_add_nml
 
-            print 'running = ', command
+            print('running = ', command)
             services.send_portal_event(event_type = 'COMPONENT_EVENT',\
                 event_comment =  command)
         
             retcode = subprocess.call(command.split(), stdout = log_file,\
                                       stderr = subprocess.STDOUT)
             if (retcode != 0):
-                print 'Error executing genray: ', prepare_input_bin
+                print('Error executing genray: ', prepare_input_bin)
                 services.error('Error executing genray prepare_input')
-                raise Exception, 'Error executing genray prepare_input'
+                raise Exception('Error executing genray prepare_input')
         
     #     Launch genray - N.B: Path to executable is in config parameter GENRAY_BIN
-            print 'rf_genray: launching genray'
+            print('rf_genray: launching genray')
             cwd = services.get_working_dir()
             task_id = services.launch_task(self.NPROC, cwd, self.GENRAY_BIN, logfile='log.genray')
             retcode = services.wait_task(task_id)
             if (retcode != 0):
-                print 'Error executing command: ', self.GENRAY_BIN
+                print('Error executing command: ', self.GENRAY_BIN)
                 services.error('Error executing genray')
-                raise Exception, 'Error executing genray'
+                raise Exception('Error executing genray')
 
         # Call process_output - step
-            print 'rf_genray step: calling process_output'
+            print('rf_genray step: calling process_output')
         
             log_file = open('log_process_genray_output', 'w')
             mode = 'step'
             command = process_output_bin + ' ' +  rfmode + ' ' + isource_string
 
-            print 'running', command
+            print('running', command)
             services.send_portal_event(event_type = 'COMPONENT_EVENT',\
                 event_comment =  command)
         
             retcode = subprocess.call(command.split(), stdout = log_file,\
                                       stderr = subprocess.STDOUT)                                  
             if (retcode != 0):
-                print 'Error executing genray init ', process_output_bin
+                print('Error executing genray init ', process_output_bin)
                 services.error('Error executing genray process_output')
-                raise Exception, 'Error executing genray process_output'
+                raise Exception('Error executing genray process_output')
         
     # Copy generic genray output to  partial plasma state file
         try:
@@ -646,19 +651,20 @@ class genray(Component):
             if rfmode == 'LH':
                 partial_file = cwd + '/RF_LH_' + cur_state_file
             shutil.copyfile('RF_GENRAY_PARTIAL_STATE', partial_file )
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s' % ('cur_state.cdf', cur_state_file), strerror
+        except IOError as xxx_todo_changeme5:
+            (errno, strerror) = xxx_todo_changeme5.args
+            print('Error copying file %s to %s' % ('cur_state.cdf', cur_state_file), strerror)
             raise
 
 
 # Merge partial plasma state containing updated EC data
         try:
             services.merge_current_plasma_state(partial_file, logfile='log.update_state')
-            print 'merged GENRAY plasma state data ', partial_file
-        except Exception, e:
-            print 'Error in call to merge_current_plasma_state(' , partial_file, ')'
+            print('merged GENRAY plasma state data ', partial_file)
+        except Exception as e:
+            print('Error in call to merge_current_plasma_state(' , partial_file, ')')
             self.services.error('Error in call to merge_current_plasma_state')
-            raise Exception, 'Error in call to merge_current_plasma_state'
+            raise Exception('Error in call to merge_current_plasma_state')
 
       # Update plasma state files in plasma_state work directory, but only cur_dql_file
       # if there is one. This way it will not overwrite the current partial plasma state that
@@ -676,10 +682,10 @@ class genray(Component):
     # Archive output files
         try:
           services.stage_output_files(timeStamp, self.OUTPUT_FILES)
-        except Exception, e:
-          print 'Error in call to stage_output_files()', e
+        except Exception as e:
+          print('Error in call to stage_output_files()', e)
           services.error('Error in call to stage_output_files()')
-          raise Exception, 'Error in call to stage_output_files()'
+          raise Exception('Error in call to stage_output_files()')
         
 #     rename the log file so that it is not appended next step
 #        os.rename('log.genray', this_logfile)
@@ -694,11 +700,11 @@ class genray(Component):
 # ------------------------------------------------------------------------------
 
     def checkpoint(self, timestamp=0.0):
-      print 'genray.checkpoint() called'
+      print('genray.checkpoint() called')
       if (self.services == None) :
-         print 'Error in genray: checkpoint(): No services'
+         print('Error in genray: checkpoint(): No services')
          services.error('Error in genray: checkpoint(): No services')
-         raise Exception, 'Error in genray: checkpoint(): No services'
+         raise Exception('Error in genray: checkpoint(): No services')
       services = self.services
       services.save_restart_files(timestamp, self.RESTART_FILES)
 
@@ -711,4 +717,4 @@ class genray(Component):
 # ------------------------------------------------------------------------------
 
     def finalize(self, timestamp=0.0):
-        print 'genray.finalize() called'
+        print('genray.finalize() called')
