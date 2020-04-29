@@ -217,7 +217,7 @@ from numpy import *
 
 
 monitor_comp_version = '5.3'
-debug = False
+debug = True
 include_density_based_profiles = True
 include_zone_based_profiles = False
 include_cumulative_profiles = True
