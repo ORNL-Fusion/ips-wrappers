@@ -93,6 +93,81 @@ def modify_variables_in_file(change_dict, filename):
             raise
     put_lines(filename, lines)
 
+#---------------------------------------------------------------------------------------
+# Edit fortran namelist file
+#---------------------------------------------------------------------------------------
+
+# This function allows changing the variable values in a fortran namelist file. 
+# Arguments:
+#
+# lines = List of character strings representing the of lines from the input namelist file.
+#    For example obtained from the get_lines() function above
+#
+# var = String containing the name of the variable to be changed.
+#
+# value = String or list of strings containing data to go into var.  The editing that can
+#     be done is pretty rudimentary.  If var is a vector then value must contain the whole
+#     new vector.  For example it doesn't support changing an array element or array 
+#     slice.
+#
+# separator = Optional argument specifying the separator between array elements.  The
+#     the default is comma
+#
+
+def edit_nml_file(lines, var, values, separator = ','):
+
+    # Find the line in the namelist containing 'var = ' and get rid of newline if present.
+    var_line_number = -1
+    for i in range(len(lines)):
+        line = lines[i]
+        if '=' in line:
+            split_line = line.split('=')
+            #print 'split_line = ', split_line
+            if (split_line[0].strip()).lower() == var.lower():
+                var_line_number = i
+
+    if var_line_number == -1:
+        message = 'Could not find variable ', var, ' in namelist lines'
+        print(message)
+        raise Exception(message)
+        
+    #print 'var_line_number = ', var_line_number
+    #print 'lines[var_line_number] = ', lines[var_line_number]
+    
+    if lines[var_line_number][-1] == '\n':
+        lines[var_line_number] = lines[var_line_number][:-1]
+
+    # Try to find out how many lines of text go with this variable.  So find the next
+    # line with either an '=' sign or a '/' signifying the end of the namelist group.
+    var_lines = 1
+    test = False
+    while test == False:
+        next_iine_no = var_line_number + var_lines
+        next_line = lines[next_iine_no]
+        if '=' in next_line:   # Could get fooled by = in a quoted string
+            test = True
+            eq_index = next_line.find('=') # so check if quote before =
+            single_quote_index = next_line.find("'")
+            if single_quote_index > -1 and single_quote_index < eq_index:
+                test = False
+            double_quote_index = next_line.find('"')
+            if double_quote_index > -1 and double_quote_index < eq_index:
+                test = False
+        elif next_line[-1] == '/':  # At end of line means end of group
+            test = True
+        else:
+            var_lines += 1
+            
+    # Insert line with new values at lines[i]
+    lines[var_line_number] = lines[var_line_number].split('=')[0] + ' = '
+    for val in values:
+        lines[var_line_number] = lines[var_line_number] + str(val) + ', '
+    lines[var_line_number] = lines[var_line_number] + '\n'
+    print('New ', lines[var_line_number])
+        
+    return lines[:var_line_number + 1] + lines[var_line_number + var_lines:]
+
+
 #_________________________________________________________________________________________________
 
 if __name__ == '__main__':
