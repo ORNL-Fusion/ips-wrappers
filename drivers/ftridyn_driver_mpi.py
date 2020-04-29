@@ -4,7 +4,7 @@ from  component import Component
 import os
 import numpy as np
 
-class ftridynDriver(Component):
+class ftridyn_mpi_driver(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
         print('Created %s' % (self.__class__))

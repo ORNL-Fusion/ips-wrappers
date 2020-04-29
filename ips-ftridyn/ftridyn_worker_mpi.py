@@ -34,24 +34,26 @@ class ftridynWorker(Component):
         d = defaultdict(list)
         if(int(self.GET_SPECIES)):
             specZs=[];
-        specList = np.loadtxt('speciesList.txt', dtype='float', skiprows=1)
-        print(( specList, len(specList)))
-        for i in range(len(specList)):
-            print(("0",specZs))
-            if ((specList[i,1] ==1.0) and (specList[i,3]>0.0)):
-                if(specList[i,1] == 1.0 and specList[i,2]==1.0):
-                    d['beam'].append('H')
+            specList = np.loadtxt('speciesList.txt', dtype='float', skiprows=1)
+            print(( specList, len(specList)))
+            for i in range(len(specList)):
+                print(("0",specZs))
+                if ((specList[i,1] ==1.0) and (specList[i,3]>0.0)):
+                    if(specList[i,1] == 1.0 and specList[i,2]==1.0):
+                        d['beam'].append('H')
+                        specZs.append(specList[i,1])
+                if(specList[i,1] == 1.0 and specList[i,2]==2.0):
+                    d['beam'].append('D')
                     specZs.append(specList[i,1])
-            if(specList[i,1] == 1.0 and specList[i,2]==2.0):
-                d['beam'].append('D')
-                specZs.append(specList[i,1])
-            if(specList[i,1] == 1.0 and specList[i,2]==3.0):
-                d['beam'].append('T')
-                specZs.append(specList[i,1])
-            elif((specList[i,1] not in specZs) and (specList[i,3]>0.0)):
-                specZs.append(specList[i,1])
-                d['beam'].append('He')
-        d['beam'].append(str(self.BEAM))
+                if(specList[i,1] == 1.0 and specList[i,2]==3.0):
+                    d['beam'].append('T')
+                    specZs.append(specList[i,1])
+                elif((specList[i,1] not in specZs) and (specList[i,3]>0.0)):
+                    specZs.append(specList[i,1])
+                    d['beam'].append('He')
+        else:            
+            d['beam'] = str(self.BEAM)
+
         d['target']=str(self.TARGET)
         d['Escale']=str(self.ESCALE)
         d['exe']=str(self.FTRIDYN_EXE)
@@ -87,7 +89,7 @@ class ftridynWorker(Component):
         
         task_id = self.services.launch_task(self.NPROC,
                                             self.services.get_working_dir(),
-                                            'python3',self.FTMPI,task_ppn=self.TASK_PPN,
+                                            'python3',self.FTMPI,task_ppn=self.FTMPI_PPN,
                                             logfile='ftmpi.log')
         
         #monitor task until complete
