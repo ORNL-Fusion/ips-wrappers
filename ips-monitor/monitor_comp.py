@@ -1771,7 +1771,7 @@ class monitor(Component):
             value = varDepsDict['ns'][:][0]
     
         if var == 'n_H(0)':
-            index = find_label_index_in_list(varDepsDict, 'S_name', 'H')
+            index = self.find_label_index_in_list(varDepsDict, 'S_name', 'H')
             value = varDepsDict['ns'][:][index][0]
     
         if var == 'n_H_ave':
