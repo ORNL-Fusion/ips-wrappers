@@ -130,7 +130,8 @@ class massive_serial_runner_init(Component):
 
 #-------------------------------------------------------------------------------
 #
-#
+#  Massive Serial Runner init Component create_input method. This takes an data
+#  base of inputs and formats the inscan file.
 #
 #-------------------------------------------------------------------------------
     def create_input(data_base):
@@ -156,7 +157,8 @@ class massive_serial_runner_init(Component):
 
 #-------------------------------------------------------------------------------
 #
-#
+#  Massive Serial Runner init Component set_header method. Sets the header for
+#  a key. This method assumes the key is a float.
 #
 #-------------------------------------------------------------------------------
     def set_header(key):
@@ -164,7 +166,9 @@ class massive_serial_runner_init(Component):
 
 #-------------------------------------------------------------------------------
 #
-#
+#  Massive Serial Runner init Component get_prefix method. This gets the prefix
+#  code for the header. Prefixes for the key are defined in the parameter
+#  dictionary.
 #
 #-------------------------------------------------------------------------------
     def get_prefix(key):
