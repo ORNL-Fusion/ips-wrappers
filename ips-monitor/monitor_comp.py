@@ -1621,6 +1621,8 @@ class monitor(Component):
     
         pickleDict = {'monitorVars' : monitorVars, 'ps_VarsList': ps_VarsList,\
                      'monitorDefinition':monitorDefinition}
+        if debug:
+            print(pickleDict)
         pickFile = open('monitor_restart', 'w')
         pickle.dump(pickleDict, pickFile)
         pickFile.close() 
