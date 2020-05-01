@@ -1624,7 +1624,7 @@ class monitor(Component):
         if debug:
             print(pickleDict)
         pickFile = open('monitor_restart', 'w')
-        pickle.dump(pickleDict, pickFile)
+#        pickle.dump(pickleDict, pickFile)
         pickFile.close() 
 
         return 0
