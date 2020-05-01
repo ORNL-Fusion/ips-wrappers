@@ -220,7 +220,7 @@ from numpy import *
 
 
 monitor_comp_version = '5.3'
-debug = True
+debug = False
 include_density_based_profiles = True
 include_zone_based_profiles = False
 include_cumulative_profiles = True
@@ -1620,8 +1620,7 @@ class monitor(Component):
     
         pickleDict = {'monitorVars' : monitorVars, 'ps_VarsList': ps_VarsList,\
                      'monitorDefinition':monitorDefinition}
-        if debug:
-            print(pickleDict)
+
         pickFile = open('monitor_restart', 'wb')
         pickle.dump(pickleDict, pickFile)
         pickFile.close() 
