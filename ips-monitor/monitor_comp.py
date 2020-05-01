@@ -1347,9 +1347,11 @@ class monitor(Component):
                             # that var depends on are in the labeled list.
                             ps_list = plasma_state.variables[dep][:]
                             if debug:
-                            	print('ps_list = ', ps_list)
+                                print('ps_list = ', ps_list)
 #                            str_list = [''.join(x).strip() for x in ps_list]
-                            str_list = [''.join(map(x, str)).strip() for x in ps_list]
+                            str_list = []
+                            [str_list.append(x[0].decode('UTF-8').strip()) for x in ps_list]
+
                             if debug:
                                 print('list variable = ', var, '  str_list = ', str_list)
                             for label in labeled_ps_quantities[var][1:]:
