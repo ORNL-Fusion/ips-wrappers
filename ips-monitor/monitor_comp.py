@@ -649,14 +649,14 @@ class monitor(Component):
 #         ps_list = varDepsDict[list_name][:]
 #         str_list = [''.join(x).strip() for x in ps_list]
 
-		ps_list = plasma_state.variables[dep][:]
-		if debug:
-			print('ps_list = ', ps_list)
-		str_list = []
-		[str_list.append(x[0].decode('UTF-8').strip()) for x in ps_list]
+        ps_list = plasma_state.variables[dep][:]
+        if debug:
+            print('ps_list = ', ps_list)
+        str_list = []
+        [str_list.append(x[0].decode('UTF-8').strip()) for x in ps_list]
 
-		if debug:
-			print('list variable = ', var, '  str_list = ', str_list)
+        if debug:
+            print('list variable = ', var, '  str_list = ', str_list)
 
         try:
             i = str_list.index(label)
