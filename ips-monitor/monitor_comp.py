@@ -164,6 +164,9 @@ change log:
 1/4/2018    Commented out reference to PORTAL run_id due to demise of SWIM PORTAL
 
 1/30/2018   Replacing defunct PORTAL run_id with datetime() to distinguish between runs
+
+4/30/2020   Converted to Python 3.  Involved 2to3, decode('UTF-8'), and write "wb" for pickle
+
 """
 
 # Note (4/2/12)
@@ -646,11 +649,7 @@ class monitor(Component):
         label = string = a name that may appear in the list
         Returns the index of label in the list if it's there.  Raises exception otherwise.
         '''
-#         ps_list = varDepsDict[list_name][:]
-#         str_list = [''.join(x).strip() for x in ps_list]
 
-#        ps_list = plasma_state.variables[list_name][:]
-        print('find_label_index_in_list list_name = ', list_name)
         ps_list = varDepsDict[list_name][:]
         if debug:
             print('ps_list = ', ps_list)
@@ -1089,7 +1088,7 @@ class monitor(Component):
 
         pickleDict = {'monitorVars' : monitorVars, 'ps_VarsList': ps_VarsList,\
                      'monitorDefinition':monitorDefinition}
-        pickFile = open('monitor_restart', 'r')
+        pickFile = open('monitor_restart', 'rb')
         pickleDict = pickle.load(pickFile)
         pickFile.close()
         monitorVars = pickleDict['monitorVars']
@@ -1623,7 +1622,7 @@ class monitor(Component):
                      'monitorDefinition':monitorDefinition}
         if debug:
             print(pickleDict)
-        pickFile = open('monitor_restart', 'w')
+        pickFile = open('monitor_restart', 'wb')
         pickle.dump(pickleDict, pickFile)
         pickFile.close() 
 
