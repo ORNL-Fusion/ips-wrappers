@@ -650,6 +650,7 @@ class monitor(Component):
 #         str_list = [''.join(x).strip() for x in ps_list]
 
 #        ps_list = plasma_state.variables[list_name][:]
+        print('find_label_index_in_list list_name = ', list_name)
         ps_list = varDepsDict[list_name][:]
         if debug:
             print('ps_list = ', ps_list)
