@@ -649,7 +649,7 @@ class monitor(Component):
 #         ps_list = varDepsDict[list_name][:]
 #         str_list = [''.join(x).strip() for x in ps_list]
 
-        ps_list = plasma_state.variables[dep][:]
+        ps_list = plasma_state.variables[list_name][:]
         if debug:
             print('ps_list = ', ps_list)
         str_list = []
