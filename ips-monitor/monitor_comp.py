@@ -646,8 +646,18 @@ class monitor(Component):
         label = string = a name that may appear in the list
         Returns the index of label in the list if it's there.  Raises exception otherwise.
         '''
-        ps_list = varDepsDict[list_name][:]
-        str_list = [''.join(x).strip() for x in ps_list]
+#         ps_list = varDepsDict[list_name][:]
+#         str_list = [''.join(x).strip() for x in ps_list]
+
+		ps_list = plasma_state.variables[dep][:]
+		if debug:
+			print('ps_list = ', ps_list)
+		str_list = []
+		[str_list.append(x[0].decode('UTF-8').strip()) for x in ps_list]
+
+		if debug:
+			print('list variable = ', var, '  str_list = ', str_list)
+
         try:
             i = str_list.index(label)
         except Exception as e:
@@ -1348,7 +1358,6 @@ class monitor(Component):
                             ps_list = plasma_state.variables[dep][:]
                             if debug:
                                 print('ps_list = ', ps_list)
-#                            str_list = [''.join(x).strip() for x in ps_list]
                             str_list = []
                             [str_list.append(x[0].decode('UTF-8').strip()) for x in ps_list]
 
