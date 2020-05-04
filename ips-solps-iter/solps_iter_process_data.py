@@ -73,7 +73,12 @@ class solps_iter_data_worker(Component):
         
         solps.make_solps_targ_file(gitr_geom_filename=dict['gitr_geometry'], \
                                    solps_geom  = dict['solps_geometry'], \
-                                   right_target_filename = dict['right_target']) 
+                                   right_target_filename = dict['right_target'])
+        
+        solps.make_solps_targ_file_txt(solps_geom = dict['solps_geometry'], \
+                b_field_file = dict['solps_equilibrium'], \
+                coords_file = 'right_target_coordinates.txt', \
+                right_target_filename= dict['right_target'])
         
         self.services.update_state()
 

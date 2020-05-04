@@ -53,7 +53,8 @@ class ftridynWorker(Component):
                     d['beam'].append('He')
         else:            
             d['beam'] = str(self.BEAM)
-
+                    
+        d['beam'].append(str(self.TARGET))
         d['target']=str(self.TARGET)
         d['Escale']=str(self.ESCALE)
         d['exe']=str(self.FTRIDYN_EXE)
