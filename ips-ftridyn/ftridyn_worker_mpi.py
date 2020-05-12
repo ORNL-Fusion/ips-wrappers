@@ -51,10 +51,11 @@ class ftridynWorker(Component):
                 elif((specList[i,1] not in specZs) and (specList[i,3]>0.0)):
                     specZs.append(specList[i,1])
                     d['beam'].append('He')
+            
+            d['beam'].append(str(self.TARGET))
         else:            
-            d['beam'] = str(self.BEAM)
-                    
-        d['beam'].append(str(self.TARGET))
+            d['beam'] = [str(i) for i in self.BEAM.split()]
+                   
         d['target']=str(self.TARGET)
         d['Escale']=str(self.ESCALE)
         d['exe']=str(self.FTRIDYN_EXE)

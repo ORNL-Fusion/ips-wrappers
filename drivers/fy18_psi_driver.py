@@ -47,9 +47,17 @@ class fy18_psi_driver(Component):
             self.services.exception('Error accessing worker component')
             raise
        
+        try:
+            gitr_worker_comp = self.services.get_port('GWORKER')
+        except Exception:
+            self.services.exception('Error accessing worker component')
+            raise
+        
         self.services.call(worker_comp, 'step', 0.0)
         self.services.call(hpic_worker_comp, 'step', 0.0)
         self.services.call(ft_worker_comp,'step',0.0)
+        self.services.call(gitr_worker_comp,'init',0.0)
+        self.services.call(gitr_worker_comp,'step',0.0)
         
         print('solps-iter-data-driver: finished worker call') 
         

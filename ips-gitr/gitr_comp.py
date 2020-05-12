@@ -30,9 +30,9 @@ class gitr_comp(Component):
             shutil.copyfile('ftridynSelf.nc','input/ftridynSelf.nc')
         if os.path.exists('profiles.nc'):
             shutil.copyfile('profiles.nc','input/profiles.nc')
-        hpic.plot_hpic_ieadDavide(solps_path=str(self.HPIC_SOLPS_FILE),HpicDataFolder=str(self.HPIC_DATA_DIR))
+        
         hpic.computeSputtYld()
-        bgFlux,flux_fracs = hpic.printBackgroundDist(rmrsPoints=locations_rmrs)
+        #bgFlux,flux_fracs = hpic.printBackgroundDist(rmrsPoints=locations_rmrs)
         fluxPerParticle = gitrParticleSource.particleSource(geomFile=str(self.GEOM_FILE),nParticles=int(self.NP)) 
         if os.path.exists('particleSource.nc'):
             shutil.copyfile('particleSource.nc','input/particleSource.nc')
