@@ -71,6 +71,9 @@ generic_ps_file_init.f90 to interact with the Plasma State. The fortran code is 
 in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true.
 
 """
+
+# Version 6.2 (Batchelor 4/25/2020) 2to3 convert
+
 # Version 6.2 (Batchelor 9/12/2019)
 # Eliminated import get_lines, put_lines, edit_nml_file, get_global_param, and
 # get_component_param.  Get these from /ips-wrappers/utilities.  Needs to be on 
@@ -173,7 +176,7 @@ component_dict = {'PLASMA':10, 'EQ':2, 'NBI':9, 'IC':6, 'LH':7, 'EC':2,\
 class generic_ps_init (Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
 
 # ------------------------------------------------------------------------------
 #
@@ -213,7 +216,7 @@ class generic_ps_init (Component):
         simulation_mode = get_global_param(self, services, 'SIMULATION_MODE')
 
         if simulation_mode == 'RESTART':
-            print 'generic_ps_init: RESTART'
+            print('generic_ps_init: RESTART')
         if simulation_mode not in ['RESTART', 'NORMAL']:
             logMsg = 'generic_ps_init: unrecoginzed SIMULATION_MODE: ' + mode
             self.services.error(logMsg)
@@ -255,7 +258,7 @@ class generic_ps_init (Component):
 
         else:
 
-            print 'generic_ps_init: simulation mode NORMAL'
+            print('generic_ps_init: simulation mode NORMAL')
             nml_lines = ['&ps_init_nml\n']
             ps_file_list = get_global_param(self, services, 'PLASMA_STATE_FILES').split(' ')
 
@@ -265,17 +268,17 @@ class generic_ps_init (Component):
 
         # Generate state files as dummies so framework will have a complete set
             for file in ps_file_list:
-                print 'touching plasma state file = ', file
+                print('touching plasma state file = ', file)
                 try:
                     subprocess.call(['touch', file])
                 except Exception:
-                    print 'No file ', file
+                    print('No file ', file)
             if init_mode in ['touch_only', 'TOUCH_ONLY'] :
                 # Update plasma state
                 try:
                     services.update_plasma_state()
-                except Exception, e:
-                    print 'Error in call to updatePlasmaState()', e
+                except Exception as e:
+                    print('Error in call to updatePlasmaState()', e)
                     raise
                 return
 
@@ -283,7 +286,7 @@ class generic_ps_init (Component):
                 services.stage_input_files(self.INPUT_FILES)
             except Exception:
                 message = 'generic_ps_init: Error in staging input files'
-                print message
+                print(message)
                 services.exception(message)
                 raise
 
@@ -306,7 +309,7 @@ class generic_ps_init (Component):
                     subprocess.call(['cp', INPUT_EQDSK_FILE, cur_eqdsk_file ])
                 except Exception:
                     message = 'generic_ps_init: Error copying INPUT_EQDSK_FILE to CURRENT_EQDSK'
-                    print message
+                    print(message)
                     services.exception(message)
                     raise
 
@@ -321,7 +324,7 @@ class generic_ps_init (Component):
                 except Exception:
                     message = 'generic_ps_init: Error in copying INPUT_STATE_FILE \
                         to current state file'
-                    print message
+                    print(message)
                     services.exception(message)
                     raise
 
@@ -334,10 +337,10 @@ class generic_ps_init (Component):
                     self.put_lines('generic_ps_init.nml', nml_lines)
 
                     init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
-                    print 'Executing ', init_bin
+                    print('Executing ', init_bin)
                     retcode = subprocess.call(init_bin)
                     if (retcode != 0):
-                       print 'Error executing ', init_bin
+                       print('Error executing ', init_bin)
                        raise
 
              # Copy INPUT_EQDSK_FILE, if there is one, to cur_eqdsk_file.
@@ -346,9 +349,9 @@ class generic_ps_init (Component):
                 if INPUT_EQDSK_FILE != ' ':
                     try:
                         subprocess.call(['cp', INPUT_EQDSK_FILE, cur_eqdsk_file ])
-                    except Exception, e:
+                    except Exception as e:
                         message =  'generic_ps_init: Error in copying input_eqdsk_file'
-                        print message
+                        print(message)
                         services.exception(message)
                         raise e
 
@@ -384,13 +387,13 @@ class generic_ps_init (Component):
                 	mdescr_components = [mdescr_components]
                 cclist = [0 for i in range(len(component_dict))]
                 for comp in mdescr_components:
-                    if comp not in component_dict.keys():
+                    if comp not in list(component_dict.keys()):
                         message = 'generic_ps_init: Unknown IPS component ' + comp
-                        print message
+                        print(message)
                         services.exception(message)
                         raise
                     cclist[component_dict[comp]-1] = 1
-                print 'cclist = ', cclist
+                print('cclist = ', cclist)
                 cclist_string = ''
                 for i in range(len(cclist)):
                     cclist_string = cclist_string + str(cclist[i]) + ', '
@@ -404,10 +407,10 @@ class generic_ps_init (Component):
                 put_lines('generic_ps_init.nml', nml_lines)
 
                 init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
-                print 'Executing ', init_bin
+                print('Executing ', init_bin)
                 retcode = subprocess.call(init_bin)
                 if (retcode != 0):
-                   print 'Error executing ', init_bin
+                   print('Error executing ', init_bin)
                    raise
 
 # ------------------------------------------------------------------------------
@@ -437,8 +440,8 @@ class generic_ps_init (Component):
         # Preserve initial plasma state file
         try:
             shutil.copyfile(cur_state_file, 'initial_PLASMA_STATE.nc')
-        except Exception, e:
-            print 'Copy to initial_PLASMA_STATE file failed ', e
+        except Exception as e:
+            print('Copy to initial_PLASMA_STATE file failed ', e)
 
         # For benefit of framework file handling generate dummy dakota.out file
         subprocess.call(['touch', 'dakota.out'])
@@ -446,8 +449,8 @@ class generic_ps_init (Component):
 # Update plasma state
         try:
             services.update_plasma_state()
-        except Exception, e:
-            print 'Error in call to updatePlasmaState()', e
+        except Exception as e:
+            print('Error in call to updatePlasmaState()', e)
             raise
 
 # "Archive" output files in history directory
@@ -461,7 +464,7 @@ class generic_ps_init (Component):
 # ------------------------------------------------------------------------------
 
     def checkpoint(self, timestamp=0.0):
-        print 'generic_ps_init.checkpoint() called'
+        print('generic_ps_init.checkpoint() called')
 
         services = self.services
         services.stage_plasma_state()
@@ -478,4 +481,4 @@ class generic_ps_init (Component):
 
 
     def finalize(self, timestamp=0.0):
-        print 'generic_ps_init.finalize() called'
+        print('generic_ps_init.finalize() called')

@@ -9,38 +9,42 @@ as an explicit argument.  e.g.
 X = config.get_component_param(self, services, 'X', optional=True, verbose=False)
 
 """
+# Working notes:
+# Batchelor 4/21/2020: Copied futurized component from dbb4 branch
+# 
 
 # Try to get config parameter - wraps the exception handling for get_config_parameter()
-def get_global_param(self, services, param_name, optional=False):
+def get_global_param(self, services, param_name, optional=False, verbose = True):
 
 	try:
 		value = services.get_config_param(param_name)
-		print param_name, ' = ', value
-	except Exception:
+		if verbose: print(param_name, ' = ', value)
+	except Exception :
 		if optional: 
-			print 'optional config parameter ', param_name, ' not found'
+			print('optional config parameter ', param_name, ' not found')
 			value = None
 		else:
 			message = 'required config parameter ', param_name, ' not found'
-			print message
+			print(message)
 			services.exception(message)
 			raise
 	
 	return value
 
 # Try to get component specific config parameter - wraps the exception handling
-def get_component_param(self, services, param_name, optional=False):
+def get_component_param(self, services, param_name, optional=False, verbose = True):
 
 	if hasattr(self, param_name):
 		value = getattr(self, param_name)
-		print param_name, ' = ', value
+		if verbose: print(param_name, ' = ', value)
 	elif optional:
-		print 'optional config parameter ', param_name, ' not found'
+		if verbose: print('optional config parameter ', param_name, ' not found')
 		value = None
 	else:
 		message = 'required component config parameter ', param_name, ' not found'
-		print message
+		print(message)
 		services.exception(message)
 		raise
 	
 	return value
+
