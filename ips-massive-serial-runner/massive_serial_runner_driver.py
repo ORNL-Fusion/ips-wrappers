@@ -29,6 +29,10 @@ class massive_serial_runner_driver(Component):
     def init(self, timeStamp=0.0):
         ScreenWriter.screen_output(self, 'verbose', 'massive_serial_runner_driver: init')
 
+#  Get config filenames.
+        self.current_state = self.services.get_config_param('CURRENT_MSR_STATE')
+        self.current_batch = self.services.get_config_param('CURRENT_MSR_BATCH')
+
 #  Initialize the massive serial runner.
         self.massive_serial_runner_port = self.services.get_port('MSR')
         self.wait = self.services.call_nonblocking(self.massive_serial_runner_port,
@@ -51,6 +55,11 @@ class massive_serial_runner_driver(Component):
         if os.path.exists(self.OUTPUT_FILES):
             os.remove(self.OUTPUT_FILES)
         self.services.stage_state()
+
+#  The super flow may need to rename the output file. Check if the current state
+#  matches the output file. If it does not rename the state so it can be staged.
+        if not os.path.exists(self.OUTPUT_FILES):
+            os.rename(self.current_state, self.OUTPUT_FILES)
 
 #-------------------------------------------------------------------------------
 #

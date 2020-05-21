@@ -14,52 +14,41 @@ import json
 
 #-------------------------------------------------------------------------------
 #
-#  Dictionary of fastran inputs and their prefix codes.
+#  Checks if the file needs to read, extracted, or rasies an exception if it
+#  couldn't be found.
 #
 #-------------------------------------------------------------------------------
-parameter = {
-    'r'           : {'prefix' : 'fastran_init', 'name' : 'r0'              },
-    'a'           : {'prefix' : 'fastran_init', 'name' : 'a0'              },
-    'kappa'       : {'prefix' : 'fastran_init', 'name' : 'kappa'           },
-    'delta'       : {'prefix' : 'fastran_init', 'name' : 'delta'           },
-    'bt'          : {'prefix' : 'fastran_init', 'name' : 'b0'              },
-    'ip'          : {'prefix' : 'fastran_init', 'name' : 'ip'              },
-    'zeffped'     : {'prefix' : 'fastran_init', 'name' : 'zeffped'         },
-    'm'           : {'prefix' : 'fastran_init', 'name' : 'm'               },
-    'xmid'        : {'prefix' : 'fastran_init', 'name' : 'xmid'            },
-    'xwid'        : {'prefix' : 'fastran_init', 'name' : 'xwid'            },
-    'ne0'         : {'prefix' : 'fastran_init', 'name' : 'ne0'             },
-    'neped'       : {'prefix' : 'fastran_init', 'name' : 'neped'           },
-    'nesep'       : {'prefix' : 'fastran_init', 'name' : 'nesep'           },
-    'alpha_ne'    : {'prefix' : 'fastran_init', 'name' : 'alpha_ne'        },
-    'beta_ne'     : {'prefix' : 'fastran_init', 'name' : 'beta_ne'         },
-    'te0'         : {'prefix' : 'fastran_init', 'name' : 'te0'             },
-    'teped'       : {'prefix' : 'fastran_init', 'name' : 'teped'           },
-    'tesep'       : {'prefix' : 'fastran_init', 'name' : 'tesep'           },
-    'alpha_te'    : {'prefix' : 'fastran_init', 'name' : 'alpha_te'        },
-    'beta_te'     : {'prefix' : 'fastran_init', 'name' : 'beta_te'         },
-    'ti0'         : {'prefix' : 'fastran_init', 'name' : 'ti0'             },
-    'tiped'       : {'prefix' : 'fastran_init', 'name' : 'tiped'           },
-    'tisep'       : {'prefix' : 'fastran_init', 'name' : 'tisep'           },
-    'alpha_ti'    : {'prefix' : 'fastran_init', 'name' : 'alpha_ti'        },
-    'beta_ti'     : {'prefix' : 'fastran_init', 'name' : 'beta_ti'         },
-    'omega0'      : {'prefix' : 'fastran_init', 'name' : 'omega0'          },
-    'alpha_omega' : {'prefix' : 'fastran_init', 'name' : 'alpha_omega'     },
-    'beta_omega'  : {'prefix' : 'fastran_init', 'name' : 'beta_omega'      },
-    'zeff0'       : {'prefix' : 'fastran_init', 'name' : 'zeff0'           },
-    'pe'          : {'prefix' : 'hcd_model'   , 'name' : 'pe'              },
-    'pi'          : {'prefix' : 'hcd_model'   , 'name' : 'pi'              },
-    'pinja_0'     : {'prefix' : 'nubeam'      , 'name' : 'pinja_0'         },
-    'pinja_1'     : {'prefix' : 'nubeam'      , 'name' : 'pinja_1'         },
-    'rfpow_0'     : {'prefix' : 'toray'       , 'name' : 'rfpow_0'         },
-    'thet_0'      : {'prefix' : 'toray'       , 'name' : 'rfpow_0'         },
-    'phai_0'      : {'prefix' : 'toray'       , 'name' : 'phai_0'          },
-    'thgrill_0'   : {'prefix' : 'genray'      , 'name' : 'grill_thgrill_0' },
-    'frqncy_0'    : {'prefix' : 'genray'      , 'name' : 'WAVE_FRQNCY_0'   },
-    'powers_0'    : {'prefix' : 'genray'      , 'name' : 'GRILL_POWERS_0'  },
-    'rho_jpeak'   : {'prefix' : 'modeleq_init', 'name' : 'RHO_JPEAK'       },
-    'jaxis'       : {'prefix' : 'modeleq_init', 'name' : 'JAXIS'           }
-}
+def write_or_extract(zip_ref, file):
+    if os.path.exists(file):
+        zip_ref.write(file)
+    elif file in zip_ref:
+        zip_ref.extract(file)
+    else:
+        raise Exception('Missing {} file.'.format(file))
+
+#-------------------------------------------------------------------------------
+#
+#  Create an inscan file. The first line contains the headers starting with the
+#  TIME_ID as a string type. The remaining headers are formated as the
+#  prefix:name:float. To data is filled in by looping through the size of the
+#  batch_size and pulling the correct index from the batch.
+#
+#-------------------------------------------------------------------------------
+def create_inscan(batch, inscan_config):
+    input = ':TIME_ID:str'
+
+    for k, v in inscan_config.items():
+        input = '{} {}'.format(input, '{}:{}:float'.format(v[0], v[1]))
+
+    batch_size = len(batch[batch.keys()[0]])
+    for i in range(batch_size):
+        input = '{}\n{:05d}'.format(input, i)
+
+        for k in inscan_config:
+            input = '{} {}'.format(input, batch[k][i])
+
+    with open('inscan', 'w') as inscan_ref:
+        inscan_ref.write(input)
 
 #-------------------------------------------------------------------------------
 #
@@ -73,7 +62,7 @@ class massive_serial_runner_init(Component):
 #-------------------------------------------------------------------------------
 #
 #  Massive Serial Runner init Component init method. This method prepairs the
-#  state.
+#  state and generates an inscan file.
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0):
@@ -82,7 +71,9 @@ class massive_serial_runner_init(Component):
 #  Get config filenames.
         current_batch = self.services.get_config_param('CURRENT_MSR_BATCH')
         current_state = self.services.get_config_param('CURRENT_MSR_STATE')
+        inscan_config = self.services.get_config_param('INSCAN_CONFIG')
         model_config = self.services.get_config_param('MODEL_CONFIG')
+        database_config = self.services.get_config_param('DATABASE_CONFIG')
 
 #  Remove old inputs.
         for file in os.listdir('.'):
@@ -91,23 +82,48 @@ class massive_serial_runner_init(Component):
 #  Stage input files and setup inital state.
         self.services.stage_input_files(self.INPUT_FILES)
 
-        if os.path.exists(current_batch):
-            if not os.path.exists(current_batch):
-                raise Exception('Model config {} not found.'.format(model_config))
-
-            with open(current_batch, 'r') as json_ref:
-                create_input(json.load(json_ref))
-
-#  Create plasma state from files. Input files can either be a new plasma state,
-#  training data file or both. If both file were staged, replace the training
-#  data input file. If the training data file is present flag the plasma state
-#  as needing to be updated.
+#  Load or create a masive serial runner zip state. And over write the model
+#  current batch, inscan config and model_config is they were staged as input
+#  files. Otherwise extract them from the zipstate.
         with ZipState.ZipState(current_state, 'a') as zip_ref:
-            if os.path.exists('inscan'):
+            write_or_extract(zip_ref, inscan_config)
+            write_or_extract(zip_ref, model_config)
+            write_or_extract(zip_ref, database_config)
+
+#  Load the inscan config file and model config file.
+            with open(current_inscan_config, 'r') as inscan_ref:
+                inscan_config = json.load(inscan_ref)
+            with open(model_config, 'r') as model_ref:
+                model_config = json.load(model_ref)
+
+#  Check that model inputs are valid and not constant.
+            for value in model_config['inputs']:
+                if value['name'] not in inscan_config['io']:
+                    raise Exception('Model input {} is not a valid parameter.'.format(value['name']))
+                if value['name'] in inscan_config['const']:
+                    raise Exception('Model input {} is not a valid scanable.'.format(value['name']))
+
+#  Check that the model inputs match the inscan inputs.
+            for key in inscan_config['scan'].keys()
+                if key not in model_config['inputs']:
+                    raise Exception('Model input {} is not a valid')
+
+#  Check if a new batch of data exists. If it does create the new inscan file
+#  and write into the
+            if os.path.exists(current_batch):
+                with open(current_batch, 'r') as json_ref:
+                    create_inscan(json.load(json_ref), inscan_config)
                 zip_ref.write('inscan')
-                zip_ref.write(current_batch)
-                zip_ref.write(model_config)
-                zip_ref.set_state(state='needs_update')
+            elif 'inscan' not in zip_ref:
+                task_wait = self.services.launch_task(self.NPROC,
+                                                      self.services.get_working_dir(),
+                                                      self.services.SAMPLE_EXE,
+                                                      '--input={}'format(inscan_config),
+                                                      '--output=inscan',
+                                                      '--nscan=32')
+                zip_ref.write('inscan')
+
+            zip_ref.set_state(state='needs_update')
 
         self.services.update_state()
 
@@ -127,49 +143,3 @@ class massive_serial_runner_init(Component):
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
         ScreenWriter.screen_output(self, 'verbose', 'massive_serial_runner_init: finalize')
-
-#-------------------------------------------------------------------------------
-#
-#  Massive Serial Runner init Component create_input method. This takes an data
-#  base of inputs and formats the inscan file.
-#
-#-------------------------------------------------------------------------------
-    def create_input(data_base):
-        keys = data_base.keys()
-
-        input = '{}'.format(set_header('TIME_ID'))
-
-        for key in keys:
-            input = '{} {}'.format(input, set_header(key))
-
-        input = '{}\n'.format(input)
-
-        for i in range(len(data_base[keys[0]])):
-            input = '{}{:05d}'.format(input, i)
-
-            for key in keys:
-                input = '{} {}'.format(input, data_base[key][i])
-
-            input = '{}\n'.format(input)
-
-        with open('inscan', 'w') as input_ref:
-            input_ref.write(input)
-
-#-------------------------------------------------------------------------------
-#
-#  Massive Serial Runner init Component set_header method. Sets the header for
-#  a key. This method assumes the key is a float.
-#
-#-------------------------------------------------------------------------------
-    def set_header(key):
-        return '{}:{}:{}'.format(get_prefix(key), key.toupper(), 'float')
-
-#-------------------------------------------------------------------------------
-#
-#  Massive Serial Runner init Component get_prefix method. This gets the prefix
-#  code for the header. Prefixes for the key are defined in the parameter
-#  dictionary.
-#
-#-------------------------------------------------------------------------------
-    def get_prefix(key):
-        return parameter[key.tolower()]['prefix']
