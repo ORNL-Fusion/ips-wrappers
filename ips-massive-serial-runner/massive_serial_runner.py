@@ -17,6 +17,15 @@ from omfit.classes.omfit_eqdsk import OMFITeqdsk
 
 #-------------------------------------------------------------------------------
 #
+#  Massive Serial Runner Component Constructor
+#
+#-------------------------------------------------------------------------------
+class massive_serial_runner(Component):
+    def __init__(self, services, config):
+        Component.__init__(self, services, config)
+
+#-------------------------------------------------------------------------------
+#
 #  Massive Serial Runner Component init method. This method prepairs the state.
 #
 #-------------------------------------------------------------------------------
@@ -24,9 +33,11 @@ from omfit.classes.omfit_eqdsk import OMFITeqdsk
         ScreenWriter.screen_output(self, 'verbose', 'massive_serial_runner: init')
 
 #  Get config filenames.
-        self.current_state = self.services.get_config_param('CURRENT_MSR_STATE')
-        self.database_config = self.services.get_config_param('DATABASE_CONFIG')
-        self.current_batch = self.services.get_config_param('CURRENT_MSR_BATCH')
+        if timeStamp = 0.0:
+            self.current_state = self.services.get_config_param('CURRENT_MSR_STATE')
+            self.database_config = self.services.get_config_param('DATABASE_CONFIG')
+            self.current_batch = self.services.get_config_param('CURRENT_BATCH')
+            self.msr_config = self.services.get_config_param('MSR_CONFIG')
 
 #  Stage state.
         self.services.stage_state()
@@ -34,6 +45,11 @@ from omfit.classes.omfit_eqdsk import OMFITeqdsk
 #  Unzip files from the state. Use mode a so files an be read and written to.
         self.zip_ref = ZipState.ZipState(self.current_state, 'a')
         self.zip_ref.extract('inscan')
+
+#  These file should never change so only extract them once.
+        if timeStamp = 0.0:
+            self.zip_ref.extract(self.database_config)
+            self.zip_ref.extract(self.msr_config)
 
 #-------------------------------------------------------------------------------
 #
@@ -47,20 +63,19 @@ from omfit.classes.omfit_eqdsk import OMFITeqdsk
 
 #  Run the massive serial workflow.
         if 'state' in flags and flags['state'] == 'needs_update':
-            with open(current_batch, 'r') as json_ref:
-                keys = json.load(json_ref).keys()
-
             task_wait = self.services.launch_task(self.NPROC,
                                                   self.services.get_working_dir(),
                                                   self.MASSIVE_SERIAL_EXE,
                                                   'inscan',
-                                                  self.fastran_config,
-                                                  MAX(self.NPROC, len(keys)),
-                                                  0)
+                                                  self.msr_config,
+                                                  MAX(self.NPROC,
+                                                      flags['batch_size']),
+                                                  0,
+                                                  logfile='massive_serial_{}.log'.format(timeStamp))
 
             database = 'db_{}.dat'.format(timeStamp)
 
-#  Collect results of the workflow.
+#  Collect results of the workflow into the database file.
             if (self.services.wait_task(task_wait)):
                 self.services.error('massive_serial_runner: step failed to run massive serial')
 
@@ -68,22 +83,26 @@ from omfit.classes.omfit_eqdsk import OMFITeqdsk
                                                   self.MAKE_DATABASE_EXE,
                                                   '--rdir=output',
                                                   '--input={}'.format(self.database_config),
-                                                  '--output={}'.format(database))
+                                                  '--output={}'.format(database),
+                                                  logfile='make_db_{}.log'.format(timeStamp))
             if (self.services.wait_task(task_wait)):
                 self.services.error('massive_serial_runner: step failed to make database')
 
+#  Save the new database entries.
+            self.services.stage_output_files(timeStamp, database)
+
+#  Convert the database file to json format.
             task_wait = self.services.launch_task(1, self.services.get_working_dir(),
                                                   self.TO_JSON_EXE,
                                                   '--input_file={}'.format(database),
-                                                  '--output_file={}'.format(self.current_batch))
+                                                  '--output_file={}'.format(self.current_batch),
+                                                  logfile='to_json_{}.log'.format(timeStamp))
 
             if (self.services.wait_task(task_wait)):
                 self.services.error('massive_serial_runner: step failed to make json')
 
             self.zip_ref.write(self.current_batch)
             self.zip_ref.set_state(state='updated')
-
-            self.services.stage_output_files(timeStamp, self.current_batch)
 
         else:
             self.zip_ref.write(state='unchanged')

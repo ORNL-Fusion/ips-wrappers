@@ -31,7 +31,6 @@ class massive_serial_runner_driver(Component):
 
 #  Get config filenames.
         self.current_state = self.services.get_config_param('CURRENT_MSR_STATE')
-        self.current_batch = self.services.get_config_param('CURRENT_MSR_BATCH')
 
 #  Initialize the massive serial runner.
         self.massive_serial_runner_port = self.services.get_port('MSR')
