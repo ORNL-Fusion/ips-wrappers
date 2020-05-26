@@ -11,9 +11,6 @@ from utilities import ScreenWriter
 from utilities import ZipState
 import os
 import json
-import numpy
-import netCDF4
-from omfit.classes.omfit_eqdsk import OMFITeqdsk
 
 #-------------------------------------------------------------------------------
 #
@@ -33,11 +30,11 @@ class massive_serial_runner(Component):
         ScreenWriter.screen_output(self, 'verbose', 'massive_serial_runner: init')
 
 #  Get config filenames.
-        if timeStamp = 0.0:
+        if timeStamp == 0.0:
             self.current_state = self.services.get_config_param('CURRENT_MSR_STATE')
             self.database_config = self.services.get_config_param('DATABASE_CONFIG')
             self.current_batch = self.services.get_config_param('CURRENT_BATCH')
-            self.msr_config = self.services.get_config_param('MSR_CONFIG')
+            self.msr_config = self.services.get_config_param('MSR_MODEL_CONFIG')
 
 #  Stage state.
         self.services.stage_state()
@@ -47,7 +44,7 @@ class massive_serial_runner(Component):
         self.zip_ref.extract('inscan')
 
 #  These file should never change so only extract them once.
-        if timeStamp = 0.0:
+        if timeStamp == 0.0:
             self.zip_ref.extract(self.database_config)
             self.zip_ref.extract(self.msr_config)
 
@@ -68,15 +65,16 @@ class massive_serial_runner(Component):
                                                   self.MASSIVE_SERIAL_EXE,
                                                   'inscan',
                                                   self.msr_config,
-                                                  MAX(self.NPROC,
-                                                      flags['batch_size']),
-                                                  0,
-                                                  logfile='massive_serial_{}.log'.format(timeStamp))
+                                                  '{}'.format(max(32,
+                                                              int(flags['batch_size']))),
+                                                  '0',
+                                                  logfile='massive_serial_{}.log'.format(timeStamp),
+                                                  whole_nodes=True)
 
             database = 'db_{}.dat'.format(timeStamp)
 
 #  Collect results of the workflow into the database file.
-            if (self.services.wait_task(task_wait)):
+            if self.services.wait_task(task_wait):
                 self.services.error('massive_serial_runner: step failed to run massive serial')
 
             task_wait = self.services.launch_task(1, self.services.get_working_dir(),
@@ -85,7 +83,7 @@ class massive_serial_runner(Component):
                                                   '--input={}'.format(self.database_config),
                                                   '--output={}'.format(database),
                                                   logfile='make_db_{}.log'.format(timeStamp))
-            if (self.services.wait_task(task_wait)):
+            if self.services.wait_task(task_wait):
                 self.services.error('massive_serial_runner: step failed to make database')
 
 #  Save the new database entries.
@@ -98,7 +96,7 @@ class massive_serial_runner(Component):
                                                   '--output_file={}'.format(self.current_batch),
                                                   logfile='to_json_{}.log'.format(timeStamp))
 
-            if (self.services.wait_task(task_wait)):
+            if self.services.wait_task(task_wait):
                 self.services.error('massive_serial_runner: step failed to make json')
 
             self.zip_ref.write(self.current_batch)

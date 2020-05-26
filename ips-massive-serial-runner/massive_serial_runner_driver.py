@@ -43,7 +43,7 @@ class massive_serial_runner_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        ScreenWriter.screen_output(self, 'verbose', 'massive_serial_runner_driver: step'
+        ScreenWriter.screen_output(self, 'verbose', 'massive_serial_runner_driver: step')
 
 #  Run massive serial runner.
         self.services.wait_call(self.wait, True)
@@ -65,6 +65,7 @@ class massive_serial_runner_driver(Component):
 #  Massive Serial Runner step method. This cleans up afterwards.
 #
 #-------------------------------------------------------------------------------
-    def finalize(self, timeStamp=0.0):
+
+def finalize(self, timeStamp=0.0):
         ScreenWriter.screen_output(self, 'verbose', 'massive_serial_runner_driver: finalize')
         self.services.call(self.massive_serial_runner_port, 'finalize', timeStamp)
