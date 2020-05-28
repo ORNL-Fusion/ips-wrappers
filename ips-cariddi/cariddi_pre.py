@@ -64,18 +64,23 @@ class xJ_matrix(carriddi_file):
 #  CONSTRUCTORS
 #*******************************************************************************
 #-------------------------------------------------------------------------------
-#  Initialize a K1 file.
+#  Initialize a xJ file.
 #
-#  param[inout] self      A k1 file instance.
+#  param[inout] self      A xJ file instance.
 #  param[in]    file_name Path to the file.
 #-------------------------------------------------------------------------------
     def __init__(self, file_name):
         super(xJ_matrix, self).__init__(file_name)
 
         idx = self.data.variables['is'][:].data[0,:].astype(int) - 1
-        self.ind3 = numpy.concatenate((       idx,
-                                       500  + idx,
-                                       1000 + idx))
+
+        idk = numpy.zeros_like(idx)
+        for i in range(len(idx)):
+            idk[i] = numpy.where(idx == i)[0]
+
+        self.ind3 = numpy.concatenate((       idk,
+                                       500  + idk,
+                                       1000 + idk))
 
 #-------------------------------------------------------------------------------
 #  Class to represent an K1 Matrix file.
@@ -94,14 +99,9 @@ class k1_matrix(carriddi_file):
     def __init__(self, file_name, indicies):
         super(k1_matrix, self).__init__(file_name)
 
-        self.x = self.data.variables['K1x'][:].data.transpose()
-        self.y = self.data.variables['K1y'][:].data.transpose()
-        self.z = self.data.variables['K1z'][:].data.transpose()
-
-        for n in range(numpy.shape(self.x)[0]):
-            self.x[n,:] = self.x[n, indicies]
-            self.y[n,:] = self.y[n, indicies]
-            self.z[n,:] = self.z[n, indicies]
+        self.x = self.data.variables['K1x'][:].data.transpose()[:,indicies]
+        self.y = self.data.variables['K1y'][:].data.transpose()[:,indicies]
+        self.z = self.data.variables['K1z'][:].data.transpose()[:,indicies]
 
 #-------------------------------------------------------------------------------
 #  Class to represent an K2 Matrix file.
@@ -140,10 +140,7 @@ class c1_matrix(carriddi_file):
     def __init__(self, file_name, indicies):
         super(c1_matrix, self).__init__(file_name)
 
-        self.c = self.data.variables['C1'][:].data.transpose()
-
-        for n in range(numpy.shape(self.c)[0]):
-            self.c[n,:] = self.c[n, indicies].transpose()
+        self.c = self.data.variables['C1'][:].data.transpose()[:,indicies]
 
 #-------------------------------------------------------------------------------
 #  Class to represent an C2 Matrix file.
@@ -292,12 +289,6 @@ class eddy:
     def load_eddy(cls, matrix_path):
         data = netCDF4.Dataset('{}/eddy.nc'.format(matrix_path), 'a')
 
-        dx = data.variables['dx']
-        dy = data.variables['dy']
-        dz = data.variables['dz']
-
-        c = data.variables['c']
-
         return cls(data,
                    data.variables['K1x'][:].data,
                    data.variables['K1y'][:].data,
@@ -307,7 +298,10 @@ class eddy:
                    data.variables['K2z'][:].data,
                    data.variables['C1'][:].data,
                    data.variables['C2'][:].data,
-                   dx, dy, dz, c)
+                   data.variables['dx'][:],
+                   data.variables['dy'][:],
+                   data.variables['dz'][:],
+                   data.variables['c'][:])
 
 #*******************************************************************************
 #  DESTRUCTORS
@@ -339,13 +333,13 @@ class eddy:
 #  FIXME: Size of this matrix is hard coded.
         I0A = numpy.zeros(484)
         if time_index != 0:
-            I0A = self.c1[:,:].data.dot(J0.k_vmec) + self.c[:].data
+            I0A = self.c1[:,:].dot(J0.k_vmec) + self.c[:].data
 
 #  Compute updated quantities.
-        self.c[:]  = -self.c1[:,:].data.dot(J0.k_vmec)  + self.c2[:,:].data.dot(I0A)
-        self.dx[:] = -self.k1x[:,:].data.dot(J0.k_vmec) + self.k2x[:,:].data.dot(I0A)
-        self.dy[:] = -self.k1y[:,:].data.dot(J0.k_vmec) + self.k2y[:,:].data.dot(I0A)
-        self.dz[:] = -self.k1z[:,:].data.dot(J0.k_vmec) + self.k2z[:,:].data.dot(I0A)
+        self.c[:]  = -self.c1[:,:].dot(J0.k_vmec)  + self.c2[:,:].dot(I0A)
+        self.dx[:] = -self.k1x[:,:].dot(J0.k_vmec) + self.k2x[:,:].dot(I0A)
+        self.dy[:] = -self.k1y[:,:].dot(J0.k_vmec) + self.k2y[:,:].dot(I0A)
+        self.dz[:] = -self.k1z[:,:].dot(J0.k_vmec) + self.k2z[:,:].dot(I0A)
 
 #-------------------------------------------------------------------------------
 #  Extract profile parameters for the time index.
@@ -388,6 +382,7 @@ def set_namelist_parameters(percorso, time_index, vmec_input):
         profile_changes['vmec__am_aux_f({})'.format(i + 1)] = p
 
     profile_changes['vmec__phiedge'] = phi_tot[-1]
+#  FIXME: Test convergence by decreasing the total toroidal current.
     profile_changes['vmec__curtor'] = I_tor[-1]
 
     with open(vmec_input, 'w') as json_ref:

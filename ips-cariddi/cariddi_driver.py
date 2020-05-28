@@ -116,8 +116,7 @@ class cariddi_driver(Component):
         self.services.call(self.eq_worker['driver'], 'step', float(time_stamp), force_update=True)
         self.get_updated_substate(time_stamp)
 
-#  Get the surface currents and generate then eddy.nc file. This also outputs
-#  the VMEC profiles for t = 1.0.
+#  Get the surface currents and generate then eddy.nc file.
         inner_loop_time_stamp = inner_loop_time_stamp + 1
         time_stamp = '{}.{}'.format(outter_loop_time_stamp,
                                     inner_loop_time_stamp)
@@ -125,7 +124,8 @@ class cariddi_driver(Component):
 
         self.services.call(self.cariddi_port, 'init', time_stamp)
         self.services.call(self.cariddi_port, 'step', time_stamp,
-                           task_list=['make_eddy'])
+                           task_list=['get_current',
+                                      'make_eddy'])
 
 #  Start outer loop. FIXME: Need a time counter for the outter loop.
 #--  Outer Loop  ---------------------------------------------------------------
@@ -167,7 +167,7 @@ class cariddi_driver(Component):
             delta_magnetic_axis = 100
 
 #--  Inner Loop  ---------------------------------------------------------------
-            while delta_magnetic_axis > 1.0E-9:
+            while delta_magnetic_axis > 1.0E-7:
                 inner_loop_time_stamp = inner_loop_time_stamp + 1
                 time_stamp = '{}.{}'.format(outter_loop_time_stamp,
                                             inner_loop_time_stamp)

@@ -111,7 +111,7 @@ class v3fit(Component):
                                                   self.services.get_working_dir(),
                                                   self.V3FIT_EXE,
                                                   self.current_v3fit_namelist,
-                                                  logfile = 'v3fit.log')
+                                                  logfile = 'v3fit_{}.log'.format(timeStamp))
 
 #  Update flags.
             self.zip_ref.set_state(state='updated')

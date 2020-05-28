@@ -92,7 +92,7 @@ class cariddi(Component):
                                                           self.services.get_working_dir(),
                                                           self.CARIDDI_BIN_EXE,
                                                           '--mgrid_file={}'.format(self.mgrid_file),
-                                                          logfile = 'cariddi_bin.log')
+                                                          logfile = 'cariddi_bin_zero_mgrid_{}.log'.format(timeStamp))
                     self.services.wait_task(task_wait)
                     continue
 
@@ -104,7 +104,7 @@ class cariddi(Component):
                                                           '--matrix_path={}'.format(self.cariddi_matrix_path),
                                                           '--time_index={}'.format(time_index),
                                                           '--vmec_input={}'.format(self.current_vmec_profile),
-                                                          logfile = 'cariddi_pre.log')
+                                                          logfile = 'cariddi_pre_get_profile_{}.log'.format(timeStamp))
                     self.services.wait_task(task_wait)
                     self.zip_ref.write(self.current_vmec_profile)
                     self.zip_ref.set_state(state='updated')
@@ -118,7 +118,7 @@ class cariddi(Component):
                                                           '--matrix_path={}'.format(self.cariddi_matrix_path),
                                                           '--time_index={}'.format(time_index),
                                                           '--vmec_current={}'.format(self.current_cariddi_input),
-                                                          logfile = 'cariddi_pre.log')
+                                                          logfile = 'cariddi_pre_make_eddy_{}.log'.format(timeStamp))
                     self.services.wait_task(task_wait)
                     continue
 
@@ -130,7 +130,7 @@ class cariddi(Component):
                                                           '-woutf={}'.format(self.current_wout_file),
                                                           '-surff={}'.format(self.current_cariddi_input),
                                                           '-para=-1',
-                                                          logfile = 'surface.log')
+                                                          logfile = 'surface_get_current_{}.log'.format(timeStamp))
                     self.services.wait_task(task_wait)
                     continue
 
@@ -142,7 +142,7 @@ class cariddi(Component):
                                                           '--mgrid_file={}'.format(self.mgrid_file),
                                                           '--matrix_path={}'.format(self.cariddi_matrix_path),
                                                           '--vmec_current={}'.format(self.current_cariddi_input),
-                                                          logfile = 'cariddi_bin.log')
+                                                          logfile = 'cariddi_bin_set_mgrid_{}.log'.format(timeStamp))
                     self.services.wait_task(task_wait)
                     continue
 

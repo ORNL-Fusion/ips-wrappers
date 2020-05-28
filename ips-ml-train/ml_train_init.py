@@ -29,8 +29,20 @@ class ml_train_init(Component):
         ScreenWriter.screen_output(self, 'verbose', 'ml_train_init: init')
 
 #  Get config filenames.
-        current_ml_train_data = self.services.get_config_param('ML_TRAIN_DATA')
-        current_ml_train_state = self.services.get_config_param('CURRENT_ML_TRAIN_STATE')
+        if timeStamp == 0.0:
+            self.current_ml_train_state = self.services.get_config_param('CURRENT_ML_TRAIN_STATE')
+
+            self.data_gen_config = self.services.get_config_param('DATA_GEN_CONFIG')
+            self.data_gen_state = self.services.get_config_param('DATA_GEN_STATE')
+
+            self.training_data = self.services.get_config_param('TRAINING_DATA')
+            self.new_data = self.services.get_config_param('NEW_DATA')
+            self.prediction_data = self.services.get_config_param('PREDICTION_DATA')
+
+            self.nn_model_config = self.services.get_config_param('NN_MODEL_CONFIG')
+            self.nn_model_matrix = self.services.get_config_param('NN_MODEL_MATRIX')
+            self.nn_model = self.services.get_config_param('NN_MODEL')
+            self.ml_train_args = self.services.get_config_param('ML_TRAIN_ARGS')
 
 #  Remove old inputs. Stage input files.
         for file in os.listdir('.'):
@@ -43,11 +55,20 @@ class ml_train_init(Component):
 #  training data file or both. If both file were staged, replace the training
 #  data input file. If the training data file is present flag the plasma state
 #  as needing to be updated.
-        with ZipState.ZipState(current_ml_train_state, 'a') as zip_ref:
-            if os.path.exists(current_ml_train_data):
-                os.rename(current_ml_train_data, 'training_data.json')
-                zip_ref.write('training_data.json')
-                zip_ref.set_state(state='needs_update')
+        with ZipState.ZipState(self.current_ml_train_state, 'a') as zip_ref:
+            zip_ref.write_or_check(self.data_gen_config)
+            zip_ref.write_or_check(self.data_gen_state)
+
+            zip_ref.write_optional(self.training_data)
+            zip_ref.write_optional(self.new_data)
+            zip_ref.write_optional(self.prediction_data)
+
+            zip_ref.write_or_check(self.nn_model_config)
+            zip_ref.write_optional(self.nn_model_matrix)
+            zip_ref.write_optional(self.nn_model)
+            zip_ref.write_or_check(self.nn_model_config)
+
+            zip_ref.set_state(state='needs_update')
 
         self.services.update_plasma_state()
 

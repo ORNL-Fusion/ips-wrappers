@@ -14,34 +14,6 @@ import json
 
 #-------------------------------------------------------------------------------
 #
-#  Checks if the file needs to written, extracted, or rasies an exception if it
-#  couldn't be found. This should be used when input files have been staged but
-#  still being used by this component.
-#
-#-------------------------------------------------------------------------------
-def write_or_extract(zip_ref, file):
-    if os.path.exists(file):
-        zip_ref.write(file)
-    elif file in zip_ref:
-        zip_ref.extract(file)
-    else:
-        raise Exception('Missing {} file.'.format(file))
-
-#-------------------------------------------------------------------------------
-#
-#  If the file can be written into the zip state file. If it cannot be check if
-#  a file already exists. This should be used when input files have been staged
-#  but not being used by this component.
-#
-#-------------------------------------------------------------------------------
-def write_or_check(zip_ref, file):
-    if os.path.exists(file):
-        zip_ref.write(file)
-    elif file not in zip_ref:
-        raise Exception('Missing {} file.'.format(file))
-
-#-------------------------------------------------------------------------------
-#
 #  Check if the file already exists. If it doesn't try to extract it from the
 #  zip state file.
 #
@@ -122,9 +94,9 @@ class massive_serial_runner_init(Component):
 #  extract it. These files are not expected to change so we only need todo this
 #  once.
             if timeStamp == 0.0:
-                write_or_extract(zip_ref, self.inscan_config_file)
-                write_or_check(zip_ref, database_config)
-                write_or_check(zip_ref, msr_model_config)
+                zip_ref.write_or_extract(self.inscan_config_file)
+                zip_ref.write_or_check(database_config)
+                zip_ref.write_or_check(msr_model_config)
 
                 #  Load the inscan config file once.
                 with open(self.inscan_config_file, 'r') as inscan_ref:

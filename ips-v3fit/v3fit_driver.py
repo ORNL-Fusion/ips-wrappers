@@ -155,8 +155,8 @@ class v3fit_driver(Component):
             os.remove(self.OUTPUT_FILES)
         self.services.stage_state()
         
-#  The super flow may need to rename the output file. Check is the current state
-#  matches if output file. If it does not rename the state so it can be staged.
+#  The super flow may need to rename the output file. Check if the current state
+#  matches the output file. If it does not rename the state so it can be staged.
         if not os.path.exists(self.OUTPUT_FILES):
             os.rename(self.current_v3fit_state, self.OUTPUT_FILES)
 

@@ -65,6 +65,63 @@ class ZipState(zipfile.ZipFile):
 
 #-------------------------------------------------------------------------------
 #
+#  ZipState write or extract files. If the file exists, write it to the file.
+#  Other check if the file is exists in the zipstate and extract it.
+#
+#-------------------------------------------------------------------------------
+    def write_or_extract(self, file):
+        if os.path.exists(file):
+            self.write(file)
+        elif file in zip_ref:
+            self.extract(file)
+        else:
+            raise Exception('Missing {} file.'.format(file))
+
+#-------------------------------------------------------------------------------
+#
+#  ZipState write or check files. If the file exists, write it to the file.
+#  Other check if the file is exists in the zipstate already.
+#
+#-------------------------------------------------------------------------------
+    def write_or_check(self, file):
+        if os.path.exists(file):
+            self.write(file)
+        elif file not in self:
+            raise Exception('Missing {} file'.format(file))
+
+#-------------------------------------------------------------------------------
+#
+#  ZipState write optionally. If the file exists, write it to the file.
+#
+#-------------------------------------------------------------------------------
+    def write_optional(self, file):
+        if os.path.exists(file):
+            self.write(file)
+
+#-------------------------------------------------------------------------------
+#
+#  ZipState extract optionally. If the file exists, extract it from the zip
+#  state.
+#
+#-------------------------------------------------------------------------------
+    def extract_or_check(self, file):
+        if file in self:
+            self.extract(file)
+        elif file not in self:
+            raise Exception('Missing {} file in ZipState'.format(file))
+
+#-------------------------------------------------------------------------------
+#
+#  ZipState extract optionally. If the file exists, extract it from the zip
+#  state.
+#
+#-------------------------------------------------------------------------------
+    def extract_optional(self, file):
+        if file in self:
+            self.extract(file)
+
+#-------------------------------------------------------------------------------
+#
 #  ZipState replace files. If a file is to be replaced, the entire zip file must
 #  be recreated since they are immutable. Create a temp zip file and copy all
 #  the contents. Then replace the existing file with the new one. Since this

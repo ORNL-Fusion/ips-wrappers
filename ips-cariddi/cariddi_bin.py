@@ -63,8 +63,8 @@ class vmec_current(carriddi_file):
 
 #  Need to use the proper ordering of indexes for the matrix multiplication.
         self.k_vmec = numpy.empty(3*len(k_x))
-        self.k_vmec[0:len(k_x)]            = k_x[:]
-        self.k_vmec[len(k_x):2*len(k_x)]   = k_y[:]
+        self.k_vmec[0         :  len(k_x)] = k_x[:]
+        self.k_vmec[  len(k_x):2*len(k_x)] = k_y[:]
         self.k_vmec[2*len(k_x):3*len(k_x)] = k_z[:]
 
 #-------------------------------------------------------------------------------

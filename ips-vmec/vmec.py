@@ -30,7 +30,7 @@ class vmec(Component):
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0, **keywords):
         ScreenWriter.screen_output(self, 'verbose', 'vmec: init')
-        
+
         self.current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
         self.current_wout_file = 'wout_{}.nc'.format(self.current_vmec_namelist.replace('input.','',1))
         current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
