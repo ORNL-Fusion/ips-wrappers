@@ -55,11 +55,12 @@ class ml_train_driver(Component):
 
 #  Get keys for the sub workflow.
                 keys = {
-                    'pwd'           : self.services.get_config_param('PWD'),
-                    'SIM_NAME'      : '{}_gen_data'.format(self.services.get_config_param('SIM_NAME')),
-                    'LOG_FILE'      : 'log.gen_data.warning',
-                    'OUTPUT_LEVEL'  : self.services.get_config_param('OUTPUT_LEVEL'),
-                    'CURRENT_BATCH' : self.new_data
+                    'pwd'              : self.services.get_config_param('PWD'),
+                    'SIM_NAME'         : '{}_gen_data'.format(self.services.get_config_param('SIM_NAME')),
+                    'LOG_FILE'         : 'log.gen_data.warning',
+                    'OUTPUT_LEVEL'     : self.services.get_config_param('OUTPUT_LEVEL'),
+                    'CURRENT_BATCH'    : self.new_data,
+                    'USER_INPUT_FILES' : self.data_gen_state
                 }
 
                 if os.path.exists('data_gen_input_dir'):
@@ -84,7 +85,7 @@ class ml_train_driver(Component):
             if os.path.exists(self.new_data) or self.training_data not in zip_ref:
                 self.services.call(self.data_gen['init'], 'init', timeStamp)
                 self.services.call(self.data_gen['driver'], 'init', timeStamp)
-                self.services.call(self.data_gen['driver'], 'driver', timeStamp)
+                self.services.call(self.data_gen['driver'], 'step', timeStamp)
 
                 self.services.stage_subflow_output_files()
 
@@ -163,7 +164,7 @@ class ml_train_driver(Component):
 #  ML Train Driver append data. Appends new data to the training data.
 #
 #-------------------------------------------------------------------------------
-    def append_data(self)
+    def append_data(self):
         with open(self.training_data, 'a') as training_data_ref:
             train = json.load(training_data_ref)
 

@@ -79,7 +79,7 @@ class ml_train(Component):
                                                       '--batch_size={}'.format(self.args['--batch_size']),
                                                       '--iterations={}'.format(self.args['--iterations']),
                                                       '--epochs={}'.format(self.args['--epochs']),
-                                                      '--param_covar_matrix={}'.format(self.nn_model_matrix)),
+                                                      '--param_covar_matrix={}'.format(self.nn_model_matrix),
                                                       '--validation_split={}'.format(self.args['--validation_split']),
                                                       logfile = 'ml_train_{}.log'.format(timeStamp))
             else:
@@ -97,7 +97,7 @@ class ml_train(Component):
                                                       '--epochs={}'.format(self.args['--epochs']),
                                                       '--num_layers={}'.format(self.args['--num_layers']),
                                                       '--layer_width={}'.format(self.args['--layer_width']),
-                                                      '--param_covar_matrix={}'.format(self.nn_model_matrix)),
+                                                      '--param_covar_matrix={}'.format(self.nn_model_matrix),
                                                       '--l1_factor={}'.format(self.args['--l1_factor']),
                                                       '--l2_factor={}'.format(self.args['--l2_factor']),
                                                       '--validation_split={}'.format(self.args['--validation_split']),
