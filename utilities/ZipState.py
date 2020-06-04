@@ -72,7 +72,7 @@ class ZipState(zipfile.ZipFile):
     def write_or_extract(self, file):
         if os.path.exists(file):
             self.write(file)
-        elif file in zip_ref:
+        elif file in self:
             self.extract(file)
         else:
             raise Exception('Missing {} file.'.format(file))
