@@ -66,7 +66,7 @@ class ml_train_init(Component):
             zip_ref.write_or_check(self.nn_model_config)
             zip_ref.write_optional(self.nn_model_matrix)
             zip_ref.write_optional(self.nn_model)
-            zip_ref.write_or_check(self.nn_model_config)
+            zip_ref.write_or_check(self.ml_train_args)
 
             zip_ref.set_state(state='needs_update')
 

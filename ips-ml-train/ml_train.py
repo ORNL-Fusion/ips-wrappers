@@ -9,6 +9,8 @@
 from component import Component
 from utilities import ScreenWriter
 from utilities import ZipState
+import json
+import os
 
 #-------------------------------------------------------------------------------
 #
@@ -42,7 +44,7 @@ class ml_train(Component):
 
 #  Unzip files from the current state. Use mode a so files can be read and
 #  written to.
-        self.zip_ref = ZipState.ZipState(current_ml_train_state, 'a')
+        self.zip_ref = ZipState.ZipState(self.current_ml_train_state, 'a')
 
         if timeStamp == 0.0:
             ml_train_args = self.services.get_config_param('ML_TRAIN_ARGS')
@@ -54,7 +56,7 @@ class ml_train(Component):
 
 
         self.zip_ref.extract_or_check(self.training_data)
-        self.extract_optional(self.nn_model)
+        self.zip_ref.extract_optional(self.nn_model)
 
 #-------------------------------------------------------------------------------
 #

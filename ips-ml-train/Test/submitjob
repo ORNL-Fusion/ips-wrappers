@@ -17,7 +17,7 @@
 
 #SBATCH -C haswell
 
-module load python cray-netcdf gcc tensorflow/gpu-2.2.0-py37
+module load cray-netcdf gcc tensorflow/gpu-2.2.0-py37
 
 export ATOM=/global/common/software/atom/cori
 export LOCAL=$ATOM/cesol
