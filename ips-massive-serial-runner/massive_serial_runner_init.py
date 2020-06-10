@@ -62,14 +62,9 @@ class massive_serial_runner_init(Component):
 #  as input files. Over the write inscan_config if it was staged. otherwise
 #  extract it. These files are not expected to change so we only need todo this
 #  once.
-            if timeStamp == 0.0:
-                zip_ref.write_or_extract(self.inscan_config_file)
-                zip_ref.write_or_check(database_config)
-                zip_ref.write_or_check(msr_model_config)
-
-                #  Load the inscan config file once.
-                with open(self.inscan_config_file, 'r') as inscan_ref:
-                    self.inscan_config = json.load(inscan_ref)
+            zip_ref.write_or_extract(self.inscan_config_file)
+            zip_ref.write_or_check(database_config)
+            zip_ref.write_or_check(msr_model_config)
 
 #  Batch files are optional. If a batch file was not staged as an input, extract
 #  if from the plasma state if one exists inside it.

@@ -70,7 +70,7 @@ class ml_train_init(Component):
 
             zip_ref.set_state(state='needs_update')
 
-        self.services.update_plasma_state()
+        self.services.update_state()
 
 #-------------------------------------------------------------------------------
 #
