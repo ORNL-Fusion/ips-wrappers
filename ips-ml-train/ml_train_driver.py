@@ -146,7 +146,7 @@ class ml_train_driver(Component):
 
                 if os.path.exists(self.training_data):
                     self.append_data()
-                else
+                else:
                     os.rename(self.new_data, self.training_data)
                 zip_ref.write(self.training_data)
 
