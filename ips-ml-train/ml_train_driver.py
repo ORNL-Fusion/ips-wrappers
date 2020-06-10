@@ -143,7 +143,12 @@ class ml_train_driver(Component):
 #  Append the new data to he training data.
                 with ZipState.ZipState(self.data_gen_state, 'r') as model_state_ref:
                     model_state_ref.extract_or_check(self.new_data)
-                self.append_data()
+
+                if os.path.exists(self.training_data):
+                    self.append_data()
+                else
+                    os.rename(self.new_data, self.training_data)
+                zip_ref.write(self.training_data)
 
                 zip_ref.set_state(state='needs_update')
                 flags = zip_ref.get_state()
@@ -166,13 +171,14 @@ class ml_train_driver(Component):
 #
 #-------------------------------------------------------------------------------
     def append_data(self):
-        with open(self.training_data, 'a') as training_data_ref:
+        with open(self.training_data, 'r') as training_data_ref:
             train = json.load(training_data_ref)
 
-            with open(self.new_data, 'r') as new_data_ref:
-                new = json.load(new_data_ref)
+        with open(self.new_data, 'r') as new_data_ref:
+            new = json.load(new_data_ref)
 
-            for k, v in train.items():
-                train[k] = v + new[k]
+        for k, v in train.items():
+            train[k] = v + new[k]
 
+        with open(self.training_data, 'w') as training_data_ref:
             json.dump(train, training_data_ref)
