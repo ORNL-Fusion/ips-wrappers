@@ -135,7 +135,7 @@ class ml_train_driver(Component):
                 shutil.copy2(self.data_gen_state, 'data_gen_input_dir')
                 self.services.call(self.data_gen['init'], 'init', timeStamp)
                 self.services.call(self.data_gen['driver'], 'init', timeStamp)
-                self.services.call(self.data_gen['driver'], 'driver', timeStamp)
+                self.services.call(self.data_gen['driver'], 'step', timeStamp)
 
                 self.services.stage_subflow_output_files()
 
