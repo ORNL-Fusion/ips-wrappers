@@ -12,6 +12,7 @@ from utilities import ScreenWriter
 from utilities import ZipState
 import os
 import shutil
+import json
 
 #-------------------------------------------------------------------------------
 #
