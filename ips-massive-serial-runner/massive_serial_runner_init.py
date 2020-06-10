@@ -24,37 +24,6 @@ def extract_if_needed(zip_ref, file):
 
 #-------------------------------------------------------------------------------
 #
-#  Create an inscan file. The first line contains the headers starting with the
-#  TIME_ID as a string type. The remaining headers are formated as the
-#  prefix:name:float. To data is filled in by looping through the size of the
-#  batch_size and pulling the correct index from the batch.
-#
-#-------------------------------------------------------------------------------
-def create_inscan(current_batch, inscan_config):
-    with open(current_batch, 'r') as json_ref:
-        batch = json.load(json_ref)
-
-    input = ':TIME_ID:str'
-
-    for k, v in inscan_config.items():
-        if k not in batch:
-            raise Exception('Missing {} in {} file'.format(k, current_batch))
-        input = '{} {}'.format(input, '{}:{}:float'.format(v[0], v[1]))
-
-    batch_size = len(batch[batch.keys()[0]])
-    for i in range(batch_size):
-        input = '{}\n{:05d}'.format(input, i)
-
-        for k in inscan_config:
-            input = '{} {}'.format(input, batch[k][i])
-
-    with open('inscan', 'w') as inscan_ref:
-        inscan_ref.write(input)
-
-    return batch_size
-
-#-------------------------------------------------------------------------------
-#
 #  Massive Serial Runner init Component Constructor
 #
 #-------------------------------------------------------------------------------
@@ -109,8 +78,14 @@ class massive_serial_runner_init(Component):
 #  Check if a new batch of data exists. If it does create the new inscan file
 #  and write into the
             if os.path.exists(self.current_batch):
-                zip_ref.set_state(batch_size=create_inscan(self.current_batch, self.inscan_config))
-                zip_ref.write('inscan')
+                task_wait = self.services.launch_task(self.NPROC,
+                                                      self.services.get_working_dir(),
+                                                      self.SAMPLE_EXE,
+                                                      '--input={}'.format(self.inscan_config_file),
+                                                      '--output=inscan',
+                                                      '--nscan=32',
+                                                      '--new={}'.format(self.current_batch),
+                                                      logfile='sample_{}.log'.format(timeStamp))
 
 #  There maybe an existing inscan file in the state file. If one doesn't exist,
 #  create a new one.
@@ -123,11 +98,14 @@ class massive_serial_runner_init(Component):
                                                       '--nscan=32',
                                                       logfile='sample_{}.log'.format(timeStamp))
 
-                if self.services.wait_task(task_wait):
-                    self.services.error('massive_serial_runner_init: failed to generate inscan sample')
+            else:
+                raise Expection('Expected inscan or {} file not found.'.format(self.current_batch))
 
-                zip_ref.write('inscan')
-                zip_ref.set_state(batch_size=32)
+            if self.services.wait_task(task_wait):
+                self.services.error('massive_serial_runner_init: failed to generate inscan sample')
+
+            zip_ref.write('inscan')
+            zip_ref.set_state(batch_size=32)
 
             zip_ref.set_state(state='needs_update')
 

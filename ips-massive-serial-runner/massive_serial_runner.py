@@ -67,7 +67,7 @@ class massive_serial_runner(Component):
                                                   self.msr_config,
                                                   '{}'.format(max(32,
                                                               int(flags['batch_size']))),
-                                                  '0',
+                                                  '1',
                                                   logfile='massive_serial_{}.log'.format(timeStamp),
                                                   whole_nodes=True)
 
