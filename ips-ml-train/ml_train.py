@@ -121,7 +121,9 @@ class ml_train(Component):
 
 #  NN models may be a directory. Zip them first before adding them to the state.
             with ZipState.ZipState('{}.zip'.format(self.nn_model), 'w') as nn_ref:
-                self.zip_ref.write(self.nn_model)
+                nn_ref.write(self.nn_model)
+            self.zip_ref.write('{}.zip'.format(self.nn_model))
+
             self.zip_ref.write(self.new_data)
             self.zip_ref.write(self.prediction_data)
             self.zip_ref.write(self.nn_model_matrix)
