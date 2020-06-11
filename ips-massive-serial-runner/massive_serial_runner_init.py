@@ -43,9 +43,9 @@ class massive_serial_runner_init(Component):
 #  Get config filenames.
         if timeStamp == 0.0:
             self.current_state = self.services.get_config_param('CURRENT_MSR_STATE')
-            msr_model_config = self.services.get_config_param('MSR_MODEL_CONFIG')
+            self.msr_model_config = self.services.get_config_param('MSR_MODEL_CONFIG')
             self.current_batch = self.services.get_config_param('CURRENT_BATCH')
-            database_config = self.services.get_config_param('DATABASE_CONFIG')
+            self.database_config = self.services.get_config_param('DATABASE_CONFIG')
             self.inscan_config_file = self.services.get_config_param('INSCAN_CONFIG')
 
 #  Remove old inputs.
@@ -63,8 +63,8 @@ class massive_serial_runner_init(Component):
 #  extract it. These files are not expected to change so we only need todo this
 #  once.
             zip_ref.write_or_extract(self.inscan_config_file)
-            zip_ref.write_or_check(database_config)
-            zip_ref.write_or_check(msr_model_config)
+            zip_ref.write_or_check(self.database_config)
+            zip_ref.write_or_check(self.msr_model_config)
 
 #  Batch files are optional. If a batch file was not staged as an input, extract
 #  if from the plasma state if one exists inside it.
