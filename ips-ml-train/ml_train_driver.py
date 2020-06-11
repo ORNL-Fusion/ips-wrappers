@@ -165,6 +165,9 @@ class ml_train_driver(Component):
         ScreenWriter.screen_output(self, 'verbose', 'ml_train_driver: finalize')
         self.services.call(self.ml_train_port, 'finalize', timeStamp)
 
+        self.services.call(self.data_gen['init'], 'finalize', timeStamp)
+        self.services.call(self.data_gen['driver'], 'finalize', timeStamp)
+
 #-------------------------------------------------------------------------------
 #
 #  ML Train Driver append data. Appends new data to the training data.
@@ -181,4 +184,4 @@ class ml_train_driver(Component):
             train[k] = v + new[k]
 
         with open(self.training_data, 'w') as training_data_ref:
-            json.dump(train, training_data_ref)
+            json.dump(train, training_data_ref, indent=4)
