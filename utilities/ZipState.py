@@ -62,9 +62,9 @@ class ZipState(zipfile.ZipFile):
 #  Write new files.
         for file in write_files:
             if os.path.isdir(file):
-                for root, dirs, file_items in os.walk(path):
+                for root, dirs, file_items in os.walk(file):
                     for item in file_items:
-                        super(ZipState, self).write(os.path.join(root, item))
+                        self.write(os.path.join(root, item))
             else:
                 super(ZipState, self).write(file)
 
@@ -135,7 +135,7 @@ class ZipState(zipfile.ZipFile):
 #-------------------------------------------------------------------------------
     def replace(self, files):
 #  Create a tempory zip file. Copy existing files and write replacement files.
-        with zipfile.ZipFile('temp.zip', 'w') as zip_ref:
+        with zipfile.ZipFile('_temp.zip', 'w') as zip_ref:
             for item in super(ZipState, self).infolist():
                 if item.filename in files:
                     zip_ref.write(item.filename)
@@ -147,7 +147,7 @@ class ZipState(zipfile.ZipFile):
         super(ZipState, self).close()
 
         os.remove(self.filename)
-        os.rename('temp.zip', self.filename)
+        os.rename('_temp.zip', self.filename)
 
         super(ZipState, self).__init__(self.filename, 'a')
 
@@ -172,7 +172,7 @@ class ZipState(zipfile.ZipFile):
                 
 #  A file exists in the zip archive. Copy all the contents unless it is in the
 #  replacement list.
-                with zipfile.ZipFile('temp.zip', 'w') as zip_ref:
+                with zipfile.ZipFile('_temp.zip', 'w') as zip_ref:
                     for item in super(ZipState, self).infolist():
                         if item.filename not in files:
                             zip_ref.writestr(item, super(ZipState, self).read(item.filename))
@@ -182,8 +182,8 @@ class ZipState(zipfile.ZipFile):
                 super(ZipState, self).close()
 
                 os.remove(self.filename)
-                os.rename('temp.zip', self.filename)
-    
+                os.rename('_temp.zip', self.filename)
+
                 super(ZipState, self).__init__(self.filename, 'a')
                 break
 
@@ -196,8 +196,8 @@ class ZipState(zipfile.ZipFile):
     def merge(self, files):
 #  Make a temporary sub directory and change the working directory to that
 #  directory.
-        os.mkdir('temp_dir')
-        os.chdir('temp_dir')
+        os.mkdir('_temp_dir')
+        os.chdir('_temp_dir')
 
         for file in files:
 #  Rename the new file to a temp and extract the old archive.
@@ -218,7 +218,7 @@ class ZipState(zipfile.ZipFile):
 
 #  Change working directory back to the parent.
         os.chdir('../')
-        shutil.rmtree('temp_dir')
+        shutil.rmtree('_temp_dir')
 
 #-------------------------------------------------------------------------------
 #
