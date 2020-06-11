@@ -56,7 +56,11 @@ class ml_train(Component):
 
 
         self.zip_ref.extract_or_check(self.training_data)
-        self.zip_ref.extract_optional(self.nn_model)
+        self.zip_ref.extract_optional('{}.zip'.format(self.nn_model))
+
+        if os.path.exists('{}.zip'.format(self.nn_model)):
+            with ZipState.ZipState('{}.zip'.format(self.nn_model), 'r') as nn_ref:
+                nn_ref.extractall()
 
 #-------------------------------------------------------------------------------
 #
@@ -115,7 +119,9 @@ class ml_train(Component):
             if (self.services.wait_task(task_wait) and False):
                 self.services.error('ml_train: step failed.')
 
-            self.zip_ref.write(self.nn_model)
+#  NN models may be a directory. Zip them first before adding them to the state.
+            with ZipState.ZipState('{}.zip'.format(self.nn_model), 'w') as nn_ref:
+                self.zip_ref.write(self.nn_model)
             self.zip_ref.write(self.new_data)
             self.zip_ref.write(self.prediction_data)
             self.zip_ref.write(self.nn_model_matrix)

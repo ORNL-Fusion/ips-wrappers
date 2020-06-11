@@ -61,7 +61,12 @@ class ZipState(zipfile.ZipFile):
 
 #  Write new files.
         for file in write_files:
-            super(ZipState, self).write(file)
+            if os.path.isdir(file):
+                for root, dirs, file_items in os.walk(path):
+                    for item in file_items:
+                        super(ZipState, self).write(os.path.join(root, item))
+            else:
+                super(ZipState, self).write(file)
 
 #-------------------------------------------------------------------------------
 #
