@@ -25,11 +25,12 @@ import getopt
 import shutil
 import string
 from component import Component
+from get_IPS_config_parameters import get_global_param, get_component_param
 
 class model_EPA(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
 
 # ------------------------------------------------------------------------------
 #
@@ -40,7 +41,7 @@ class model_EPA(Component):
 # ------------------------------------------------------------------------------
 
     def init(self, timeStamp):
-        print 'model_epa.init() called'
+        print('model_epa.init() called')
 
         services = self.services
 
@@ -48,13 +49,13 @@ class model_EPA(Component):
         self.services.stage_plasma_state()
 
         self.services.stage_input_files(self.INPUT_FILES)
-        cur_state_file = self.services.get_config_param('CURRENT_STATE')
-        next_state_file = self.services.get_config_param('NEXT_STATE')
-        cur_eqdsk_file = self.services.get_config_param('CURRENT_EQDSK')
+        cur_state_file = get_global_param(self, services,'CURRENT_STATE')
+        next_state_file = get_global_param(self, services,'NEXT_STATE')
+        cur_eqdsk_file = get_global_param(self, services,'CURRENT_EQDSK')
         
         model_epa_bin = os.path.join(self.BIN_PATH, 'model_epa_ps_file_init')
 
-        print 'Executing ', [model_epa_bin, cur_state_file, 'INIT', timeStamp]
+        print('Executing ', [model_epa_bin, cur_state_file, 'INIT', timeStamp])
         
         try:
             retcode = subprocess.call([model_epa_bin, cur_state_file, next_state_file,
@@ -80,7 +81,7 @@ class model_EPA(Component):
 # ------------------------------------------------------------------------------
 
     def step(self, timeStamp):
-        print 'model_epa.step() called'
+        print('model_epa.step() called')
 
         if (self.services == None) :
             services.error('Error in model_epa step (): No self.services')
@@ -91,9 +92,9 @@ class model_EPA(Component):
 # Copy current and prior state over to working directory
         services.stage_plasma_state()
 
-        cur_state_file = services.get_config_param('CURRENT_STATE')
-        next_state_file = self.services.get_config_param('NEXT_STATE')
-        cur_eqdsk_file = self.services.get_config_param('CURRENT_EQDSK')
+        cur_state_file = services.get_global_param('CURRENT_STATE')
+        next_state_file = get_global_param(self, services,'NEXT_STATE')
+        cur_eqdsk_file = get_global_param(self, services,'CURRENT_EQDSK')
 
 # Call model_epa
         model_epa_bin = os.path.join(self.BIN_PATH, 'model_epa_ps_file_init')
@@ -121,4 +122,4 @@ class model_EPA(Component):
 
 
     def finalize(self, timestamp=0.0):
-        print 'model_epa finalize() called'
+        print('model_epa finalize() called')

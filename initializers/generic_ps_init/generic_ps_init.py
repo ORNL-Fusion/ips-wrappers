@@ -41,9 +41,9 @@ the MHD equilibrium, so the equilibrium must be specified during further compone
 initializations
 
 INIT_MODE = mixed
-This combines existing_ps_file and mdescr modes.  This copies an existing input plasma state 
-file and optionally an existing eqdsk file to CURRENT_STATE and CURRENT_EQDSK as in 
-existing_ps_file mode.  But initializations from MDESCR_FILE and SCONFIG_FILE are also added.  
+This combines existing_ps_file and mdescr modes.  This copies an existing input plasma state
+file and optionally an existing eqdsk file to CURRENT_STATE and CURRENT_EQDSK as in
+existing_ps_file mode.  But initializations from MDESCR_FILE and SCONFIG_FILE are also added.
 Caution is advised.  If the MDESCR_FILE or SCONFIG_FILE attempts to reallocate any of the
 arrays already allocated in the CURRENT_STATE file a Plasma State error will occur.
 Therefore one must provide in the simulation config file a list of which components are
@@ -76,14 +76,14 @@ in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true
 
 # Version 6.2 (Batchelor 9/12/2019)
 # Eliminated import get_lines, put_lines, edit_nml_file, get_global_param, and
-# get_component_param.  Get these from /ips-wrappers/utilities.  Needs to be on 
+# get_component_param.  Get these from /ips-wrappers/utilities.  Needs to be on
 # PYTHON_PATH.
 
 # Version 6.1 (Batchelor 8/26/2019)
 # A new version of netCDF4 module has broken the syntax for setting variables.  The symptom
 # is that the variables don't get set and the plasma state file is not updated on close().
-# Fix is: 
-# plasma_state.variables['tokamak_id'] = tokamak -> 
+# Fix is:
+# plasma_state.variables['tokamak_id'] = tokamak ->
 #       plasma_state.variables['tokamak_id'][:] = stringtoarr(tokamak, 32)
 # plasma_state.variables['t0'] = t0 -> plasma_state.variables['t0'][0]
 # N.B. Apparently ps.variables['t0'].assignValue(float(tinit)) also works
@@ -315,7 +315,7 @@ class generic_ps_init (Component):
 
 # ------------------------------------------------------------------------------
             # init from existing plasma state file
-            if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE', 'mixed', 'MIXED'] :    
+            if init_mode in ['existing_ps_file', 'EXISTING_PS_FILE', 'mixed', 'MIXED'] :
                 INPUT_STATE_FILE = get_component_param(self, services, 'INPUT_STATE_FILE')
 
                 # Copy INPUT_STATE_FILE to current state file
@@ -376,11 +376,11 @@ class generic_ps_init (Component):
                    nml_lines.append(' input_eqdsk_file = \"' + INPUT_EQDSK_FILE + '\"\n')
 
 # ------------------------------------------------------------------------------
-			# For init_mode = mixed add input_state_file to namelist			
+			# For init_mode = mixed add input_state_file to namelist
             if init_mode in ['mixed', 'MIXED'] :
                 nml_lines.append(' input_state_file = \"' + INPUT_STATE_FILE + '\"\n')
-                
-				# Retrieve list of IPS components which are to be initialized from 
+
+				# Retrieve list of IPS components which are to be initialized from
 				# mdescr/sconfig and construct cclist for generic_ps_init.f90
                 mdescr_components =  get_component_param(self, services, 'MDESCR_COMPONENTS')
                 if isinstance(mdescr_components, type('str')):
@@ -397,10 +397,10 @@ class generic_ps_init (Component):
                 cclist_string = ''
                 for i in range(len(cclist)):
                     cclist_string = cclist_string + str(cclist[i]) + ', '
-                nml_lines.append(' cclist = \"' + cclist_string + '\"\n')
+                nml_lines.append(' cclist = ' + cclist_string + '\n')
 
 # ------------------------------------------------------------------------------
-            # For 'minimal', 'mdescr' and 'mixed' modes generate namelist for the fortran  
+            # For 'minimal', 'mdescr' and 'mixed' modes generate namelist for the fortran
             # helper code generic_ps_init.f90 and execute it
             if init_mode in ['minimal', 'MINIMAL', 'mdescr', 'MDESCR', 'mixed', 'MIXED'] :
                 nml_lines.append('/\n')
@@ -445,7 +445,7 @@ class generic_ps_init (Component):
 
         # For benefit of framework file handling generate dummy dakota.out file
         subprocess.call(['touch', 'dakota.out'])
-                      
+
 # Update plasma state
         try:
             services.update_plasma_state()
