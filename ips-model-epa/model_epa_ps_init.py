@@ -30,7 +30,7 @@ from get_IPS_config_parameters import get_global_param, get_component_param
 class model_EPA(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
 
 # ------------------------------------------------------------------------------
 #
@@ -41,7 +41,7 @@ class model_EPA(Component):
 # ------------------------------------------------------------------------------
 
     def init(self, timeStamp):
-        print 'model_epa.init() called'
+        print('model_epa.init() called')
 
         services = self.services
 
@@ -55,7 +55,7 @@ class model_EPA(Component):
         
         model_epa_bin = os.path.join(self.BIN_PATH, 'model_epa_ps_file_init')
 
-        print 'Executing ', [model_epa_bin, cur_state_file, 'INIT', timeStamp]
+        print('Executing ', [model_epa_bin, cur_state_file, 'INIT', timeStamp])
         
         try:
             retcode = subprocess.call([model_epa_bin, cur_state_file, next_state_file,
@@ -81,7 +81,7 @@ class model_EPA(Component):
 # ------------------------------------------------------------------------------
 
     def step(self, timeStamp):
-        print 'model_epa.step() called'
+        print('model_epa.step() called')
 
         if (self.services == None) :
             services.error('Error in model_epa step (): No self.services')
@@ -122,4 +122,4 @@ class model_EPA(Component):
 
 
     def finalize(self, timestamp=0.0):
-        print 'model_epa finalize() called'
+        print('model_epa finalize() called')
