@@ -1,5 +1,19 @@
 #! /usr/bin/env python
 
+# fp_cql3d_general.py, Version 0.5 Batchelor 3-2-2020
+# Added coding to read the cqlinput file, extract mnemonic <--> cql3d_output_file and
+# add that as a command line argument to process_cql3d_output.f90
+
+# fp_cql3d_general.py, Version 0.4 Batchelor 2-19-2020
+# Removed coding which did caused cql3d not to run if the LH power was zero.  Three good
+# reasons: 1) It was a latent bug since it only tested for zero power on LH, not the other
+# power sources. 2) The distribution can evolve with no power applied.  3) Whether or not
+# to evolve the distribution function when there is no power is a higher level logic that
+# should appear in the driver not in this component.  To implement this I would recommend 
+# using the event handling system.  This only affects STEP calls.
+# I also made the distribution function file, CURRENT_CQL, an optional command line argument
+# since some applications do not use the distribution function output. 
+
 # fp_cql3d_general.py, Version 0.3 Batchelor 1-22-2019
 # Added coding to make enorm and cur_ImChizz_inp_file (needed for TORLH/CQL3D iteration)
 # optional config config parameters
@@ -87,9 +101,8 @@ import getopt
 import shutil
 import string
 from  component import Component
-from Numeric import *                        #Use numpy instead?? BH
-from Scientific.IO.NetCDF import *           #Use scipy.io.netcdf implentation??  BH
 from get_IPS_config_parameters import get_global_param, get_component_param
+from simple_file_editing_functions import get_lines, lines_to_variable_dict
 
 class cql3d(Component):
     def __init__(self, services, config):
@@ -97,7 +110,7 @@ class cql3d(Component):
         self.firstTime  = True
         self.curTime = -1.0
         self.prevTime = -1.0
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
 
 # ------------------------------------------------------------------------------
 #
@@ -106,7 +119,7 @@ class cql3d(Component):
 # ------------------------------------------------------------------------------
 
     def init(self, timeStamp=0):
-        print 'cql3d.init() called'
+        print('cql3d.init() called')
 
         services = self.services
 
@@ -114,7 +127,7 @@ class cql3d(Component):
         cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
         cur_eqdsk_file = get_global_param(self, services, 'CURRENT_EQDSK')
         cur_dql_file = get_global_param(self, services, 'CURRENT_DQL')
-        cur_cql_file = get_global_param(self, services,'CURRENT_CQL')
+        cur_cql_file = get_global_param(self, services,'CURRENT_CQL', optional = True)
         cur_ImChizz_inp_file = get_global_param(self, services,'CURRENT_ImChizz_inp', optional = True)
 
     # Get component-specific configuration parameters. Note: Not all of these are
@@ -141,18 +154,18 @@ class cql3d(Component):
     # Copy plasma state files over to working directory
         try:
           services.stage_plasma_state()
-        except Exception, e:
-          print 'Error in call to stage_plasma_state()' , e
+        except Exception as e:
+          print('Error in call to stage_plasma_state()' , e)
           services.error('Error in call to stage_plasma_state()')
-          raise Exception, 'Error in call to stage_plasma_state()'
+          raise Exception('Error in call to stage_plasma_state()')
         
     # Get input files  
         try:
           services.stage_input_files(INPUT_FILES)
-        except Exception, e:
-          print 'Error in call to stageInputFiles()' , e
+        except Exception as e:
+          print('Error in call to stageInputFiles()' , e)
           services.error('Error in call to stageInputFiles()')
-          raise Exception, 'Error in call to stageInputFiles()'
+          raise Exception('Error in call to stageInputFiles()')
             
     # Copy cqlinput_<suffix> to generic file name -> cqlinput if there is
     # a suffix
@@ -161,7 +174,7 @@ class cql3d(Component):
           have_suffix = True
         # If suffix is not empty put an underscore in front of it.
           if len(suffix) > 0:
-              print 'cql3d INPUT_SUFFIX = ', suffix      
+              print('cql3d INPUT_SUFFIX = ', suffix)      
               suffix = '_' + suffix
         # If suffix is empty you don't really have one
           else:
@@ -173,41 +186,45 @@ class cql3d(Component):
         if have_suffix:      
           try:
               shutil.copyfile('cqlinput' + suffix, 'cqlinput')
-          except IOError, (errno, strerror):
-              print 'Error copying file %s to %s' % ('cqlinput' + suffix, 
-              'cqlinput', strerror)
+          except IOError as xxx_todo_changeme:
+              (errno, strerror) = xxx_todo_changeme.args
+              print('Error copying file %s to %s' % ('cqlinput' + suffix, 
+              'cqlinput', strerror))
               services.error('Error copying cqlinput_<suffix> -> cqlinput')
-              raise Exception, 'Error copying cqlinput_<suffix> -> cqlinput'
+              raise Exception('Error copying cqlinput_<suffix> -> cqlinput')
 
     # Copy current plasma state file to generic name -> cur_state.cdf
         try:
             shutil.copyfile(cur_state_file, 'cur_state.cdf')
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s' % (cur_state_file, 'cur_state.cdf', strerror)
+        except IOError as xxx_todo_changeme3:
+            (errno, strerror) = xxx_todo_changeme3.args
+            print('Error copying file %s to %s' % (cur_state_file, 'cur_state.cdf', strerror))
             services.error('Error copying cur_state_file -> cur_state.cdf')
-            raise Exception, 'Error copying cur_state_file -> cur_state.cdf'
+            raise Exception('Error copying cur_state_file -> cur_state.cdf')
 
     # Copy current eqdsk file to generic name -> eqdsk
         try:
             shutil.copyfile(cur_eqdsk_file, 'eqdsk')
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s' % (cur_eqdsk_file, 'eqdsk', strerror)
+        except IOError as xxx_todo_changeme4:
+            (errno, strerror) = xxx_todo_changeme4.args
+            print('Error copying file %s to %s' % (cur_eqdsk_file, 'eqdsk', strerror))
             services.error('Error copying cur_eqdsk_file -> eqdsk')
-            raise Exception, 'Error copying cur_eqdsk_file -> eqdsk'
+            raise Exception('Error copying cur_eqdsk_file -> eqdsk')
 
     # Copy current Dql file to generic name -> genray.nc
         if cur_dql_file != 'genray.nc':
             try:
                 shutil.copyfile(cur_dql_file, 'genray.nc')
-            except IOError, (errno, strerror):
-                print 'Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror)
+            except IOError as xxx_todo_changeme1:
+                (errno, strerror) = xxx_todo_changeme1.args
+                print('Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror))
                 services.error('Error copying cur_dql_file -> genray.nc')
-                raise Exception, 'Error copying cur_dql_file -> genray.nc'
+                raise Exception('Error copying cur_dql_file -> genray.nc')
 
         prepare_input_bin = os.path.join(self.BIN_PATH, 'prepare_cql3d_input')
 
     # Call prepare_input - init
-        print 'fp_cql3d: calling prepare_input init'        
+        print('fp_cql3d: calling prepare_input init')        
         log_file = open('log_prepare_cql3d_input_init', 'w')
         ips_mode = 'init'
 
@@ -232,32 +249,33 @@ class cql3d(Component):
         if arg_enorm != None:
             command = command  + ' ' + arg_enorm
         
-        print 'running = ', command
+        print('running = ', command)
         services.send_portal_event(event_type = 'COMPONENT_EVENT',\
           event_comment =  command)
         
         retcode = subprocess.call(command.split(), stdout = log_file,\
                                   stderr = subprocess.STDOUT)
         if (retcode != 0):
-            print 'Error executing cql3d init ', prepare_input_bin
+            print('Error executing cql3d init ', prepare_input_bin)
             services.error('Error executing cql3d init')
-            raise Exception, 'Error executing cql3d init'
+            raise Exception('Error executing cql3d init')
 
     # Copy generic cur_state.cdf -> current plasma state file
         try:
             shutil.copyfile('cur_state.cdf', cur_state_file)
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s' % ('cur_state.cdf', cur_state_file, strerror)
+        except IOError as xxx_todo_changeme5:
+            (errno, strerror) = xxx_todo_changeme5.args
+            print('Error copying file %s to %s' % ('cur_state.cdf', cur_state_file, strerror))
             services.error('Error copying cur_state.cdf -> cur_state_file')
-            raise Exception, 'Error copying cur_state.cdf -> cur_state_file'
+            raise Exception('Error copying cur_state.cdf -> cur_state_file')
 
     # Update plasma state files in plasma_state work directory
         try:
           services.update_plasma_state()
-        except Exception, e:
-          print 'Error in call to update_plasma_state()', e
+        except Exception as e:
+          print('Error in call to update_plasma_state()', e)
           services.error('Error in call to update_plasma_state()')
-          raise Exception, 'Error in call to update_plasma_state()'
+          raise Exception('Error in call to update_plasma_state()')
      
     # Archive output files
     # N.B.  prepare_cql3d_input in init mode does not produce a complete set 
@@ -265,15 +283,15 @@ class cql3d(Component):
     #       To solve this we generate a dummy set of output files here with 
     #       system call 'touch'
         for file in self.OUTPUT_FILES.split():
-          print 'touching ', file
+          print('touching ', file)
           subprocess.call(['touch', file])
     # Now stage them      
         try:
           services.stage_output_files(timeStamp, self.OUTPUT_FILES)
-        except Exception, e:
-          print 'Error in call to stage_output_files()', e
+        except Exception as e:
+          print('Error in call to stage_output_files()', e)
           services.error('Error in call to stage_output_files()')
-          raise Exception, 'Error in call to stage_output_files()'
+          raise Exception('Error in call to stage_output_files()')
 
         return 0
 # ------------------------------------------------------------------------------
@@ -285,13 +303,13 @@ class cql3d(Component):
 # ------------------------------------------------------------------------------
         
     def restart(self, timeStamp):
-      print 'cql3d.restart() called'
+      print('cql3d.restart() called')
 
       services = self.services
       if (services == None) :
-         print 'Error in cql3d: step (): No services'
+         print('Error in cql3d: step (): No services')
          services.error('Error in cql3d: step (): No services')
-         raise Exception, 'Error in cql3d: step (): No services'
+         raise Exception('Error in cql3d: step (): No services')
 
 #ptb&SS      services = self.services
 
@@ -300,19 +318,19 @@ class cql3d(Component):
             restart_root = services.get_config_param('RESTART_ROOT')
             restart_time = services.get_config_param('RESTART_TIME')
             services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
-      except Exception, e:
-            print 'Error in call to get_restart_files()' , e
+      except Exception as e:
+            print('Error in call to get_restart_files()' , e)
             services.error('cql3d: error in call to get_restart_files()')
-            raise Exception, 'cql3d: error in call to get_restart_files()'
+            raise Exception('cql3d: error in call to get_restart_files()')
 
     # Get global configuration parameters
       try:
             self.plasma_state_file = services.get_config_param('CURRENT_STATE')
             self.eqdsk_file = services.get_config_param('CURRENT_EQDSK')
       except:
-            print 'cql3d restart: error in getting config parameters'
+            print('cql3d restart: error in getting config parameters')
             services.error('cql3d restart: error in getting config parameters')
-            raise Exception, 'cql3d restart: error in getting config parameters'
+            raise Exception('cql3d restart: error in getting config parameters')
 
       return 0
         
@@ -323,11 +341,11 @@ class cql3d(Component):
 # ------------------------------------------------------------------------------
 
     def step(self, timeStamp):
-        print 'cql3d.step() called'
+        print('cql3d.step() called')
 
         if (self.services == None) :
-           print 'Error in cql3d: step (): No services'
-           raise Exception, 'Error in cql3d: step (): No services'
+           print('Error in cql3d: step (): No services')
+           raise Exception('Error in cql3d: step (): No services')
         services = self.services
 
         prepare_input_bin = os.path.join(self.BIN_PATH, 'prepare_cql3d_input')
@@ -337,178 +355,182 @@ class cql3d(Component):
     # Copy plasma state files over to working directory
         try:
           services.stage_plasma_state()
-        except Exception, e:
-          print 'Error in call to stage_plasma_state()' , e
+        except Exception as e:
+          print('Error in call to stage_plasma_state()' , e)
           services.error('Error in call to stage_plasma_state()')
-          raise Exception, 'Error in call to stage_plasma_state()'
+          raise Exception('Error in call to stage_plasma_state()')
 
     # Get global configuration parameters
         cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
         cur_eqdsk_file = get_global_param(self, services, 'CURRENT_EQDSK')
         cur_dql_file = get_global_param(self, services, 'CURRENT_DQL')
-        cur_cql_file = get_global_param(self, services,'CURRENT_CQL')
+        cur_cql_file = get_global_param(self, services,'CURRENT_CQL', optional = True)
         cur_ImChizz_inp_file = get_global_param(self, services,'CURRENT_ImChizz_inp', optional = True)
         
-        print 'CURRENT_CQL = ', cur_cql_file
     # Copy current plasma state file to generic name -> cur_state.cdf
         try:
             shutil.copyfile(cur_state_file, 'cur_state.cdf')
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s' % (cur_state_file, 'cur_state.cdf', strerror)
+        except IOError as xxx_todo_changeme6:
+            (errno, strerror) = xxx_todo_changeme6.args
+            print('Error copying file %s to %s' % (cur_state_file, 'cur_state.cdf', strerror))
             raise
 
     # Copy current eqdsk file to generic name -> eqdsk
         try:
             shutil.copyfile(cur_eqdsk_file, 'eqdsk')
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s' % (cur_eqdsk_file, 'eqdsk', strerror)
+        except IOError as xxx_todo_changeme7:
+            (errno, strerror) = xxx_todo_changeme7.args
+            print('Error copying file %s to %s' % (cur_eqdsk_file, 'eqdsk', strerror))
             services.error('Error copying cur_eqdsk_file -> eqdsk')
-            raise Exception, 'Error copying cur_eqdsk_file -> eqdsk'
+            raise Exception('Error copying cur_eqdsk_file -> eqdsk')
 
-# Check if LHRF power is zero (or effectively zero).  If true don't run Genray
-
-        ps = NetCDFFile(cur_state_file, 'r')
-        power_lh = ps.variables['power_lh'].getValue()[0]
-        ps.close()
-        print 'power = ', power_lh
-        if(power_lh > 1.0E-04):
-
-    # Copy current Dql file to generic name -> genray.nc
-          if cur_dql_file != 'genray.nc':
-            try:
-                shutil.copyfile(cur_dql_file, 'genray.nc')
-            except IOError, (errno, strerror):
-                print 'Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror)
-                services.error('Error copying cur_dql_file -> genray.nc')
-                raise Exception, 'Error copying cur_dql_file -> genray.nc'
-
-          cql3d_mode = get_component_param(self, services, 'CQL3D_MODE')
-          cql3d_output = get_component_param(self, services, 'CQL3D_OUTPUT')
-          cql3d_nml = get_component_param(self, services, 'CQL3D_NML')
-          nsteps_str = get_component_param(self, services, 'NSTEPS_STR')
-          deltat_str = get_component_param(self, services, 'DELTAT_STR')
-          ps_add_nml = get_component_param(self, services, 'PS_ADD_NML')
-          cur_ImChizz_inp_file = get_global_param(self, services,'CURRENT_ImChizz_inp', optional = True)
-
-        # enorm which is used here and in cql3d
-          arg_enorm = get_component_param(self, services, 'ENORM', optional = True)
-          
-    # Call prepare_input - step
-          print 'fp_cql3d step: calling prepare_input'
-          
-          log_file = open('log_prepare_cql3d_input_step', 'w')
-          ips_mode = 'step'
-
-    # ptb: Set restart depending on whether the distribution function file from cql3d
-    # already exist
-          restart = 'disabled'
-    #ptb&SS      if os.path.isfile('./cql3d.nc'): restart = 'enabled'
-    #ptb&SS      if os.path.isfile('./cql3d.nc'): shutil.copyfile('cql3d.nc','distrfunc.nc')
-
-          if os.path.isfile('./cql3d.nc'): 
-              if os.stat('./cql3d.nc')[6] != 0:
-                   restart = 'enabled'
-                   shutil.copyfile('cql3d.nc','distrfunc.nc')
-
-
-    # ptb: End of ptb hack
-
-    # ptb:    command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
-    # ptb:    cql3d_output + ' ' + cql3d_nml + ' ' + nsteps_str + ' ' + ps_add_nml
-          command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
-          cql3d_output + ' ' + cql3d_nml + ' ' + restart + ' ' + nsteps_str + ' ' +\
-          ' ' + deltat_str + ' ' + ps_add_nml
-          if arg_enorm != None:
-            command = command  + ' ' + arg_enorm
-
-          print 'running', command
-          services.send_portal_event(event_type = 'COMPONENT_EVENT',\
-              event_comment =  command)
-
-          retcode = subprocess.call(command.split(), stdout = log_file,\
-                                    stderr = subprocess.STDOUT)
-          if (retcode != 0):
-              print 'Error executing cql3d: ', prepare_input_bin
-              services.error('Error executing cql3d prepare_input')
-              raise Exception, 'Error executing cql3d prepare_input'
-        
-#     Launch cql3d - N.B: Path to executable is in config parameter CQL3D_BIN
-          print 'fp_cql3d: launching cql3d'
-# ptb: Need to first copy the cqlinput_new file to cqlinput
-          shutil.copyfile('cqlinput_new', 'cqlinput')
-          cwd = services.get_working_dir()
-          task_id = services.launch_task(self.NPROC, cwd, self.CQL3D_BIN, logfile='log.cql3d')
-          retcode = services.wait_task(task_id)
-          if (retcode != 0):
-              print 'Error executing command: ', cql3d_bin
-              services.error('Error executing cql3d')
-              raise Exception, 'Error executing cql3d'
-
-    # Call process_output - step
-          print 'fp_cql3d step: calling process_output'
-          
-          log_file = open('log_process_cql3d_output', 'w')
-          mode = 'step'
-# ptb;          command = process_output_bin + ' ' +  cql3d_mode
-          command = process_output_bin + ' ' +  cql3d_output    
-
-          print 'running', command
-          services.send_portal_event(event_type = 'COMPONENT_EVENT',\
-              event_comment =  command)
-
-          retcode = subprocess.call(command.split(), stdout = log_file,\
-                                    stderr = subprocess.STDOUT)                                  
-          if (retcode != 0):
-              print 'Error executing cql3d init ', process_output_bin
-              services.error('Error executing cql3d process_output')
-              raise Exception, 'Error executing cql3d process_output'
-        
-    # Copy generic cql3d partial plasma state file -> FP_CQL3D_cur_state_file  [correct??, BH]
+# Copy current Dql file to generic name -> genray.nc
+        if cur_dql_file != 'genray.nc':
           try:
-              partial_file = cwd + '/FP_CQL3D_' + cur_state_file
-              shutil.copyfile('FP_CQL3D_PARTIAL_STATE', partial_file )
-          except IOError, (errno, strerror):
-              print 'Error copying file %s to %s' % ('cur_state.cdf', cur_state_file, strerror)
-              raise
+            shutil.copyfile(cur_dql_file, 'genray.nc')
+          except IOError as xxx_todo_changeme2:
+            (errno, strerror) = xxx_todo_changeme2.args
+            print('Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror))
+            services.error('Error copying cur_dql_file -> genray.nc')
+            raise Exception('Error copying cur_dql_file -> genray.nc')
+
+        cql3d_mode = get_component_param(self, services, 'CQL3D_MODE')
+        cql3d_output = get_component_param(self, services, 'CQL3D_OUTPUT')
+        cql3d_nml = get_component_param(self, services, 'CQL3D_NML')
+        nsteps_str = get_component_param(self, services, 'NSTEPS_STR')
+        deltat_str = get_component_param(self, services, 'DELTAT_STR')
+        ps_add_nml = get_component_param(self, services, 'PS_ADD_NML')
+        cur_ImChizz_inp_file = get_global_param(self, services,'CURRENT_ImChizz_inp', optional = True)
+
+    # enorm which is used here and in cql3d
+        arg_enorm = get_component_param(self, services, 'ENORM', optional = True)
+      
+# Call prepare_input - step
+        print('fp_cql3d step: calling prepare_input')
+      
+        log_file = open('log_prepare_cql3d_input_step', 'w')
+        ips_mode = 'step'
+
+# ptb: Set restart depending on whether the distribution function file from cql3d
+# already exist
+        restart = 'disabled'
+#ptb&SS      if os.path.isfile('./cql3d.nc'): restart = 'enabled'
+#ptb&SS      if os.path.isfile('./cql3d.nc'): shutil.copyfile('cql3d.nc','distrfunc.nc')
+
+        if os.path.isfile('./cql3d.nc'): 
+          if os.stat('./cql3d.nc')[6] != 0:
+               restart = 'enabled'
+               shutil.copyfile('cql3d.nc','distrfunc.nc')
+
+
+# ptb: End of ptb hack
+
+# ptb:    command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
+# ptb:    cql3d_output + ' ' + cql3d_nml + ' ' + nsteps_str + ' ' + ps_add_nml
+        command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
+        cql3d_output + ' ' + cql3d_nml + ' ' + restart + ' ' + nsteps_str + ' ' +\
+        ' ' + deltat_str + ' ' + ps_add_nml
+        if arg_enorm != None:
+          command = command  + ' ' + arg_enorm
+
+        print('running', command)
+        services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+          event_comment =  command)
+
+        retcode = subprocess.call(command.split(), stdout = log_file,\
+                                stderr = subprocess.STDOUT)
+        if (retcode != 0):
+          print('Error executing cql3d: ', prepare_input_bin)
+          services.error('Error executing cql3d prepare_input')
+          raise Exception('Error executing cql3d prepare_input')
+    
+#     Launch cql3d - N.B: Path to executable is in config parameter CQL3D_BIN
+        print('fp_cql3d: launching cql3d')
+# ptb: Need to first copy the cqlinput_new file to cqlinput
+        shutil.copyfile('cqlinput_new', 'cqlinput')
+        cwd = services.get_working_dir()
+        task_id = services.launch_task(self.NPROC, cwd, self.CQL3D_BIN, logfile='log.cql3d')
+        retcode = services.wait_task(task_id)
+        if (retcode != 0):
+          print('Error executing command: ', cql3d_bin)
+          services.error('Error executing cql3d')
+          raise Exception('Error executing cql3d')
+
+# Call process_output - step
+        print('fp_cql3d step: calling process_output')
+
+# Get cql3d_output_file file name <--> mnemonic from cqlinput file
+        lines = get_lines('cqlinput')
+        cql3d_output_file = lines_to_variable_dict(lines)['MNEMONIC'].strip("'") + ".nc"
+        print('cql3d_output_file = ', cql3d_output_file)
+  
+        log_file = open('log_process_cql3d_output', 'w')
+        mode = 'step'
+# ptb;          command = process_output_bin + ' ' +  cql3d_mode
+        command = process_output_bin + ' ' +  cql3d_output+ ' ' +  cql3d_output_file   
+
+        print('running', command)
+        services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+          event_comment =  command)
+
+        retcode = subprocess.call(command.split(), stdout = log_file,\
+                                stderr = subprocess.STDOUT)                                  
+        if (retcode != 0):
+          print('Error executing cql3d init ', process_output_bin)
+          services.error('Error executing cql3d process_output')
+          raise Exception('Error executing cql3d process_output')
+    
+# Copy generic cql3d partial plasma state file -> FP_CQL3D_cur_state_file  [correct??, BH]
+        try:
+          partial_file = cwd + '/FP_CQL3D_' + cur_state_file
+          shutil.copyfile('FP_CQL3D_PARTIAL_STATE', partial_file )
+        except IOError as xxx_todo_changeme8:
+          (errno, strerror) = xxx_todo_changeme8.args
+          print('Error copying file %s to %s' % ('cur_state.cdf', cur_state_file, strerror))
+          raise
 
 
 # Merge partial plasma state containing updated CQL3D data  [BH]
-          try:
-             services.merge_current_plasma_state(partial_file, logfile='log.update_state')
-             print 'merged CQL3D plasma state data ', partial_file
-          except Exception, e:
-             print 'Error in call to merge_current_plasma_state(' , partial_file, ')'
-             self.services.error('Error in call to merge_current_plasma_state')
-             raise Exception, 'Error in call to merge_current_plasma_state'
+        try:
+           services.merge_current_plasma_state(partial_file, logfile='log.update_state')
+           print('merged CQL3D plasma state data ', partial_file)
+        except Exception as e:
+           print('Error in call to merge_current_plasma_state(' , partial_file, ')')
+           self.services.error('Error in call to merge_current_plasma_state')
+           raise Exception('Error in call to merge_current_plasma_state')
 
-      # Update plasma state files in plasma_state work directory, but only cur_cql_file
-      # and cur_ImChizz_inp_file if there is one.
-      # This way it can be used concurrently without overwriting other plasma state files.
-          print 'CURRENT_CQL = ', cur_cql_file
-          try:
-            if cur_ImChizz_inp_file != None:
-                services.update_plasma_state([cur_cql_file, cur_ImChizz_inp_file])
-            else:
-                services.update_plasma_state([cur_cql_file])
-          except Exception:
-            logMsg = 'Error in call to update_plasma_state()'
-            self.services.exception(logMsg)
-            raise 
-            
-    # Archive output files
-          try:
-            services.stage_output_files(timeStamp, self.OUTPUT_FILES)
-          except Exception, e:
-            print 'Error in call to stage_output_files()', e
-            services.error('Error in call to stage_output_files()')
-            raise Exception, 'Error in call to stage_output_files()'
+  # Update plasma state files in plasma_state work directory, but only cur_cql_file
+  # and cur_ImChizz_inp_file if there is one.
+  # This way it can be used concurrently without overwriting other plasma state files.
+        print('CURRENT_CQL = ', cur_cql_file, '  cur_ImChizz_inp_file = ', cur_ImChizz_inp_file)
+        try:
+           if cur_cql_file != None:
+             services.update_plasma_state([cur_cql_file])
+        except Exception:
+           logMsg = 'Error in call to update_plasma_state()'
+           self.services.exception(logMsg)
+           raise 
+        try:
+           if cur_ImChizz_inp_file != None:
+             services.update_plasma_state([cur_ImChizz_inp_file])
+        except Exception:
+           logMsg = 'Error in call to update_plasma_state()'
+           self.services.exception(logMsg)
+           raise 
         
+# Archive output files
+        try:
+           services.stage_output_files(timeStamp, self.OUTPUT_FILES)
+        except Exception as e:
+           print('Error in call to stage_output_files()', e)
+           services.error('Error in call to stage_output_files()')
+           raise Exception('Error in call to stage_output_files()')
+    
 #     rename the log file so that it is not appended next step
 #        os.rename('log.cql3d', this_logfile)
 
-          return 0
+        return 0
 
-        return 0  # return on "zero" LHRF power condition
 # ------------------------------------------------------------------------------
 #
 # checkpoint function
@@ -517,11 +539,11 @@ class cql3d(Component):
 # ------------------------------------------------------------------------------
 
     def checkpoint(self, timestamp=0.0):
-      print 'cql3d.checkpoint() called'
+      print('cql3d.checkpoint() called')
       if (self.services == None) :
-         print 'Error in cql3d: checkpoint(): No services'
+         print('Error in cql3d: checkpoint(): No services')
          services.error('Error in cql3d: checkpoint(): No services')
-         raise Exception, 'Error in cql3d: checkpoint(): No services'
+         raise Exception('Error in cql3d: checkpoint(): No services')
       services = self.services
       services.save_restart_files(timestamp, self.RESTART_FILES)
 
@@ -534,7 +556,7 @@ class cql3d(Component):
 # ------------------------------------------------------------------------------
 
     def finalize(self, timestamp=0.0):
-        print 'cql3d.finalize() called'
+        print('cql3d.finalize() called')
 
 # ------------------------------------------------------------------------------
 #
