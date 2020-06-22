@@ -101,8 +101,6 @@ import getopt
 import shutil
 import string
 from  component import Component
-#from Numeric import *                        #Use numpy instead?? BH
-#from Scientific.IO.NetCDF import *           #Use scipy.io.netcdf implentation??  BH
 from get_IPS_config_parameters import get_global_param, get_component_param
 from simple_file_editing_functions import get_lines, lines_to_variable_dict
 
