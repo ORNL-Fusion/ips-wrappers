@@ -385,7 +385,7 @@ class cql3d(Component):
             (errno, strerror) = xxx_todo_changeme8.args
             print('Error copying file %s to %s' % (cur_eqdsk_file, 'eqdsk', strerror))
             services.error('Error copying cur_eqdsk_file -> eqdsk')
-            raise Exception, 'Error copying cur_eqdsk_file -> eqdsk'
+            raise Exception('Error copying cur_eqdsk_file -> eqdsk')
 
     # Copy current Dql file to generic name -> genray.nc
           if cur_dql_file != 'genray.nc':
