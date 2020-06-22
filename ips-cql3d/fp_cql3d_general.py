@@ -1,5 +1,19 @@
 #! /usr/bin/env python
 
+# fp_cql3d_general.py, Version 0.5 Batchelor 3-2-2020
+# Added coding to read the cqlinput file, extract mnemonic <--> cql3d_output_file and
+# add that as a command line argument to process_cql3d_output.f90
+
+# fp_cql3d_general.py, Version 0.4 Batchelor 2-19-2020
+# Removed coding which did caused cql3d not to run if the LH power was zero.  Three good
+# reasons: 1) It was a latent bug since it only tested for zero power on LH, not the other
+# power sources. 2) The distribution can evolve with no power applied.  3) Whether or not
+# to evolve the distribution function when there is no power is a higher level logic that
+# should appear in the driver not in this component.  To implement this I would recommend 
+# using the event handling system.  This only affects STEP calls.
+# I also made the distribution function file, CURRENT_CQL, an optional command line argument
+# since some applications do not use the distribution function output. 
+
 # fp_cql3d_general.py, Version 0.3 Batchelor 1-22-2019
 # Added coding to make enorm and cur_ImChizz_inp_file (needed for TORLH/CQL3D iteration)
 # optional config config parameters
@@ -90,6 +104,7 @@ from  component import Component
 from Numeric import *                        #Use numpy instead?? BH
 from Scientific.IO.NetCDF import *           #Use scipy.io.netcdf implentation??  BH
 from get_IPS_config_parameters import get_global_param, get_component_param
+from simple_file_editing_functions import get_lines, lines_to_variable_dict
 
 class cql3d(Component):
     def __init__(self, services, config):
@@ -114,7 +129,7 @@ class cql3d(Component):
         cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
         cur_eqdsk_file = get_global_param(self, services, 'CURRENT_EQDSK')
         cur_dql_file = get_global_param(self, services, 'CURRENT_DQL')
-        cur_cql_file = get_global_param(self, services,'CURRENT_CQL')
+        cur_cql_file = get_global_param(self, services,'CURRENT_CQL', optional = True)
         cur_ImChizz_inp_file = get_global_param(self, services,'CURRENT_ImChizz_inp', optional = True)
 
     # Get component-specific configuration parameters. Note: Not all of these are
@@ -351,7 +366,7 @@ class cql3d(Component):
         cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
         cur_eqdsk_file = get_global_param(self, services, 'CURRENT_EQDSK')
         cur_dql_file = get_global_param(self, services, 'CURRENT_DQL')
-        cur_cql_file = get_global_param(self, services,'CURRENT_CQL')
+        cur_cql_file = get_global_param(self, services,'CURRENT_CQL', optional = True)
         cur_ImChizz_inp_file = get_global_param(self, services,'CURRENT_ImChizz_inp', optional = True)
         
         print('CURRENT_CQL = ', cur_cql_file)
@@ -370,15 +385,7 @@ class cql3d(Component):
             (errno, strerror) = xxx_todo_changeme8.args
             print('Error copying file %s to %s' % (cur_eqdsk_file, 'eqdsk', strerror))
             services.error('Error copying cur_eqdsk_file -> eqdsk')
-            raise Exception('Error copying cur_eqdsk_file -> eqdsk')
-
-# Check if LHRF power is zero (or effectively zero).  If true don't run Genray
-
-        ps = NetCDFFile(cur_state_file, 'r')
-        power_lh = ps.variables['power_lh'].getValue()[0]
-        ps.close()
-        print('power = ', power_lh)
-        if(power_lh > 1.0E-04):
+            raise Exception, 'Error copying cur_eqdsk_file -> eqdsk'
 
     # Copy current Dql file to generic name -> genray.nc
           if cur_dql_file != 'genray.nc':
