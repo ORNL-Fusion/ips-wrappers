@@ -1,14 +1,14 @@
 #!/bin/bash -l
 
-#SBATCH -p debug
+##SBATCH -p debug
 
-##SBATCH -p regular
+#SBATCH -p regular
 ##SBATCH --qos=premium
 
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=64
-#SBATCH -t 00:30:00
+#SBATCH -t 48:00:00
 #SBATCH -C haswell
 
 #SBATCH -J ips_fastran

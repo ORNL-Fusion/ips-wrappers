@@ -117,7 +117,7 @@ class ml_train_driver(Component):
             flags = zip_ref.get_state()
 
 #  Adaptive training loop. Hard code the number of iterations for now.
-        for i in range(10):
+        for i in range(100):
 
 #  Train the NN model.
             self.services.call(self.ml_train_port, 'init', timeStamp)

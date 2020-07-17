@@ -82,6 +82,9 @@ class massive_serial_runner_init(Component):
                                                       '--new={}'.format(self.current_batch),
                                                       logfile='sample_{}.log'.format(timeStamp))
 
+                if self.services.wait_task(task_wait):
+                    self.services.error('massive_serial_runner_init: failed to generate inscan sample')
+
 #  There maybe an existing inscan file in the state file. If one doesn't exist,
 #  create a new one.
             elif 'inscan' not in zip_ref:
@@ -93,11 +96,11 @@ class massive_serial_runner_init(Component):
                                                       '--nscan=32',
                                                       logfile='sample_{}.log'.format(timeStamp))
 
+                if self.services.wait_task(task_wait):
+                    self.services.error('massive_serial_runner_init: failed to generate inscan sample')
+
             else:
                 raise Expection('Expected inscan or {} file not found.'.format(self.current_batch))
-
-            if self.services.wait_task(task_wait):
-                self.services.error('massive_serial_runner_init: failed to generate inscan sample')
 
             zip_ref.write('inscan')
             zip_ref.set_state(batch_size=32)
