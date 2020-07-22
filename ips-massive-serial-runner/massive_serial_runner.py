@@ -36,6 +36,9 @@ class massive_serial_runner(Component):
             self.current_batch = self.services.get_config_param('CURRENT_BATCH')
             self.msr_config = self.services.get_config_param('MSR_MODEL_CONFIG')
 
+            self.constraint_path = self.services.get_config_param('MODULE_PATH')
+            self.constraint_name = self.services.get_config_param('MODULE_NAME')
+
 #  Stage state.
         self.services.stage_state()
 
@@ -94,6 +97,8 @@ class massive_serial_runner(Component):
                                                   self.TO_JSON_EXE,
                                                   '--input_file={}'.format(database),
                                                   '--output_file={}'.format(self.current_batch),
+                                                  '--module_path={}'.format(self.constraint_path),
+                                                  '--module={}'.format(self.constraint_name),
                                                   logfile='to_json_{}.log'.format(timeStamp))
 
             if self.services.wait_task(task_wait):

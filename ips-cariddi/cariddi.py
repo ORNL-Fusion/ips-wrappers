@@ -86,6 +86,8 @@ class cariddi(Component):
 
         if 'task_list' in keywords:
             for task in keywords['task_list']:
+
+#  Zero out the inital mgrid fields.
                 if task == 'zero_mgrid':
                     ScreenWriter.screen_output(self, 'quiet', 'Zero out mgrid file: Time Stamp = {}'.format(timeStamp))
                     task_wait = self.services.launch_task(self.NPROC,
@@ -96,6 +98,7 @@ class cariddi(Component):
                     self.services.wait_task(task_wait)
                     continue
 
+#  Get new profiles for vmec for current time step.
                 if task == 'get_profile':
                     ScreenWriter.screen_output(self, 'quiet', 'Get equilibrium profiles: Time Stamp = {}'.format(timeStamp))
                     task_wait = self.services.launch_task(self.NPROC,
@@ -110,6 +113,7 @@ class cariddi(Component):
                     self.zip_ref.set_state(state='updated')
                     continue
 
+#  Update eddy current file.
                 if task == 'make_eddy':
                     ScreenWriter.screen_output(self, 'quiet', 'Update eddy.nc file: Time Stamp = {}'.format(timeStamp))
                     task_wait = self.services.launch_task(self.NPROC,
@@ -122,6 +126,7 @@ class cariddi(Component):
                     self.services.wait_task(task_wait)
                     continue
 
+#  Compute virtual current at coupling surface.
                 if task == 'get_current':
                     ScreenWriter.screen_output(self, 'quiet', 'Getting surface current: Time Stamp = {}'.format(timeStamp))
                     task_wait = self.services.launch_task(self.NPROC,
@@ -132,8 +137,11 @@ class cariddi(Component):
                                                           '-para=-1',
                                                           logfile = 'surface_get_current_{}.log'.format(timeStamp))
                     self.services.wait_task(task_wait)
+                    self.zip_ref.write(self.current_cariddi_input)
+                    self.zip_ref.set_state(state='updated')
                     continue
 
+#  Set vacuum fields for the eddy current.
                 if task == 'set_mgrid':
                     ScreenWriter.screen_output(self, 'quiet', 'Setting Vacuum Eddy Current Fields: Time Stamp = {}'.format(timeStamp))
                     task_wait = self.services.launch_task(self.NPROC,

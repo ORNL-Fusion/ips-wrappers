@@ -156,15 +156,15 @@ class cariddi_driver(Component):
                                                        task_list=['get_current',
                                                                   'set_mgrid'])
 
-            if outter_loop_time_stamp == 2.0:
-                return
-
 #  While the surface current is being computed, extract the current woutfile to
 #  get the stopping criteria.
             magnetic_axis = self.get_magnetic_axis()
 
 #  Wait for the mgrid file to be finished updating.
             self.services.wait_call(wait_call, True)
+
+            if outter_loop_time_stamp == 2.0:
+                return
 
 #  FIXME: Choose some stopping criteria for the loop...
             delta_magnetic_axis = 100

@@ -39,6 +39,9 @@ class ml_train(Component):
             self.nn_model_matrix = self.services.get_config_param('NN_MODEL_MATRIX')
             self.nn_model = self.services.get_config_param('NN_MODEL')
 
+            self.constraint_path = self.services.get_config_param('MODULE_PATH')
+            self.constraint_name = self.services.get_config_param('MODULE_NAME')
+
 #  Stage state.
         self.services.stage_state()
 
@@ -87,6 +90,8 @@ class ml_train(Component):
                                                       '--epochs={}'.format(self.args['--epochs']),
                                                       '--param_covar_matrix={}'.format(self.nn_model_matrix),
                                                       '--validation_split={}'.format(self.args['--validation_split']),
+                                                      '--module_path={}'.format(self.constraint_path),
+                                                      '--module={}'.format(self.constraint_name),
                                                       logfile = 'ml_train_{}.log'.format(timeStamp))
             else:
                 task_wait = self.services.launch_task(self.NPROC,
@@ -107,6 +112,8 @@ class ml_train(Component):
                                                       '--l1_factor={}'.format(self.args['--l1_factor']),
                                                       '--l2_factor={}'.format(self.args['--l2_factor']),
                                                       '--validation_split={}'.format(self.args['--validation_split']),
+                                                      '--module_path={}'.format(self.constraint_path),
+                                                      '--module={}'.format(self.constraint_name),
                                                       logfile = 'ml_train_{}.log'.format(timeStamp))
 
 
