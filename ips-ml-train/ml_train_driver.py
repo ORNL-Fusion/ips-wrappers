@@ -61,7 +61,9 @@ class ml_train_driver(Component):
                     'LOG_FILE'         : 'log.gen_data.warning',
                     'OUTPUT_LEVEL'     : self.services.get_config_param('OUTPUT_LEVEL'),
                     'CURRENT_BATCH'    : self.new_data,
-                    'USER_INPUT_FILES' : self.data_gen_state
+                    'USER_INPUT_FILES' : self.data_gen_state,
+                    'MODULE_PATH'      : self.services.get_config_param('MODULE_PATH'),
+                    'MODULE_NAME'      : self.services.get_config_param('MODULE_NAME')
                 }
 
                 if os.path.exists('data_gen_input_dir'):
