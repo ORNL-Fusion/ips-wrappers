@@ -1,14 +1,15 @@
 #!/bin/bash -l
 
-##SBATCH -p debug
+#SBATCH -p debug
 
-#SBATCH -p regular
+##SBATCH -p regular
 ##SBATCH --qos=premium
 
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=64
-#SBATCH -t 48:00:00
+##SBATCH -t 48:00:00
+#SBATCH -t 00:30:00
 #SBATCH -C haswell
 
 #SBATCH -J ips_fastran
@@ -23,7 +24,7 @@ export ATOM=/global/common/software/atom/cori
 export LOCAL=$ATOM/cesol
 export IPSCONFIG_DIR=$LOCAL/conf
 
-export PYTHONPATH="$PYTHONPATH:$HOME/systemcode:$ATOM/cesol/share/python:$ATOM/cesol/ips_fastran/src:$HOME/ips-wrappers"
+export PYTHONPATH="$PYTHONPATH:$HOME/systemcode:$ATOM/cesol/share/python:$ATOM/cesol/ips_fastran/src:$HOME/ips-wrappers:$HOME/systemcode/ml"
 
 export IPS_ROOT=$ATOM/ips-framework
 export DAKOTA_ROOT=$ATOM/dakota
@@ -72,10 +73,12 @@ export NFREYA_DATA_ROOT=/project/projectdirs/atom/users/parkjm
 export PSTOOL=$PSTOOL_BIN_DIR/$PSTOOL_BIN_NAME
 export PS_BACKEND=pyps
 
-rm -rf $SCRATCH/test_ml_train
-mkdir $SCRATCH/test_ml_train
-cp -rd * $SCRATCH/test_ml_train
-cd $SCRATCH/test_ml_train
+WORK_DIRECTORY=test_ml_train_debug
+
+rm -rf $SCRATCH/$WORK_DIRECTORY
+mkdir $SCRATCH/$WORK_DIRECTORY
+cp -rd * $SCRATCH/$WORK_DIRECTORY
+cd $SCRATCH/$WORK_DIRECTORY
 
 python $IPS_ROOT/bin/ips.py --platform=platform.conf --simulation=ips.ml_train.config
 
