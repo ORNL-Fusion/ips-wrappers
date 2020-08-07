@@ -7,7 +7,5 @@
     "--layer_width"      : 10,
     "--l1_factor"        : 0.0,
     "--l2_factor"        : 0.0,
-    "--validation_split" : 0.0,
-    "--module_path"      : "",
-    "--moudle"           : ""
+    "--validation_split" : 0.0
 }
