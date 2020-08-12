@@ -35,6 +35,7 @@ class massive_serial_runner(Component):
             self.database_config = self.services.get_config_param('DATABASE_CONFIG')
             self.current_batch = self.services.get_config_param('CURRENT_BATCH')
             self.msr_config = self.services.get_config_param('MSR_MODEL_CONFIG')
+            self.batch_size = self.services.get_config_param('BATCH_SIZE')
 
             self.constraint_path = self.services.get_config_param('MODULE_PATH')
             self.constraint_name = self.services.get_config_param('MODULE_NAME')
@@ -68,8 +69,7 @@ class massive_serial_runner(Component):
                                                   self.MASSIVE_SERIAL_EXE,
                                                   'inscan',
                                                   self.msr_config,
-                                                  '{}'.format(max(32,
-                                                              int(flags['batch_size']))),
+                                                  '{}'.format(self.batch_size),
                                                   '1',
                                                   logfile='massive_serial_{}.log'.format(timeStamp),
                                                   whole_nodes=True)

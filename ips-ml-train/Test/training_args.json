@@ -1,6 +1,5 @@
 {
     "--activation"       : "tanh",
-    "--batch_size"       : 32,
     "--iterations"       : 10,
     "--epochs"           : 1000,
     "--num_layers"       : 10,

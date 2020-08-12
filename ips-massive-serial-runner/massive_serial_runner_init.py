@@ -47,6 +47,7 @@ class massive_serial_runner_init(Component):
             self.current_batch = self.services.get_config_param('CURRENT_BATCH')
             self.database_config = self.services.get_config_param('DATABASE_CONFIG')
             self.inscan_config_file = self.services.get_config_param('INSCAN_CONFIG')
+            self.batch_size = self.services.get_config_param('BATCH_SIZE')
 
 #  Remove old inputs.
         for file in os.listdir('.'):
@@ -78,7 +79,7 @@ class massive_serial_runner_init(Component):
                                                       self.SAMPLE_EXE,
                                                       '--input={}'.format(self.inscan_config_file),
                                                       '--output=inscan',
-                                                      '--nscan=32',
+                                                      '--nscan={}'.format(self.batch_size),
                                                       '--new={}'.format(self.current_batch),
                                                       logfile='sample_{}.log'.format(timeStamp))
 
@@ -93,7 +94,7 @@ class massive_serial_runner_init(Component):
                                                       self.SAMPLE_EXE,
                                                       '--input={}'.format(self.inscan_config_file),
                                                       '--output=inscan',
-                                                      '--nscan=32',
+                                                      '--nscan={}'.format(self.batch_size),
                                                       logfile='sample_{}.log'.format(timeStamp))
 
                 if self.services.wait_task(task_wait):

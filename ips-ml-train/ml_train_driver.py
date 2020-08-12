@@ -63,7 +63,8 @@ class ml_train_driver(Component):
                     'CURRENT_BATCH'    : self.new_data,
                     'USER_INPUT_FILES' : self.data_gen_state,
                     'MODULE_PATH'      : self.services.get_config_param('MODULE_PATH'),
-                    'MODULE_NAME'      : self.services.get_config_param('MODULE_NAME')
+                    'MODULE_NAME'      : self.services.get_config_param('MODULE_NAME'),
+                    'BATCH_SIZE'       : self.services.get_config_param('BATCH_SIZE')
                 }
 
                 if os.path.exists('data_gen_input_dir'):

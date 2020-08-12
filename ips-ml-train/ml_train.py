@@ -38,6 +38,7 @@ class ml_train(Component):
             self.nn_model_config = self.services.get_config_param('NN_MODEL_CONFIG')
             self.nn_model_matrix = self.services.get_config_param('NN_MODEL_MATRIX')
             self.nn_model = self.services.get_config_param('NN_MODEL')
+            self.batch_size = self.services.get_config_param('BATCH_SIZE')
 
             self.constraint_path = self.services.get_config_param('MODULE_PATH')
             self.constraint_name = self.services.get_config_param('MODULE_NAME')
@@ -85,7 +86,7 @@ class ml_train(Component):
                                                       '--training_data={}'.format(self.training_data),
                                                       '--supplemental_data={}'.format(self.new_data),
                                                       '--prediction_data={}'.format(self.prediction_data),
-                                                      '--batch_size={}'.format(self.args['--batch_size']),
+                                                      '--batch_size={}'.format(self.batch_size),
                                                       '--iterations={}'.format(self.args['--iterations']),
                                                       '--epochs={}'.format(self.args['--epochs']),
                                                       '--param_covar_matrix={}'.format(self.nn_model_matrix),
@@ -103,7 +104,7 @@ class ml_train(Component):
                                                       '--training_data={}'.format(self.training_data),
                                                       '--supplemental_data={}'.format(self.new_data),
                                                       '--prediction_data={}'.format(self.prediction_data),
-                                                      '--batch_size={}'.format(self.args['--batch_size']),
+                                                      '--batch_size={}'.format(self.batch_size),
                                                       '--iterations={}'.format(self.args['--iterations']),
                                                       '--epochs={}'.format(self.args['--epochs']),
                                                       '--num_layers={}'.format(self.args['--num_layers']),
