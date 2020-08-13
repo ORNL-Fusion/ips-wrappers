@@ -100,7 +100,7 @@ class basic_driver(Component):
 
       # Get state files into driver work directory
         services.stage_state()
-        cur_state_file = services.get_global_param('CURRENT_STATE')
+        cur_state_file = config.get_global_param(self, services, 'CURRENT_STATE')
 
        # Get Portal RUNID and save to a file
         run_id = config.get_global_param(self, services,'PORTAL_RUNID')
