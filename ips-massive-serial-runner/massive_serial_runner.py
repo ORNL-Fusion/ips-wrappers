@@ -11,6 +11,7 @@ from utilities import ScreenWriter
 from utilities import ZipState
 import os
 import json
+import subprocess
 
 #-------------------------------------------------------------------------------
 #
@@ -34,11 +35,21 @@ class massive_serial_runner(Component):
             self.current_state = self.services.get_config_param('CURRENT_MSR_STATE')
             self.database_config = self.services.get_config_param('DATABASE_CONFIG')
             self.current_batch = self.services.get_config_param('CURRENT_BATCH')
-            self.msr_config = self.services.get_config_param('MSR_MODEL_CONFIG')
-            self.batch_size = self.services.get_config_param('BATCH_SIZE')
 
             self.constraint_path = self.services.get_config_param('MODULE_PATH')
             self.constraint_name = self.services.get_config_param('MODULE_NAME')
+
+#  IPS framework config parameters.
+            os.environ['PWD'] = os.getcwd()
+            self.ips_path = self.services.get_config_param('IPS_PATH')
+            self.msr_global_config = self.services.get_config_param('MSR_GLOBAL_CONFIG')
+            os.environ['PLATFORM'] = self.services.get_config_param('MSR_PLATFORM_FILE')
+            os.environ['MSR_CONFIG'] = self.services.get_config_param('MSR_CONFIG')
+            os.environ['MSR_MODEL_CONFIG'] = self.services.get_config_param('MSR_MODEL_CONFIG')
+
+            batch_size = float(self.services.get_config_param('BATCH_SIZE'))
+            processors_per_node = float(self.services.get_config_param('CORES_PER_NODE'))
+            os.environ['NNODES'] = MAX(1, math.ceil(batch_size/processors_per_node))
 
 #  Stage state.
         self.services.stage_state()
@@ -64,20 +75,17 @@ class massive_serial_runner(Component):
 
 #  Run the massive serial workflow.
         if 'state' in flags and flags['state'] == 'needs_update':
-            task_wait = self.services.launch_task(self.NPROC,
-                                                  self.services.get_working_dir(),
-                                                  self.MASSIVE_SERIAL_EXE,
-                                                  'inscan',
-                                                  self.msr_config,
-                                                  '{}'.format(self.batch_size),
-                                                  '1',
-                                                  logfile='massive_serial_{}.log'.format(timeStamp),
-                                                  whole_nodes=True)
+            process = subprocess.Popen(['python3',
+                                        '{}/ips.py'.format(self.ips_path),
+                                        '--platform={}'.format(self.msr_platform_conf),
+                                        '--simulation={}'.format(self.msr_global_config),
+                                        '--log=massive_serial_{}.log'.format(timeStamp)],
+                                       env=os.environ)
 
             database = 'db_{}.dat'.format(timeStamp)
 
 #  Collect results of the workflow into the database file.
-            if self.services.wait_task(task_wait):
+            if process.wait():
                 self.services.error('massive_serial_runner: step failed to run massive serial')
 
             task_wait = self.services.launch_task(1, self.services.get_working_dir(),
