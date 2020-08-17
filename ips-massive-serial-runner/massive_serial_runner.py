@@ -12,6 +12,7 @@ from utilities import ZipState
 import os
 import json
 import subprocess
+import math
 
 #-------------------------------------------------------------------------------
 #
@@ -53,7 +54,7 @@ class massive_serial_runner(Component):
 
             batch_size = float(self.services.get_config_param('BATCH_SIZE'))
             processors_per_node = float(self.services.get_config_param('CORES_PER_NODE'))
-            os.environ['NNODES'] = MAX(1, math.ceil(batch_size/processors_per_node))
+            os.environ['NNODES'] = '{}'.format(max(1, math.ceil(batch_size/processors_per_node)))
 
 #  Stage state.
         self.services.stage_state()
@@ -68,6 +69,7 @@ class massive_serial_runner(Component):
             self.zip_ref.extract(self.msr_config)
             self.zip_ref.extract(self.msr_global_config)
             self.zip_ref.extract(self.msr_model_config)
+            self.zip_ref.extract(self.msr_platform_conf)
 
 #-------------------------------------------------------------------------------
 #
