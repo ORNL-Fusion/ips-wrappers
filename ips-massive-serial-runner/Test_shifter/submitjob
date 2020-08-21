@@ -1,0 +1,82 @@
+#!/bin/bash -l
+
+#SBATCH -p debug
+
+##SBATCH -p regular
+##SBATCH --qos=premium
+
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=64
+#SBATCH -t 00:30:00
+#SBATCH -C haswell
+
+#SBATCH -J ips_fastran
+#SBATCH -e ips.err
+#SBATCH -o ips.out
+
+#SBATCH -C haswell
+
+module load python cray-netcdf gcc
+
+export ATOM=/global/common/software/atom/cori
+export LOCAL=$ATOM/cesol_dev
+export IPSCONFIG_DIR=$LOCAL/conf
+
+export PYTHONPATH="$PYTHONPATH:$HOME/systemcode:$ATOM/cesol/share/python:$ATOM/cesol/ips_fastran/src:$HOME/ips-wrappers"
+
+export IPS_ROOT=$ATOM/ips-framework
+export DAKOTA_ROOT=$ATOM/dakota
+export FASTRAN_ROOT=$LOCAL/ips_fastran
+export EPED_ROOT=$LOCAL/ips_eped
+export DATA_ROOT=$ATOM/data
+
+export PATH=$DAKOTA_ROOT/bin:$IPS_ROOT/bin:$PATH
+
+export PYTHONPATH=$EPED_ROOT/lib:$PYTHONPATH
+export PYTHONPATH=$EPED_ROOT/src:$PYTHONPATH
+export PYTHONPATH=$FASTRAN_ROOT/lib:$PYTHONPATH
+export PYTHONPATH=$FASTRAN_ROOT/lib/python:$PYTHONPATH
+export PYTHONPATH=$FASTRAN_ROOT/src:$PYTHONPATH
+export PYTHONPATH=$IPS_ROOT/bin:$PYTHONPATH
+
+export PYTHONPATH=$ATOM/share/pyps:$PYTHONPATH
+
+export NTCC_DIR=$ATOM/share/ntcc_intel
+export PATH=$NTCC_DIR/bin:$PATH
+
+export ATOM_BIN_DIR=$ATOM/binaries
+export PSTOOL_BIN_DIR=$ATOM_BIN_DIR/pstool/default
+export PSTOOL_BIN_NAME=pstool
+export WGEQDSK_BIN_DIR=$ATOM_BIN_DIR/wgeqdsk/default
+export WGEQDSK_BIN_NAME=wgeqdsk
+export FASTRAN_BIN_DIR=$ATOM_BIN_DIR/fastran/default
+export FASTRAN_BIN_NAME=xfastran_ver0.93  
+export FASTRAN_SERIAL_BIN_NAME=xfastran_ver0.93_ser  
+export EFIT_BIN_DIR=$ATOM_BIN_DIR/efit/default
+export EFIT_BIN_NAME=efitd90
+export ESC_BIN_DIR=$ATOM_BIN_DIR/esc/default
+export ESC_BIN_NAME=xesc
+export NUBEAM_BIN_DIR=$ATOM_BIN_DIR/nubeam/default
+export NUBEAM_BIN_NAME=mpi_nubeam_comp_exec
+export TORAY_BIN_DIR=$ATOM_BIN_DIR/toray/default
+export TORAY_BIN_NAME=xtoray
+export CURRAY_BIN_DIR=$ATOM_BIN_DIR/curray/default
+export CURRAY_BIN_NAME=xcurray
+export GENRAY_BIN_DIR=$ATOM_BIN_DIR/genray/default
+export GENRAY_BIN_NAME=xgenray.intel.edison
+export NFREYA_BIN_PATH=$ATOM_BIN_DIR/onetwo/default
+export NFREYA_BIN_NAME=onetwo_129_201
+export NFREYA_DATA_ROOT=/project/projectdirs/atom/users/parkjm
+
+export PSTOOL=$PSTOOL_BIN_DIR/$PSTOOL_BIN_NAME
+export PS_BACKEND=pyps
+
+rm -rf $SCRATCH/test_massive_serial_runner
+mkdir $SCRATCH/test_massive_serial_runner
+cp -rd * $SCRATCH/test_massive_serial_runner
+cd $SCRATCH/test_massive_serial_runner
+
+python $IPS_ROOT/bin/ips.py --platform=platform.conf --simulation=ips.massive_serial_runner.config
+
+wait
