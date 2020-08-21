@@ -8,7 +8,7 @@
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=64
-#SBATCH -t 00:10:00
+#SBATCH -t 00:30:00
 #SBATCH -C haswell
 
 #SBATCH -J ips_fastran
@@ -20,7 +20,7 @@
 module load python cray-netcdf gcc
 
 export ATOM=/global/common/software/atom/cori
-export LOCAL=$ATOM/cesol
+export LOCAL=$ATOM/cesol_dev
 export IPSCONFIG_DIR=$LOCAL/conf
 
 export PYTHONPATH="$PYTHONPATH:$HOME/systemcode:$ATOM/cesol/share/python:$ATOM/cesol/ips_fastran/src:$HOME/ips-wrappers"
