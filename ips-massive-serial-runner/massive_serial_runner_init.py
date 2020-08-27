@@ -73,6 +73,10 @@ class massive_serial_runner_init(Component):
             zip_ref.write_or_check(self.msr_model_config)
             zip_ref.write_or_check(self.msr_platform_conf)
 
+#  This is the inputs to fastran. Should only need todo this once.
+            if timeStamp == 0.0:
+                zip_ref.write('input.zip')
+
 #  Batch files are optional. If a batch file was not staged as an input, extract
 #  if from the plasma state if one exists inside it.
             extract_if_needed(zip_ref, self.current_batch)

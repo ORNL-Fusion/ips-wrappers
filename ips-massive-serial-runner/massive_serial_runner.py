@@ -71,6 +71,16 @@ class massive_serial_runner(Component):
             self.zip_ref.extract(self.msr_model_config)
             self.zip_ref.extract(self.msr_platform_conf)
 
+#  We need the input directory to exist in a directory called input. So we must
+#  make that directory first than extract the files. Remember to change back to
+#  the orginal working directory after extraction.
+            self.zip_ref.extract('input.zip')
+            os.makedirs('input')
+            os.chdir('input')
+            with ZipState.ZipState('../input.zip', 'r') as input_ref:
+                input_ref.extractall()
+            os.chdir('../')
+
 #-------------------------------------------------------------------------------
 #
 #  Massive Serial Runner Component step method. Not used.
