@@ -17,6 +17,9 @@
 
 #SBATCH -C haswell
 
+#SBATCH --image=docker:registry.services.nersc.gov/rwp53/ips-massive-serial:latest
+#SBATCH --volume="/global/cscratch1/sd/rwp/tmpfiles:/tmp:perNodeCache=size=1G"
+
 module load python cray-netcdf gcc
 
 export ATOM=/global/common/software/atom/cori
