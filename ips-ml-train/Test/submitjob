@@ -1,13 +1,12 @@
 #!/bin/bash -l
 
 #SBATCH -p debug
-
 ##SBATCH -p regular
 ##SBATCH --qos=premium
 
 #SBATCH --account=atom
 
-#SBATCH --nodes=2
+#SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=64
 ##SBATCH -t 48:00:00
@@ -20,10 +19,13 @@
 
 #SBATCH -C haswell
 
+#SBATCH --image=docker:registry.services.nersc.gov/rwp53/ips-massive-serial:latest
+#SBATCH --volume="/global/cscratch1/sd/rwp/tmpfiles:/tmp:perNodeCache=size=1G"
+
 module load cray-netcdf gcc tensorflow/gpu-2.2.0-py37
 
 export ATOM=/global/common/software/atom/cori
-export LOCAL=$ATOM/cesol
+export LOCAL=$ATOM/cesol_dev
 export IPSCONFIG_DIR=$LOCAL/conf
 
 export PYTHONPATH="$PYTHONPATH:$HOME/systemcode:$ATOM/cesol/share/python:$ATOM/cesol/ips_fastran/src:$HOME/ips-wrappers:$HOME/systemcode/ml"

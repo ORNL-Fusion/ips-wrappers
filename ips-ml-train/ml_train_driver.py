@@ -120,7 +120,7 @@ class ml_train_driver(Component):
             flags = zip_ref.get_state()
 
 #  Adaptive training loop. Hard code the number of iterations for now.
-        for i in range(100):
+        for i in range(10):
 
 #  Train the NN model.
             self.services.call(self.ml_train_port, 'init', timeStamp)
@@ -135,7 +135,9 @@ class ml_train_driver(Component):
                 with ZipState.ZipState(self.data_gen_state, 'a') as model_state_ref:
                     model_state_ref.write(self.new_data)
 
-#  Generate new training data.
+#  Generate new training data. Update the time the first data batch was
+#  generated in the init method.
+                timeStamp = timeStamp + 1.0
                 shutil.copy2(self.data_gen_state, 'data_gen_input_dir')
                 self.services.call(self.data_gen['init'], 'init', timeStamp)
                 self.services.call(self.data_gen['driver'], 'init', timeStamp)
@@ -157,7 +159,6 @@ class ml_train_driver(Component):
                 flags = zip_ref.get_state()
 
             self.services.update_state()
-            timeStamp = timeStamp + 1.0
 
 #-------------------------------------------------------------------------------
 #
