@@ -47,14 +47,12 @@ class massive_serial_runner(Component):
             self.msr_config = self.services.get_config_param('MSR_CONFIG')
             self.msr_global_config = self.services.get_config_param('MSR_GLOBAL_CONFIG')
             self.msr_model_config = self.services.get_config_param('MSR_MODEL_CONFIG')
+            self.platform_file = self.services.get_config_param('PLATFORM_FILE')
             self.msr_platform_conf = self.services.get_config_param('MSR_PLATFORM_FILE')
             os.environ['PLATFORM'] = self.msr_platform_conf
             os.environ['MSR_CONFIG'] = self.services.get_config_param('MSR_CONFIG')
             os.environ['MSR_MODEL_CONFIG'] = self.msr_model_config
-
-            batch_size = float(self.services.get_config_param('BATCH_SIZE'))
-            processors_per_node = float(self.services.get_config_param('CORES_PER_NODE'))
-            os.environ['NNODES'] = '{}'.format(max(1, math.ceil(batch_size/processors_per_node)))
+            os.environ['NNODES'] = self.services.get_config_param('NNODES')
 
 #  Stage state.
         self.services.stage_state()
@@ -95,7 +93,7 @@ class massive_serial_runner(Component):
         if 'state' in flags and flags['state'] == 'needs_update':
             process = subprocess.Popen(['python3',
                                         '{}/ips.py'.format(self.ips_path),
-                                        '--platform={}'.format(self.msr_platform_conf),
+                                        '--platform={}'.format(self.platform_file),
                                         '--simulation={}'.format(self.msr_global_config),
                                         '--log=massive_serial_{}.log'.format(timeStamp)],
                                        env=os.environ)
