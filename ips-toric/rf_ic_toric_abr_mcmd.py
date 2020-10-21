@@ -213,6 +213,10 @@ class toric (Component):
             raise Exception(logMsg)
         services = self.services
 
+    # Get global configuration parameters
+        cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
+        cur_eqdsk_file = get_global_param(self, services, 'CURRENT_EQDSK')
+
       # Copy plasma state files over to working directory
         try:
             services.stage_plasma_state()
@@ -264,8 +268,8 @@ class toric (Component):
         toric_bin = self.TORIC_BIN
         prepare_eqdsk  = self.GEQXPL_BIN
 
-        cur_state_file = self.plasma_state_file
-        cur_eqdsk_file = self.eqdsk_file
+#        cur_state_file = self.plasma_state_file
+#        cur_eqdsk_file = self.eqdsk_file
         toric_log = self.toric_log
         cwd = os.getcwd()
 
