@@ -36,6 +36,7 @@ class TORIC_basic (Component):
     def step(self, timeStamp):
         print('TORIC_basic.step() called')
         services = self.services
+        workdir = services.get_working_dir()
 
     # Get global configuration parameters (none for this example)
  
@@ -54,6 +55,15 @@ class TORIC_basic (Component):
           self.services.error('Error in call to stageInputFiles()')
           raise
 
+        try:
+             self.toric_log = os.path.join(workdir, 'log.toric')
+        except:
+            logMsg = 'rf_ic_toric_mcmd: error in getting log.toric path'
+            self.services.exception(logMsg)
+            raise 
+        toric_log = self.toric_log
+
+
     # Launch TORIC executable
         print(('toric processors = ', self.NPROC))
         cwd = services.get_working_dir()
@@ -63,6 +73,10 @@ class TORIC_basic (Component):
             logMsg = 'Error executing command: ' + toric_bin
             self.services.error(logMsg)
             raise Exception(logMsg)
+
+		# Rename default fort.* to expected names by component method as of toric5 r918 from ipp
+		os.rename('fort.9','toric_cfg.nc')
+		os.rename('fort.21','toric.nc')
 
 # "Archive" output files in history directory
         try:
