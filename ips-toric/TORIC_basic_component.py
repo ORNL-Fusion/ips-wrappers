@@ -42,7 +42,7 @@ class TORIC_basic (Component):
     # Get component-specific configuration parameters.
         BIN_PATH = config.get_component_param(self, services, 'BIN_PATH')
         NPROC = config.get_component_param(self, services, 'NPROC')
-        EXECUTABLE = config.get_component_param(self, services, 'EXECUTABLE')
+        toric_bin = config.get_component_param(self, services, 'EXECUTABLE')
 
     # Copy state files over to working directory (none for this example)
       
