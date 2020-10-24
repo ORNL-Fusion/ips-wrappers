@@ -7,6 +7,7 @@ Input files required are: torica.inp, equidt.data, equigs.data.
 
 """
 import shutil
+import os
 import get_IPS_config_parameters as config
 from component import Component
 
