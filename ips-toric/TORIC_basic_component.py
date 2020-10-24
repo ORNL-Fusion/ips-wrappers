@@ -74,9 +74,9 @@ class TORIC_basic (Component):
             self.services.error(logMsg)
             raise Exception(logMsg)
 
-		# Rename default fort.* to expected names by component method as of toric5 r918 from ipp
-		os.rename('fort.9','toric_cfg.nc')
-		os.rename('fort.21','toric.nc')
+        # Rename default fort.* to expected names by component method as of toric5 r918 from ipp
+        os.rename('fort.9','toric_cfg.nc')
+        os.rename('fort.21','toric.nc')
 
 # "Archive" output files in history directory
         try:
