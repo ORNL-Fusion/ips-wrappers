@@ -334,7 +334,7 @@ class generic_ps_init (Component):
                 if GENERATE_EQDSK in ['true', 'TRUE', 'True']:
                     nml_lines.append(' generate_eqdsk = \"True\"')
                     nml_lines.append('/\n')
-                    self.put_lines('generic_ps_init.nml', nml_lines)
+                    put_lines('generic_ps_init.nml', nml_lines)
 
                     init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
                     print('Executing ', init_bin)

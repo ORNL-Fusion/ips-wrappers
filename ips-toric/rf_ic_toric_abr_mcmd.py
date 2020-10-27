@@ -48,15 +48,14 @@ import getopt
 import shutil
 import string
 from  component import Component
-#Numeric should be replace by numpy, if needed -JCW
-from Numeric import *
-from Scientific.IO.NetCDF import *
+from netCDF4 import *
+from get_IPS_config_parameters import get_global_param, get_component_param
 
 class toric (Component):
 
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print 'Created %s' % (self.__class__)
+        print(('Created %s' % (self.__class__)))
 
 # ------------------------------------------------------------------------------
 #
@@ -66,22 +65,21 @@ class toric (Component):
 
 
     def init(self, timeStamp=0):
-        print 'toric.init() called'
+        print('toric.init() called')
 
         services = self.services
         workdir = services.get_working_dir()
 
-      # Get global configuration parameters
+    # Get global configuration parameters
+        cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
+        cur_eqdsk_file = get_global_param(self, services, 'CURRENT_EQDSK')
+
         try:
-            self.plasma_state_file = services.get_config_param('CURRENT_STATE')
-            self.eqdsk_file = services.get_config_param('CURRENT_EQDSK')
-            self.toric_log = os.path.join(workdir, 'log.toric')
+             self.toric_log = os.path.join(workdir, 'log.toric')
         except:
-            logMsg = 'rf_ic_toric_mcmd: error in getting config parameters'
+            logMsg = 'rf_ic_toric_mcmd: error in getting log.toric path'
             self.services.exception(logMsg)
             raise 
-
-        cur_state_file = self.plasma_state_file
         toric_log = self.toric_log
 
 
@@ -108,7 +106,7 @@ class toric (Component):
             have_suffix = True
         # If suffix is not empty put an underscore in front of it.
             if len(suffix) > 0:
-                print 'INPUT_SUFFIX = ', suffix
+                print(('INPUT_SUFFIX = ', suffix))
                 suffix = '_' + suffix
         # If suffix is empty you don't really have one
             else:
@@ -121,8 +119,9 @@ class toric (Component):
         if have_suffix:
             try:
                 shutil.copyfile('machine.inp' + suffix, 'machine.inp')
-            except IOError, (errno, strerror):
-                print 'Error copying file %s to %s' % ('machine.inp' + suffix, 'machine.inp', strerror)
+            except IOError as xxx_todo_changeme:
+                (errno, strerror) = xxx_todo_changeme.args
+                print(('Error copying file %s to %s' % ('machine.inp' + suffix, 'machine.inp', strerror)))
                 logMsg = 'Error copying machine.inp_<suffix> -> machine.inp'
                 services.exception(logMsg)
                 raise
@@ -149,7 +148,7 @@ class toric (Component):
       #       solve this we generate a dummy set of output files here with
       #       system call 'touch'
         for file in self.OUTPUT_FILES.split():
-            print 'touching ', file
+            print(('touching ', file))
             subprocess.call(['touch', file])
       # Now stage them
         try:
@@ -170,7 +169,7 @@ class toric (Component):
 # ------------------------------------------------------------------------------
 
     def restart(self, timeStamp):
-        print 'toric.restart() called'
+        print('toric.restart() called')
 
         services = self.services
         workdir = services.get_working_dir()
@@ -185,13 +184,14 @@ class toric (Component):
             self.services.exception(logMsg)
             raise
 
-      # Get global configuration parameters
+    # Get global configuration parameters
+        cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
+        cur_eqdsk_file = get_global_param(self, services, 'CURRENT_EQDSK')
+
         try:
-            self.plasma_state_file = services.get_config_param('CURRENT_STATE')
-            self.eqdsk_file = services.get_config_param('CURRENT_EQDSK')
-            self.toric_log = os.path.join(workdir, 'log.toric')
+             self.toric_log = os.path.join(workdir, 'log.toric')
         except:
-            logMsg = 'toric restart: error in getting config parameters'
+            logMsg = 'rf_ic_toric_mcmd: error in getting log.toric path'
             self.services.exception(logMsg)
             raise 
 
@@ -205,13 +205,17 @@ class toric (Component):
 
     def step(self, timeStamp):
         """Take a step for the toric component.  Really a complete run."""
-        print 'toric.step() called'
+        print('toric.step() called')
 
         if (self.services == None) :
             logMsg = 'Error in toric: step (): No self.services'
             self.services.error(logMsg)
             raise Exception(logMsg)
         services = self.services
+
+    # Get global configuration parameters
+        cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
+        cur_eqdsk_file = get_global_param(self, services, 'CURRENT_EQDSK')
 
       # Copy plasma state files over to working directory
         try:
@@ -236,7 +240,7 @@ class toric (Component):
             have_suffix = True
         # If suffix is not empty put an underscore in front of it.
             if len(suffix) > 0:
-                print 'INPUT_SUFFIX = ', suffix
+                print(('INPUT_SUFFIX = ', suffix))
                 suffix = '_' + suffix
         # If suffix is empty you don't really have one
             else:
@@ -249,9 +253,10 @@ class toric (Component):
         if have_suffix:
             try:
                 shutil.copyfile('machine.inp' + suffix, 'machine.inp')
-            except IOError, (errno, strerror):
-                print 'Error copying file %s to %s' % ('machine.inp' + suffix,
-                'machine.inp', strerror)
+            except IOError as xxx_todo_changeme1:
+                (errno, strerror) = xxx_todo_changeme1.args
+                print(('Error copying file %s to %s' % ('machine.inp' + suffix,
+                'machine.inp', strerror)))
                 logMsg = 'Error copying machine.inp_<suffix> -> machine.inp'
                 services.exception(logMsg)
                 raise 
@@ -263,20 +268,24 @@ class toric (Component):
         toric_bin = self.TORIC_BIN
         prepare_eqdsk  = self.GEQXPL_BIN
 
-        cur_state_file = self.plasma_state_file
-        cur_eqdsk_file = self.eqdsk_file
+#        cur_state_file = self.plasma_state_file
+#        cur_eqdsk_file = self.eqdsk_file
         toric_log = self.toric_log
         cwd = os.getcwd()
 
 # Check if ICRF power is zero (or effectively zero).  If true don't run toric just
 # run zero_RF_IC_power fortran code
-        print 'cur_state_file = ', cur_state_file
-        ps = NetCDFFile(cur_state_file, 'r')
-        power_ic = ps.variables['power_ic'].getValue()[0]
+        print('cur_state_file = ', cur_state_file)
+        ps = Dataset(cur_state_file, 'r', format='NETCDF3_CLASSIC')
+        rf_power = ps.variables['power_ic'][:]
         ps.close()
-        print 'power = ', power_ic
+        total_rf_power = sum(rf_power)
+        print(('Total IC power = ', total_rf_power))
+        zero_rf_power_bin_string = 'ZERO_IC_POWER_BIN'
+        power_ic = rf_power
+        print('power = ', power_ic)
         if(-0.02 < power_ic < 0.02):
-            print zero_RF_IC_power
+            print(zero_RF_IC_power)
             retcode = subprocess.call([zero_RF_IC_power, cur_state_file])
             if (retcode != 0):
                 logMsg = 'Error executing ' + prepare_input
@@ -295,7 +304,7 @@ class toric (Component):
 # However power_ic needs to be reset back to positive
 
         elif( power_ic < -0.02):
-            print 'continuing power from previous time step'
+            print('continuing power from previous time step')
             ps.variables['power_ic'].assignValue(-power_ic)
             ps.close()
 
@@ -316,7 +325,7 @@ class toric (Component):
                 raise Exception(logMsg)
 
             # Call xeqdsk_setup to generate eqdsk.out file
-            print 'prepare_eqdsk', prepare_eqdsk, cur_eqdsk_file
+            print(('prepare_eqdsk', prepare_eqdsk, cur_eqdsk_file))
 
             retcode = subprocess.call([prepare_eqdsk, \
                                        '@equigs_gen', '/g_filename='+cur_eqdsk_file,\
@@ -327,7 +336,7 @@ class toric (Component):
                 raise Exception(logMsg)
 
             # Launch TORIC executable
-            print 'toric processors = ', self.NPROC
+            print(('toric processors = ', self.NPROC))
             cwd = services.get_working_dir()
             task_id = services.launch_task(self.NPROC, cwd, toric_bin, logfile=toric_log)
             retcode = services.wait_task(task_id)
@@ -351,7 +360,7 @@ class toric (Component):
         try:
             partial_file = cwd + '/RF_IC_' + cur_state_file
             services.merge_current_plasma_state(partial_file, logfile='log.update_state')
-            print 'merged TORIC plasma state data ', partial_file
+            print(('merged TORIC plasma state data ', partial_file))
         except:
             logMsg = 'Error in call to merge_current_plasma_state(' + partial_file + ')'
             self.services.exception(logMsg)
@@ -375,7 +384,7 @@ class toric (Component):
 # ------------------------------------------------------------------------------
 
     def checkpoint(self, timestamp=0.0):
-        print 'rf_ic_toric.checkpoint() called'
+        print('rf_ic_toric.checkpoint() called')
         services = self.services
         services.save_restart_files(timestamp, self.RESTART_FILES)
 
@@ -388,4 +397,4 @@ class toric (Component):
 # ------------------------------------------------------------------------------
 
     def finalize(self, timestamp=0.0):
-        print 'toric.finalize() called'
+        print('toric.finalize() called')
