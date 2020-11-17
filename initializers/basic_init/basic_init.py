@@ -8,7 +8,7 @@ The purpose is to collect a complete set of initial state files and stage them t
 /work/state/ directory. It is simplified and adapted from generic_ps_init.py, but 
 eliminating reference to many features specific to plasma physics.  The immediate  
 application is to simple, example simulations which do not make use of the SWIM Plasma 
-State system. The SWIM Plasma State need not be used at all but can be.
+State system. The SWIM Plasma State need not be used at all, but can be.
 
 This script first touches all the files listed as STATE_FILES in the config file.  If
 config variable INIT_MODE = TOUCH_ONLY that is all that is done, then returns.

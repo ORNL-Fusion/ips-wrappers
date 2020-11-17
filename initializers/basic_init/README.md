@@ -15,8 +15,8 @@ convenient to initialize a state file from an input file of a different name, th
 service is provided to copy a file to another name before updating state.  This is
 controlled by config parameters COPY\_FILES and COPIED\_FILES\_NEW\_NAMES
 
-COPY\_FILES = list of files to be copied COPIED\_FILES\_NEW\_NAMES = list of new names for
-files, must match COPY_FILES
+COPY\_FILES = list of files to be copied 
+COPIED\_FILES\_NEW\_NAMES = list of new names for files, must match COPY_FILES
 
 The term CURRENT\_STATE refers to a SWIM PLASMA\_STATE file if it is being used.  If a
 CURRENT\_STATE is specified in the simulation config file, this script adds the Plasma
