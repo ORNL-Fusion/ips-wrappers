@@ -44,6 +44,7 @@
       real(rspec), dimension(:),allocatable :: bb_prof
       real(rspec), dimension(:),allocatable :: x_orig
       real(rspec), dimension(:),allocatable :: x_toric
+      real(rspec), dimension(:),allocatable :: sqrt_psipol
       real(rspec) :: tol_zero = 1.0E-12_rspec, dVol, dVol_int, Q_ps, Q_int
 
 ! PTB ends
