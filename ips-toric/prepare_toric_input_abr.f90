@@ -608,7 +608,7 @@
 !              to length nrho-1. So fool it by introducing dummy non-PS varible psi_poloidal_eq
 
 	  sqrt_psipol = sqrt(ps%psipol/ps%psipol(nprodt))
-      call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, sqrt_psipol, x_torlh, ierr )
+      call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, sqrt_psipol, x_toric, ierr )
 	  write (*,*) " "
 	  write (*,*) "ps%rho(irho) = "
 	  write (*,*) ps%rho(irho)
@@ -616,8 +616,8 @@
 	  write (*,*) "sqrt_psipol = "
 	  write (*,*) sqrt_psipol
 	  write (*,*) " "
-	  write (*,*) "x_torlh = "
-	  write (*,*) x_torlh
+	  write (*,*) "x_toric = "
+	  write (*,*) x_toric
 ! DBB ends
 
 !     write(out_unit,'(A10)')  'rho'
