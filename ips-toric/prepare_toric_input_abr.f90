@@ -3,6 +3,19 @@
 !25 Jan 2008 - added optional command line arg for state file
 !JCW 2007, 2008
 
+! Working notes:
+!
+! Batchelor 12-24-2020
+! Modifying interpolation in accordance with discussion of 12-9-202 with MIT people.
+! 
+! N.B. ps%psipol is on rho_eq grid (size = nproeq)) not rho grid (size = nprodt).  Typically
+!      they are the same but they need not always be.
+! 1) Introduced new array: sqrt_psipol = sqrt(ps%psipol/ps%psipol(nproeq))
+! 2) Interpolated sqrt_psipol to x_toric on ps%rho grid
+
+
+
+
       program prepare_input
       USE plasma_state_mod
 !--------------------------------------------------------------------------
@@ -563,8 +576,8 @@
       allocate( v_pars(nprodt-1,ps%nspec_tha))
       allocate( aa_prof(nprodt))
       allocate( bb_prof(nprodt))
-      allocate( x_orig (nprodt-1))
-      allocate( x_toric (nprodt))
+      allocate( sqrt_psipol(nproeq))
+      allocate( x_toric(nprodt))
 ! PTB ends 
 
       open(unit=out_unit, file=profnt_file,              &
@@ -588,7 +601,23 @@
 ! TORIC uses only one radial mesh for density and temperature profiles that is
 ! that is defined in terms of the sqrt (Psi_pol) - normalized
 !
-      x_toric = sqrt(ps%psipol / ps%psipol(nprodt))
+! DBB begins: First interpolate psi_poloidal from rho_eq grid to rho grid.  Note, if you
+!             try to interpolate ps%psipol with the ps_user_1dintrp_vec routine it will
+!              detect that ps%psipol is a zone centered variable and will interpolate it
+!              to length nrho-1. So fool it by introducing dummy non-PS varible psi_poloidal_eq
+
+	  sqrt_psipol = sqrt(ps%psipol/ps%psipol(nprodt))
+      call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, sqrt_psipol, x_torlh, ierr )
+	  write (*,*) " "
+	  write (*,*) "ps%rho(irho) = "
+	  write (*,*) ps%rho(irho)
+	  write (*,*) " "
+	  write (*,*) "sqrt_psipol = "
+	  write (*,*) sqrt_psipol
+	  write (*,*) " "
+	  write (*,*) "x_torlh = "
+	  write (*,*) x_torlh
+! DBB ends
 
 !     write(out_unit,'(A10)')  'rho'
 !     write(out_unit,'(5E16.9)')  ps%rho !check units
