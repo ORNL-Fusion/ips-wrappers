@@ -613,6 +613,16 @@
 !              to length nrho-1. So fool it by introducing dummy non-PS varible psi_poloidal_eq
 
 	  sqrt_psipol = sqrt(ps%psipol/ps%psipol(nprodt))
+
+	  write (*,*) " "
+	  write (*,*) "ps%rho(irho) = "
+	  write (*,*) ps%rho(irho)
+	  write (*,*) " "
+	  write (*,*) "sqrt_psipol = "
+	  write (*,*) sqrt_psipol
+	  write (*,*) " "
+	  write (*,*) "x_toric = "
+	  write (*,*) x_toric
 	  
 	  write(*,*) 'Prepare toric input got to here 2'
 
