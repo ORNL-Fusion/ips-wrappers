@@ -497,6 +497,8 @@
          nspec=nspmx
       END IF
 
+      write(*,*) 'Prepare toric input got to here 1'
+
 !radial profiles generation, these are output to equilequ_file
       s_nrho_n = ps%nrho
       s_nrho_t = ps%nrho
@@ -589,6 +591,9 @@
          write(out_unit,'(2i4)')  atm(isp), azi(isp)
 !         write(*,*)  atm(isp), azi(isp)
       end do
+
+      write(*,*) 'Prepare toric input got to here 2'
+
 ! PTB begins
 !
 ! Define mid-cell values from the orginal Plasma State radial grid - "ps%rho" and use this array
@@ -608,6 +613,9 @@
 !              to length nrho-1. So fool it by introducing dummy non-PS varible psi_poloidal_eq
 
 	  sqrt_psipol = sqrt(ps%psipol/ps%psipol(nprodt))
+	  
+	  write(*,*) 'Prepare toric input got to here 2'
+
       call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, sqrt_psipol, x_toric, ierr )
 	  write (*,*) " "
 	  write (*,*) "ps%rho(irho) = "
