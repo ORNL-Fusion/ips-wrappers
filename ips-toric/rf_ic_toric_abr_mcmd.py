@@ -317,17 +317,17 @@ class toric (Component):
                 self.services.error(logMsg)
                 raise Exception(logMsg)
 
-			# Call TORIC prepare_input to generate torica.inp
-			command = prepare_input + ' ' + cur_state_file 
-			print('running = ', command)
-			services.send_portal_event(event_type = 'COMPONENT_EVENT',event_comment =  command)
+            # Call TORIC prepare_input to generate torica.inp
+            command = prepare_input + ' ' + cur_state_file 
+            print('running = ', command)
+            services.send_portal_event(event_type = 'COMPONENT_EVENT',event_comment =  command)
 
-			retcode = subprocess.call(command.split()) #, cur_eqdsk_file])
-			if (retcode != 0):
-				logMsg = 'Error executing ' + prepare_input
-				print(logMsg)
-				self.services.error(logMsg)
-				raise Exception(logMsg)
+            retcode = subprocess.call(command.split()) #, cur_eqdsk_file])
+            if (retcode != 0):
+                logMsg = 'Error executing ' + prepare_input
+                print(logMsg)
+                self.services.error(logMsg)
+                raise Exception(logMsg)
 
 #             retcode = subprocess.call([prepare_input, cur_state_file]) #, cur_eqdsk_file])
 #             if (retcode != 0):
