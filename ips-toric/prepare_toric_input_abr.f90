@@ -618,8 +618,8 @@
 	  sqrt_psipol = sqrt(ps%psipol/ps%psipol(nprodt))
 
 	  write (*,*) " "
-	  write (*,*) "ps%rho(irho) = "
-	  write (*,*) ps%rho(irho)
+	  write (*,*) "ps%rho = "
+	  write (*,*) ps%rho
 	  write (*,*) " "
 	  write (*,*) "sqrt_psipol = "
 	  write (*,*) sqrt_psipol
@@ -631,8 +631,8 @@
 
       call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, sqrt_psipol, x_toric, ierr )
 	  write (*,*) " "
-	  write (*,*) "ps%rho(irho) = "
-	  write (*,*) ps%rho(irho)
+	  write (*,*) "ps%rho = "
+	  write (*,*) ps%rho
 	  write (*,*) " "
 	  write (*,*) "sqrt_psipol = "
 	  write (*,*) sqrt_psipol
