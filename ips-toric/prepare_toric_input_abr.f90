@@ -655,7 +655,9 @@
 !
 ! Interpolate the electron density profile from the Plasma State grid to the Toric grid
 !
-         call ps_user_1dintrp_vec(x_toric, x_orig, ps%ns(:,0), &
+!          call ps_user_1dintrp_vec(x_toric, x_orig, ps%ns(:,0), &
+!                tmp_prof(:),ierr )
+         call ps_user_1dintrp_vec(x_toric, ps%rho, ps%ns(:,0), &
                tmp_prof(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS electron density profile onto Toric grid'
 
