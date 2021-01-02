@@ -670,6 +670,12 @@
          call ps_user_1dintrp_vec(x_toric, ps%rho_eq, ps%vol(:), &
                vol_int(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS volume onto Toric grid'
+         
+      write(*,*) ' '
+      write(*,*) 'ps%vol(:) ', ps%vol(:)
+      write(*,*) ' '
+      write(*,*) 'vol_int(:) ', vol_int(:)
+
 !
 ! PTB Compare the volume average of the orginal density profile from the Plasma State 
 ! and the volume average of the interpolated profile
