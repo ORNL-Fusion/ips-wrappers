@@ -604,6 +604,8 @@
       end do
 ! PTB end
 
+	  write(*,*) 'Prepare toric input got to here 3'
+
 ! TORIC uses only one radial mesh for density and temperature profiles that is
 ! that is defined in terms of the sqrt (Psi_pol) - normalized
 !
@@ -624,7 +626,7 @@
 	  write (*,*) "x_toric = "
 	  write (*,*) x_toric
 	  
-	  write(*,*) 'Prepare toric input got to here 2'
+	  write(*,*) 'Prepare toric input got to here 4'
 
       call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, sqrt_psipol, x_toric, ierr )
 	  write (*,*) " "
