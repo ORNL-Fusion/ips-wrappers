@@ -660,7 +660,7 @@
          if(ierr .ne. 0) stop 'error interpolating PS electron density profile onto Toric grid'
 
       write(out_unit,'(A10)')  'n_e interpolated, tmp_prof(:)'
-      write(*,*) 'ps%ns(:,0)', tmp_prof(:)
+      write(*,*) 'n_e interpolated, tmp_prof(:) ', tmp_prof(:)
 
 !
 ! Interpolate the volume profile from the Plasma State grid to the Toric grid
