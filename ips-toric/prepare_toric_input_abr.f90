@@ -580,6 +580,7 @@
       allocate( aa_prof(nprodt))
       allocate( bb_prof(nprodt))
       allocate( sqrt_psipol(nproeq))
+      allocate( x_orig (nprodt-1))
       allocate( x_toric(nprodt))
 ! PTB ends 
 
