@@ -656,8 +656,8 @@
 ! Interpolate the electron density profile from the Plasma State grid to the Toric grid
 !
 	 write(*,*) ' '
-	 write(*,*) 'Interpolating ne from x_orig grid to x_toric grid'
-	 call ps_user_1dintrp_vec(x_toric, x_orig, ps%ns(:,0), &
+	 write(*,*) 'Interpolating ne from ps%rho grid to x_toric grid'
+	 call ps_user_1dintrp_vec(ps%rho, x_orig, ps%ns(:,0), &
 		   tmp_prof(:),ierr )
 !          call ps_user_1dintrp_vec(x_toric, ps%rho, ps%ns(:,0), &
 !                tmp_prof(:),ierr )
@@ -669,7 +669,10 @@
 !
 ! Interpolate the volume profile from the Plasma State grid to the Toric grid
 !
-         call ps_user_1dintrp_vec(x_toric, ps%rho_eq, ps%vol(:), &
+	 write(*,*) ' '
+	 write(*,*) 'Interpolating vol from ps%rho_eq grid to ps%rho grid'
+
+         call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, ps%vol(:), &
                vol_int(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS volume onto Toric grid'
          
