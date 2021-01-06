@@ -6,7 +6,7 @@
 ! Working notes:
 !
 ! Batchelor 12-24-2020
-! Modifying interpolation in accordance with discussion of 12-9-202 with MIT people.
+! Modifying interpolation in accordance with discussion of 12-9-2020 with MIT people.
 ! 
 ! N.B. ps%psipol is on rho_eq grid (size = nproeq)) not rho grid (size = nprodt).  Typically
 !      they are the same but they need not always be.
@@ -497,8 +497,6 @@
          nspec=nspmx
       END IF
 
-      write(*,*) 'Prepare toric input got to here 1'
-
 !radial profiles generation, these are output to equilequ_file
       s_nrho_n = ps%nrho
       s_nrho_t = ps%nrho
@@ -593,8 +591,6 @@
 !         write(*,*)  atm(isp), azi(isp)
       end do
 
-      write(*,*) 'Prepare toric input got to here 2'
-
 ! PTB begins
 !
 ! Define mid-cell values from the orginal Plasma State radial grid - "ps%rho" and use this array
@@ -604,8 +600,6 @@
         x_orig(irho) = 0.5 * (ps%rho(irho) + ps%rho(irho+1))
       end do
 ! PTB end
-
-	  write(*,*) 'Prepare toric input got to here 3'
 
 ! TORIC uses only one radial mesh for density and temperature profiles that is
 ! that is defined in terms of the sqrt (Psi_pol) - normalized
@@ -617,17 +611,6 @@
 
 	  sqrt_psipol = sqrt(ps%psipol/ps%psipol(nprodt))
 
-	  write (*,*) " "
-	  write (*,*) "ps%rho = "
-	  write (*,*) ps%rho
-	  write (*,*) " "
-	  write (*,*) "sqrt_psipol = "
-	  write (*,*) sqrt_psipol
-	  write (*,*) " "
-	  write (*,*) "x_toric = "
-	  write (*,*) x_toric
-	  
-	  write(*,*) 'Prepare toric input got to here 4'
 
       call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, sqrt_psipol, x_toric, ierr )
 	  write (*,*) " "
@@ -657,10 +640,7 @@
 !
 	 write(*,*) ' '
 	 write(*,*) 'Interpolating ne from x_orig to rho grid'
-	 call ps_user_1dintrp_vec(ps%rho, x_orig, ps%ns(:,0), &
-		   tmp_prof(:),ierr )
-!          call ps_user_1dintrp_vec(x_toric, ps%rho, ps%ns(:,0), &
-!                tmp_prof(:),ierr )
+	 call ps_user_1dintrp_vec(ps%rho, x_orig, ps%ns(:,0),tmp_prof(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS electron density profile onto Toric grid'
 
       write(out_unit,'(A10)')  'n_e interpolated, tmp_prof(:)'
@@ -668,8 +648,7 @@
 
 	 write(*,*) ' '
 	 write(*,*) 'Interpolating ne from rho grid to rho grid'
-	 call ps_user_1dintrp_vec(ps%rho, ps%rho, ps%ns(:,0), &
-		   tmp_prof(:),ierr )
+	 call ps_user_1dintrp_vec(ps%rho, ps%rho, ps%ns(:,0), tmp_prof(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS electron density profile onto Toric grid'
 
       write(out_unit,'(A10)')  'n_e interpolated, tmp_prof(:)'
