@@ -634,7 +634,7 @@
 ! PTB ends
 
       write(out_unit,'(A10)')  'n_e'
-      write(*,*) 'ps%ns(:,0)', ps%ns(:,0)
+      write(*,*) 'ps%ns(1,0)', ps%ns(1,0)
 !
 ! Interpolate the electron density profile from the Plasma State grid to the Toric grid
 !
@@ -643,15 +643,13 @@
 	 call ps_user_1dintrp_vec(ps%rho, x_orig, ps%ns(:,0),tmp_prof(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS electron density profile onto Toric grid'
 
-      write(out_unit,'(A10)')  'n_e interpolated, tmp_prof(:)'
-      write(*,*) 'n_e interpolated, tmp_prof(:) ', tmp_prof(:)
+     write(*,*) 'n_e interpolated, tmp_prof(:) ', tmp_prof(:)
 
 	 write(*,*) ' '
 	 write(*,*) 'Interpolating ne from rho grid to rho grid'
 	 call ps_user_1dintrp_vec(ps%rho, ps%rho, ps%ns(:,0), tmp_prof(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS electron density profile onto Toric grid'
 
-      write(out_unit,'(A10)')  'n_e interpolated, tmp_prof(:)'
       write(*,*) 'n_e interpolated, tmp_prof(:) ', tmp_prof(:)
 
 !
