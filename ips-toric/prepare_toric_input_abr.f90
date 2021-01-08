@@ -5,16 +5,16 @@
 
 ! Working notes:
 !
-! Batchelor 12-24-2020
-! Modifying interpolation in accordance with discussion of 12-9-2020 with MIT people.
+! Batchelor 1-8-2021
+! Modifying interpolation subsequent to discussion of 12-9-2020 with MIT people. Details
+! of the rationale for changes are given in email to MIT et al 1/6/2021.
 ! 
-! N.B. ps%psipol is on rho_eq grid (size = nproeq)) not rho grid (size = nprodt).  Typically
-!      they are the same but they need not always be.
 ! 1) Introduced new array: sqrt_psipol = sqrt(ps%psipol/ps%psipol(nproeq))
 ! 2) Interpolated sqrt_psipol to x_toric on ps%rho grid
-
-
-
+! 3) Changed interpolation target grid from x_toric to ps%rho (except for interpolation of 
+!    x_toric itself)
+! 4) Changed interpolation source grid for profiles from x_orig to ps%rho. Eliminated all
+!    reference to x_orig
 
       program prepare_input
       USE plasma_state_mod
@@ -42,7 +42,6 @@
       real(rspec), dimension(:,:),allocatable :: v_pars
       real(rspec), dimension(:),allocatable :: aa_prof
       real(rspec), dimension(:),allocatable :: bb_prof
-      real(rspec), dimension(:),allocatable :: x_orig
       real(rspec), dimension(:),allocatable :: x_toric
       real(rspec), dimension(:),allocatable :: sqrt_psipol
       real(rspec) :: tol_zero = 1.0E-12_rspec, dVol, dVol_int, Q_ps, Q_int
@@ -578,7 +577,6 @@
       allocate( aa_prof(nprodt))
       allocate( bb_prof(nprodt))
       allocate( sqrt_psipol(nproeq))
-      allocate( x_orig (nprodt-1))
       allocate( x_toric(nprodt))
 ! PTB ends 
 
@@ -590,16 +588,6 @@
          write(out_unit,'(2i4)')  atm(isp), azi(isp)
 !         write(*,*)  atm(isp), azi(isp)
       end do
-
-! PTB begins
-!
-! Define mid-cell values from the orginal Plasma State radial grid - "ps%rho" and use this array
-! for all interpolations
-!
-     do irho = 1,nprodt-1
-        x_orig(irho) = 0.5 * (ps%rho(irho) + ps%rho(irho+1))
-      end do
-! PTB end
 
 ! TORIC uses only one radial mesh for density and temperature profiles that is
 ! that is defined in terms of the sqrt (Psi_pol) - normalized
@@ -638,13 +626,6 @@
 !
 ! Interpolate the electron density profile from the Plasma State grid to the Toric grid
 !
-	 write(*,*) ' '
-	 write(*,*) 'Interpolating ne from x_orig to rho grid'
-	 call ps_user_1dintrp_vec(ps%rho, x_orig, ps%ns(:,0),tmp_prof(:),ierr )
-         if(ierr .ne. 0) stop 'error interpolating PS electron density profile onto Toric grid'
-
-     write(*,*) 'n_e interpolated, tmp_prof(:) ', tmp_prof(:)
-
 	 write(*,*) ' '
 	 write(*,*) 'Interpolating ne from rho grid to rho grid'
 	 call ps_user_1dintrp_vec(ps%rho, ps%rho, ps%ns(:,0), tmp_prof(:),ierr )
@@ -692,7 +673,7 @@
       write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
 
       write(out_unit,'(A10)')  't_e'
-         call ps_user_1dintrp_vec(x_toric, x_orig, ps%Ts(:,0), &
+         call ps_user_1dintrp_vec(ps%rho, ps%rho, ps%Ts(:,0), &
                tmp_prof(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS electron temperature profile onto Toric grid'
       write(out_unit,'(5E16.9)')  tmp_prof   !keV
@@ -703,7 +684,7 @@
          if(ierr .ne. 0) stop 'error getting the density and temperature data from the abridged species list'
       do isp=1,ps%nspec_tha
          write(out_unit,'(A4,I2.2)')  'n_i_',isp
-         call ps_user_1dintrp_vec(x_toric, x_orig, ns_tha(:,isp), &
+         call ps_user_1dintrp_vec(ps%rho, ps%rho, ns_tha(:,isp), &
                tmp_prof(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS ion density profile onto Toric grid'
          write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
@@ -711,7 +692,7 @@
          write(out_unit,'(A4,I2.2)')  't_i_',isp
          write(*,*) "Thermal ion name, A, Z, dens, temp = "
          write(*,*) trim(ps%alla_name(isp)), atm(isp),azi(isp),ns_tha(1,isp),ts_tha(1,isp)
-         call ps_user_1dintrp_vec(x_toric, x_orig, Ts_tha(:,isp), &
+         call ps_user_1dintrp_vec(ps%rho, ps%rho, Ts_tha(:,isp), &
                tmp_prof(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS ion temperature profile onto Toric grid'
          write(out_unit,'(5E16.9)')  tmp_prof !keV
@@ -731,7 +712,7 @@
        isp = ps%snbi_to_alla(1)
          write(*,*) "Fast ion name, A, Z = ", trim(ps%alla_name(isp)), &
      &              NINT(ps%m_alla(isp)/ps_mp), NINT(ps%q_alla(isp)/ps_xe)
-         call ps_user_1dintrp_vec(x_toric, ps%rho_nbi, ps%nbeami(:,1), &
+         call ps_user_1dintrp_vec(ps%rho, ps%rho_nbi, ps%nbeami(:,1), &
                tmp_prof(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS NBI density profile onto Toric grid'
          write(out_unit,'(A4,I2.2)')  'n_i_',isp
@@ -741,10 +722,10 @@
 ! onto the Toric input data grid. Then compute the equivalent temperature profile for the NBI and
 ! write it to the equidt.data file.
 !
-          call ps_user_1dintrp_vec(x_toric, ps%rho_nbi, ps%eperp_beami(:,1), &
+          call ps_user_1dintrp_vec(ps%rho, ps%rho_nbi, ps%eperp_beami(:,1), &
                aa_prof(:),ierr )
           if(ierr .ne. 0) stop 'error interpolating PS NBI perp. energy profile onto Toric grid'
-          call ps_user_1dintrp_vec(x_toric, ps%rho_nbi, ps%epll_beami(:,1),  &
+          call ps_user_1dintrp_vec(ps%rho, ps%rho_nbi, ps%epll_beami(:,1),  &
                bb_prof(:),ierr )
           if(ierr .ne. 0) stop 'error interpolating PS NBI parallel energy profile onto Toric grid'
           tmp_prof = 0.667 * (aa_prof + bb_prof)
@@ -766,7 +747,7 @@
 ! compute nmini = fracmin * ne
 !
         if (trim(kdens_rfmin) .EQ. 'fraction') then
-         call ps_user_1dintrp_vec(x_toric, ps%rho, ps%ns(:,0), &
+         call ps_user_1dintrp_vec(ps%rho, ps%rho, ps%ns(:,0), &
                tmp_prof(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS electron density profile onto Toric grid'
          tmp_prof(:) = fracmin * tmp_prof(:)
@@ -776,7 +757,7 @@
 ! Next update ps%nmini in the Plasma State with th new minority ion density profile, by mapping
 ! fracmin * ps%ns(:,0) from the PS grid to the ICRF rho grid:
 !
-         call ps_user_1dintrp_vec(ps%rho_icrf,x_orig, fracmin*ps%ns(:,0), &
+         call ps_user_1dintrp_vec(ps%rho_icrf,ps%rho, fracmin*ps%ns(:,0), &
                ps%nmini(:,1),ierr )
          if(ierr .ne. 0) stop 'error interpolating new minority desnity profile onto PS grid'     
         endif
@@ -785,7 +766,7 @@
 ! it from the rho-icrf grid onto the Toric radial grid
 !
         if (trim(kdens_rfmin) .EQ. 'data') then
-         call ps_user_1dintrp_vec(x_toric, ps%rho_icrf, ps%nmini(:,1), &
+         call ps_user_1dintrp_vec(ps%rho, ps%rho_icrf, ps%nmini(:,1), &
                tmp_prof(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS minority density profile onto Toric grid'
          write(out_unit,'(A4,I2.2)')  'n_rfmin_',isp
@@ -799,7 +780,7 @@
 !
          write(out_unit,'(A4,I2.2)')  't_rfmin_',isp
          if (ps%isThermal(1) .eq. 1) then
-         call ps_user_1dintrp_vec(x_toric, ps%rho, Ts_tha(:,1), &
+         call ps_user_1dintrp_vec(ps%rho, ps%rho, Ts_tha(:,1), &
                tmp_prof(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS RF minority temperature profile onto Toric grid'
          write(out_unit,'(5E16.9)')  tmp_prof !keV
@@ -811,10 +792,10 @@
 ! the RF minority profile. Finally write this array to the equidt.data file.
 !
          if (ps%isThermal(1) .eq. 2) then
-          call ps_user_1dintrp_vec(x_toric, ps%rho_icrf, ps%eperp_mini(:,1), &
+          call ps_user_1dintrp_vec(ps%rho, ps%rho_icrf, ps%eperp_mini(:,1), &
                aa_prof(:),ierr )
           if(ierr .ne. 0) stop 'error interpolating PS RF minority perp. energy profile onto Toric grid'
-          call ps_user_1dintrp_vec(x_toric, ps%rho_icrf, ps%epll_mini(:,1),  &
+          call ps_user_1dintrp_vec(ps%rho, ps%rho_icrf, ps%epll_mini(:,1),  &
                bb_prof(:),ierr )
           if(ierr .ne. 0) stop 'error interpolating PS RF minority parallel energy profile onto Toric grid'
           tmp_prof = 0.667 * (aa_prof + bb_prof)
@@ -831,7 +812,7 @@
        isp = ps%sfus_to_alla(1)
          write(*,*) "Fast ion name, A, Z = ", trim(ps%alla_name(isp)), &
      &              NINT(ps%m_alla(isp)/ps_mp), NINT(ps%q_alla(isp)/ps_xe)
-         call ps_user_1dintrp_vec(x_toric, ps%rho_fus, ps%nfusi(:,1), &
+         call ps_user_1dintrp_vec(ps%rho, ps%rho_fus, ps%nfusi(:,1), &
                tmp_prof(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS fusion alpha density profile onto Toric grid'
          write(out_unit,'(A4,I2.2)')  'n_i_',isp
@@ -841,10 +822,10 @@
 ! onto the Toric input data grid. Then compute the equivalent temperature profile for the NBI and
 ! write it to the equidt.data file.
 !
-          call ps_user_1dintrp_vec(x_toric, ps%rho_fus, ps%eperp_fusi(:,1), &
+          call ps_user_1dintrp_vec(ps%rho, ps%rho_fus, ps%eperp_fusi(:,1), &
                aa_prof(:),ierr )
           if(ierr .ne. 0) stop 'error interpolating PS fusion alpha perp. energy profile onto Toric grid'
-          call ps_user_1dintrp_vec(x_toric, ps%rho_fus, ps%epll_fusi(:,1),  &
+          call ps_user_1dintrp_vec(ps%rho, ps%rho_fus, ps%epll_fusi(:,1),  &
                bb_prof(:),ierr )
           if(ierr .ne. 0) stop 'error interpolating PS fusion alpha parallel energy profile onto Toric grid'
           tmp_prof = 0.667 * (aa_prof + bb_prof)
@@ -866,7 +847,6 @@
       deallocate(v_pars)
       deallocate(aa_prof)
       deallocate(bb_prof)
-      deallocate(x_orig)
       deallocate(x_toric)
       close(out_unit)
 
