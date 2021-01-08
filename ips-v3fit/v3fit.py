@@ -7,7 +7,7 @@
 #
 #-------------------------------------------------------------------------------
 
-from component import Component
+from ipsframework import Component
 from omfit.classes.omfit_namelist import OMFITnamelist
 from omfit.classes.omfit_nc import OMFITnc
 from utilities import ZipState

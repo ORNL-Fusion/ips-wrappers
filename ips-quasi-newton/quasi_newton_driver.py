@@ -7,7 +7,7 @@
 #
 #-------------------------------------------------------------------------------
 
-from component import Component
+from ipsframework import Component
 from utilities import ZipState
 from utilities import ScreenWriter
 import os

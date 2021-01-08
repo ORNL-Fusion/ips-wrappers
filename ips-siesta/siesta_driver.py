@@ -6,7 +6,7 @@
 #
 #-------------------------------------------------------------------------------
 
-from component import Component
+from ipsframework import Component
 import os
 import shutil
 from utilities import ZipState
