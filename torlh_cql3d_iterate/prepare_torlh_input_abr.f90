@@ -8,6 +8,19 @@
 ! Modified to pick up LH power (pwtot) from plasma state ps%power_lh(1)
 ! And get enorm from command line argument.
 
+! Working notes:
+!
+! Batchelor 1-12-2021 (Same modifications as done 1-8-21 for prepare_toric_input_abr.f90)
+! Modifying interpolation subsequent to discussion of 12-9-2020 with MIT people. Details
+! of the rationale for changes are given in email to MIT et al 1/6/2021.
+! 
+! 1) Introduced new array: sqrt_psipol = sqrt(ps%psipol/ps%psipol(nproeq))
+! 2) Interpolated sqrt_psipol to x_torlh on ps%rho grid
+! 3) Changed interpolation target grid from x_torlh to ps%rho (except for interpolation of 
+!    x_torlh itself)
+! 4) Changed interpolation source grid for profiles from ps%rho to ps%rho. Eliminated all
+!    reference to ps%rho
+
 ! Working notes: DBB 4-13-2017
 ! Previous versions had wrong logic for controlling the INUMIN variable.  In particular the
 ! explanation in Working notes: DBB 9-8-2016 was wrong so I'm eliminating that and fixing.
@@ -58,8 +71,8 @@
       real(rspec), dimension(:,:),allocatable :: v_pars
       real(rspec), dimension(:),allocatable :: aa_prof
       real(rspec), dimension(:),allocatable :: bb_prof
-      real(rspec), dimension(:),allocatable :: x_orig
       real(rspec), dimension(:),allocatable :: x_torlh
+      real(rspec), dimension(:),allocatable :: sqrt_psipol
       real(rspec) :: tol_zero = 1.0E-12_rspec, dVol, dVol_int, Q_ps, Q_int
 
 ! PTB ends
@@ -730,7 +743,8 @@
       allocate( v_pars(nprodt-1,ps%nspec_tha))
       allocate( aa_prof(nprodt))
       allocate( bb_prof(nprodt))
-      allocate( x_orig (nprodt-1))
+      allocate( ps%rho (nprodt-1))
+      allocate( sqrt_psipol(nproeq))
       allocate( x_torlh (nprodt))
 ! PTB ends
 
@@ -742,31 +756,24 @@
          write(out_unit,'(2i4)')  atm(isp), azi(isp)
 !         write(*,*)  atm(isp), azi(isp)
       end do
-! PTB begins
-!
-! Define mid-cell values from the orginal Plasma State radial grid - "ps%rho" and use this array
-! for all interpolations
-!
-     do irho = 1,nprodt-1
-        x_orig(irho) = 0.5 * (ps%rho(irho) + ps%rho(irho+1))
-      end do
-! PTB end
 
 ! TORIC uses only one radial mesh for density and temperature profiles that is
 ! that is defined in terms of the sqrt (Psi_pol) - normalized
 !
-! DBB begins: First interpolate psi_poloidal from rho_eq grid to rho grid.  Note, if you
-!             try to interpolate ps%psipol with the ps_user_1dintrp_vec routine it will
-!              detect that ps%psipol is a zone centered variable and will interpolate it
-!              to length nrho-1. So fool it by introducing dummy non-PS varible psi_poloidal_eq
+! DBB begins: Interpolate psi_poloidal from rho_eq grid to rho grid.
 
-	  psi_poloidal_eq = ps%psipol
-      call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, psi_poloidal_eq, x_torlh, ierr )
-      x_torlh = sqrt(x_torlh/x_torlh(nprodt))
+	  sqrt_psipol = sqrt(ps%psipol/ps%psipol(nprodt))
+
+      call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, sqrt_psipol, x_torlh, ierr )
+	  write (*,*) " "
+	  write (*,*) "ps%rho = "
+	  write (*,*) ps%rho
+	  write (*,*) " "
+	  write (*,*) "sqrt_psipol = "
+	  write (*,*) sqrt_psipol
 	  write (*,*) " "
 	  write (*,*) "x_torlh = "
 	  write (*,*) x_torlh
-! DBB ends
 
 !     write(out_unit,'(A10)')  'rho'
 !     write(out_unit,'(5E16.9)')  ps%rho !check units
@@ -782,7 +789,7 @@
 !
 ! Interpolate the electron density profile from the Plasma State grid to the Toric grid
 ! N.B. Toric grid maps directly to rho grid ps%rho, same radii.
-         call ps_user_1dintrp_vec(ps%rho, x_orig, ps%ns(:,0), tmp_prof(:),ierr )  !DBB 6-27_2017
+         call ps_user_1dintrp_vec(ps%rho, ps%rho, ps%ns(:,0), tmp_prof(:),ierr )  !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS electron density profile onto Toric grid'
 !
 !
@@ -815,7 +822,7 @@
       write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
 
       write(out_unit,'(A10)')  't_e'
-         call ps_user_1dintrp_vec(ps%rho, x_orig, ps%Ts(:,0), tmp_prof(:),ierr ) !DBB 6-27_2017
+         call ps_user_1dintrp_vec(ps%rho, ps%rho, ps%Ts(:,0), tmp_prof(:),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS electron temperature profile onto Torlh grid'
       write(out_unit,'(5E16.9)')  tmp_prof   !keV
 	  write (*,*) " "
@@ -827,7 +834,7 @@
          if(ierr .ne. 0) stop 'error getting the density and temperature data from the abridged species list'
       do isp=1,ps%nspec_tha
          write(out_unit,'(A4,I2.2)')  'n_i_',isp
-         call ps_user_1dintrp_vec(ps%rho, x_orig, ns_tha(:,isp), tmp_prof(:),ierr ) !DBB 6-27_2017
+         call ps_user_1dintrp_vec(ps%rho, ps%rho, ns_tha(:,isp), tmp_prof(:),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS ion density profile onto Torlh grid'
          write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
 	     write (*,*) " "
@@ -837,7 +844,7 @@
          write(out_unit,'(A4,I2.2)')  't_i_',isp
          write(*,*) "Thermal ion name, A, Z, dens, temp = "
          write(*,*) trim(ps%alla_name(isp)), atm(isp),azi(isp),ns_tha(1,isp),ts_tha(1,isp)
-         call ps_user_1dintrp_vec(ps%rho, x_orig, Ts_tha(:,isp), tmp_prof(:),ierr )  !DBB 6-27_2017
+         call ps_user_1dintrp_vec(ps%rho, ps%rho, Ts_tha(:,isp), tmp_prof(:),ierr )  !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS ion temperature profile onto Torlh grid'
          write(out_unit,'(5E16.9)')  tmp_prof !keV
 	     write (*,*) " "
@@ -901,7 +908,7 @@
 ! compute nmini = fracmin * ne
 !
         if (trim(kdens_rfmin) .EQ. 'fraction') then
-         call ps_user_1dintrp_vec(x_torlh, ps%rho, ps%ns(:,0), &
+         call ps_user_1dintrp_vec(ps%rho, ps%rho, ps%ns(:,0), &
                tmp_prof(:),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS electron density profile onto Torlh grid'
          tmp_prof(:) = fracmin * tmp_prof(:)
@@ -945,7 +952,7 @@
 !
          write(out_unit,'(A4,I2.2)')  't_rfmin_',isp
          if (ps%isThermal(1) .eq. 1) then
-			 call ps_user_1dintrp_vec(x_torlh, ps%rho, Ts_tha(:,1), &
+			 call ps_user_1dintrp_vec(ps%rho, ps%rho, Ts_tha(:,1), &
 				   tmp_prof(:),ierr ) !DBB 6-27_2017
 			 if(ierr .ne. 0) stop 'error interpolating PS RF minority temperature profile onto Torlh grid'
 			 write(out_unit,'(5E16.9)')  tmp_prof !keV
@@ -1026,7 +1033,7 @@
       deallocate(v_pars)
       deallocate(aa_prof)
       deallocate(bb_prof)
-      deallocate(x_orig)
+      deallocate(ps%rho)
       deallocate(x_torlh)
       close(out_unit)
 
