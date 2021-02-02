@@ -49,6 +49,8 @@
       logical ::   use_incore=.false.
                               ! default is to use out-of-core memory
       integer ::   pcblock=4  !  number of processors used in poloidal pc mesh when MASTCH=2
+      character(80) :: conv = 'none'
+      integer :: wndwconv = 0
 ! Namelist inputs for control of the output, most are off to avoid too much data dumped
       integer ::   iout=0, ipltht=0, idlout=1
 ! NetCDF output for plots on by default.  torica.sol file has solutions but not necessarily
@@ -161,7 +163,7 @@
      &   isol,   mastch,         iout,   idlout, &
      &   iwdisk, zeff, &
      &   timing_on, scratchpath, use_incore, pcblock, inputpath, &
-     &   IJRF, IPWDIM, ICLPLO
+     &   IJRF, IPWDIM, ICLPLO, conv, wndwconv
 
       namelist /nonthermals/ &
      &   fracmin, q_rfmin, qatom_rfmin, m_rfmin, rfmin_name, &

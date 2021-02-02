@@ -141,15 +141,17 @@
       logical ::   use_incore=.false.
                               ! default is to use out-of-core memory
                               ! Core-memory is not enough for LH waves resolution
+      character(80) :: conv='none'
+      integer :: wndwconv = 0
 
 !  qldce namelist variables
 !  ~~~~~~~~~~~~~~~~~
       integer, parameter :: max_runs = 50    !max number of nphi
       character(80), dimension(:) :: files_toric(max_runs)
       character(80) :: path, file_felice, smooth, consv
-      character(80) :: sumtrunc
+      character(80) :: sumtrunc = 'disabled'
       integer :: num_runs, nfel_nphi, iread_felice, npsi_qld
-      integer :: wndwtrunc
+      integer :: wndwtrunc=0
       real(rspec) :: d_u, enorm=0._rspec, uasp=1.0, pwtot=1.0
       real(rspec) :: deltapsi,ntres
       real(rspec) :: psi_min, psi_max
@@ -278,7 +280,7 @@
      &   isol,   mastch,         iout,   idlout, &
      &   iwdisk, zeff, &
      &   timing_on, inumin, scratchpath, use_incore, pcblock, inputpath, &
-     &   IJRF, IPWDIM, ICLPLO
+     &   IJRF, IPWDIM, ICLPLO,conv,wndwconv
 
 ! originally in t0_mod_qldce.F
       namelist /qldceinp/ &
@@ -794,7 +796,7 @@
       allocate( v_pars(nprodt-1,ps%nspec_tha))
       allocate( aa_prof(nprodt))
       allocate( bb_prof(nprodt))
-      allocate( ps%rho (nprodt-1))
+      !allocate( ps%rho (nprodt-1)) this was already allocated?
       allocate( sqrt_psipol(nproeq))
       allocate( x_torlh (nprodt))
 ! PTB ends

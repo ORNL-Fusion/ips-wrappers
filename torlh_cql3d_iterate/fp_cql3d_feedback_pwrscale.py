@@ -115,9 +115,11 @@ import subprocess
 import getopt
 import shutil
 import string
+import scipy.io.netcdf as nc
 from  component import Component
-from Numeric import *                        #Use numpy instead?? BH
-from Scientific.IO.NetCDF import *           #Use scipy.io.netcdf implentation??  BH
+from numpy import *                        #Use numpy instead?? BH
+#from Scientific.IO.NetCDF import *           #Use scipy.io.netcdf implentation??  BH
+
 
 class cql3d(Component):
     def __init__(self, services, config):
@@ -416,8 +418,9 @@ class cql3d(Component):
 
 # Check if LHRF power is zero (or effectively zero).  If true don't run Genray
 
-        ps = NetCDFFile(cur_state_file, 'r')
-        power_lh = ps.variables['power_lh'].getValue()[0]
+        ps = nc.netcdf_file(cur_state_file, 'r')
+        power_lh_tmp = ps.variables['power_lh'].data
+        power_lh = copy(power_lh_tmp[0])
         ps.close()
         print('power = ', power_lh)
         if(power_lh > 1.0E-04):
@@ -459,7 +462,8 @@ class cql3d(Component):
                    restart = 'enabled'
                    shutil.copyfile('cql3d.nc','distrfunc.nc')
     # ptb: End of ptb hack
-
+          if (timeStamp == 1.0) and (icount == 1): #SFRNK hack to fix implicit iteration
+              restart = 'disabled'
 # If this is the first step in a pwrscale iteration, and restart = 'enabled' (e.g. this
 # is a restart) save the distrfunc.nc file to initial_distrfunc.nc.   
           if 'icount_arg' in kwargs:
@@ -497,7 +501,7 @@ class cql3d(Component):
 #     Launch cql3d - N.B: Path to executable is in config parameter CQL3D_BIN
           print('fp_cql3d: launching cql3d')
           cwd = services.get_working_dir()
-          task_id = services.launch_task(self.NPROC, cwd, self.CQL3D_BIN, task_ppn=10, logfile='log.cql3d')
+          task_id = services.launch_task(self.NPROC, cwd, self.CQL3D_BIN, task_ppn=5, logfile='log.cql3d')
           retcode = services.wait_task(task_id)
           if (retcode != 0):
               print('Error executing command: ', cql3d_bin)

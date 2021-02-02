@@ -492,18 +492,19 @@ class torlh (Component):
                 print(logMsg)
                 services.exception(logMsg)
                 raise 
-            
+           
+            #SF Removed: DU0U0 File now written by TORLH no need to write with mapin
             # For qldce mode need to also run mapin
-            if arg_toric_Mode == 'qldce':
-                mapin_bin = self.try_get_component_param(services,'MAPIN_BIN')
-                print('\nRunning ' + mapin_bin)
-                services.send_portal_event(event_type = 'COMPONENT_EVENT', \
-                     event_comment = 'running ' + mapin_bin)
-                retcode = subprocess.call([mapin_bin])
-                if (retcode != 0):
-                    logMsg = 'Error executing ' + mapin_bin
-                    self.services.error(logMsg)
-                    raise Exception(logMsg)
+#            if arg_toric_Mode == 'qldce':
+#                mapin_bin = self.try_get_component_param(services,'MAPIN_BIN')
+#                print('\nRunning ' + mapin_bin)
+#                services.send_portal_event(event_type = 'COMPONENT_EVENT', \
+#                     event_comment = 'running ' + mapin_bin)
+#                retcode = subprocess.call([mapin_bin])
+#                if (retcode != 0):
+#                    logMsg = 'Error executing ' + mapin_bin
+#                    self.services.error(logMsg)
+#                    raise Exception(logMsg)
 
 # For toric mode merge partial plasma state containing updated IC data
         if arg_toric_Mode == 'toric':
