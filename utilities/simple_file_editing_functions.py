@@ -9,6 +9,7 @@ For now it only deals with single line assignments.
 
 # Working notes:
 # Batchelor 4/21/2020: Copied futurized component from dbb4 branch
+# Batchelor 2/1/2021: Added read_var_from_nml_lines
 #
 
 import sys
@@ -167,6 +168,40 @@ def edit_nml_file(lines, var, values, separator = ','):
         
     return lines[:var_line_number + 1] + lines[var_line_number + var_lines:]
 
+#---------------------------------------------------------------------------------------
+# Read a variable from a fortran namelist file
+#---------------------------------------------------------------------------------------
+
+def read_var_from_nml_lines(lines, var, separator = ','):
+
+# This routine is very limited, for now it only reads scalar real numbers
+
+    # Find the line in the namelist containing 'var = '
+    var_line_number = -1
+    for i in range(len(lines)):
+        line = lines[i]
+        if '=' in line:
+            split_line = line.split('=')
+            #print 'split_line = ', split_line
+            if (split_line[0].strip()).lower() == var.lower():
+                var_line_number = i
+
+    if var_line_number == -1:
+        message = 'read_var_from_nml_lines: Could not find variable ', var, ' in namelist lines'
+        print(message)
+        raise Exception(message)
+
+    RHS = lines[var_line_number].split('=')[1]
+
+#     Get rid of newline if there is one
+    if RHS[-1] == '\n':
+        lines[var_line_number] = lines[var_line_number][:-1]
+
+    RHS_list = RHS.split(',')
+#    print 'RHS = ', RHS_list[0].split()
+    value = float(RHS_list[0].split()[0])
+    print('value = ', value)
+    return value
 
 #_________________________________________________________________________________________________
 
@@ -180,7 +215,9 @@ if __name__ == '__main__':
     print('variable_dict = ', variable_dict)
     
     variable_dict_to_output_file(VD, 'out_file')
-
+    
+    read_var_from_nml_lines(lines, 'x', separator = ',')
+    
     VD_2 = input_file_to_variable_dict('little_dict2')
     print(VD_2)
 
@@ -189,3 +226,5 @@ if __name__ == '__main__':
 
     change_dict = {'Q': 600}
     add_variables_to_output_file(change_dict, 'test_file_2')
+
+    read_var_from_nml_lines(lines, x, separator = ',')
