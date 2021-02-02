@@ -216,7 +216,7 @@ if __name__ == '__main__':
     
     variable_dict_to_output_file(VD, 'out_file')
     
-    read_var_from_nml_lines(lines, 'x', separator = ',')
+    read_var_from_nml_lines(lines, 'x')
     
     VD_2 = input_file_to_variable_dict('little_dict2')
     print(VD_2)
@@ -226,5 +226,3 @@ if __name__ == '__main__':
 
     change_dict = {'Q': 600}
     add_variables_to_output_file(change_dict, 'test_file_2')
-
-    read_var_from_nml_lines(lines, x, separator = ',')
