@@ -184,7 +184,7 @@ class model_EPA_mdescr(Component):
                     t_final = float(DT_paramsList[1])
                     
                     # Get initial value of parameter from the initial namelist file
-                    Value_init = read_var_from_nml_lines(self, initial_nml_Lines, param)
+                    Value_init = read_var_from_nml_lines(initial_nml_Lines, param)
                     print('intial '+param, ' = ', Value_init)
                     
                     #Value_init = float(DT_paramsList[2])
@@ -202,7 +202,7 @@ class model_EPA_mdescr(Component):
                     Value_final = float(DT_paramsList[2])
                     
                     # Get initial value of parameter from the initial namelist file
-                    Value_init = read_var_from_nml_lines(self, initial_nml_Lines, param)
+                    Value_init = read_var_from_nml_lines(initial_nml_Lines, param)
                     print('intial '+param, ' = ', Value_init)
                     
                     print('t_initial = ',t_initial, \
