@@ -213,11 +213,11 @@ class model_EPA_mdescr(Component):
                                
                 print('t = ', float(timeStamp), ' ', param, ' = ', newValue)
                 # modify that parameter in namelist file
-                lines = self.edit_nml_file(inputLines, param, [newValue], separator = ',')
+                lines = edit_nml_file(inputLines, param, [newValue])
         
         # write modified namelist file        
         if params_to_change:
-            self.put_lines('model_EPA_mdescr_input.nml', lines)
+            put_lines('model_EPA_mdescr_input.nml', lines)
 
 # Call model_EPA_mdescr
         bin = os.path.join(self.BIN_PATH, 'model_EPA_mdescr')
