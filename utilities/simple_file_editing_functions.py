@@ -111,11 +111,8 @@ def modify_variables_in_file(change_dict, filename):
 #     new vector.  For example it doesn't support changing an array element or array 
 #     slice.
 #
-# separator = Optional argument specifying the separator between array elements.  The
-#     the default is comma
-#
 
-def edit_nml_file(lines, var, values, separator = ','):
+def edit_nml_file(lines, var, values):
 
     # Find the line in the namelist containing 'var = ' and get rid of newline if present.
     var_line_number = -1
@@ -172,7 +169,7 @@ def edit_nml_file(lines, var, values, separator = ','):
 # Read a variable from a fortran namelist file
 #---------------------------------------------------------------------------------------
 
-def read_var_from_nml_lines(lines, var, separator = ','):
+def read_var_from_nml_lines(lines, var):
 
 # This routine is very limited, for now it only reads scalar real numbers
 
