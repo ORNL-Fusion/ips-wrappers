@@ -436,20 +436,15 @@ class torlh (Component):
                     raise              
                 imchzz_bin = self.ImChizz_BIN
                 cmd_imchizz=self.ImChizz_BIN
-                try:
-                   services.send_portal_event(event_type = 'COMPONENT_EVENT',\
-                      event_comment =  'running ' + cmd_imchizz)
-                   P=subprocess.Popen(cmd_imchizz,stdin=subprocess.PIPE,stdout=subprocess.PIPE,\
-                      stderr=subprocess.STDOUT, bufsize=1)
-                except :
-                   logMsg = "Error executing" + cmd_imchizz
-                   self.services.error(logMsg)
-                   raise
-                print(P.communicate("b\n"))
-                
-                #P.wait()
+                cwd = services.get_working_dir()
+                imchzz_log = os.path.join(workdir, 'log.imchzz')
+                task_id = services.launch_task(60,cwd,imchzz_bin, logfile=imchzz_log)
+                retcode = services.wait_task(task_id, timeout = 1800.0, delay = 60.)
+                if (retcode != 0):
+                    services.error("ImChizz Failed")
+                    raise Exception("ImChizz Failed")
                 print('Finished ImChizz')
-
+                
 
             # Launch torlh executable
             cwd = services.get_working_dir()
