@@ -5,7 +5,7 @@ import subprocess
 import getopt
 import shutil
 import math
-from component import Component
+from ipsframework import Component
 from Scientific.IO.NetCDF import *
 import Numeric
 from plasmastate import *
@@ -28,11 +28,11 @@ class basic_time_step_driver(Component):
     def step(self, timestamp=0):
 
         services = self.services
-        services.stage_plasma_state()
+        services.stage_state()
         services.stage_input_files(self.INPUT_FILES)
 
         # get list of ports
-        ports = services.getGlobalConfigParameter('PORTS')
+        ports = services.get_config_param('PORTS')
         port_names = ports['NAMES'].split()
         print 'PORTS =', port_names
         port_dict = {}
@@ -54,7 +54,7 @@ class basic_time_step_driver(Component):
             port_id_list.append(port)
  
         # Is this a simulation startup or restart
-        sim_mode = services.getGlobalConfigParameter('SIMULATION_MODE')
+        sim_mode = services.get_config_param('SIMULATION_MODE')
         print 'SIMULATION_MODE =', sim_mode
 
         # Get timeloop for simulation
@@ -73,7 +73,7 @@ class basic_time_step_driver(Component):
             self.component_call(services,port_name,port_dict[port_name],init_mode,t)
  
         # Get plasma state files into driver work directory and copy to psn if there is one
-        services.stage_plasma_state()
+        services.stage_state()
         cur_state_file = services.get_config_param('CURRENT_STATE')
         try:
             next_state_file = services.get_config_param('NEXT_STATE')
@@ -82,11 +82,11 @@ class basic_time_step_driver(Component):
             logMsg = 'generic_driver: No NEXT_STATE file '        
             services.exception(logMsg)
             raise
-        services.update_plasma_state()
+        services.update_state()
 
         # Get Portal RUNID and save to a file
         run_id = services.get_config_param('PORTAL_RUNID')
-        sym_root = services.getGlobalConfigParameter('SIM_ROOT')
+        sym_root = services.get_config_param('SIM_ROOT')
         path = os.path.join(sym_root, 'PORTAL_RUNID')
         runid_file = open(path, 'a')
         runid_file.writelines(run_id + '\n')
@@ -98,7 +98,7 @@ class basic_time_step_driver(Component):
         print ' init sequence complete--ready for time loop'
 
         ps = PlasmaState("ips",1)
-        ps_work_dir = services.getGlobalConfigParameter('PLASMA_STATE_WORK_DIR')
+        ps_work_dir = services.get_config_param('PLASMA_STATE_WORK_DIR')
 
         # Iterate through the timeloop
         for t in tlist_str[1:len(timeloop)]:
@@ -107,9 +107,9 @@ class basic_time_step_driver(Component):
             services.update_time_stamp(t)
 
             # call pre_step_logic
-            services.stage_plasma_state()
+            services.stage_state()
             self.pre_step_logic(float(t))
-            services.update_plasma_state()
+            services.update_state()
             print (' ')
 
             # Call step for each component
@@ -136,7 +136,7 @@ class basic_time_step_driver(Component):
                         services.error(logMsg)
                         raise Exception(logMsg)
  
-            services.stage_plasma_state()
+            services.stage_state()
 
             # Post step processing: stage plasma state, checkpoint components and self
             services.stage_output_files(t, self.OUTPUT_FILES)

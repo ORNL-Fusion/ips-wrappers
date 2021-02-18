@@ -29,7 +29,7 @@ TORLH component.  Adapted from RF_LH_toric_abr_mcmd.py. (5-14-2016)
 # arg_inumin_Mode = Maxwell or nonMaxwell
 # arg_isol_Mode = 0 or 1 (Normally = 1)
 #
-# Nota Bene: This component uses services.update_plasma_state() which overwrites all state
+# Nota Bene: This component uses services.update_state() which overwrites all state
 # files. To use this in a concurrent simulation should use merge_plasma_state instead.
 
 # Working notes: DBB 8-29-2016
@@ -40,7 +40,7 @@ TORLH component.  Adapted from RF_LH_toric_abr_mcmd.py. (5-14-2016)
 # Working notes: DBB 8-28-2016
 # Have not yet developed a process_torlh_output code.  For the torlh/CQL3D coupling
 # no lower hybrid data needs to go back into plasma state.  So for now have just commented
-# out the calls to process_torlh_output and the merge_current_plasma_state.
+# out the calls to process_torlh_output and the merge_current_state.
 
 # Working notes: DBB 5-14-2016
 # Changed all IC references to LH.  Assuming torlh works just the same as TORIC.  
@@ -137,9 +137,9 @@ class torlh (Component):
 
       # Copy plasma state files over to working directory
         try:
-            services.stage_plasma_state()
+            services.stage_state()
         except Exception:
-            logMsg = 'Error in call to stage_plasma_state()'
+            logMsg = 'Error in call to stage_state()'
             self.services.exception(logMsg)
             raise 
 
@@ -147,7 +147,7 @@ class torlh (Component):
         try:
             services.stage_input_files(self.INPUT_FILES)
         except:
-            logMsg = 'Error in call to stageInputFiles()'
+            logMsg = 'Error in call to stage_input_files()'
             self.services.exception(logMsg)
             raise
 
@@ -186,9 +186,9 @@ class torlh (Component):
             
       # Update plasma state files in plasma_state work directory
         try:
-            services.update_plasma_state()
+            services.update_state()
         except Exception:
-            logMsg = 'Error in call to update_plasma_state()'
+            logMsg = 'Error in call to update_state()'
             self.services.exception(logMsg)
             raise 
 
@@ -271,9 +271,9 @@ class torlh (Component):
 
       # Copy plasma state files over to working directory
         try:
-            services.stage_plasma_state()
+            services.stage_state()
         except:
-            logMsg = 'Error in call to stage_plasma_state()'
+            logMsg = 'Error in call to stage_state()'
             self.services.exception(logMsg)
             raise 
 
@@ -281,7 +281,7 @@ class torlh (Component):
         try:
             services.stage_input_files(self.INPUT_FILES)
         except:
-            logMsg = 'Error in call to stageInputFiles()'
+            logMsg = 'Error in call to stage_input_files()'
             self.services.exception(logMsg)
             raise 
 
@@ -531,11 +531,11 @@ class torlh (Component):
         try:
             partial_file = cwd + '/RF_LH_' + cur_state_file
             # No process_output code yet
-            #services.merge_current_plasma_state(partial_file, logfile='log.update_state')
+            #services.merge_current_state(partial_file, logfile='log.update_state')
             #print 'merged torlh plasma state data ', partial_file
             print 'No process_output code yet, so no plasma state merge'
         except:
-            logMsg = 'Error in call to merge_current_plasma_state(' + partial_file + ')'
+            logMsg = 'Error in call to merge_current_state(' + partial_file + ')'
             self.services.exception(logMsg)
             raise 
 
@@ -549,9 +549,9 @@ class torlh (Component):
 
       # Update plasma state files in plasma_state work directory
         try:
-            services.update_plasma_state()
+            services.update_state()
         except Exception:
-            logMsg = 'Error in call to update_plasma_state()'
+            logMsg = 'Error in call to update_state()'
             self.services.exception(logMsg)
             raise 
 

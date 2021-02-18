@@ -3,7 +3,7 @@
 import sys
 import os
 import subprocess
-from component import Component
+from ipsframework import Component
 import time
 import shutil
 from stat import *
@@ -74,7 +74,7 @@ class Genray_xmhd(Component):
         process_output_bin = os.path.join(self.BIN_PATH, 'process_genray_output')
         print "Got GENRAY's process_genray_output binary path"
 	
-        self.services.stage_plasma_state()
+        self.services.stage_state()
 
         start = self.last_timestamp
         stop = timestamp

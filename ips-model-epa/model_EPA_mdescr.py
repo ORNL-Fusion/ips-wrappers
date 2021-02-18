@@ -102,7 +102,7 @@ class model_EPA_mdescr(Component):
         services = self.services
 
 # Copy current and prior state over to working directory
-        self.services.stage_plasma_state()
+        self.services.stage_state()
 
         self.services.stage_input_files(self.INPUT_FILES)
         cur_state_file = get_global_param(self, services,'CURRENT_STATE')
@@ -117,7 +117,7 @@ class model_EPA_mdescr(Component):
             raise
 
 # Update (original) plasma state
-        services.update_plasma_state()
+        services.update_state()
         
 # "Archive" output files in history directory
         services.stage_output_files(timeStamp, self.OUTPUT_FILES)
@@ -152,7 +152,7 @@ class model_EPA_mdescr(Component):
 
 
 # Copy current and prior state over to working directory
-        services.stage_plasma_state()
+        services.stage_state()
         cur_state_file = get_global_param(self, services,'CURRENT_STATE')
         ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
         tinit = ps.variables['tinit'].getValue()
@@ -230,7 +230,7 @@ class model_EPA_mdescr(Component):
             raise
 
 # Update plasma state
-        services.update_plasma_state()
+        services.update_state()
 
 # "Archive" output files in history directory
         services.stage_output_files(timeStamp, self.OUTPUT_FILES)

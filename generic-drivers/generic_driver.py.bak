@@ -1,31 +1,52 @@
 #! /usr/bin/env python
 
-# Version 9 (Batchelor 6/2/2011)
-# Moved LH component into the list of components that run concurrently
+# Version 10.5 (Batchelor 9-12-2019)
+# Eliminated import get_lines, put_lines, edit_nml_file, get_global_param, and
+# get_component_param.  Get these from /ips-wrappers/utilities.  Needs to be on 
+# PYTHON_PATH.
 
+# Version 10.4 (Batchelor 7/29/2018)
+# Eliminated all reference to NEXT_STATE
+
+# Version 10.3 (Batchelor 4/25/2017)
+# Added capabiity to terminate simulation after INIT phase based on optional config 
+# parameter INIT_ONLY == True.
+
+# Version 10.2 (Batchelor 4/21/2017)
+# reordered INIT phase so that RF INITs before Fokker-Planck. We expect the RF components
+# To set the RF grid dimensions and allocate them, then these are used by Fokker-Planck.
+# Fokker-Planck continues to run after RF in STEP.
+
+# Version 10.1 (Batchelor 11/18/2015)
+# Updated exception handling to new protocol.  Updated old Scientific.IO.NetCDF to
+# netCDF4
+
+# Version 10 (Batchelor 3/2/2014)
+# Reorders the initialization and step sequence so that Fokker-Planck (FP) goes before
+# the RF components.  The RF components (at least AORSA) needs the non-Maxwellian
+# distribution function in order to run.  Also but the copy of current plasma state to
+# prior plasma state that happens in pre_step_logic() into a try/except structure.  This
+# way it's not necessary to carry a prior state if it's not needed.
+
+# Version 9 (Batchelor 3/9/2011) N.B. Gone as of version 10.4
+# Eliminates copying of NEXT_STATE to CURRENT_STATE in the pres_tep_logic function
+# This copy clobbers plasma state merges of partial states.  It was already 
+# eliminated from the concurrent_driver.py.  Components are free to still write
+# NEXT_STATE and other components can read it if they want to communicate that
+# way.
 
 # Version 8 (Batchelor 1/11/2011)
 # Adds generic awareness of RF_EC component
 
 # Version 7 (Batchelor 11/19/2010)
-
 # Now writes a file in SIM_ROOT called "PORTAL_RUNID" that contains the 
 # PORTAL_RUNID number of the present run.  On restart it appends the new runid
 # to the file so there is a record of all portal run id numbers associated with
 # this simulation.
 
-# Version 6 (Batchelor 6/30/2010)
-
-# In pre-step_logic eliminated the copy of next_state_file to cur_state_file.  This was
-# clobbering the plasma states accumulated from the services.merge_current_state
-# calls.  Besides which TSC was not writing power_ic and power_nbi for the next time step
-# into it.  Which was the whole purpose of next_plasma_state.  So now the RF and NBI 
-# components don't get the news that the power has changed until the time step is over.
-# We need to fix that but with a different method.  However it is possible that some 
-# components might still use next_state_file so:
+# Version 6 (Batchelor 7/1/2010)
 # Put in a test to see if there is a NEXT_STATE before copying between it and
 # CURRENT_STATE.  This way it won't crash if the simulation doesn't use NEXT_STATE
-
 
 # version 5 (Batchelor 5/21/2010)
 
@@ -60,8 +81,8 @@
 # or one must start an interactive session. It can't be launched from the command line 
 # unless the machine configuration file (e.g. franklin.conf) is modified to contain 
 # "MPIRUN=eval" instead of "MPIRUN=aprun". The intention is to write a companion to this 
-# driver that uses the Python subprocess.call() to launch components.  Then the IPS can be
-# started from the command line but the job will be restricted to one processor.
+# driver that uses the Python subprocess.call() to launch components.  Then the IPS can 
+# be started from the command line but the job will be restricted to one processor.
 #
 # This version also has some of the additions needed to allow checkpoint/restart but
 # that is under continued development.
@@ -73,8 +94,8 @@ import getopt
 import shutil
 import math
 from ipsframework import Component
-from Scientific.IO.NetCDF import *
-import Numeric
+from netCDF4 import *
+from get_IPS_config_parameters import get_global_param, get_component_param
 
 
 class generic_driver(Component):
@@ -106,7 +127,8 @@ class generic_driver(Component):
         services.stage_input_files(self.INPUT_FILES)
 
       # get list of ports
-        ports = services.get_config_param('PORTS')
+#        ports = services.get_config_param('PORTS')
+        ports = get_global_param(self, services,'PORTS')
         port_names = ports['NAMES'].split()
         print 'PORTS =', port_names
         port_dict = {}
@@ -133,7 +155,7 @@ class generic_driver(Component):
             port_dict['EPA'] = epaComp
             port_id_list.append(epaComp)
             print (' ')
-        
+       
         if 'RF_EC' in port_names:
             rf_ecComp = services.get_port('RF_EC')
             if(rf_ecComp == None):
@@ -178,7 +200,7 @@ class generic_driver(Component):
             port_dict['FUS'] = fusComp
             port_id_list.append(fusComp)
             print (' ')
-
+ 
         if 'FP' in port_names:
             fpComp = services.get_port('FP')
             if(fpComp == None):
@@ -198,8 +220,7 @@ class generic_driver(Component):
             print (' ')
 
       # Is this a simulation startup or restart
-        sim_mode = services.get_config_param('SIMULATION_MODE')
-        print 'SIMULATION_MODE =', sim_mode
+        sim_mode = get_global_param(self, services,'SIMULATION_MODE')
 
       # Get timeloop for simulation
         timeloop = services.get_time_loop()
@@ -236,19 +257,13 @@ class generic_driver(Component):
         if 'MONITOR' in port_names:
             self.component_call(services, 'MONITOR', monitorComp, init_mode, t)
 
-      # Get plasma state files into driver work directory and copy to ps next if there is one
+      # Get plasma state files into driver work directory and copy to psn if there is one
         services.stage_state()
-        cur_state_file = services.get_config_param('CURRENT_STATE')
-        try:
-            next_state_file = services.get_config_param('NEXT_STATE')
-            shutil.copyfile(cur_state_file, next_state_file)
-        except Exception, e:
-            print 'concurrent_driver: No NEXT_STATE file ', e        
-        services.update_state()
+        cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
 
        # Get Portal RUNID and save to a file
-        run_id = services.get_config_param('PORTAL_RUNID')
-        sym_root = services.get_config_param('SIM_ROOT')
+        run_id = get_global_param(self, services,'PORTAL_RUNID')
+        sym_root = get_global_param(self, services,'SIM_ROOT')
         path = os.path.join(sym_root, 'PORTAL_RUNID')
         runid_file = open(path, 'a')
         runid_file.writelines(run_id + '\n')
@@ -258,6 +273,12 @@ class generic_driver(Component):
         services.stage_output_files(t, self.OUTPUT_FILES)
 
         print ' init sequence complete--ready for time loop'
+
+        INIT_ONLY = get_component_param(self, services, 'INIT_ONLY', optional = True)
+        if INIT_ONLY in [True, 'true', 'True', 'TRUE']:   
+            message = 'INIT_ONLY: Intentional stop after INIT phase'
+            print message
+            return
 
 # ------------------------------------------------------------------------------
 #
@@ -274,46 +295,33 @@ class generic_driver(Component):
 
         # call pre_step_logic
             services.stage_state()
-            self.pre_step_logic(float(t))
+            self.pre_step_logic(services, float(t))
             services.update_state()
             print (' ')
 
        # Call step for each component
 
             print (' ')
-            
-            call_list = []
-
-            if 'EPA' in port_names:
-                call_id_epa  = services.call_nonblocking(epaComp, 'step', t)
-                call_list.append(call_id_epa)
-
             if 'RF_EC' in port_names:
-                call_id_rf  = services.call_nonblocking(rf_ecComp, 'step', t)
-                call_list.append(call_id_rf)
+                self.component_call(services, 'RF_EC', rf_ecComp, 'step', t)
 
             if 'RF_IC' in port_names:
-                call_id_rf  = services.call_nonblocking(rf_icComp, 'step', t)
-                call_list.append(call_id_rf)
+                self.component_call(services, 'RF_IC', rf_icComp, 'step', t)
 
             if 'RF_LH' in port_names:
-                self.component_call_nonblocking(services, 'RF_LH', rf_lhComp, 'step', t)
+                self.component_call(services, 'RF_LH', rf_lhComp, 'step', t)
 
             if 'NB' in port_names:
-                call_id_nb  = services.call_nonblocking(nbComp, 'step', t)
-                call_list.append(call_id_nb)
-                
-            retval_dict = services.wait_call_list(call_list, block=True)
-            print 'retval_dict ',retval_dict
-            print 'present working directory ', os.getcwd()
-            print 'should be file name of partial rf_ic state ', retval_dict[call_id_rf]
-#            print 'should be file name of partial nb state ', retval_dict[call_id_nb]
+                self.component_call(services, 'NB', nbComp, 'step', t)
 
             if 'FUS' in port_names:
                 self.component_call(services, 'FUS', fusComp, 'step', t)
 
             if 'FP' in port_names:
                 self.component_call(services, 'FP', fpComp, 'step', t)
+
+            if 'EPA' in port_names:
+                self.component_call(services, 'EPA', epaComp, 'step', t)
 
             if 'MONITOR' in port_names:
                 self.component_call(services, 'MONITOR', monitorComp, 'step', t)
@@ -389,50 +397,39 @@ class generic_driver(Component):
     # Component call - wraps the exception handling for all component calls
     def component_call(self, services, port_name, comp, mode, time):
             comp_mode_string = port_name + ' ' + mode
-            print (comp_mode_string)
+            print '\n', comp_mode_string
+
             try:
                 services.call(comp, mode, time)
             except Exception:
-                services.exception(comp_mode_string + ' failed')
-                raise
-            else:
-                print comp_mode_string + ' finished'
-                print (' ')
+                message = comp_mode_string + ' failed'
+                print message
+                services.exception(message)
+                raise 
             
             return
     
     
     # Pre Step Logic
-    def pre_step_logic(self, timeStamp):
+    def pre_step_logic(self, services, timeStamp):
 
-        cur_state_file = self.services.get_config_param('CURRENT_STATE')
-        prior_state_file = self.services.get_config_param('PRIOR_STATE')
-
-      #  Copy data from next plasma state (if there is one) to current plasma state
-        try:
-            next_state_file = services.get_config_param('NEXT_STATE')
-            shutil.copyfile(next_state_file, cur_state_file)
-        except Exception, e:
-            pass
+        cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
 
       # Update time stamps
-        ps = NetCDFFile(cur_state_file, 'r+')
+
+        ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
         t1 = ps.variables['t1'].getValue()
+        ps.variables['t0'].assignValue(t1)
+        ps.variables['t1'].assignValue(timeStamp)
         self.services.log('ps%t1 = ', t1)
 
         power_ic = 0.0
         if ('power_ic' in ps.variables.keys()):
-            power_ic = ps.variables['power_ic'].getValue()[0]
-            print'concurrent_driver pre_step_logic: power_ic = ', power_ic
-
-        ps.variables['t0'].assignValue(t1)
-        ps.variables['t1'].assignValue(timeStamp)
+            power_ic = ps.variables['power_ic'][:]
+            print'generic_driver pre_step_logic: power_ic = ', power_ic
 
         ps.close()
-        shutil.copyfile(cur_state_file, prior_state_file)
-
-        print'concurrent_driver pre_step_logic: timeStamp = ', timeStamp
-
+        
+        print'generic_driver pre_step_logic: timeStamp = ', timeStamp
+        
         return
-
-

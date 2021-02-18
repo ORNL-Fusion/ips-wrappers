@@ -26,7 +26,7 @@ import sys
 import os
 import simple_assignment_file_edit as edit
 import get_IPS_config_parameters as config
-from component import Component
+from ipsframework import Component
 
 class basic_driver(Component):
 
@@ -57,7 +57,7 @@ class basic_driver(Component):
         services.stage_input_files(self.INPUT_FILES)
 
       # get list of ports
-#        ports = services.getGlobalConfigParameter('PORTS')
+#        ports = services.get_config_param('PORTS')
         ports = config.get_global_param(self, services,'PORTS')
         port_names = ports['NAMES'].split()
         print('PORTS =', port_names)

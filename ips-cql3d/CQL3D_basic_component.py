@@ -7,7 +7,7 @@ A simple component script to run the CQL3D code from provided input files
 """
 import shutil
 import get_IPS_config_parameters as config
-from component import Component
+from ipsframework import Component
 
 class CQL3D_basic (Component):
     def __init__(self, services, config):
@@ -49,8 +49,8 @@ class CQL3D_basic (Component):
         try:
           services.stage_input_files(self.INPUT_FILES)
         except Exception:
-          print('Error in call to stageInputFiles()')
-          self.services.error('Error in call to stageInputFiles()')
+          print('Error in call to stage_input_files()')
+          self.services.error('Error in call to stage_input_files()')
           raise
       
 #     Launch CQL3D - N.B: Path to executable is in config parameter EXECUTABLE

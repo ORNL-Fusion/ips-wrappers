@@ -45,7 +45,7 @@ class model_EPA(Component):
         services = self.services
 
 # Copy current and prior state over to working directory
-        self.services.stage_plasma_state()
+        self.services.stage_state()
 
         self.services.stage_input_files(self.INPUT_FILES)
         cur_state_file = self.services.get_config_param('CURRENT_STATE')
@@ -61,7 +61,7 @@ class model_EPA(Component):
             return 1
 
 # Update (original) plasma state
-        services.update_plasma_state()
+        services.update_state()
 
         return
 
@@ -83,7 +83,7 @@ class model_EPA(Component):
 
 
 # Copy current and prior state over to working directory
-        services.stage_plasma_state()
+        services.stage_state()
 
         cur_state_file = services.get_config_param('CURRENT_STATE')
         next_state_file = self.services.get_config_param('NEXT_STATE')
@@ -98,7 +98,7 @@ class model_EPA(Component):
             sys.exit(1)
 
 # Update plasma state
-        services.update_plasma_state()
+        services.update_state()
 
 # "Archive" output files in history directory
         services.stage_output_files(timeStamp, self.OUTPUT_FILES)

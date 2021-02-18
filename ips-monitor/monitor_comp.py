@@ -976,7 +976,7 @@ class monitor(Component):
             self.GENERATE_PDF = False
         
     # Copy current state over to working directory
-        services.stage_plasma_state()
+        services.stage_state()
 
         services.stage_input_files(self.INPUT_FILES)
         cur_state_file = services.get_config_param('CURRENT_STATE')
@@ -1118,7 +1118,7 @@ class monitor(Component):
             return 1
 
     # Copy current and prior state over to working directory
-        services.stage_plasma_state()
+        services.stage_state()
         cur_state_file = services.get_config_param('CURRENT_STATE')
 
         monitor = os.path.join(self.BIN_PATH, 'monitor_comp')

@@ -84,7 +84,7 @@ import utils.simple_assignment_file_edit as edit
 import utils.get_IPS_config_parameters as config
 import subprocess
 import os
-from component import Component
+from ipsframework import Component
 
 
 class generic_component (Component):
@@ -136,7 +136,7 @@ class generic_component (Component):
         try:
             services.stage_input_files(self.INPUT_FILES)
         except Exception as e:
-            print('Error in call to stageInputFiles()', e)
+            print('Error in call to stage_input_files()', e)
             self.services.exception('Error in call to stage_input_files()')
             raise
 
@@ -241,8 +241,8 @@ class generic_component (Component):
         try:
             services.stage_input_files(self.INPUT_FILES)
         except Exception:
-            print('Error in call to stageInputFiles()')
-            self.services.exception('Error in call to stageInputFiles()')
+            print('Error in call to stage_input_files()')
+            self.services.exception('Error in call to stage_input_files()')
             raise
 
     # Copy state files over to working directory

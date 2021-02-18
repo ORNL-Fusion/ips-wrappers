@@ -35,7 +35,7 @@ class cql3d(Component):
         cql3d_bin = os.path.join(self.BIN_PATH, 'xcql3d')
 
 # Copy current and prior state over to working directory
-        services.stage_plasma_state()
+        services.stage_state()
 
 # Call prepare_cql3d-input
         cur_state_file = services.get_config_param('CURRENT_STATE')
@@ -123,7 +123,7 @@ class cql3d(Component):
                     print 'fp_cql3d.py 1 error: Error copying state files' , e
 #              return 1
 
-        services.update_plasma_state()
+        services.update_state()
 
 # "Archive" output files in history directory
         services.stage_output_files(timeStamp, self.OUTPUT_FILES)

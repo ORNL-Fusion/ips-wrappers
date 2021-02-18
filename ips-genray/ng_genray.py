@@ -3,7 +3,7 @@
 import sys
 import os
 import subprocess
-from component import Component
+from ipsframework import Component
 import time
 import shutil
 from stat import *
@@ -61,7 +61,7 @@ class ng_genray(Component):
         newComment='ng_genray is getting the current Plasma State data.'
         self.services.send_portal_event('GENRAY_EVENT',event_comment=newComment)
         self.services.info(newComment)
-        self.services.stage_plasma_state()
+        self.services.stage_state()
 
         # Move the input files (presently only the genray.template file) to the GENRAY working
         # directory so they will be available for use.
@@ -118,7 +118,7 @@ class ng_genray(Component):
         # Merge plasma state.
         shutil.copy('cur_state.cdf','cur_state.cdf.0')
         self.services.send_portal_event('GENRAY_EVENT',event_comment='ng_genray is updating the Plasma State.')
-        self.services.update_plasma_state() 
+        self.services.update_state() 
 
         # Now publish the new genray.nc filepath to PHYS_GENRAY_EVENTS.
         event_data={}
@@ -212,7 +212,7 @@ class ng_genray(Component):
             newComment='ng_genray is getting the current Plasma State data.'
             self.services.send_portal_event('GENRAY_EVENT',event_comment=newComment)
             self.services.info(newComment)
-            self.services.stage_plasma_state()
+            self.services.stage_state()
 
             # Now call prepare_genray_input to make the GENRAY input file with the
             # correct NIMROD profiles.
@@ -262,7 +262,7 @@ class ng_genray(Component):
 	    newComment='ng_genray is updating the Plasma State.'
             self.services.send_portal_event('GENRAY_EVENT',event_comment=newComment)
             shutil.copy('cur_state.cdf','cur_state.cdf.'+str(counter))
-            self.services.update_plasma_state()
+            self.services.update_state()
 
             # Publish the announcement of a new Plasma State to the monitor channel so 
 	    # that the monitor file can be updated.

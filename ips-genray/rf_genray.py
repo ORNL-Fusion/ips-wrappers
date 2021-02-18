@@ -130,7 +130,7 @@ import subprocess
 #import getopt
 import shutil
 #import string
-from component import Component
+from ipsframework import Component
 from netCDF4 import *
 from simple_file_editing_functions import get_lines, put_lines, edit_nml_file
 from get_IPS_config_parameters import get_global_param, get_component_param
@@ -349,19 +349,19 @@ class genray(Component):
 
     # Copy plasma state files over to working directory
         try:
-            services.stage_plasma_state()
+            services.stage_state()
         except Exception as e:
-            print('Error in call to stage_plasma_state()', e)
-            services.error('Error in call to stage_plasma_state()')
-            raise Exception('Error in call to stage_plasma_state()')
+            print('Error in call to stage_state()', e)
+            services.error('Error in call to stage_state()')
+            raise Exception('Error in call to stage_state()')
 
     # Get input files
         try:
             services.stage_input_files(INPUT_FILES)
         except Exception as e:
-            print('Error in call to stageInputFiles()', e)
-            services.error('Error in call to stageInputFiles()')
-            raise Exception('Error in call to stageInputFiles()')
+            print('Error in call to stage_input_files()', e)
+            services.error('Error in call to stage_input_files()')
+            raise Exception('Error in call to stage_input_files()')
 
     # Copy current plasma state file to generic name -> cur_state.cdf
         try:
@@ -431,11 +431,11 @@ class genray(Component):
 
     # Update plasma state files in plasma_state work directory
         try:
-            services.update_plasma_state()
+            services.update_state()
         except Exception as e:
-            print('Error in call to update_plasma_state()', e)
-            services.error('Error in call to update_plasma_state()')
-            raise Exception('Error in call to update_plasma_state()')
+            print('Error in call to update_state()', e)
+            services.error('Error in call to update_state()')
+            raise Exception('Error in call to update_state()')
 
     # Archive output files
     # N.B.  prepare_genray_input in init mode does not produce a complete set
@@ -532,11 +532,11 @@ class genray(Component):
 
     # Copy plasma state files over to working directory
         try:
-            services.stage_plasma_state()
+            services.stage_state()
         except Exception as e:
-            print('Error in call to stage_plasma_state()', e)
-            services.error('Error in call to stage_plasma_state()')
-            raise Exception('Error in call to stage_plasma_state()')
+            print('Error in call to stage_state()', e)
+            services.error('Error in call to stage_state()')
+            raise Exception('Error in call to stage_state()')
 
         cur_state_file = services.get_config_param('CURRENT_STATE')
         cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
@@ -685,15 +685,15 @@ class genray(Component):
 
 # Merge partial plasma state containing updated EC data
         try:
-            services.merge_current_plasma_state(
+            services.merge_current_state(
                 partial_file, logfile='log.update_state')
             print('merged GENRAY plasma state data ', partial_file)
         except Exception as e:
             (errno, strerror) = e.args
-            print('Error in call to merge_current_plasma_state(', partial_file, ')'\
+            print('Error in call to merge_current_state(', partial_file, ')'\
             , strerror)
-            self.services.error('Error in call to merge_current_plasma_state')
-            raise Exception('Error in call to merge_current_plasma_state')
+            self.services.error('Error in call to merge_current_state')
+            raise Exception('Error in call to merge_current_state')
 
         # Update plasma state files in plasma_state work directory, but only dql_file
         # if there is one. This way it will not overwrite the current partial plasma state
@@ -702,9 +702,9 @@ class genray(Component):
             self, services, 'CURRENT_DQL', optional=True)
         try:
             if dql_file is not None:
-                services.update_plasma_state([dql_file])
+                services.update_state([dql_file])
         except Exception:
-            logMsg = 'Error in call to update_plasma_state ' + cur_dql_file
+            logMsg = 'Error in call to update_state ' + cur_dql_file
             self.services.exception(logMsg)
             raise
 

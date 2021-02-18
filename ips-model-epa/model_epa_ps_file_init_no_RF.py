@@ -54,7 +54,7 @@ import subprocess
 import getopt
 import shutil
 import string
-from component import Component
+from ipsframework import Component
 
 class model_EPA(Component):
     def __init__(self, services, config):
@@ -109,19 +109,19 @@ class model_EPA(Component):
             
     # Copy plasma state files over to working directory
         try:
-          services.stage_plasma_state()
+          services.stage_state()
         except Exception, e:
-          print 'Error in call to stage_plasma_state()' , e
-          services.error('Error in call to stage_plasma_state()')
-          raise Exception, 'Error in call to stage_plasma_state()'
+          print 'Error in call to stage_state()' , e
+          services.error('Error in call to stage_state()')
+          raise Exception, 'Error in call to stage_state()'
         
     # Get input files  
         try:
           services.stage_input_files(INPUT_FILES)
         except Exception, e:
-          print 'Error in call to stageInputFiles()' , e
-          services.error('Error in call to stageInputFiles()')
-          raise Exception, 'Error in call to stageInputFiles()'
+          print 'Error in call to stage_input_files()' , e
+          services.error('Error in call to stage_input_files()')
+          raise Exception, 'Error in call to stage_input_files()'
           
      # Copy input_state_file to generic name "input_state_file"
         try:
@@ -130,7 +130,7 @@ class model_EPA(Component):
           print 'Error in renaming input_state_file' , e
           services.error('Error in renaming input_state_file')
           raise Exception, 'Error in renaming input_state_file'
-          raise Exception, 'Error in call to stageInputFiles()'
+          raise Exception, 'Error in call to stage_input_files()'
                     
      # Copy input_eqdsk_file to generic name "input_eqdsk_file"
         try:
@@ -161,11 +161,11 @@ class model_EPA(Component):
 
     # Update plasma state files in plasma_state work directory
         try:
-          services.update_plasma_state()
+          services.update_state()
         except Exception, e:
-          print 'Error in call to update_plasma_state()', e
-          services.error('Error in call to update_plasma_state()')
-          raise Exception, 'Error in call to update_plasma_state()'
+          print 'Error in call to update_state()', e
+          services.error('Error in call to update_state()')
+          raise Exception, 'Error in call to update_state()'
 
 # "Archive" output files in history directory
         try:
@@ -247,19 +247,19 @@ class model_EPA(Component):
 
     # Copy plasma state files over to working directory
         try:
-          services.stage_plasma_state()
+          services.stage_state()
         except Exception, e:
-          print 'Error in call to stage_plasma_state()' , e
-          services.error('Error in call to stage_plasma_state()')
-          raise Exception, 'Error in call to stage_plasma_state()'
+          print 'Error in call to stage_state()' , e
+          services.error('Error in call to stage_state()')
+          raise Exception, 'Error in call to stage_state()'
       
     # Get input files  
         try:
           services.stage_input_files(self.INPUT_FILES)
         except Exception, e:
-          print 'Error in call to stageInputFiles()' , e
-          self.services.error('Error in call to stageInputFiles()')
-          raise Exception, 'Error in call to stageInputFiles()'
+          print 'Error in call to stage_input_files()' , e
+          self.services.error('Error in call to stage_input_files()')
+          raise Exception, 'Error in call to stage_input_files()'
 
 # Call model_epa
         model_epa_bin = os.path.join(BIN_PATH, 'model_epa_ps_file_init_no_RF')
@@ -278,23 +278,23 @@ class model_EPA(Component):
         if STATE_WRITE_MODE == 'full':
         # Update plasma state files in plasma_state work directory
             try:
-              services.update_plasma_state()
+              services.update_state()
               print 'Updated model_epa plasma state data ', cur_state_file
             except Exception, e:
-              print 'Error in call to update_plasma_state()', e
-              services.error('Error in call to update_plasma_state()')
-              raise Exception, 'Error in call to update_plasma_state()'
+              print 'Error in call to update_state()', e
+              services.error('Error in call to update_state()')
+              raise Exception, 'Error in call to update_state()'
         else:
     # Merge partial plasma state containing updated EPA data
             try:
               cwd = services.get_working_dir()
               partial_file = cwd + '/EPA_' + cur_state_file
-              services.merge_current_plasma_state(partial_file, logfile='log.update_state')
+              services.merge_current_state(partial_file, logfile='log.update_state')
               print 'Merged model_epa plasma state data ', partial_file
             except Exception, e:
-              print 'Error in call to merge_current_plasma_state(' , partial_file, ')'
-              self.services.error('Error in call to merge_current_plasma_state')
-              raise Exception, 'Error in call to merge_current_plasma_state'
+              print 'Error in call to merge_current_state(' , partial_file, ')'
+              self.services.error('Error in call to merge_current_state')
+              raise Exception, 'Error in call to merge_current_state'
 
     # Archive output files
         try:

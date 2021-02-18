@@ -31,7 +31,7 @@ import subprocess
 import getopt
 import shutil
 import string
-from component import Component
+from ipsframework import Component
 
 class model_RF_IC_3 (Component):
     def __init__(self, services, config):
@@ -69,18 +69,18 @@ class model_RF_IC_3 (Component):
 
     # Copy plasma state files over to working directory
         try:
-          services.stage_plasma_state()
+          services.stage_state()
         except Exception, e:
-          print 'Error in call to stage_plasma_state()' , e
-          services.error('Error in call to stage_plasma_state()')
+          print 'Error in call to stage_state()' , e
+          services.error('Error in call to stage_state()')
           raise
       
     # Get input files  
         try:
           services.stage_input_files(self.INPUT_FILES)
         except Exception, e:
-          print 'Error in call to stageInputFiles()' , e
-          self.services.error('Error in call to stageInputFiles()')
+          print 'Error in call to stage_input_files()' , e
+          self.services.error('Error in call to stage_input_files()')
           raise
 
         RF_IC_bin = os.path.join(BIN_PATH, 'model_RF_IC_3')
@@ -103,9 +103,9 @@ class model_RF_IC_3 (Component):
 
 # Update plasma state files in plasma_state work directory
         try:
-          services.update_plasma_state()
+          services.update_state()
         except Exception:
-          message = 'Error in call to update_plasma_state()'
+          message = 'Error in call to update_state()'
           print message
           services.error(message)
           raise
@@ -184,18 +184,18 @@ class model_RF_IC_3 (Component):
 
     # Copy plasma state files over to working directory
         try:
-          services.stage_plasma_state()
+          services.stage_state()
         except Exception, e:
-          print 'Error in call to stage_plasma_state()' , e
-          services.error('Error in call to stage_plasma_state()')
+          print 'Error in call to stage_state()' , e
+          services.error('Error in call to stage_state()')
           raise
       
     # Get input files  
         try:
           services.stage_input_files(self.INPUT_FILES)
         except Exception:
-          print 'Error in call to stageInputFiles()'
-          self.services.error('Error in call to stageInputFiles()')
+          print 'Error in call to stage_input_files()'
+          self.services.error('Error in call to stage_input_files()')
           raise
 
 
@@ -217,9 +217,9 @@ class model_RF_IC_3 (Component):
 
 # Update plasma state files in plasma_state work directory
         try:
-            services.merge_current_plasma_state(partial_file)
+            services.merge_current_state(partial_file)
         except Exception:
-            message = 'Error in call merge_current_plasma_state()'
+            message = 'Error in call merge_current_state()'
             print message
             services.error(message)
             raise

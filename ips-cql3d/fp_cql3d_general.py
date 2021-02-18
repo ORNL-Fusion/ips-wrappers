@@ -23,8 +23,8 @@
 # of prepare_cql3d_input.f90
 
 # fp_cql3d_general.py, Version 0.1 Batchelor 3-2-2017
-# Added cur_cql_file only to update_plasma_state for iteration (not full update).
-# Plasma state variables are already updated with merge_current_plasma_state.  So this 
+# Added cur_cql_file only to update_state for iteration (not full update).
+# Plasma state variables are already updated with merge_current_state.  So this 
 # component can be used concurrently.
 
 # Version 0.0, fp_cql3d_general.py, BH 08/15/2012
@@ -153,19 +153,19 @@ class cql3d(Component):
 
     # Copy plasma state files over to working directory
         try:
-          services.stage_plasma_state()
+          services.stage_state()
         except Exception as e:
-          print('Error in call to stage_plasma_state()' , e)
-          services.error('Error in call to stage_plasma_state()')
-          raise Exception('Error in call to stage_plasma_state()')
+          print('Error in call to stage_state()' , e)
+          services.error('Error in call to stage_state()')
+          raise Exception('Error in call to stage_state()')
         
     # Get input files  
         try:
           services.stage_input_files(INPUT_FILES)
         except Exception as e:
-          print('Error in call to stageInputFiles()' , e)
-          services.error('Error in call to stageInputFiles()')
-          raise Exception('Error in call to stageInputFiles()')
+          print('Error in call to stage_input_files()' , e)
+          services.error('Error in call to stage_input_files()')
+          raise Exception('Error in call to stage_input_files()')
             
     # Copy cqlinput_<suffix> to generic file name -> cqlinput if there is
     # a suffix
@@ -271,11 +271,11 @@ class cql3d(Component):
 
     # Update plasma state files in plasma_state work directory
         try:
-          services.update_plasma_state()
+          services.update_state()
         except Exception as e:
-          print('Error in call to update_plasma_state()', e)
-          services.error('Error in call to update_plasma_state()')
-          raise Exception('Error in call to update_plasma_state()')
+          print('Error in call to update_state()', e)
+          services.error('Error in call to update_state()')
+          raise Exception('Error in call to update_state()')
      
     # Archive output files
     # N.B.  prepare_cql3d_input in init mode does not produce a complete set 
@@ -354,11 +354,11 @@ class cql3d(Component):
 
     # Copy plasma state files over to working directory
         try:
-          services.stage_plasma_state()
+          services.stage_state()
         except Exception as e:
-          print('Error in call to stage_plasma_state()' , e)
-          services.error('Error in call to stage_plasma_state()')
-          raise Exception('Error in call to stage_plasma_state()')
+          print('Error in call to stage_state()' , e)
+          services.error('Error in call to stage_state()')
+          raise Exception('Error in call to stage_state()')
 
     # Get global configuration parameters
         cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
@@ -492,12 +492,12 @@ class cql3d(Component):
 
 # Merge partial plasma state containing updated CQL3D data  [BH]
         try:
-           services.merge_current_plasma_state(partial_file, logfile='log.update_state')
+           services.merge_current_state(partial_file, logfile='log.update_state')
            print('merged CQL3D plasma state data ', partial_file)
         except Exception as e:
-           print('Error in call to merge_current_plasma_state(' , partial_file, ')')
-           self.services.error('Error in call to merge_current_plasma_state')
-           raise Exception('Error in call to merge_current_plasma_state')
+           print('Error in call to merge_current_state(' , partial_file, ')')
+           self.services.error('Error in call to merge_current_state')
+           raise Exception('Error in call to merge_current_state')
 
   # Update plasma state files in plasma_state work directory, but only cur_cql_file
   # and cur_ImChizz_inp_file if there is one.
@@ -505,16 +505,16 @@ class cql3d(Component):
         print('CURRENT_CQL = ', cur_cql_file, '  cur_ImChizz_inp_file = ', cur_ImChizz_inp_file)
         try:
            if cur_cql_file != None:
-             services.update_plasma_state([cur_cql_file])
+             services.update_state([cur_cql_file])
         except Exception:
-           logMsg = 'Error in call to update_plasma_state()'
+           logMsg = 'Error in call to update_state()'
            self.services.exception(logMsg)
            raise 
         try:
            if cur_ImChizz_inp_file != None:
-             services.update_plasma_state([cur_ImChizz_inp_file])
+             services.update_state([cur_ImChizz_inp_file])
         except Exception:
-           logMsg = 'Error in call to update_plasma_state()'
+           logMsg = 'Error in call to update_state()'
            self.services.exception(logMsg)
            raise 
         

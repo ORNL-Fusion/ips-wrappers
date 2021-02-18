@@ -39,7 +39,7 @@ class model_FUS (Component):
 
 
 # Copy current state files and input files over to working directory
-        self.services.stage_plasma_state()
+        self.services.stage_state()
         self.services.stage_input_files(self.INPUT_FILES)
         cur_state_file = self.services.get_config_param('CURRENT_STATE')
         prior_state_file = self.services.get_config_param('PRIOR_STATE')
@@ -55,7 +55,7 @@ class model_FUS (Component):
             return 1
 
 # Update (original) plasma state
-        services.update_plasma_state()
+        services.update_state()
 
         return
 
@@ -76,7 +76,7 @@ class model_FUS (Component):
         services = self.services
 
 # Copy current state files and input files over to working directory
-        self.services.stage_plasma_state()
+        self.services.stage_state()
         self.services.stage_input_files(self.INPUT_FILES)
         cur_state_file = self.services.get_config_param('CURRENT_STATE')
         prior_state_file = self.services.get_config_param('PRIOR_STATE')
@@ -94,7 +94,7 @@ class model_FUS (Component):
 #           return 1
 
 # Update plasma state
-        services.update_plasma_state()
+        services.update_state()
 
 # "Archive" output files in history directory
         retcode = subprocess.call(['touch','FUS.out'])

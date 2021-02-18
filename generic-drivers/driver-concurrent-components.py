@@ -17,7 +17,7 @@
 # Version 6 (Batchelor 6/30/2010)
 
 # In pre-step_logic eliminated the copy of next_state_file to cur_state_file.  This was
-# clobbering the plasma states accumulated from the services.merge_current_plasma_state
+# clobbering the plasma states accumulated from the services.merge_current_state
 # calls.  Besides which TSC was not writing power_ic and power_nbi for the next time step
 # into it.  Which was the whole purpose of next_plasma_state.  So now the RF and NBI 
 # components don't get the news that the power has changed until the time step is over.
@@ -72,7 +72,7 @@ import subprocess
 import getopt
 import shutil
 import math
-from component import Component
+from ipsframework import Component
 from Scientific.IO.NetCDF import *
 import Numeric
 
@@ -102,11 +102,11 @@ class generic_driver(Component):
     def step(self, timestamp=0):
 
         services = self.services
-        services.stage_plasma_state()
+        services.stage_state()
         services.stage_input_files(self.INPUT_FILES)
 
       # get list of ports
-        ports = services.getGlobalConfigParameter('PORTS')
+        ports = services.get_config_param('PORTS')
         port_names = ports['NAMES'].split()
         print 'PORTS =', port_names
         port_dict = {}
@@ -198,7 +198,7 @@ class generic_driver(Component):
             print (' ')
 
       # Is this a simulation startup or restart
-        sim_mode = services.getGlobalConfigParameter('SIMULATION_MODE')
+        sim_mode = services.get_config_param('SIMULATION_MODE')
         print 'SIMULATION_MODE =', sim_mode
 
       # Get timeloop for simulation
@@ -237,18 +237,18 @@ class generic_driver(Component):
             self.component_call(services, 'MONITOR', monitorComp, init_mode, t)
 
       # Get plasma state files into driver work directory and copy to ps next if there is one
-        services.stage_plasma_state()
+        services.stage_state()
         cur_state_file = services.get_config_param('CURRENT_STATE')
         try:
             next_state_file = services.get_config_param('NEXT_STATE')
             shutil.copyfile(cur_state_file, next_state_file)
         except Exception, e:
             print 'concurrent_driver: No NEXT_STATE file ', e        
-        services.update_plasma_state()
+        services.update_state()
 
        # Get Portal RUNID and save to a file
         run_id = services.get_config_param('PORTAL_RUNID')
-        sym_root = services.getGlobalConfigParameter('SIM_ROOT')
+        sym_root = services.get_config_param('SIM_ROOT')
         path = os.path.join(sym_root, 'PORTAL_RUNID')
         runid_file = open(path, 'a')
         runid_file.writelines(run_id + '\n')
@@ -273,9 +273,9 @@ class generic_driver(Component):
             services.update_time_stamp(t)
 
         # call pre_step_logic
-            services.stage_plasma_state()
+            services.stage_state()
             self.pre_step_logic(float(t))
-            services.update_plasma_state()
+            services.update_state()
             print (' ')
 
        # Call step for each component
@@ -318,7 +318,7 @@ class generic_driver(Component):
             if 'MONITOR' in port_names:
                 self.component_call(services, 'MONITOR', monitorComp, 'step', t)
 
-            services.stage_plasma_state()
+            services.stage_state()
 
          # Post step processing: stage plasma state, checkpoint components and self
             services.stage_output_files(t, self.OUTPUT_FILES)

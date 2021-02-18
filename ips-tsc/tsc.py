@@ -41,11 +41,11 @@ turned off, energy transport calculation turned off, etc
 # Working notes 8/13/2010:
 # TSC now writes two partial states for merging by the concurrent framework.  These are:
 # ps_update_state_eq.cdf and ps_update_state_pa.cdf.  This conponent now does
-# services.merge_current_plasma_state() on these rather than services.update_plasma_state.
-# However it still does an update_plasma_state with the reduced_ps_list as mentioned just
+# services.merge_current_state() on these rather than services.update_state.
+# However it still does an update_state with the reduced_ps_list as mentioned just
 # below.
 # Working notes 6/30/10:
-# In 'step' added services.update_plasma_state(reduced_ps_list) where reduced_ps_list is
+# In 'step' added services.update_state(reduced_ps_list) where reduced_ps_list is
 # the list of plasma state files written by epa but excluding the current plasma state so as
 # not to step on the merged state. This list presently contains eqdsk_file and jso_file.
 # The prior_state_file has been eliminated.  It was an error to be there.
@@ -182,7 +182,7 @@ class tsc(Component):
         try:
             services.stage_input_files(self.INPUT_FILES)
         except Exception, e:
-            print 'Error in call to stageInputFiles()' , e
+            print 'Error in call to stage_input_files()' , e
 
         # TSC input and binary restart files assumed of form
         # input<.suffix> and sprsin<.suffix>.  Get suffix
@@ -199,9 +199,9 @@ class tsc(Component):
  
     # Copy current, prior and next state over to working directory
         try:
-            services.stage_plasma_state()
+            services.stage_state()
         except Exception, e:
-            print 'Error in call to services.stage_plasma_state()', e
+            print 'Error in call to services.stage_state()', e
 
         # Make backups of the starting point plasma state files
         try:
@@ -256,9 +256,9 @@ class tsc(Component):
 
     # Update plasma state files in plasma_state work directory
         try:
-            services.update_plasma_state()
+            services.update_state()
         except Exception, e:
-            print 'epa_tsc: Error in call to updatePlasmaState()', e
+            print 'epa_tsc: Error in call to update_state()', e
             raise
             
     # copy binary output file sprsou<.suffix> -> binary restart file sprsin<.suffix>
@@ -368,9 +368,9 @@ class tsc(Component):
 
         # Copy current and prior state over to working directory
         try:
-            services.stage_plasma_state()
+            services.stage_state()
         except Exception, e:
-            print 'epa_tsc: Error in call to stageCurrentPlasmaState()', e
+            print 'epa_tsc: Error in call to stage_state()', e
             raise
 
         # Copy CURRENT_STATE -> <suffix> + _ps.cdf. Unless state file already 
@@ -435,27 +435,27 @@ class tsc(Component):
 
         try:
            partial_file = "ps_update_state_eq.cdf"
-           services.merge_current_plasma_state(partial_file, logfile='log.update_state')
+           services.merge_current_state(partial_file, logfile='log.update_state')
            print 'merged TSC plasma state data ', partial_file
         except Exception, e:
-           print 'Error in call to merge_current_plasma_state(' , partial_file, ')'
-           self.services.error('Error in call to merge_current_plasma_state')
-           raise Exception, 'Error in call to merge_current_plasma_state'
+           print 'Error in call to merge_current_state(' , partial_file, ')'
+           self.services.error('Error in call to merge_current_state')
+           raise Exception, 'Error in call to merge_current_state'
 
         try:
            partial_file = "ps_update_state_pa.cdf"
-           services.merge_current_plasma_state(partial_file, logfile='log.update_state')
+           services.merge_current_state(partial_file, logfile='log.update_state')
            print 'merged TSC plasma state data ', partial_file
         except Exception, e:
-           print 'Error in call to merge_current_plasma_state(' , partial_file, ')'
-           self.services.error('Error in call to merge_current_plasma_state')
-           raise Exception, 'Error in call to merge_current_plasma_state'
+           print 'Error in call to merge_current_state(' , partial_file, ')'
+           self.services.error('Error in call to merge_current_state')
+           raise Exception, 'Error in call to merge_current_state'
 
     # Update plasma state files in plasma_state work directory, but excluding current_plasma_state
         try:
-            services.update_plasma_state(reduced_ps_list)
+            services.update_state(reduced_ps_list)
         except Exception, e:
-            print 'epa_tsc: Error in call to updatePlasmaState()', e
+            print 'epa_tsc: Error in call to update_state()', e
             raise
             
     # copy binary output file: sprsou<.suffix> -> binary restart file: sprsin<.suffix>

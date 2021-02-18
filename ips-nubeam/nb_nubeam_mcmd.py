@@ -76,9 +76,9 @@ class nubeam(Component):
         try:
             services.stage_input_files(self.INPUT_FILES)
         except Exception, e:
-            print 'Error in call to stageInputFiles()' , e
-            self.services.error('Error in call to stageInputFiles()')
-            raise Exception, 'Error in call to stageInputFiles()'
+            print 'Error in call to stage_input_files()' , e
+            self.services.error('Error in call to stage_input_files()')
+            raise Exception, 'Error in call to stage_input_files()'
 
     # Copy init_files and step_files lists to generic names.  Unless the filenames
     # are already generic. NB: assumes nubeam_init_files.dat and nubeam_step_files.dat
@@ -110,11 +110,11 @@ class nubeam(Component):
 
     # Copy plasma state files over to working directory
         try:
-            services.stage_plasma_state()
+            services.stage_state()
         except Exception, e:
-            print 'Error in call to stage_plasma_state()' , e
-            self.services.error('Error in call to stage_plasma_state()')
-            raise Exception, 'Error in call to stage_plasma_state()'
+            print 'Error in call to stage_state()' , e
+            self.services.error('Error in call to stage_state()')
+            raise Exception, 'Error in call to stage_state()'
 
     # Copy plasma state files over to generic file names
         try:
@@ -139,7 +139,7 @@ class nubeam(Component):
             raise Exception('Error executing command:  mpi_nubeam_comp_exec: init ')
 
     # Update plasma state
-        services.merge_current_plasma_state("state_changes.cdf", logfile='log.update_state')
+        services.merge_current_state("state_changes.cdf", logfile='log.update_state')
 
     # Archive output files
         try:
@@ -222,11 +222,11 @@ class nubeam(Component):
       
     # Copy plasma state files over to working directory
         try:
-           services.stage_plasma_state()
+           services.stage_state()
         except Exception, e:
-           print 'Error in call to stage_plasma_state()' , e
-           self.services.error('Error in call to stage_plasma_state()')
-           raise Exception, 'Error in call to stage_plasma_state()'
+           print 'Error in call to stage_state()' , e
+           self.services.error('Error in call to stage_state()')
+           raise Exception, 'Error in call to stage_state()'
 
     # Copy plasma state files over to generic file names, unless file names are
     # already generic
@@ -298,12 +298,12 @@ class nubeam(Component):
     # Merge partial plasma state containing updated nubeam data
         try:
            partial_file = "state_changes.cdf"
-           services.merge_current_plasma_state(partial_file, logfile='log.update_state')
+           services.merge_current_state(partial_file, logfile='log.update_state')
            print 'merged NUBEAM plasma state data ', partial_file
         except Exception, e:
-           print 'Error in call to merge_current_plasma_state(' , partial_file, ')'
-           self.services.error('Error in call to merge_current_plasma_state')
-           raise Exception, 'Error in call to merge_current_plasma_state'
+           print 'Error in call to merge_current_state(' , partial_file, ')'
+           self.services.error('Error in call to merge_current_state')
+           raise Exception, 'Error in call to merge_current_state'
 
     # Archive output files
         try:

@@ -11,7 +11,7 @@ import subprocess
 import getopt
 import shutil
 import math
-from component import Component
+from ipsframework import Component
 from netCDF4 import *
 import Numeric
 
@@ -45,7 +45,7 @@ class generic_driver(Component):
         services.stage_input_files(self.INPUT_FILES)
 
       # get list of ports
-        ports = services.getGlobalConfigParameter('PORTS')
+        ports = services.get_config_param('PORTS')
         port_names = ports['NAMES'].split()
         print('PORTS =', port_names)
         port_dict = {}
@@ -137,7 +137,7 @@ class generic_driver(Component):
             print (' ')
 
       # Is this a simulation startup or restart
-        sim_mode = services.getGlobalConfigParameter('SIMULATION_MODE')
+        sim_mode = services.get_config_param('SIMULATION_MODE')
         print('SIMULATION_MODE =', sim_mode)
 
       # Get timeloop for simulation
@@ -187,7 +187,7 @@ class generic_driver(Component):
 
        # Get Portal RUNID and save to a file
         run_id = services.get_config_param('PORTAL_RUNID')
-        sym_root = services.getGlobalConfigParameter('SIM_ROOT')
+        sym_root = services.get_config_param('SIM_ROOT')
         path = os.path.join(sym_root, 'PORTAL_RUNID')
         runid_file = open(path, 'a')
         runid_file.writelines(run_id + '\n')

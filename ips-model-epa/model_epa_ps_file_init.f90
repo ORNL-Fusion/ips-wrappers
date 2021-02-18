@@ -20,8 +20,8 @@ PROGRAM model_epa_ps_file_init
 ! version 3.1 10/18/2010 (Batchelor)
 
 ! This version writes both a full plasma state and a partial plasma state.  This way the
-! Python component in the step function can use either services.update_plasma_state() to 
-! write a full plasma state or services.merge_current_plasma_state() to write a partial
+! Python component in the step function can use either services.update_state() to 
+! write a full plasma state or services.merge_current_state() to write a partial
 ! plasma state depending on how the component is being used.
 
 ! version 3.0 10/13/2010 (Batchelor)

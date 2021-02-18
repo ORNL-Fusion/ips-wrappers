@@ -93,7 +93,7 @@ import subprocess
 import getopt
 import shutil
 import math
-from component import Component
+from ipsframework import Component
 from netCDF4 import *
 from get_IPS_config_parameters import get_global_param, get_component_param
 
@@ -123,11 +123,11 @@ class generic_driver(Component):
     def step(self, timestamp=0):
 
         services = self.services
-        services.stage_plasma_state()
+        services.stage_state()
         services.stage_input_files(self.INPUT_FILES)
 
       # get list of ports
-#        ports = services.getGlobalConfigParameter('PORTS')
+#        ports = services.get_config_param('PORTS')
         ports = get_global_param(self, services,'PORTS')
         port_names = ports['NAMES'].split()
         print('PORTS =', port_names)
@@ -258,7 +258,7 @@ class generic_driver(Component):
             self.component_call(services, 'MONITOR', monitorComp, init_mode, t)
 
       # Get plasma state files into driver work directory and copy to psn if there is one
-        services.stage_plasma_state()
+        services.stage_state()
         cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
 
        # Get Portal RUNID and save to a file
@@ -294,9 +294,9 @@ class generic_driver(Component):
             services.update_time_stamp(t)
 
         # call pre_step_logic
-            services.stage_plasma_state()
+            services.stage_state()
             self.pre_step_logic(services, float(t))
-            services.update_plasma_state()
+            services.update_state()
             print (' ')
 
        # Call step for each component
@@ -326,7 +326,7 @@ class generic_driver(Component):
             if 'MONITOR' in port_names:
                 self.component_call(services, 'MONITOR', monitorComp, 'step', t)
 
-            services.stage_plasma_state()
+            services.stage_state()
 
          # Post step processing: stage plasma state, checkpoint components and self
             services.stage_output_files(t, self.OUTPUT_FILES)

@@ -9,7 +9,7 @@ Input files required are: torica.inp, equidt.data, equigs.data.
 import shutil
 import os
 import get_IPS_config_parameters as config
-from component import Component
+from ipsframework import Component
 
 class TORIC_basic (Component):
     def __init__(self, services, config):
@@ -52,8 +52,8 @@ class TORIC_basic (Component):
         try:
           services.stage_input_files(self.INPUT_FILES)
         except Exception:
-          print('Error in call to stageInputFiles()')
-          self.services.error('Error in call to stageInputFiles()')
+          print('Error in call to stage_input_files()')
+          self.services.error('Error in call to stage_input_files()')
           raise
 
         try:

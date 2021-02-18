@@ -29,7 +29,7 @@
 # [mdescr_state_init] section.  The new values of ps%t0 and ps%tfinal are written into
 # CURRENT_STATE, and CURRENT_STATE is copied to PRIOR_STATE and NEXT_STATE if these are
 # in the PLASMA_STATE_FILES list.  The state files are copied to the plasma state work
-# directory by services.update_plasma_state().
+# directory by services.update_state().
 #
 # Nota Bene: For restart the plasma state files should be listed in the config file as
 # input files to the mdescr_state_init component.
@@ -213,9 +213,9 @@ class mdescr_state_init (Component):
 
 # Update plasma state
         try:
-            services.update_plasma_state()
+            services.update_state()
         except Exception, e:
-            print 'Error in call to updatePlasmaState()', e
+            print 'Error in call to update_state()', e
             raise
 
 # "Archive" output files in history directory
@@ -232,7 +232,7 @@ class mdescr_state_init (Component):
         print 'mdescr_state_init.checkpoint() called'
 
         services = self.services
-        services.stage_plasma_state()
+        services.stage_state()
         services.save_restart_files(timestamp, self.RESTART_FILES)
 
 

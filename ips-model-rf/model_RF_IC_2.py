@@ -18,7 +18,7 @@ import subprocess
 import getopt
 import shutil
 import string
-from component import Component
+from ipsframework import Component
 
 class model_RF_IC_2 (Component):
     def __init__(self, services, config):
@@ -38,7 +38,7 @@ class model_RF_IC_2 (Component):
 
 
 # Copy current state files and input files over to working directory
-        self.services.stage_plasma_state()
+        self.services.stage_state()
         self.services.stage_input_files(self.INPUT_FILES)
         cur_state_file = self.services.get_config_param('CURRENT_STATE')
         cur_eqdsk_file = self.services.get_config_param('CURRENT_EQDSK')
@@ -54,7 +54,7 @@ class model_RF_IC_2 (Component):
             print 'Error executing ', RF_IC_bin
             return 1
 # Update (original) plasma state
-        services.update_plasma_state()
+        services.update_state()
 # "Archive" output files in history directory
         services.stage_output_files(timeStamp, self.OUTPUT_FILES)
         return 0
@@ -76,7 +76,7 @@ class model_RF_IC_2 (Component):
         services = self.services
 
 # Copy current state files and input files over to working directory
-        self.services.stage_plasma_state()
+        self.services.stage_state()
         self.services.stage_input_files(self.INPUT_FILES)
         cur_state_file = self.services.get_config_param('CURRENT_STATE')
         cur_eqdsk_file = self.services.get_config_param('CURRENT_EQDSK')
@@ -96,7 +96,7 @@ class model_RF_IC_2 (Component):
             print 'Error executing ', RF_IC_bin
             return 1
 # Update plasma state
-        services.update_plasma_state()
+        services.update_state()
 
 # "Archive" output files in history directory
         services.stage_output_files(timeStamp, self.OUTPUT_FILES)

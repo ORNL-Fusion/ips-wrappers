@@ -60,7 +60,7 @@
   !       Update interpolation information and store the state (ps) in
   !       the file (state_file).
   !
-  !    SUBROUTINE ps_update_plasma_state(ierr)
+  !    SUBROUTINE ps_update_state(ierr)
   !       Update interpolation information but do not write a file.
   !
   !    SUBROUTINE ps_commit_plasma_state(ierr)

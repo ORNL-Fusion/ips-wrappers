@@ -65,19 +65,19 @@ class model_NB (Component):
 
     # Copy plasma state files over to working directory
         try:
-          services.stage_plasma_state()
+          services.stage_state()
         except Exception, e:
-          print 'Error in call to stage_plasma_state()' , e
-          services.error('Error in call to stage_plasma_state()')
-          raise Exception, 'Error in call to stage_plasma_state()'
+          print 'Error in call to stage_state()' , e
+          services.error('Error in call to stage_state()')
+          raise Exception, 'Error in call to stage_state()'
       
     # Get input files  
         try:
           services.stage_input_files(self.INPUT_FILES)
         except Exception, e:
-          print 'Error in call to stageInputFiles()' , e
-          self.services.error('Error in call to stageInputFiles()')
-          raise Exception, 'Error in call to stageInputFiles()'
+          print 'Error in call to stage_input_files()' , e
+          self.services.error('Error in call to stage_input_files()')
+          raise Exception, 'Error in call to stage_input_files()'
 
         NB_bin = os.path.join(BIN_PATH, 'model_NB')
 
@@ -93,11 +93,11 @@ class model_NB (Component):
 
 # Update plasma state files in plasma_state work directory
         try:
-          services.update_plasma_state()
+          services.update_state()
         except Exception, e:
-          print 'Error in call to update_plasma_state()', e
-          services.error('Error in call to update_plasma_state()')
-          raise Exception, 'Error in call to update_plasma_state()'
+          print 'Error in call to update_state()', e
+          services.error('Error in call to update_state()')
+          raise Exception, 'Error in call to update_state()'
 
 # "Archive" output files in history directory
         try:
@@ -172,19 +172,19 @@ class model_NB (Component):
 
     # Copy plasma state files over to working directory
         try:
-          services.stage_plasma_state()
+          services.stage_state()
         except Exception, e:
-          print 'Error in call to stage_plasma_state()' , e
-          services.error('Error in call to stage_plasma_state()')
-          raise Exception, 'Error in call to stage_plasma_state()'
+          print 'Error in call to stage_state()' , e
+          services.error('Error in call to stage_state()')
+          raise Exception, 'Error in call to stage_state()'
       
     # Get input files  
         try:
           services.stage_input_files(self.INPUT_FILES)
         except Exception, e:
-          print 'Error in call to stageInputFiles()' , e
-          self.services.error('Error in call to stageInputFiles()')
-          raise Exception, 'Error in call to stageInputFiles()'
+          print 'Error in call to stage_input_files()' , e
+          self.services.error('Error in call to stage_input_files()')
+          raise Exception, 'Error in call to stage_input_files()'
 
 # Call model_NB
         NB_bin = os.path.join(BIN_PATH, 'model_NB')
@@ -200,8 +200,8 @@ class model_NB (Component):
             raise Exception(' error executing model_NB_bin')
             
 # Update plasma state
-#        services.update_plasma_state()
-        services.merge_current_plasma_state(partial_file)
+#        services.update_state()
+        services.merge_current_state(partial_file)
         print 'merged partial nb update'
 # "Archive" output files in history directory
         services.stage_output_files(timeStamp, self.OUTPUT_FILES)

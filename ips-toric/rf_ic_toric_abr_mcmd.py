@@ -85,9 +85,9 @@ class toric (Component):
 
       # Copy plasma state files over to working directory
         try:
-            services.stage_plasma_state()
+            services.stage_state()
         except Exception:
-            logMsg = 'Error in call to stage_plasma_state()'
+            logMsg = 'Error in call to stage_state()'
             self.services.exception(logMsg)
             raise 
 
@@ -95,7 +95,7 @@ class toric (Component):
         try:
             services.stage_input_files(self.INPUT_FILES)
         except:
-            logMsg = 'Error in call to stageInputFiles()'
+            logMsg = 'Error in call to stage_input_files()'
             self.services.exception(logMsg)
             raise
 
@@ -136,9 +136,9 @@ class toric (Component):
 
       # Update plasma state files in plasma_state work directory
         try:
-            services.update_plasma_state()
+            services.update_state()
         except Exception:
-            logMsg = 'Error in call to update_plasma_state()'
+            logMsg = 'Error in call to update_state()'
             self.services.exception(logMsg)
             raise 
 
@@ -219,9 +219,9 @@ class toric (Component):
 
       # Copy plasma state files over to working directory
         try:
-            services.stage_plasma_state()
+            services.stage_state()
         except:
-            logMsg = 'Error in call to stage_plasma_state()'
+            logMsg = 'Error in call to stage_state()'
             self.services.exception(logMsg)
             raise 
 
@@ -229,7 +229,7 @@ class toric (Component):
         try:
             services.stage_input_files(self.INPUT_FILES)
         except:
-            logMsg = 'Error in call to stageInputFiles()'
+            logMsg = 'Error in call to stage_input_files()'
             self.services.exception(logMsg)
             raise 
 
@@ -359,10 +359,10 @@ class toric (Component):
 # Merge partial plasma state containing updated IC data
         try:
             partial_file = cwd + '/RF_IC_' + cur_state_file
-            services.merge_current_plasma_state(partial_file, logfile='log.update_state')
+            services.merge_current_state(partial_file, logfile='log.update_state')
             print(('merged TORIC plasma state data ', partial_file))
         except:
-            logMsg = 'Error in call to merge_current_plasma_state(' + partial_file + ')'
+            logMsg = 'Error in call to merge_current_state(' + partial_file + ')'
             self.services.exception(logMsg)
             raise 
 

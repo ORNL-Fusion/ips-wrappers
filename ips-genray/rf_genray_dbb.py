@@ -331,19 +331,19 @@ class genray(Component):
 
     # Copy plasma state files over to working directory
         try:
-          services.stage_plasma_state()
+          services.stage_state()
         except Exception as e:
-          print('Error in call to stage_plasma_state()' , e)
-          services.error('Error in call to stage_plasma_state()')
-          raise Exception('Error in call to stage_plasma_state()')
+          print('Error in call to stage_state()' , e)
+          services.error('Error in call to stage_state()')
+          raise Exception('Error in call to stage_state()')
         
     # Get input files  
         try:
           services.stage_input_files(INPUT_FILES)
         except Exception as e:
-          print('Error in call to stageInputFiles()' , e)
-          services.error('Error in call to stageInputFiles()')
-          raise Exception('Error in call to stageInputFiles()')
+          print('Error in call to stage_input_files()' , e)
+          services.error('Error in call to stage_input_files()')
+          raise Exception('Error in call to stage_input_files()')
             
     # Copy current plasma state file to generic name -> cur_state.cdf
         try:
@@ -409,11 +409,11 @@ class genray(Component):
 
     # Update plasma state files in plasma_state work directory
         try:
-          services.update_plasma_state()
+          services.update_state()
         except Exception as e:
-          print('Error in call to update_plasma_state()', e)
-          services.error('Error in call to update_plasma_state()')
-          raise Exception('Error in call to update_plasma_state()')
+          print('Error in call to update_state()', e)
+          services.error('Error in call to update_state()')
+          raise Exception('Error in call to update_state()')
      
     # Archive output files
     # N.B.  prepare_genray_input in init mode does not produce a complete set 
@@ -507,11 +507,11 @@ class genray(Component):
 
     # Copy plasma state files over to working directory
         try:
-          services.stage_plasma_state()
+          services.stage_state()
         except Exception as e:
-          print('Error in call to stage_plasma_state()' , e)
-          services.error('Error in call to stage_plasma_state()')
-          raise Exception('Error in call to stage_plasma_state()')
+          print('Error in call to stage_state()' , e)
+          services.error('Error in call to stage_state()')
+          raise Exception('Error in call to stage_state()')
 
         cur_state_file = services.get_config_param( 'CURRENT_STATE')
         cur_eqdsk_file = services.get_config_param( 'CURRENT_EQDSK')
@@ -649,12 +649,12 @@ class genray(Component):
 
 # Merge partial plasma state containing updated EC data
         try:
-            services.merge_current_plasma_state(partial_file, logfile='log.update_state')
+            services.merge_current_state(partial_file, logfile='log.update_state')
             print('merged GENRAY plasma state data ', partial_file)
         except Exception as e:
-            print('Error in call to merge_current_plasma_state(' , partial_file, ')')
-            self.services.error('Error in call to merge_current_plasma_state')
-            raise Exception('Error in call to merge_current_plasma_state')
+            print('Error in call to merge_current_state(' , partial_file, ')')
+            self.services.error('Error in call to merge_current_state')
+            raise Exception('Error in call to merge_current_state')
             
     # Archive output files
         try:

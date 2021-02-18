@@ -1,0 +1,383 @@
+/global/project/projectdirs/atom/users/u2115/ips-examples/ABC_example $ python -v
+import _frozen_importlib # frozen
+import _imp # builtin
+import '_thread' # <class '_frozen_importlib.BuiltinImporter'>
+import '_warnings' # <class '_frozen_importlib.BuiltinImporter'>
+import '_weakref' # <class '_frozen_importlib.BuiltinImporter'>
+# installing zipimport hook
+import 'zipimport' # <class '_frozen_importlib.BuiltinImporter'>
+# installed zipimport hook
+import '_frozen_importlib_external' # <class '_frozen_importlib.FrozenImporter'>
+import '_io' # <class '_frozen_importlib.BuiltinImporter'>
+import 'marshal' # <class '_frozen_importlib.BuiltinImporter'>
+import 'posix' # <class '_frozen_importlib.BuiltinImporter'>
+import _thread # previously loaded ('_thread')
+import '_thread' # <class '_frozen_importlib.BuiltinImporter'>
+import _weakref # previously loaded ('_weakref')
+import '_weakref' # <class '_frozen_importlib.BuiltinImporter'>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/encodings/__pycache__/__init__.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/encodings/__init__.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/encodings/__pycache__/__init__.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/codecs.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/codecs.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/codecs.cpython-37.pyc'
+import '_codecs' # <class '_frozen_importlib.BuiltinImporter'>
+import 'codecs' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaac19350>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/encodings/__pycache__/aliases.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/encodings/aliases.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/encodings/__pycache__/aliases.cpython-37.pyc'
+import 'encodings.aliases' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaac375d0>
+import 'encodings' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaac157d0>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/encodings/__pycache__/utf_8.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/encodings/utf_8.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/encodings/__pycache__/utf_8.cpython-37.pyc'
+import 'encodings.utf_8' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaac19310>
+import '_signal' # <class '_frozen_importlib.BuiltinImporter'>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/encodings/__pycache__/latin_1.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/encodings/latin_1.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/encodings/__pycache__/latin_1.cpython-37.pyc'
+import 'encodings.latin_1' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaac2ed90>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/io.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/io.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/io.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/abc.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/abc.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/abc.cpython-37.pyc'
+import '_abc' # <class '_frozen_importlib.BuiltinImporter'>
+import 'abc' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaac427d0>
+import 'io' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaac42090>
+# /global/homes/t/tyounkin/code/libconfPython/lib/python2.7/site-packages/__pycache__/site.cpython-37.pyc matches /global/homes/t/tyounkin/code/libconfPython/lib/python2.7/site-packages/site.py
+# code object from '/global/homes/t/tyounkin/code/libconfPython/lib/python2.7/site-packages/__pycache__/site.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/os.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/os.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/os.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/stat.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/stat.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/stat.cpython-37.pyc'
+import '_stat' # <class '_frozen_importlib.BuiltinImporter'>
+import 'stat' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaac5e550>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/posixpath.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/posixpath.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/posixpath.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/genericpath.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/genericpath.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/genericpath.cpython-37.pyc'
+import 'genericpath' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaac69550>
+import 'posixpath' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaac5ee50>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/_collections_abc.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/_collections_abc.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/_collections_abc.cpython-37.pyc'
+import '_collections_abc' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaac69ed0>
+import 'os' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaac51450>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/imp.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/imp.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/imp.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/importlib/__pycache__/__init__.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/importlib/__init__.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/importlib/__pycache__/__init__.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/types.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/types.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/types.cpython-37.pyc'
+import 'types' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaac9de10>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/warnings.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/warnings.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/warnings.cpython-37.pyc'
+import 'warnings' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaac9df90>
+import 'importlib' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaac9d850>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/importlib/__pycache__/machinery.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/importlib/machinery.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/importlib/__pycache__/machinery.cpython-37.pyc'
+import 'importlib.machinery' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaaca8ed0>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/importlib/__pycache__/util.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/importlib/util.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/importlib/__pycache__/util.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/importlib/__pycache__/abc.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/importlib/abc.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/importlib/__pycache__/abc.cpython-37.pyc'
+import 'importlib.abc' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaacb2950>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/contextlib.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/contextlib.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/contextlib.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/collections/__pycache__/__init__.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/collections/__init__.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/collections/__pycache__/__init__.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/operator.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/operator.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/operator.cpython-37.pyc'
+import '_operator' # <class '_frozen_importlib.BuiltinImporter'>
+import 'operator' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabc2f410>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/keyword.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/keyword.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/keyword.cpython-37.pyc'
+import 'keyword' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabc31050>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/heapq.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/heapq.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/heapq.cpython-37.pyc'
+# extension module '_heapq' loaded from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_heapq.cpython-37m-x86_64-linux-gnu.so'
+# extension module '_heapq' executed from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_heapq.cpython-37m-x86_64-linux-gnu.so'
+import '_heapq' # <_frozen_importlib_external.ExtensionFileLoader object at 0x2aaaabc3c990>
+import 'heapq' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabc3aad0>
+import 'itertools' # <class '_frozen_importlib.BuiltinImporter'>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/reprlib.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/reprlib.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/reprlib.cpython-37.pyc'
+import 'reprlib' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabc3ccd0>
+import '_collections' # <class '_frozen_importlib.BuiltinImporter'>
+import 'collections' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabc0ae90>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/functools.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/functools.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/functools.cpython-37.pyc'
+import '_functools' # <class '_frozen_importlib.BuiltinImporter'>
+import 'functools' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabc0e5d0>
+import 'contextlib' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabbf6150>
+import 'importlib.util' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaacae9d0>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/tokenize.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/tokenize.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/tokenize.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/re.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/re.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/re.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/enum.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/enum.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/enum.cpython-37.pyc'
+import 'enum' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabc798d0>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/sre_compile.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/sre_compile.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/sre_compile.cpython-37.pyc'
+import '_sre' # <class '_frozen_importlib.BuiltinImporter'>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/sre_parse.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/sre_parse.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/sre_parse.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/sre_constants.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/sre_constants.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/sre_constants.cpython-37.pyc'
+import 'sre_constants' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabca24d0>
+import 'sre_parse' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabc97790>
+import 'sre_compile' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabc86a90>
+import '_locale' # <class '_frozen_importlib.BuiltinImporter'>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/copyreg.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/copyreg.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/copyreg.cpython-37.pyc'
+import 'copyreg' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabcb48d0>
+import 're' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabc74f90>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/token.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/token.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/token.cpython-37.pyc'
+import 'token' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabc75e90>
+import 'tokenize' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabc05590>
+import 'imp' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaac51a90>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/site.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/site.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/_sitebuiltins.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/_sitebuiltins.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/_sitebuiltins.cpython-37.pyc'
+import '_sitebuiltins' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabcc9690>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/_bootlocale.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/_bootlocale.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/_bootlocale.cpython-37.pyc'
+import '_bootlocale' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabcdd2d0>
+# possible namespace for /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/mpl_toolkits
+# possible namespace for /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/google
+# destroy sphinxcontrib
+# destroy sphinxcontrib
+# destroy sphinxcontrib
+# destroy sphinxcontrib
+# destroy sphinxcontrib
+# destroy sphinxcontrib
+# code object from /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/sitecustomize.py
+# could not create '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/__pycache__/sitecustomize.cpython-37.pyc': PermissionError(13, 'Permission denied')
+# wrote '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/__pycache__/sitecustomize.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/json/__pycache__/__init__.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/json/__init__.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/json/__pycache__/__init__.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/json/__pycache__/decoder.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/json/decoder.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/json/__pycache__/decoder.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/json/__pycache__/scanner.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/json/scanner.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/json/__pycache__/scanner.cpython-37.pyc'
+# extension module '_json' loaded from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_json.cpython-37m-x86_64-linux-gnu.so'
+# extension module '_json' executed from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_json.cpython-37m-x86_64-linux-gnu.so'
+import '_json' # <_frozen_importlib_external.ExtensionFileLoader object at 0x2aaaabd10f90>
+import 'json.scanner' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabd10950>
+import 'json.decoder' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabd09850>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/json/__pycache__/encoder.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/json/encoder.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/json/__pycache__/encoder.cpython-37.pyc'
+import 'json.encoder' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabd10750>
+import 'json' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabd04c90>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/platform.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/platform.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/platform.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/subprocess.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/subprocess.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/subprocess.cpython-37.pyc'
+import 'time' # <class '_frozen_importlib.BuiltinImporter'>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/signal.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/signal.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/signal.cpython-37.pyc'
+import 'signal' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabd514d0>
+import 'errno' # <class '_frozen_importlib.BuiltinImporter'>
+# extension module '_posixsubprocess' loaded from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_posixsubprocess.cpython-37m-x86_64-linux-gnu.so'
+# extension module '_posixsubprocess' executed from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_posixsubprocess.cpython-37m-x86_64-linux-gnu.so'
+import '_posixsubprocess' # <_frozen_importlib_external.ExtensionFileLoader object at 0x2aaaabd5b5d0>
+# extension module 'select' loaded from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/select.cpython-37m-x86_64-linux-gnu.so'
+# extension module 'select' executed from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/select.cpython-37m-x86_64-linux-gnu.so'
+import 'select' # <_frozen_importlib_external.ExtensionFileLoader object at 0x2aaaabd5b650>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/selectors.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/selectors.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/selectors.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/collections/__pycache__/abc.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/collections/abc.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/collections/__pycache__/abc.cpython-37.pyc'
+import 'collections.abc' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabd69550>
+# extension module 'math' loaded from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/math.cpython-37m-x86_64-linux-gnu.so'
+# extension module 'math' executed from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/math.cpython-37m-x86_64-linux-gnu.so'
+import 'math' # <_frozen_importlib_external.ExtensionFileLoader object at 0x2aaaabd69410>
+import 'selectors' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabd5be50>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/threading.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/threading.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/threading.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/traceback.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/traceback.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/traceback.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/linecache.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/linecache.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/linecache.cpython-37.pyc'
+import 'linecache' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabda4690>
+import 'traceback' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabd81810>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/_weakrefset.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/_weakrefset.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/_weakrefset.cpython-37.pyc'
+import '_weakrefset' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabda4a90>
+import 'threading' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabd64790>
+import 'subprocess' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabd23f50>
+import 'platform' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabd1acd0>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/customs/__pycache__/__init__.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/customs/__init__.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/customs/__pycache__/__init__.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/customs/__pycache__/core.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/customs/core.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/customs/__pycache__/core.cpython-37.pyc'
+import 'atexit' # <class '_frozen_importlib.BuiltinImporter'>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/typing.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/typing.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/typing.cpython-37.pyc'
+import 'typing' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabdb0650>
+import 'customs.core' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabd2c590>
+import 'customs' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabd23b50>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/modster/__pycache__/__init__.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/modster/__init__.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/modster/__pycache__/__init__.cpython-37.pyc'
+import 'modster' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabdf3590>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/modster/__pycache__/modster.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/modster/modster.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/modster/__pycache__/modster.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/datetime.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/datetime.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/datetime.cpython-37.pyc'
+# extension module '_datetime' loaded from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_datetime.cpython-37m-x86_64-linux-gnu.so'
+# extension module '_datetime' executed from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_datetime.cpython-37m-x86_64-linux-gnu.so'
+import '_datetime' # <_frozen_importlib_external.ExtensionFileLoader object at 0x2aaaabe1dd10>
+import 'datetime' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabdc0950>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/socket.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/socket.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/socket.cpython-37.pyc'
+# extension module '_socket' loaded from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_socket.cpython-37m-x86_64-linux-gnu.so'
+# extension module '_socket' executed from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_socket.cpython-37m-x86_64-linux-gnu.so'
+import '_socket' # <_frozen_importlib_external.ExtensionFileLoader object at 0x2aaaabe75fd0>
+import 'socket' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabdc0ad0>
+import 'modster.modster' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabdf3750>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/nerscjson/__pycache__/__init__.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/nerscjson/__init__.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/nerscjson/__pycache__/__init__.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/logging/__pycache__/__init__.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/logging/__init__.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/logging/__pycache__/__init__.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/weakref.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/weakref.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/weakref.cpython-37.pyc'
+import 'weakref' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabe99650>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/string.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/string.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/string.cpython-37.pyc'
+import '_string' # <class '_frozen_importlib.BuiltinImporter'>
+import 'string' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabea7b50>
+import 'logging' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabe12a50>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/__init__.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__init__.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/__init__.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/error.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/error.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/error.cpython-37.pyc'
+import 'yaml.error' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabf007d0>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/tokens.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/tokens.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/tokens.cpython-37.pyc'
+import 'yaml.tokens' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabf00d50>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/events.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/events.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/events.cpython-37.pyc'
+import 'yaml.events' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabf03650>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/nodes.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/nodes.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/nodes.cpython-37.pyc'
+import 'yaml.nodes' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabf07910>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/loader.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/loader.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/loader.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/reader.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/reader.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/reader.cpython-37.pyc'
+import 'yaml.reader' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabf0fc50>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/scanner.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/scanner.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/scanner.cpython-37.pyc'
+import 'yaml.scanner' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabf15710>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/parser.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/parser.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/parser.cpython-37.pyc'
+import 'yaml.parser' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabf22c90>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/composer.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/composer.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/composer.cpython-37.pyc'
+import 'yaml.composer' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabf2ce90>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/constructor.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/constructor.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/constructor.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/base64.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/base64.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/base64.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/struct.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/struct.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/struct.cpython-37.pyc'
+# extension module '_struct' loaded from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_struct.cpython-37m-x86_64-linux-gnu.so'
+# extension module '_struct' executed from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_struct.cpython-37m-x86_64-linux-gnu.so'
+import '_struct' # <_frozen_importlib_external.ExtensionFileLoader object at 0x2aaaabf4e9d0>
+import 'struct' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabf4e610>
+# extension module 'binascii' loaded from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/binascii.cpython-37m-x86_64-linux-gnu.so'
+# extension module 'binascii' executed from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/binascii.cpython-37m-x86_64-linux-gnu.so'
+import 'binascii' # <_frozen_importlib_external.ExtensionFileLoader object at 0x2aaaabf4eb50>
+import 'base64' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabf405d0>
+import 'yaml.constructor' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabf34650>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/resolver.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/resolver.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/resolver.cpython-37.pyc'
+import 'yaml.resolver' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabf571d0>
+import 'yaml.loader' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabf0f410>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/dumper.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/dumper.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/dumper.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/emitter.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/emitter.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/emitter.cpython-37.pyc'
+import 'yaml.emitter' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabf57ed0>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/serializer.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/serializer.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/serializer.cpython-37.pyc'
+import 'yaml.serializer' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabfa5a10>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/representer.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/representer.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/representer.cpython-37.pyc'
+import 'yaml.representer' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabfae190>
+import 'yaml.dumper' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabf0f850>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/cyaml.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/cyaml.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/yaml/__pycache__/cyaml.cpython-37.pyc'
+# extension module '_yaml' loaded from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/_yaml.cpython-37m-x86_64-linux-gnu.so'
+# extension module '_yaml' executed from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/site-packages/_yaml.cpython-37m-x86_64-linux-gnu.so'
+import '_yaml' # <_frozen_importlib_external.ExtensionFileLoader object at 0x2aaaabfb49d0>
+import 'yaml.cyaml' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabf57d90>
+import 'yaml' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabeec610>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/random.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/random.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/random.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/hashlib.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/hashlib.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/hashlib.cpython-37.pyc'
+# extension module '_hashlib' loaded from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_hashlib.cpython-37m-x86_64-linux-gnu.so'
+# extension module '_hashlib' executed from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_hashlib.cpython-37m-x86_64-linux-gnu.so'
+import '_hashlib' # <_frozen_importlib_external.ExtensionFileLoader object at 0x2aaaabfcf150>
+# extension module '_blake2' loaded from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_blake2.cpython-37m-x86_64-linux-gnu.so'
+# extension module '_blake2' executed from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_blake2.cpython-37m-x86_64-linux-gnu.so'
+import '_blake2' # <_frozen_importlib_external.ExtensionFileLoader object at 0x2aaaabfcfd90>
+# extension module '_sha3' loaded from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_sha3.cpython-37m-x86_64-linux-gnu.so'
+# extension module '_sha3' executed from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_sha3.cpython-37m-x86_64-linux-gnu.so'
+import '_sha3' # <_frozen_importlib_external.ExtensionFileLoader object at 0x2aaaabfcff90>
+import 'hashlib' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabfc9050>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/bisect.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/bisect.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/bisect.cpython-37.pyc'
+# extension module '_bisect' loaded from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_bisect.cpython-37m-x86_64-linux-gnu.so'
+# extension module '_bisect' executed from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_bisect.cpython-37m-x86_64-linux-gnu.so'
+import '_bisect' # <_frozen_importlib_external.ExtensionFileLoader object at 0x2aaaabfc9cd0>
+import 'bisect' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabfc9a90>
+# extension module '_random' loaded from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_random.cpython-37m-x86_64-linux-gnu.so'
+# extension module '_random' executed from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_random.cpython-37m-x86_64-linux-gnu.so'
+import '_random' # <_frozen_importlib_external.ExtensionFileLoader object at 0x2aaaabfc9690>
+import 'random' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabfb48d0>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/logging/__pycache__/handlers.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/logging/handlers.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/logging/__pycache__/handlers.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/pickle.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/pickle.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/pickle.cpython-37.pyc'
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/_compat_pickle.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/_compat_pickle.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/_compat_pickle.cpython-37.pyc'
+import '_compat_pickle' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaac543d10>
+# extension module '_pickle' loaded from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_pickle.cpython-37m-x86_64-linux-gnu.so'
+# extension module '_pickle' executed from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_pickle.cpython-37m-x86_64-linux-gnu.so'
+import '_pickle' # <_frozen_importlib_external.ExtensionFileLoader object at 0x2aaaac547fd0>
+import 'pickle' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaac528390>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/queue.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/queue.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/queue.cpython-37.pyc'
+# extension module '_queue' loaded from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_queue.cpython-37m-x86_64-linux-gnu.so'
+# extension module '_queue' executed from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/_queue.cpython-37m-x86_64-linux-gnu.so'
+import '_queue' # <_frozen_importlib_external.ExtensionFileLoader object at 0x2aaaac565190>
+import 'queue' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaac528790>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/copy.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/copy.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/copy.cpython-37.pyc'
+import 'copy' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaac560f10>
+import 'logging.handlers' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabfc9a10>
+import 'nerscjson' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabe1d3d0>
+import 'sitecustomize' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaabce55d0>
+import 'site' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaaac48c10>
+Python 3.7.4 (default, Aug 13 2019, 20:35:49)
+[GCC 7.3.0] :: Anaconda, Inc. on linux
+Type "help", "copyright", "credits" or "license" for more information.
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/encodings/__pycache__/cp437.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/encodings/cp437.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/encodings/__pycache__/cp437.cpython-37.pyc'
+import 'encodings.cp437' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaac565dd0>
+# zipimport: found 7 names in '/global/homes/t/tyounkin/code/libconfPython/lib/python2.7/site-packages/libconf-1.0.1-py2.7.egg'
+# extension module 'readline' loaded from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/readline.cpython-37m-x86_64-linux-gnu.so'
+# extension module 'readline' executed from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/lib-dynload/readline.cpython-37m-x86_64-linux-gnu.so'
+import 'readline' # <_frozen_importlib_external.ExtensionFileLoader object at 0x2aaaac5746d0>
+# /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/rlcompleter.cpython-37.pyc matches /usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/rlcompleter.py
+# code object from '/usr/common/software/python/3.7-anaconda-2019.10/lib/python3.7/__pycache__/rlcompleter.cpython-37.pyc'
+import 'rlcompleter' # <_frozen_importlib_external.SourceFileLoader object at 0x2aaaac574a90>
+>>> import netCDF4
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "<frozen importlib._bootstrap>", line 983, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 967, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 670, in _load_unlocked
+  File "<frozen importlib._bootstrap>", line 583, in module_from_spec
+  File "<frozen importlib._bootstrap_external>", line 1043, in create_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+ImportError: dynamic module does not define module export function (PyInit_netCDF4)

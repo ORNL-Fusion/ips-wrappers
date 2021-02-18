@@ -9,7 +9,7 @@ import subprocess
 import getopt
 import shutil
 import math
-from component import Component
+from ipsframework import Component
 
 class cql3dDriver(Component):
 
@@ -49,7 +49,7 @@ class cql3dDriver(Component):
             services.call(fpComp,'step', t)
 
             # ssf - post step processing: stage plasma state, stage output
-            services.stage_plasma_state()
+            services.stage_state()
             services.stage_output_files(t, self.OUTPUT_FILES)
 
         # ssf - post simulation: call finalize on each component

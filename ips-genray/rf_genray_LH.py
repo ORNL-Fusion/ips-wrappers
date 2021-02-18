@@ -112,19 +112,19 @@ class genray_LH(Component):
 
     # Copy plasma state files over to working directory
         try:
-          services.stage_plasma_state()
+          services.stage_state()
         except Exception, e:
-          print 'Error in call to stage_plasma_state()' , e
-          services.error('Error in call to stage_plasma_state()')
-          raise Exception, 'Error in call to stage_plasma_state()'
+          print 'Error in call to stage_state()' , e
+          services.error('Error in call to stage_state()')
+          raise Exception, 'Error in call to stage_state()'
         
     # Get input files  
         try:
           services.stage_input_files(INPUT_FILES)
         except Exception, e:
-          print 'Error in call to stageInputFiles()' , e
-          services.error('Error in call to stageInputFiles()')
-          raise Exception, 'Error in call to stageInputFiles()'
+          print 'Error in call to stage_input_files()' , e
+          services.error('Error in call to stage_input_files()')
+          raise Exception, 'Error in call to stage_input_files()'
             
     # Copy genray.in_<suffix> to generic file name -> genray.in if there is
     # a suffix
@@ -207,11 +207,11 @@ class genray_LH(Component):
 
     # Update plasma state files in plasma_state work directory
         try:
-          services.update_plasma_state()
+          services.update_state()
         except Exception, e:
-          print 'Error in call to update_plasma_state()', e
-          services.error('Error in call to update_plasma_state()')
-          raise Exception, 'Error in call to update_plasma_state()'
+          print 'Error in call to update_state()', e
+          services.error('Error in call to update_state()')
+          raise Exception, 'Error in call to update_state()'
      
     # Archive output files
     # N.B.  prepare_genray_input in init mode does not produce a complete set 
@@ -289,11 +289,11 @@ class genray_LH(Component):
 
     # Copy plasma state files over to working directory
         try:
-          services.stage_plasma_state()
+          services.stage_state()
         except Exception, e:
-          print 'Error in call to stage_plasma_state()' , e
-          services.error('Error in call to stage_plasma_state()')
-          raise Exception, 'Error in call to stage_plasma_state()'
+          print 'Error in call to stage_state()' , e
+          services.error('Error in call to stage_state()')
+          raise Exception, 'Error in call to stage_state()'
 
         cur_state_file = services.get_config_param('CURRENT_STATE')
         cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
@@ -386,12 +386,12 @@ class genray_LH(Component):
 
 # Merge partial plasma state containing updated LH data
           try:
-              services.merge_current_plasma_state(partial_file, logfile='log.update_state')
+              services.merge_current_state(partial_file, logfile='log.update_state')
               print 'merged GENRAY plasma state data ', partial_file
           except Exception, e:
-              print 'Error in call to merge_current_plasma_state(' , partial_file, ')'
-              self.services.error('Error in call to merge_current_plasma_state')
-              raise Exception, 'Error in call to merge_current_plasma_state'
+              print 'Error in call to merge_current_state(' , partial_file, ')'
+              self.services.error('Error in call to merge_current_state')
+              raise Exception, 'Error in call to merge_current_state'
             
     # Archive output files
           try:
@@ -403,11 +403,11 @@ class genray_LH(Component):
 # ptb tried this
     # Update plasma state files in plasma_state work directory
           try:
-            services.update_plasma_state()
+            services.update_state()
           except Exception, e:
-            print 'Error in call to update_plasma_state()', e
-            services.error('Error in call to update_plasma_state()')
-            raise Exception, 'Error in call to update_plasma_state()'
+            print 'Error in call to update_state()', e
+            services.error('Error in call to update_state()')
+            raise Exception, 'Error in call to update_state()'
 # ptb tried this
         
 #     rename the log file so that it is not appended next step
