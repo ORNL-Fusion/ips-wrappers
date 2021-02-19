@@ -35,7 +35,7 @@ import subprocess
 import shutil
 import pickle
 
-from  component import Component
+from ipsframework import Component
 
 # Import the necessary Numeric and netCDF modules
 from netCDF4 import *

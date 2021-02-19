@@ -139,7 +139,7 @@ in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true
 # by the framework from the path indicated by the INPUT_DIR config parameter in the
 # [generic_ps_init] section.  The new values of ps%t0 and ps%tfinal are written into
 # CURRENT_STATE, and CURRENT_STATE is copied to PRIOR_STATE and NEXT_STATE if these are
-# in the PLASMA_STATE_FILES list.  The state files are copied to the plasma state work
+# in the STATE_FILES list.  The state files are copied to the plasma state work
 # directory by services.update_plasma_state().
 #
 # Nota Bene: For restart the plasma state files should be listed in the config file as
@@ -164,7 +164,7 @@ import getopt
 import shutil
 import string
 import datetime
-from  component import Component
+from ipsframework import Component
 from netCDF4 import *
 from simple_file_editing_functions import put_lines
 from get_IPS_config_parameters import get_global_param, get_component_param
@@ -260,7 +260,7 @@ class generic_ps_init (Component):
 
             print('generic_ps_init: simulation mode NORMAL')
             nml_lines = ['&ps_init_nml\n']
-            ps_file_list = get_global_param(self, services, 'PLASMA_STATE_FILES').split(' ')
+            ps_file_list = get_global_param(self, services, 'STATE_FILES').split(' ')
 
 
             init_mode = get_component_param(self, services, 'INIT_MODE')

@@ -32,7 +32,7 @@
 # by the framework from the path indicated by the INPUT_DIR config parameter in the 
 # [existing_ps_file_init] section.  The new values of ps%t0 and ps%tfinal are written into
 # CURRENT_STATE, and CURRENT_STATE is copied to PRIOR_STATE and NEXT_STATE if these are
-# in the PLASMA_STATE_FILES list.  The state files are copied to the plasma state work
+# in the STATE_FILES list.  The state files are copied to the plasma state work
 # directory by services.update_state().
 #
 # Nota Bene: For restart the plasma state files should be listed in the config file as  
@@ -60,7 +60,7 @@ import subprocess
 import getopt
 import shutil
 import string
-from  component import Component
+from ipsframework import Component
 from netCDF4 import *
 
 class existing_ps_file_init (Component):
@@ -157,7 +157,7 @@ class existing_ps_file_init (Component):
         
         else:
             print 'existing_ps_file_init: simulation mode NORMAL'
-            ps_file_list = services.get_config_param('PLASMA_STATE_FILES').split(' ')
+            ps_file_list = services.get_config_param('STATE_FILES').split(' ')
             print 'ps_file_list = ', ps_file_list
 
         # Get name of current plasma state file

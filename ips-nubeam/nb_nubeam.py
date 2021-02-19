@@ -52,7 +52,7 @@ import subprocess
 import getopt
 import shutil
 import string
-from  component import Component
+from ipsframework import Component
 from Scientific.IO.NetCDF import *
 import time
 

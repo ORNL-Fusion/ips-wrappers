@@ -91,7 +91,7 @@ import subprocess
 import getopt
 import shutil
 import string
-from  component import Component
+from ipsframework import Component
 #Numeric should be replace by numpy, if needed -JCW
 from Numeric import *
 from Scientific.IO.NetCDF import *

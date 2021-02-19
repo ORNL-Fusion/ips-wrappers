@@ -204,7 +204,7 @@ import pickle
 import time
 import datetime
 
-from  component import Component
+from ipsframework import Component
 from get_IPS_config_parameters import get_global_param, get_component_param
 
 # Import the necessary Numeric and netCDF modules

@@ -98,7 +98,7 @@ class basic_time_step_driver(Component):
         print ' init sequence complete--ready for time loop'
 
         ps = PlasmaState("ips",1)
-        ps_work_dir = services.get_config_param('PLASMA_STATE_WORK_DIR')
+        ps_work_dir = services.get_config_param('STATE_WORK_DIR')
 
         # Iterate through the timeloop
         for t in tlist_str[1:len(timeloop)]:

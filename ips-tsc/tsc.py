@@ -125,7 +125,7 @@ import getopt
 import shutil
 import string
 import time
-from  component import Component
+from ipsframework import Component
 from TSC_input_file import *
 
 class tsc(Component):

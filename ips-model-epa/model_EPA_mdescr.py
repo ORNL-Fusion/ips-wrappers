@@ -70,7 +70,7 @@ import shutil
 import string
 import math
 from netCDF4 import *
-from  component import Component
+from ipsframework import Component
 from simple_file_editing_functions import get_lines, put_lines, edit_nml_file,\
 										read_var_from_nml_lines
 from get_IPS_config_parameters import get_global_param, get_component_param

@@ -115,7 +115,7 @@ import subprocess
 import getopt
 import shutil
 import string
-from  component import Component
+from ipsframework import Component
 from Numeric import *                        #Use numpy instead?? BH
 from Scientific.IO.NetCDF import *           #Use scipy.io.netcdf implentation??  BH
 

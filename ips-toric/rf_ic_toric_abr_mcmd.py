@@ -47,7 +47,7 @@ import subprocess
 import getopt
 import shutil
 import string
-from  component import Component
+from ipsframework import Component
 from netCDF4 import *
 from get_IPS_config_parameters import get_global_param, get_component_param
 

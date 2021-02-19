@@ -110,7 +110,7 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
 from netCDF4 import *
 #from Scientific.IO.NetCDF import *
-from  component import Component
+from ipsframework import Component
 
 class torlh (Component):
 

@@ -6,7 +6,7 @@ import subprocess
 import getopt
 import shutil
 import string
-from  component import Component
+from ipsframework import Component
 
 class cql3d(Component):
     def __init__(self, services, config):
