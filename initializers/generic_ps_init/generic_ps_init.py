@@ -140,7 +140,7 @@ in existing_ps_file mode to extract the CURRENT_EQDSK when GENERATE_EQDSK = true
 # [generic_ps_init] section.  The new values of ps%t0 and ps%tfinal are written into
 # CURRENT_STATE, and CURRENT_STATE is copied to PRIOR_STATE and NEXT_STATE if these are
 # in the STATE_FILES list.  The state files are copied to the plasma state work
-# directory by services.update_plasma_state().
+# directory by services.update_state().
 #
 # Nota Bene: For restart the plasma state files should be listed in the config file as
 # input files to the generic_ps_init component.
@@ -276,7 +276,7 @@ class generic_ps_init (Component):
             if init_mode in ['touch_only', 'TOUCH_ONLY'] :
                 # Update plasma state
                 try:
-                    services.update_plasma_state()
+                    services.update_state()
                 except Exception as e:
                     print('Error in call to updatePlasmaState()', e)
                     raise
@@ -448,7 +448,7 @@ class generic_ps_init (Component):
 
 # Update plasma state
         try:
-            services.update_plasma_state()
+            services.update_state()
         except Exception as e:
             print('Error in call to updatePlasmaState()', e)
             raise
