@@ -467,7 +467,7 @@ class generic_ps_init (Component):
         print('generic_ps_init.checkpoint() called')
 
         services = self.services
-        services.stage_plasma_state()
+        services.stage_state()
         services.save_restart_files(timestamp, self.RESTART_FILES)
 
 
