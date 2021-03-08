@@ -1,0 +1,14 @@
+# host: workstation
+# total nodes: 1
+# processors per node: 1
+using accurate nodes: False
+# time (in seconds since the | available | allocated | percent allocated | processes | percent used | notes 
+#   resource manager started |           |           |                   |           |              |
+#-----------------------------------------------------------------------------------------------------------
+                     1.29799 |         1 |         0 |              0.00 |         0 |        0.00  #  initial state of resources
+                     3.42216 |         0 |         1 |            100.00 |         1 |      100.00  #  allocation for task 1 using partial nodes
+                    12.79733 |         1 |         0 |              0.00 |         0 |        0.00  #  released nodes for task 1
+                    13.87793 |         0 |         1 |            100.00 |         1 |      100.00  #  allocation for task 2 using partial nodes
+                    27.78347 |         1 |         0 |              0.00 |         0 |        0.00  #  released nodes for task 2
+                    28.84368 |         0 |         1 |            100.00 |         1 |      100.00  #  allocation for task 3 using partial nodes
+                    30.26031 |         1 |         0 |              0.00 |         0 |        0.00  #  released nodes for task 3

@@ -1,0 +1,29 @@
+&sources
+ rhomesh_src   = 'eqdsk'
+ current_src   = 'eqdsk'
+ boundary_src  = 'asis'
+ pressure_src  = 'eqdsk'
+ eprofiles_src = 'profiles'
+ iprofiles_src = 'profiles'
+/
+
+&namelist
+ NS        =   64
+ NT        =   64
+ NISO      =   64
+ NPSI      =  128
+ NCHI      =  128
+ NRBOX     = 60
+ NZBOX     = 60
+ RELAX     = 0.0
+ NSTTP     = 1
+ NPROPT    = 3
+ NPPFUN    = 8
+ NEQDSK    = 1
+ NFUNRHO   = 0
+ TENSBND   = 0
+ TENSPROF  = 0
+ NRHOMESH  = 0
+ cocos_in  = 2
+ cocos_out = 12
+/

@@ -1,0 +1,29 @@
+&sources
+ rhomesh_src   = 'chease'
+ current_src   = 'chease'
+ boundary_src  = 'asis'
+ pressure_src  = 'chease'
+ eprofiles_src = 'chease'
+ iprofiles_src = 'chease'
+/
+
+&namelist
+ NS        =   64
+ NT        =   64
+ NISO      =   64
+ NPSI      =  128
+ NCHI      =  128
+ NRBOX     = 60
+ NZBOX     = 60
+ RELAX     = 0.0
+ NSTTP     = 3
+ NPROPT    = 3
+ NPPFUN    = 8
+ NEQDSK    = 0
+ NFUNRHO   = 0
+ TENSBND   = 0
+ TENSPROF  = 0
+ NRHOMESH  = 0
+ cocos_in  = 2
+ cocos_out = 12
+/

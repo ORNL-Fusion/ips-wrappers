@@ -1,0 +1,35 @@
+*** for EQDSK file copied onto EXPEQ file 
+*** cp this file to "chease_namelist" and run chease 
+***  
+***  
+ &EQDATA 
+ RELAX=0.00,  NBSEXPQ=1111,  NEQDSK=0,     
+ NS=  64,  NT=  64,         
+ NPSI= 128,  NCHI= 128,  NISO=  64,       
+ NRBOX=  60,  NZBOX=  60,      
+ NCSCAL=4,  NOPT=0,       
+ NSURF=6,  NFUNC=4,      
+ NPPFUN=8,     
+ NFUNRHO=0,  NRHOMESH=0,   
+ NSTTP=3,  NPROPT=-3,     
+ NVERBOSE=4,   
+ QSPEC=0.850,  CSSPEC=0.000,   
+ R0EXP=1.696,  B0EXP=2.003,    
+ NDIAGOP=1,  NIDEAL=9,     
+ NDIFPS=0,  NDIFT=1,      
+ NMESHC=1,  NPOIDC=2,  SOLPDC=0.70,   
+ CPLACE=0.9,0.95,0.99,1.0,      
+ CWIDTH=0.1,0.05,0.01,0.025,      
+ NMESHPOL=   1,  SOLPDPOL=0.10, 
+ NTURN=20,  NBLC0=16,  NPPR=24,       
+ NINMAP=40,  NINSCA=40,     
+ NSYM=0,  NEGP=0,  NER=2,        
+ EPSLON=1.00E-10,   
+ ETAEI=3.0,  RPEOP=0.5,  RZION=1.0,  GAMMA=1.66666666670,  
+ AT3(1)=-0.69,   
+ TENSPROF=0.00, 
+ TENSBND=0.00,  
+ cocos_in= 2,   
+ cocos_out=12   
+ &END 
+
