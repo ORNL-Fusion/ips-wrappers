@@ -685,6 +685,8 @@ driver['LOOP_TIME_STEP'])))
             #tridyn.dat always in order: He, W, D, T --> maintain that here, regardless of order in plasmaSpecies
             #for prj in ['He', 'W', 'D', 'T']:
                 #i=self.gitr['plasmaSpecies'].index(prj)
+
+            netParam = self.XOLOTL_INPUT_PARAMETERS['netParam'].split() #split(',')
             for i in range(len(self.gitr['plasmaSpecies'])):
                 prj=self.gitr['plasmaSpecies'][i]                
                 ft_output_profile_temp_prj=timeFolder+'/'+self.FT_OUTPUT_PROFILE_TEMP+'_'+prj
@@ -693,8 +695,20 @@ driver['LOOP_TIME_STEP'])))
                 combinedTridynString=str(tridynString)+str(self.maxRangeXolotl[i])
                 print(('for {0}, fraction in plasma = {1} , and reflection = {2} '.format(prj,self.gitr['fluxFraction'][i], self.rYield[i])))
                 print(('\t effective fraction (in plasma * (1-reflection)) = {} '.format(self.gitr['fluxFraction'][i]*(1-self.rYield[i]))))
-                combinedFile.write("%s\n" %(str(self.gitr['fluxFraction'][i]*(1-self.rYield[i])))) #self.fluxFraction[i]
-                combinedFile.write("%s\n" %(combinedTridynString))
+                #the format of tridyn.dat is different for the pulsed & UQ executables of Xolotl:
+                if prj!='W': #then the name in the tridyn.dat line is the same as prj
+                             #& need to check if it exists in the network: 
+                    if prj=='He': #if He,  check He's position in netParam, i.e., index i=0                                                
+                        if netParam[i]!="0":
+                            combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.gitr['fluxFraction'][i]*(1-self.rYield[i])))) 
+                            combinedFile.write("%s\n" %(combinedTridynString))
+                    else: #if prj=='D' or prj=='T':
+                        if netParam[i-1]!="0": #if D or T,  check position in netParam, i.e., index i=2,3 -> i-1 = 1 or 2 (no W in netParam)
+                            combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.gitr['fluxFraction'][i]*(1-self.rYield[i])))) 
+                            combinedFile.write("%s\n" %(combinedTridynString))
+                elif prj=='W': #W is called interstitial in tridyn.dat, i.e., "I" & always exists in the network (no need to check)
+                    combinedFile.write("%s %s %s\n" %('I',str(1),str(self.gitr['fluxFraction'][i]*(1-self.rYield[i]))))
+                    combinedFile.write("%s\n" %(combinedTridynString))
                 profile.close()
             combinedFile.close()
 
