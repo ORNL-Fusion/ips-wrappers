@@ -7,15 +7,15 @@ import glob
 import sys
 #import translate_xolotl_to_ftridyn
 #import translate_ftridyn_to_xolotl
-import generate_ftridyn_input #new script to generate FTridyn input
+import generate_ftridyn_input_UQ #new script to generate FTridyn input
 import numpy as np
 import subprocess
 import re
 import pickle
 import math
 
-print('The generate_ftridyn_input path in ftridyn_comp is:')
-print(os.path.abspath(generate_ftridyn_input.__file__)) #TEST
+print('The generate_ftridyn_input_UQ path in ftridyn_comp is:')
+print(os.path.abspath(generate_ftridyn_input_UQ.__file__)) #TEST
 
 class ftridynWorker(Component):
     def __init__(self, services, config):
@@ -78,7 +78,7 @@ class ftridynWorker(Component):
                 print(('\t weight of angle {0} is {1}, so skip generateInput'.format(angleIn[j],weightAngle[j]))) 
 
             elif (weightAngle[j] > 0.0):
-                generate_ftridyn_input.Prj_Tg_xolotl(IQ0=ftridyn['iQ0'],number_layers=ftridyn['nDataPts'],depth=ftridyn['nTT'],number_histories=ftridyn['nImpacts'],incident_energy=energyIn,incident_angle=angleIn[j],projectile_name=str(prj),target1_name=str(tg[0]), target2_name=str(tg[1]),target3_name=str(tg[2]),target4_name=str(tg[3]),ED_He=ftridyn.get('ED_He',''),EF_He=ftridyn.get('EF_He',''),E0_He=ftridyn.get('E0_He',''),ALPHA0_He=ftridyn.get('ALPHA0_He',''),ED_W=ftridyn.get('ED_W',''),EF_W=ftridyn.get('EF_W',''),SBV_W=ftridyn.get('SBV_W',''))
+                generate_ftridyn_input_UQ.Prj_Tg_xolotl(IQ0=ftridyn['iQ0'],number_layers=ftridyn['nDataPts'],depth=ftridyn['nTT'],number_histories=ftridyn['nImpacts'],incident_energy=energyIn,incident_angle=angleIn[j],projectile_name=str(prj),target1_name=str(tg[0]), target2_name=str(tg[1]),target3_name=str(tg[2]),target4_name=str(tg[3]),ED_He=ftridyn.get('ED_He',''),EF_He=ftridyn.get('EF_He',''),E0_He=ftridyn.get('E0_He',''),ALPHA0_He=ftridyn.get('ALPHA0_He',''),ED_W=ftridyn.get('ED_W',''),EF_W=ftridyn.get('EF_W',''),SBV_W=ftridyn.get('SBV_W',''))
 
             pathFolder = self.ft_folder+'/ANGLE'+str(angleIn[j])# + "_"+str(energyInW[j])
             #if not os.path.exists(pathFolder):
