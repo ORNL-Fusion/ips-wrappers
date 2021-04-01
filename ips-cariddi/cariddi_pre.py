@@ -1,345 +1,281 @@
+import argparse
+import scipy.io
 import netCDF4
 import numpy
-import argparse
 import json
-import time
 
 #-------------------------------------------------------------------------------
-#  Class to represent an carriddi file.
-#-------------------------------------------------------------------------------
-class carriddi_file:
-#*******************************************************************************
-#  CONSTRUCTORS
-#*******************************************************************************
-#-------------------------------------------------------------------------------
-#  Initialize a carriddi file.
+#  Save fields.
 #
-#  param[inout] self      A carriddi file instance.
-#  param[in]    file_name Path to the file.
+#  param[in] path      Path to the file.
+#  param[in] file_name Name of the mgrid file.
 #-------------------------------------------------------------------------------
-    def __init__(self, file_name):
-        self.data = netCDF4.Dataset(file_name, 'a')
+def save_fields(path, file_name):
+    with netCDF4.Dataset('{}/eddy.nc'.format(path), 'a') as eddy:
 
-#*******************************************************************************
-#  DESTRUCTORS
-#*******************************************************************************
-#-------------------------------------------------------------------------------
-#  Destruct a cariddi file instance.
-#
-#  param[inout] self A mgrid file instance.
-#-------------------------------------------------------------------------------
-    def __del__(self):
-        self.data.close()
+        with netCDF4.Dataset(file_name, 'a') as mgrid:
+#  FIXME: Doesn't handle 3D fields.
+            br = mgrid.variables['br_006'][:].data[1,:,:]
+            bp = mgrid.variables['bp_006'][:].data[1,:,:]
+            bz = mgrid.variables['bz_006'][:].data[1,:,:]
 
-#-------------------------------------------------------------------------------
-#  Class to represent an vmec current file.
-#-------------------------------------------------------------------------------
-class vmec_current(carriddi_file):
-#*******************************************************************************
-#  CONSTRUCTORS
-#*******************************************************************************
-#-------------------------------------------------------------------------------
-#  Initialize a vmec_current file.
-#
-#  param[inout] self      A carriddi file instance.
-#  param[in]    file_name Path to the file.
-#-------------------------------------------------------------------------------
-    def __init__(self, file_name):
-        super(vmec_current, self).__init__(file_name)
+        bx = eddy.variables['bx']
+        by = eddy.variables['by']
+        bz = eddy.variables['bz']
 
-        k_x = self.data.variables['k_x'][:].data
-        k_y = self.data.variables['k_y'][:].data
-        k_z = self.data.variables['k_z'][:].data
+        bx[:] = numpy.reshape(br, numpy.shape(bx), order='F')
+        by[:] = numpy.reshape(bp, numpy.shape(bx), order='F')
+        bz[:] = numpy.reshape(bz, numpy.shape(bx), order='F')
 
-        self.k_vmec = numpy.empty(3*len(k_x))
-        self.k_vmec[0         :  len(k_x)] = k_x[:]
-        self.k_vmec[  len(k_x):2*len(k_x)] = k_y[:]
-        self.k_vmec[2*len(k_x):3*len(k_x)] = k_z[:]
-
-#-------------------------------------------------------------------------------
-#  Class to represent an xJ Matrix file.
-#-------------------------------------------------------------------------------
-class xJ_matrix(carriddi_file):
-#*******************************************************************************
-#  CONSTRUCTORS
-#*******************************************************************************
-#-------------------------------------------------------------------------------
-#  Initialize a xJ file.
-#
-#  param[inout] self      A xJ file instance.
-#  param[in]    file_name Path to the file.
-#-------------------------------------------------------------------------------
-    def __init__(self, file_name):
-        super(xJ_matrix, self).__init__(file_name)
-
-        idx = self.data.variables['is'][:].data[0,:].astype(int) - 1
-
-        idk = numpy.zeros_like(idx)
-        for i in range(len(idx)):
-            idk[i] = numpy.where(idx == i)[0]
-
-        self.ind3 = numpy.concatenate((       idk,
-                                       500  + idk,
-                                       1000 + idk))
-
-#-------------------------------------------------------------------------------
-#  Class to represent an K1 Matrix file.
-#-------------------------------------------------------------------------------
-class k1_matrix(carriddi_file):
-#*******************************************************************************
-#  CONSTRUCTORS
-#*******************************************************************************
-#-------------------------------------------------------------------------------
-#  Initialize a K1 file.
-#
-#  param[inout] self      A k1 file instance.
-#  param[in]    file_name Path to the file.
-#  param[in]    indicies  Ordering indicies for matrix.
-#-------------------------------------------------------------------------------
-    def __init__(self, file_name, indicies):
-        super(k1_matrix, self).__init__(file_name)
-
-        self.x = self.data.variables['K1x'][:].data.transpose()[:,indicies]
-        self.y = self.data.variables['K1y'][:].data.transpose()[:,indicies]
-        self.z = self.data.variables['K1z'][:].data.transpose()[:,indicies]
-
-#-------------------------------------------------------------------------------
-#  Class to represent an K2 Matrix file.
-#-------------------------------------------------------------------------------
-class k2_matrix(carriddi_file):
-#*******************************************************************************
-#  CONSTRUCTORS
-#*******************************************************************************
-#-------------------------------------------------------------------------------
-#  Initialize a K2 file.
-#
-#  param[inout] self      A k2 file instance.
-#  param[in]    file_name Path to the file.
-#-------------------------------------------------------------------------------
-    def __init__(self, file_name):
-        super(k2_matrix, self).__init__(file_name)
-
-        self.x = self.data.variables['K2x'][:].data.transpose()
-        self.y = self.data.variables['K2y'][:].data.transpose()
-        self.z = self.data.variables['K2z'][:].data.transpose()
-
-#-------------------------------------------------------------------------------
-#  Class to represent an C1 Matrix file.
-#-------------------------------------------------------------------------------
-class c1_matrix(carriddi_file):
-#*******************************************************************************
-#  CONSTRUCTORS
-#*******************************************************************************
-#-------------------------------------------------------------------------------
-#  Initialize a C1 file.
-#
-#  param[inout] self      A c1 file instance.
-#  param[in]    file_name Path to the file.
-#  param[in]    indicies  Ordering indicies for matrix.
-#-------------------------------------------------------------------------------
-    def __init__(self, file_name, indicies):
-        super(c1_matrix, self).__init__(file_name)
-
-        self.c = self.data.variables['C1'][:].data.transpose()[:,indicies]
-
-#-------------------------------------------------------------------------------
-#  Class to represent an C2 Matrix file.
-#-------------------------------------------------------------------------------
-class c2_matrix(carriddi_file):
-#*******************************************************************************
-#  CONSTRUCTORS
-#*******************************************************************************
-#-------------------------------------------------------------------------------
-#  Initialize a C2 file.
-#
-#  param[inout] self      A c2 file instance.
-#  param[in]    file_name Path to the file.
-#-------------------------------------------------------------------------------
-    def __init__(self, file_name):
-        super(c2_matrix, self).__init__(file_name)
-
-        self.c = self.data.variables['C2'][:].data.transpose()
-
-#-------------------------------------------------------------------------------
-#  Class to represent an vmec current file.
-#-------------------------------------------------------------------------------
-class eddy:
-#*******************************************************************************
-#  CONSTRUCTORS
-#*******************************************************************************
+    print('Fields saved')
+    
 #-------------------------------------------------------------------------------
 #  Initialize a eddy file.
 #
-#  param[inout] self A eddy file instance.
-#  param[in]    data Open netcdf file reference.
-#  param[in]    k1x
-#  param[in]    k1y
-#  param[in]    k1z
-#  param[in]    k2x
-#  param[in]    k2y
-#  param[in]    k2z
-#  param[in]    c1
-#  param[in]    c2
-#  param[in]    dx
-#  param[in]    dy
-#  param[in]    dz
-#  param[in]    c
+#  param[in] path       Path to the file.
+#  param[in] time_index Current time index.
+#  param[in] file_name  Name of the file.
 #-------------------------------------------------------------------------------
-    def __init__(self, data,
-                 k1x, k1y, k1z, k2x, k2y, k2z,
-                 c1, c2, dx, dy, dz, c):
+def set_current(path, time_index, file_name):
+    with netCDF4.Dataset('{}/eddy.nc'.format(path), 'a') as eddy:
 
-        self.data = data
+        with netCDF4.Dataset(file_name, 'a') as current:
+            ax = current.variables['ax'][:].data
+            ay = current.variables['ay'][:].data
+            az = current.variables['az'][:].data
 
-        self.k1x = k1x
-        self.k1y = k1y
-        self.k1z = k1z
+        c1x = eddy.variables['c1x'][:].data
+        c1y = eddy.variables['c1y'][:].data
+        c1z = eddy.variables['c1z'][:].data
 
-        self.k2x = k2x
-        self.k2y = k2y
-        self.k2z = k2z
+        c2 = eddy.variables['c2'][:].data
 
-        self.c1 = c1
-        self.c2 = c2
+        c = eddy.variables['c']
 
-        self.dx = dx
-        self.dy = dy
-        self.dz = dz
+        k1xx = eddy.variables['k1xx'][:].data
+        k1xy = eddy.variables['k1xy'][:].data
+        k1xz = eddy.variables['k1xz'][:].data
 
-        self.c = c
+        k1yx = eddy.variables['k1yx'][:].data
+        k1yy = eddy.variables['k1yy'][:].data
+        k1yz = eddy.variables['k1yz'][:].data
 
-#-------------------------------------------------------------------------------
-#  Create a new eddy file.
-#
-#  param[in] matrix_path Path to the matrix files.
-#  returns An new initialized eddy file object.
-#-------------------------------------------------------------------------------
-    @classmethod
-    def new_eddy(cls, matrix_path):
-        data = netCDF4.Dataset('{}/eddy.nc'.format(matrix_path), 'w')
+        k1zx = eddy.variables['k1zx'][:].data
+        k1zy = eddy.variables['k1zy'][:].data
+        k1zz = eddy.variables['k1zz'][:].data
 
-        xJfile = xJ_matrix('{}/cs_xJ.nc'.format(matrix_path))
-        c1file = c1_matrix('{}/cs_C1.nc'.format(matrix_path), xJfile.ind3)
-        c2file = c2_matrix('{}/cs_C2.nc'.format(matrix_path))
-        k1file = k1_matrix('{}/cs_K1.nc'.format(matrix_path), xJfile.ind3)
-        k2file = k2_matrix('{}/cs_K2.nc'.format(matrix_path))
+        k2x = eddy.variables['k2x'][:].data
+        k2y = eddy.variables['k2y'][:].data
+        k2z = eddy.variables['k2z'][:].data
 
-        data.description = 'Cariddi matrix re-alligned and vectors for VMEC run time index {:04d}'.format(0)
-        data.history = 'Created {}'.format(time.ctime(time.time()))
-        data.source = 'netCDF3 python module'
+        dx = eddy.variables['dx']
+        dy = eddy.variables['dy']
+        dz = eddy.variables['dz']
 
-        Ng = data.createDimension('Ng', numpy.shape(k1file.x)[0]) # Number of points on vacuum grid.
-        Ns = data.createDimension('Ns', numpy.shape(k1file.x)[1]) # 3 times the number of points on control surface
-        Nw = data.createDimension('Nw', numpy.shape(c2file.c)[1]) # Number of points on eddy current.
+        i = numpy.zeros(numpy.shape(c[:].data))
+        if time_index > 0:
+            i = numpy.matmul(c1x, ax) + numpy.matmul(c1y, ay) + numpy.matmul(c1y, az) + c[:].data
+
+        c[:] = -numpy.matmul(c1x, ax) - numpy.matmul(c1y, ay) - numpy.matmul(c1z, az) + numpy.matmul(c2, i)
+
+        dx[:] = -numpy.matmul(k1xx, ax) - numpy.matmul(k1xy, ay) - numpy.matmul(k1xz, az) + numpy.matmul(k2x, i)
+        dy[:] = -numpy.matmul(k1yx, ax) - numpy.matmul(k1yy, ay) - numpy.matmul(k1yz, az) + numpy.matmul(k2y, i)
+        dz[:] = -numpy.matmul(k1zx, ax) - numpy.matmul(k1zy, ay) - numpy.matmul(k1zz, az) + numpy.matmul(k2z, i)
+
+    print('eddy.nc file updated')
 
 #-------------------------------------------------------------------------------
-        K1x = data.createVariable('K1x', 'f8', ('Ng','Ns'))
-        K1y = data.createVariable('K1y', 'f8', ('Ng','Ns'))
-        K1z = data.createVariable('K1z', 'f8', ('Ng','Ns'))
-
-        shape = numpy.shape(k1file.x)
-
-        K1x[:,:] = k1file.x.reshape(shape, order='F') # Use Fortran ordering in reshaping
-        K1y[:,:] = k1file.y.reshape(shape, order='F') # Use Fortran ordering in reshaping
-        K1z[:,:] = k1file.z.reshape(shape, order='F') # Use Fortran ordering in reshaping
-
+#  Class to represent an matrix file.
 #-------------------------------------------------------------------------------
-        K2x = data.createVariable('K2x', 'f8', ('Ng', 'Nw'))
-        K2y = data.createVariable('K2y', 'f8', ('Ng', 'Nw'))
-        K2z = data.createVariable('K2z', 'f8', ('Ng', 'Nw'))
-
-        shape = numpy.shape(k2file.x)
-
-        K2x[:,:] = k2file.x.reshape(shape, order='F') # Use Fortran ordering in reshaping
-        K2y[:,:] = k2file.y.reshape(shape, order='F') # Use Fortran ordering in reshaping
-        K2z[:,:] = k2file.z.reshape(shape, order='F') # Use Fortran ordering in reshaping
-
-#-------------------------------------------------------------------------------
-        C1 = data.createVariable('C1', 'f8', ('Nw', 'Ns'))
-
-        shape = numpy.shape(c1file.c)
-
-        C1[:,:] = c1file.c.reshape(shape, order='F') # Use Fortran ordering in reshaping
-
-#-------------------------------------------------------------------------------
-        C2 = data.createVariable('C2', 'f8', ('Nw', 'Nw'))
-
-        shape = numpy.shape(c2file.c)
-
-        C2[:,:] = c2file.c.reshape(shape, order='F') #Use Fortran ordering in reshaping
-
-#-------------------------------------------------------------------------------
-        dx = data.createVariable('dx', 'f8', ('Ng'))
-        dy = data.createVariable('dy', 'f8', ('Ng'))
-        dz = data.createVariable('dz', 'f8', ('Ng'))
-
-#-------------------------------------------------------------------------------
-        c = data.createVariable('c', 'f8', ('Nw'))
-
-        return cls(data, K1x, K1y, K1z, K2x, K2y, K2z,
-                   C1, C2, dx, dy, dz, c)
-
-#-------------------------------------------------------------------------------
-#  Load an existing eddy file.
-#
-#  param[in] matrix_path Path to the matrix files.
-#  returns An open eddy file object.
-#-------------------------------------------------------------------------------
-    @classmethod
-    def load_eddy(cls, matrix_path):
-        data = netCDF4.Dataset('{}/eddy.nc'.format(matrix_path), 'a')
-
-        return cls(data,
-                   data.variables['K1x'][:].data,
-                   data.variables['K1y'][:].data,
-                   data.variables['K1z'][:].data,
-                   data.variables['K2x'][:].data,
-                   data.variables['K2y'][:].data,
-                   data.variables['K2z'][:].data,
-                   data.variables['C1'][:].data,
-                   data.variables['C2'][:].data,
-                   data.variables['dx'][:],
-                   data.variables['dy'][:],
-                   data.variables['dz'][:],
-                   data.variables['c'][:])
-
+class matrix:
 #*******************************************************************************
-#  DESTRUCTORS
+#  CONSTRUCTORS
 #*******************************************************************************
 #-------------------------------------------------------------------------------
-#  Destruct a cariddi file instance.
+#  Initialize a matrix file.
 #
-#  param[inout] self A mgrid file instance.
+#  param[inout] self      A matrix file instance.
+#  param[in]    path      Path to the file.
+#  param[in]    file_name Name of the file.
 #-------------------------------------------------------------------------------
-    def __del__(self):
-        self.data.close()
+    def __init__(self, path, file_name):
+        mat = scipy.io.loadmat('{}/{}'.format(path, file_name))
 
+        self.path = path
+
+        self.c1x = mat['C1x']
+        self.c1y = mat['C1y']
+        self.c1z = mat['C1z']
+        self.c2 = mat['C2']
+
+        self.k1xx = mat['K1xx']
+        self.k1xy = mat['K1xy']
+        self.k1xz = mat['K1xz']
+        self.k2x = mat['K2x']
+
+        self.k1yx = mat['K1yx']
+        self.k1yy = mat['K1yy']
+        self.k1yz = mat['K1yz']
+        self.k2y = mat['K2y']
+
+        self.k1zx = mat['K1zx']
+        self.k1zy = mat['K1zy']
+        self.k1zz = mat['K1zz']
+        self.k2z = mat['K2z']
+
+#-------------------------------------------------------------------------------
+#  Write out the netcdf matrix files.
+#
+#  param[in] self A matrix file instance.
+#-------------------------------------------------------------------------------
+    def write(self):
+        with netCDF4.Dataset('{}/eddy.nc'.format(self.path), 'w') as eddy:
+
+            nf = eddy.createDimension('nf', numpy.shape(self.k2x)[1])
+            ng = eddy.createDimension('ng', numpy.shape(self.k1xx)[1])
+            nv = eddy.createDimension('nv', numpy.shape(self.k1xx)[0])
+            scalar = eddy.createDimension('s', 1)
+
+            c = eddy.createVariable('c', 'f8', ('nf'))
+
+            c[:] = 0
+
+            dx = eddy.createVariable('dx', 'f8', ('nv'))
+            dy = eddy.createVariable('dy', 'f8', ('nv'))
+            dz = eddy.createVariable('dz', 'f8', ('nv'))
+
+            dx[:] = 0
+            dy[:] = 0
+            dz[:] = 0
+
+            k1xx = eddy.createVariable('k1xx', 'f8', ('nv','ng'))
+            k1xy = eddy.createVariable('k1xy', 'f8', ('nv','ng'))
+            k1xz = eddy.createVariable('k1xz', 'f8', ('nv','ng'))
+
+            k1yx = eddy.createVariable('k1yx', 'f8', ('nv','ng'))
+            k1yy = eddy.createVariable('k1yy', 'f8', ('nv','ng'))
+            k1yz = eddy.createVariable('k1yz', 'f8', ('nv','ng'))
+
+            k1zx = eddy.createVariable('k1zx', 'f8', ('nv','ng'))
+            k1zy = eddy.createVariable('k1zy', 'f8', ('nv','ng'))
+            k1zz = eddy.createVariable('k1zz', 'f8', ('nv','ng'))
+
+            k1xx[:,:] = self.k1xx
+            k1xy[:,:] = self.k1xy
+            k1xz[:,:] = self.k1xz
+
+            k1yx[:,:] = self.k1yx
+            k1yy[:,:] = self.k1yy
+            k1yz[:,:] = self.k1yz
+
+            k1zx[:,:] = self.k1zx
+            k1zy[:,:] = self.k1zy
+            k1zz[:,:] = self.k1zz
+
+            k2x = eddy.createVariable('k2x', 'f8', ('nv','nf'))
+            k2y = eddy.createVariable('k2y', 'f8', ('nv','nf'))
+            k2z = eddy.createVariable('k2z', 'f8', ('nv','nf'))
+
+            k2x[:,:] = self.k2x
+            k2y[:,:] = self.k2y
+            k2z[:,:] = self.k2z
+
+            c1x = eddy.createVariable('c1x', 'f8', ('nf','ng'))
+            c1y = eddy.createVariable('c1y', 'f8', ('nf','ng'))
+            c1z = eddy.createVariable('c1z', 'f8', ('nf','ng'))
+
+            c1x[:,:] = self.c1x
+            c1y[:,:] = self.c1y
+            c1z[:,:] = self.c1z
+
+            c2 = eddy.createVariable('c2', 'f8', ('nf','nf'))
+
+            c2[:,:] = self.c2
+
+            bx = eddy.createVariable('bx', 'f8', 'nv')
+            by = eddy.createVariable('by', 'f8', 'nv')
+            bz = eddy.createVariable('bz', 'f8', 'nv')
+
+            bx[:] = 0
+            by[:] = 0
+            bz[:] = 0
+
+            ax = eddy.createVariable('ax', 'f8', ('ng'))
+            ay = eddy.createVariable('ay', 'f8', ('ng'))
+            az = eddy.createVariable('az', 'f8', ('ng'))
+
+            ax[:] = 0
+            ay[:] = 0
+            az[:] = 0
+
+#-------------------------------------------------------------------------------
+#  Class to represent an surface file.
+#-------------------------------------------------------------------------------
+class surface:
 #*******************************************************************************
-#  SETTERS
+#  CONSTRUCTORS
 #*******************************************************************************
 #-------------------------------------------------------------------------------
-#  Set vmec current.
+#  Initialize a surface file.
 #
-#  This updates the d* and c matricies with values of the new current. At t=0,
-#  these values are zero since there is no surface current initially.
-#
-#  param[inout] self         A eddy file object instance.
-#  param[in]    time_index   Current time index.
-#  param[in]    current_path Path to the J0 file.
+#  param[inout] self      A surface file instance.
+#  param[in]    path      Path to the file.
+#  param[in]    file_name Name of the file.
 #-------------------------------------------------------------------------------
-    def set_current(self, time_index, current_path):
-        J0 = vmec_current(current_path)
+    def __init__(self, path, file_name):
+        mat = scipy.io.loadmat('{}/{}'.format(path, file_name))
 
-#  FIXME: Size of this matrix is hard coded.
-        I0A = numpy.zeros(484)
-        if time_index != 0:
-            I0A = self.c1[:,:].dot(J0.k_vmec) + self.c[:].data
+        self.x = mat['xel']
+        self.y = mat['yel']
+        self.z = mat['zel']
 
-#  Compute updated quantities.
-        self.c[:]  = -self.c1[:,:].dot(J0.k_vmec)  + self.c2[:,:].dot(I0A)
-        self.dx[:] = -self.k1x[:,:].dot(J0.k_vmec) + self.k2x[:,:].dot(I0A)
-        self.dy[:] = -self.k1y[:,:].dot(J0.k_vmec) + self.k2y[:,:].dot(I0A)
-        self.dz[:] = -self.k1z[:,:].dot(J0.k_vmec) + self.k2z[:,:].dot(I0A)
+#-------------------------------------------------------------------------------
+#  Write out the netcdf matrix files.
+#
+#  param[in] self A matrix file instance.
+#-------------------------------------------------------------------------------
+    def write(self):
+        with netCDF4.Dataset('A1.nc', 'w') as a1:
+
+            ng = a1.createDimension('ng', numpy.shape(self.x)[0])
+
+            ax = a1.createVariable('ax', 'f8', ('ng'))
+            ay = a1.createVariable('ay', 'f8', ('ng'))
+            az = a1.createVariable('az', 'f8', ('ng'))
+
+            ax[:] = 0
+            ay[:] = 0
+            az[:] = 0
+
+            x = a1.createVariable('x', 'f8', ('ng'))
+            y = a1.createVariable('y', 'f8', ('ng'))
+            z = a1.createVariable('z', 'f8', ('ng'))
+
+            x[:] = self.x[:,0]
+            y[:] = self.y[:,0]
+            z[:] = self.z[:,0]
+
+#-------------------------------------------------------------------------------
+#  Convert matrix files to netcdf.
+#
+#  param[in] path      Path to the file.
+#  param[in] file_name Name of the file.
+#-------------------------------------------------------------------------------
+def set_matrix(path, file_name):
+    mat = matrix(path, file_name)
+    mat.write()
+    print('eddy.nc file created')
+
+#-------------------------------------------------------------------------------
+#  Convert surface files to netcdf.
+#
+#  param[in] path      Path to the file.
+#  param[in] file_name Name of the file.
+#-------------------------------------------------------------------------------
+def set_surface(path, file_name):
+    surf = surface(path, file_name)
+    surf.write()
+    print('A1.nc file created')
 
 #-------------------------------------------------------------------------------
 #  Extract profile parameters for the time index.
@@ -347,13 +283,13 @@ class eddy:
 #  Profile data is written into a json dictionary file that can be passed to
 #  ips-vmec to update namelist input files.
 #
-#  param[in] percorso   Precurser path for the stored profile quantities.
+#  param[in] path       Path for the stored profile quantities.
 #  param[in] time_index Current time index.
 #  param[in] vmec_input JSON file to write vmec profile parameters to.
 #-------------------------------------------------------------------------------
-def set_namelist_parameters(percorso, time_index, vmec_input):
+def set_namelist_parameters(path, time_index, vmec_input):
 #  File with profiles from Cariddi.
-    file_prof = '{}/SURFACEQUANT_{:04d}.dat'.format(percorso, time_index)
+    file_prof = '{}/SURFACEQUANT_{:04d}.dat'.format(path, time_index)
 
 #  Read profile data.
     data = numpy.loadtxt(file_prof, skiprows = 1)
@@ -391,29 +327,6 @@ def set_namelist_parameters(percorso, time_index, vmec_input):
     print('VMEC profile profile parameters written to {}.'.format(vmec_input))
 
 #-------------------------------------------------------------------------------
-#  Update carriddi matricies.
-#
-#  Routine to read cariddi matrices, re-arrange data (K1 and C1 matrices) so
-#  that they fit to VMEC ordering of points onto the coupling surface. Also
-#  compute quantitites required to compute B on VMEC vacuum grid. The following
-#  data are stored in eddy.nc file to be used by VMEC
-#       1) Read J,surface data
-#       2) save K1,K2,C1,C2,c,s
-#
-#  param[in] matrix_path  Path to the matrix files.
-#  param[in] time_index   Current time index.
-#  param[in] vmec_current VMEC J0 current file.
-#-------------------------------------------------------------------------------
-def set_matrix_file(matrix_path, time_index, vmec_current):
-    eddyfile = None
-    if time_index == 0:
-        eddyfile = eddy.new_eddy(matrix_path)
-    else:
-        eddyfile = eddy.load_eddy(matrix_path)
-
-    eddyfile.set_current(time_index, vmec_current)
-
-#-------------------------------------------------------------------------------
 #  Main routine.
 #
 #  This routine runs a number of different tasks depending on the command line
@@ -425,46 +338,62 @@ def main(**args):
     print('PRE-PROCESSING time index {:04d}\n'.format(args['time_index']))
     print('reading data from files in {}\n'.format(args['matrix_path']))
 
+#  If the matrix_file flag was used create the first eddy file.
+    if 'matrix_file' in args:
+        set_matrix(args['matrix_path'],
+                   args['matrix_file'])
+
+#  If the coordinate_file flag was used create the first A1 file.
+    if 'coordinate_file' in args:
+        set_surface(args['matrix_path'],
+                    args['coordinate_file'])
+
 #  If the vmec_input flag was used write out the new VMEC profiles.
     if 'vmec_input' in args:
         set_namelist_parameters(args['matrix_path'],
                                 args['time_index'],
                                 args['vmec_input'])
 
-#  If the vmec_currents update the matrix file.
+#  If the vmec_current flag was used update the eddy file.
     if 'vmec_current' in args:
-        set_matrix_file(args['matrix_path'],
-                        args['time_index'],
-                        args['vmec_current'])
+        set_current(args['matrix_path'],
+                    args['time_index'],
+                    args['vmec_current'])
+
+#  If mgrid_file flag was used was used update save the mgird field.
+    if 'mgrid_file' in args:
+        save_fields(args['matrix_path'],
+                    args['mgrid_file'])
 
 #-------------------------------------------------------------------------------
 #  Parse commandline arguments.
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='PRE-processing routine')
-    parser.add_argument('-t',
-                        '--time_index',
-                        required=True,
+    parser = argparse.ArgumentParser(description='Mat to netcdf conversion utility')
+    parser.add_argument('-c',
+                        '--coordinate_file',
                         action='store',
-                        dest='time_index',
-                        help='time index (integer)',
-                        type=int,
-                        default=0,
-                        metavar='TIME_INDEX')
+                        dest='coordinate_file',
+                        help='Name of the coordinate data.',
+                        metavar='COORDINATE_FILE')
+    parser.add_argument('-m',
+                        '--matrix_file',
+                        action='store',
+                        dest='matrix_file',
+                        help='Name of the matrix data.',
+                        metavar='MATRIX_FILE')
+    parser.add_argument('-mg',
+                        '--mgrid_file',
+                        action='store',
+                        dest='mgrid_file',
+                        help='Name of the mgrid file.',
+                        metavar='MGRID_FILE')
     parser.add_argument('-p',
                         '--matrix_path',
-                        required=True,
                         action='store',
                         dest='matrix_path',
-                        help='Path to the folder containing the matrices.',
+                        help='Path to the matrix directory.',
                         metavar='MATRIX_PATH')
-    parser.add_argument('-v',
-                        '--vmec_current',
-                        required=False,
-                        action='store',
-                        dest='vmec_current',
-                        help='Path to the file containing the vmec current',
-                        metavar='VMEC_CURRENT')
     parser.add_argument('-i',
                         '--vmec_input',
                         required=False,
@@ -472,11 +401,34 @@ if __name__ == '__main__':
                         dest='vmec_input',
                         help='Path to the file containing the vmec namelist input.',
                         metavar='VMEC_INPUT')
+    parser.add_argument('-t',
+                        '--time_index',
+                        required=False,
+                        action='store',
+                        dest='time_index',
+                        help='time index (integer)',
+                        type=int,
+                        default=0,
+                        metavar='TIME_INDEX')
+    parser.add_argument('-v',
+                        '--vmec_current',
+                        required=False,
+                        action='store',
+                        dest='vmec_current',
+                        help='Path to the file containing the vmec current',
+                        metavar='VMEC_CURRENT')
 
     args = vars(parser.parse_args())
 
-    #  Remove empty arguments
+#  Remove empty arguments
     for key in [key for key in args if args[key] == None]:
         del args[key]
+
+    if 'vmec_input' in args and 'time_index' not in args:
+        print('Faital error: "time_index" must be set when using the "vmec_input" flag.')
+        exit(1)
+    if 'vmec_current' in args and 'time_index' not in args:
+        print('Faital error: "time_index" must be set when using the "vmec_current" flag.')
+        exit(1)
 
     main(**args)

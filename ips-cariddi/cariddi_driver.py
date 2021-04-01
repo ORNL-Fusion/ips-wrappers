@@ -6,9 +6,9 @@
 #
 #-------------------------------------------------------------------------------
 
-from component import Component
-from utilities import ScreenWriter
-from utilities import ZipState
+from ipsframework import Component
+from ips_component_utilities import ZipState
+from ips_component_utilities import ScreenWriter
 import os
 import shutil
 import netCDF4
@@ -50,6 +50,7 @@ class cariddi_driver(Component):
             self.current_wout_file = 'wout_{}.nc'.format(current_vmec_namelist.replace('input.','',1))
 
             self.time_steps = int(self.services.get_config_param('NUMBER_OF_TIME_STEPS'))
+            self.time_sub_steps = int(self.services.get_config_param('NUMBER_OF_SUB_TIME_STEPS'))
 
             if os.path.exists('eq_input_dir'):
                 shutil.rmtree('eq_input_dir')
@@ -102,7 +103,9 @@ class cariddi_driver(Component):
 #  Zero out the mgrid_file and get intial equilibrium profiles for t = 0.0.
         self.services.call(self.cariddi_port, 'init', time_stamp)
         self.services.call(self.cariddi_port, 'step', time_stamp,
-                           task_list=['zero_mgrid',
+                           task_list=['init_eddy',
+                                      'init_potential',
+                                      'zero_mgrid',
                                       'get_profile'])
         self.get_updated_state()
 
@@ -117,19 +120,25 @@ class cariddi_driver(Component):
         self.get_updated_substate(time_stamp)
 
 #  Get the surface currents and generate then eddy.nc file.
-        inner_loop_time_stamp = inner_loop_time_stamp + 1
         time_stamp = '{}.{}'.format(outter_loop_time_stamp,
                                     inner_loop_time_stamp)
         ScreenWriter.screen_output(self, 'quiet', 'Initialization: Time Stamp = {}'.format(time_stamp))
 
+#  FIXME: Make non blocking so that the axis can be saved while the currents are
+#         computed.
         self.services.call(self.cariddi_port, 'init', time_stamp)
         self.services.call(self.cariddi_port, 'step', time_stamp,
                            task_list=['get_current',
                                       'make_eddy'])
 
+#  While the surface current is being computed, extract the current woutfile to
+#  get the stopping criteria.
+        magnetic_axis = self.get_magnetic_axis()
+
 #  Start outer loop. FIXME: Need a time counter for the outter loop.
 #--  Outer Loop  ---------------------------------------------------------------
-        while outter_loop_time_stamp < self.time_steps - 1:
+        while outter_loop_time_stamp < self.time_steps:
+
 #  Increment outer loop counter and reset inner loop counter.
             outter_loop_time_stamp = outter_loop_time_stamp + 1
             inner_loop_time_stamp = 0
@@ -140,77 +149,62 @@ class cariddi_driver(Component):
 #  Get the new profiles.
             self.services.call(self.cariddi_port, 'init', time_stamp)
             self.services.call(self.cariddi_port, 'step', time_stamp,
-                               task_list=['get_profile'])
+                               task_list=['get_profile',
+                                          'save_fields'])
             self.get_updated_state()
-
-#  Update VMEC for t = t + 1 profiles.
             eq_keywords = self.get_eq_profiles()
-            self.services.call(self.eq_worker['driver'], 'init', float(time_stamp), **eq_keywords)
-            self.services.call(self.eq_worker['driver'], 'step', float(time_stamp), force_update=True)
-            self.get_updated_substate(time_stamp)
-
-#  Calculate the surface current from the new wout file and update the mgrid
-#  file.
-            self.services.call(self.cariddi_port, 'init', time_stamp)
-            wait_call = self.services.call_nonblocking(self.cariddi_port, 'step', time_stamp,
-                                                       task_list=['get_current',
-                                                                  'set_mgrid'])
-
-#  While the surface current is being computed, extract the current woutfile to
-#  get the stopping criteria.
-            magnetic_axis = self.get_magnetic_axis()
-
-#  Wait for the mgrid file to be finished updating.
-            self.services.wait_call(wait_call, True)
-
-            if outter_loop_time_stamp == 2.0:
-                return
-
-#  FIXME: Choose some stopping criteria for the loop...
+            
             delta_magnetic_axis = 100
 
-#--  Inner Loop  ---------------------------------------------------------------
-            while delta_magnetic_axis > 1.0E-7:
-                inner_loop_time_stamp = inner_loop_time_stamp + 1
-                time_stamp = '{}.{}'.format(outter_loop_time_stamp,
-                                            inner_loop_time_stamp)
+            while inner_loop_time_stamp < self.time_sub_steps:
+
+                if inner_loop_time_stamp == 0:
+                    self.services.call(self.eq_worker['driver'], 'init', float(time_stamp), **eq_keywords)
+                else:
+                    self.services.call(self.eq_worker['driver'], 'init', float(time_stamp))
+                self.services.call(self.eq_worker['driver'], 'step', float(time_stamp), force_update=True)
+                self.get_updated_substate(time_stamp)
+
+                self.services.call(self.cariddi_port, 'init', time_stamp)
+                self.services.call(self.cariddi_port, 'step', time_stamp,
+                                   task_list=['get_current',
+                                              'set_mgrid'])
+
+                self.services.call(self.eq_worker['driver'], 'init', float(time_stamp))
+                self.services.call(self.eq_worker['driver'], 'step', float(time_stamp), force_update=True)
+                self.get_updated_substate(time_stamp)
+
+                new_magnetic_axis = self.get_magnetic_axis()
+                delta_magnetic_axis = abs(new_magnetic_axis - magnetic_axis)
+                magnetic_axis = new_magnetic_axis
+                if delta_magnetic_axis < 1.0E-10:
+                    break
+
+                self.services.call(self.cariddi_port, 'init', time_stamp)
+                self.services.call(self.cariddi_port, 'step', time_stamp,
+                                   task_list=['get_current',
+                                              'scale_fields'])
+
                 ScreenWriter.screen_output(self, 'quiet',
                                            'Inner Loop: Time Stamp = {}, Magnetic Axis = {}, Delta Axis = {}'.format(time_stamp,
                                                                                                                      magnetic_axis,
                                                                                                                      delta_magnetic_axis))
 
-#  Update equilibrium with new vacuum contribution.
-                self.services.call(self.eq_worker['driver'], 'init', float(time_stamp))
-                self.services.call(self.eq_worker['driver'], 'step', float(time_stamp), force_update=True)
-                self.get_updated_substate(time_stamp)
+                inner_loop_time_stamp = inner_loop_time_stamp + 1
+                time_stamp = '{}.{}'.format(outter_loop_time_stamp,
+                                            inner_loop_time_stamp)
 
-#  Calculate the surface current from the new wout file and update the mgrid
-#  file.
-                self.services.call(self.cariddi_port, 'init', time_stamp)
-                wait_call = self.services.call_nonblocking(self.cariddi_port, 'step', time_stamp,
-                                                           task_list=['get_current',
-                                                                      'set_mgrid'])
-
-#  Measure change in magnetic axis position and update magnetic axis.
-                new_magnetic_axis = self.get_magnetic_axis()
-                delta_magnetic_axis = abs(new_magnetic_axis - magnetic_axis)
-                magnetic_axis = new_magnetic_axis
-
-#  Wait for the mgrid file to be finished updating.
-                self.services.wait_call(wait_call, True)
+#--  End Inner Loop  -----------------------------------------------------------
+            self.services.call(self.cariddi_port, 'init', time_stamp)
+            self.services.call(self.cariddi_port, 'step', time_stamp,
+                               task_list=['make_eddy'])
 
             ScreenWriter.screen_output(self, 'quiet',
                                        'Inner Loop End: Time Stamp = {}, Magnetic Axis = {}, Delta Axis = {}'.format(time_stamp,
                                                                                                                      magnetic_axis,
                                                                                                                      delta_magnetic_axis))
 
-#--  End Inner Loop  -----------------------------------------------------------
-
-#  Equilibrium converged to new position. Update eddy.nc file.
-            self.services.call(self.cariddi_port, 'init', time_stamp)
-            self.services.call(self.cariddi_port, 'step', time_stamp,
-                               task_list=['make_eddy'])
-
+#--  End Outer Loop  -----------------------------------------------------------
         ScreenWriter.screen_output(self, 'quiet', 'Outer Loop End: Time Stamp = {}'.format(time_stamp))
 
 #--  End Outer Loop  -----------------------------------------------------------

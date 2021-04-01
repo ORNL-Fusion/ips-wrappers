@@ -7,9 +7,9 @@
 #
 #-------------------------------------------------------------------------------
 
-from component import Component
-from utilities import ScreenWriter
-from utilities import ZipState
+from ipsframework import Component
+from ips_component_utilities import ZipState
+from ips_component_utilities import ScreenWriter
 import os
 
 #-------------------------------------------------------------------------------
@@ -34,7 +34,8 @@ class cariddi(Component):
 
 #  Get config filenames.
         if timeStamp == '0.0':
-            self.current_cariddi_input = self.services.get_config_param('CARIDDI_INPUT')
+            self.current_cariddi_matrix = self.services.get_config_param('CARIDDI_MATRIX_FILE')
+            self.current_cariddi_geometry = self.services.get_config_param('CARIDDI_GEOMETRY_FILE')
             self.cariddi_matrix_path = self.services.get_config_param('CARIDDI_MATRIX_PATH')
             self.current_cariddi_state = self.services.get_config_param('CURRENT_CARIDDI_STATE')
 
@@ -50,7 +51,8 @@ class cariddi(Component):
             self.current_vmec_profile = self.services.get_config_param('CURRENT_VMEC_PROFILE')
 
             self.zip_ref = ZipState.ZipState(self.current_cariddi_state, 'a')
-            self.zip_ref.extract(self.current_cariddi_input)
+            if 'A1.nc' in self.zip_ref:
+                self.zip_ref.extract('A1.nc')
         else:
             self.zip_ref = ZipState.ZipState(self.current_cariddi_state, 'a')
 
@@ -86,6 +88,31 @@ class cariddi(Component):
 
         if 'task_list' in keywords:
             for task in keywords['task_list']:
+#  Initalize eddy file.
+                if task == 'init_eddy':
+                    ScreenWriter.screen_output(self, 'quiet', 'Initalize eddy current file: Time Stamp = {}'.format(timeStamp))
+                    task_wait = self.services.launch_task(self.NPROC,
+                                                          self.services.get_working_dir(),
+                                                          self.CARIDDI_PRE_EXE,
+                                                          '--matrix_file={}'.format(self.current_cariddi_matrix),
+                                                          '--matrix_path={}'.format(self.cariddi_matrix_path),
+                                                          logfile = 'cariddi_pre_init_eddy_{}.log'.format(timeStamp))
+                    self.services.wait_task(task_wait)
+                    continue
+
+#  Initalize vector potential file.
+                if task == 'init_potential':
+                    ScreenWriter.screen_output(self, 'quiet', 'Initalize potential file: Time Stamp = {}'.format(timeStamp))
+                    task_wait = self.services.launch_task(self.NPROC,
+                                                          self.services.get_working_dir(),
+                                                          self.CARIDDI_PRE_EXE,
+                                                          '--coordinate_file={}'.format(self.current_cariddi_geometry),
+                                                          '--matrix_path={}'.format(self.cariddi_matrix_path),
+                                                          logfile = 'cariddi_pre_init_potential_{}.log'.format(timeStamp))
+                    self.services.wait_task(task_wait)
+                    self.zip_ref.write('A1.nc')
+                    self.zip_ref.set_state(state='updated')
+                    continue
 
 #  Zero out the inital mgrid fields.
                 if task == 'zero_mgrid':
@@ -94,6 +121,7 @@ class cariddi(Component):
                                                           self.services.get_working_dir(),
                                                           self.CARIDDI_BIN_EXE,
                                                           '--mgrid_file={}'.format(self.mgrid_file),
+                                                          '--zero_mgrid',
                                                           logfile = 'cariddi_bin_zero_mgrid_{}.log'.format(timeStamp))
                     self.services.wait_task(task_wait)
                     continue
@@ -121,8 +149,20 @@ class cariddi(Component):
                                                           self.CARIDDI_PRE_EXE,
                                                           '--matrix_path={}'.format(self.cariddi_matrix_path),
                                                           '--time_index={}'.format(time_index),
-                                                          '--vmec_current={}'.format(self.current_cariddi_input),
+                                                          '--vmec_current=A1.nc',
                                                           logfile = 'cariddi_pre_make_eddy_{}.log'.format(timeStamp))
+                    self.services.wait_task(task_wait)
+                    continue
+
+#  Save fields.
+                if task == 'save_fields':
+                    ScreenWriter.screen_output(self, 'quiet', 'Save fields file: Time Stamp = {}'.format(timeStamp))
+                    task_wait = self.services.launch_task(self.NPROC,
+                                                          self.services.get_working_dir(),
+                                                          self.CARIDDI_PRE_EXE,
+                                                          '--matrix_path={}'.format(self.cariddi_matrix_path),
+                                                          '--mgrid_file={}'.format(self.mgrid_file),
+                                                          logfile = 'cariddi_pre_save_fields_{}.log'.format(timeStamp))
                     self.services.wait_task(task_wait)
                     continue
 
@@ -133,11 +173,11 @@ class cariddi(Component):
                                                           self.services.get_working_dir(),
                                                           self.SURFACE_EXE,
                                                           '-woutf={}'.format(self.current_wout_file),
-                                                          '-surff={}'.format(self.current_cariddi_input),
+                                                          '-surff=A1.nc',
                                                           '-para=-1',
                                                           logfile = 'surface_get_current_{}.log'.format(timeStamp))
                     self.services.wait_task(task_wait)
-                    self.zip_ref.write(self.current_cariddi_input)
+                    self.zip_ref.write('A1.nc')
                     self.zip_ref.set_state(state='updated')
                     continue
 
@@ -149,11 +189,24 @@ class cariddi(Component):
                                                           self.CARIDDI_BIN_EXE,
                                                           '--mgrid_file={}'.format(self.mgrid_file),
                                                           '--matrix_path={}'.format(self.cariddi_matrix_path),
-                                                          '--vmec_current={}'.format(self.current_cariddi_input),
+                                                          '--vmec_current=A1.nc',
+                                                          '--set_fields',
                                                           logfile = 'cariddi_bin_set_mgrid_{}.log'.format(timeStamp))
                     self.services.wait_task(task_wait)
                     continue
 
+                if task == 'scale_fields':
+                    ScreenWriter.screen_output(self, 'quiet', 'Scaling Vacuum Eddy Current Fields: Time Stamp = {}'.format(timeStamp))
+                    task_wait = self.services.launch_task(self.NPROC,
+                                                          self.services.get_working_dir(),
+                                                          self.CARIDDI_BIN_EXE,
+                                                          '--mgrid_file={}'.format(self.mgrid_file),
+                                                          '--matrix_path={}'.format(self.cariddi_matrix_path),
+                                                          '--vmec_current=A1.nc',
+                                                          '--scale_fields',
+                                                          logfile = 'cariddi_bin_set_mgrid_{}.log'.format(timeStamp))
+                    self.services.wait_task(task_wait)
+                    continue
         else:
             self.zip_ref.set_state(state='unchanged')
 
