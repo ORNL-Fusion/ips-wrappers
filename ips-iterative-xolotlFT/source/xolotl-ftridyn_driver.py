@@ -13,6 +13,7 @@ import get_yields
 import binTRIDYN
 import param_handler
 import traceback
+import transferGrid
 
 class xolotlFtridynDriver(Component):
     def __init__(self, services, config):
@@ -794,10 +795,11 @@ driver['LOOP_TIME_STEP'])))
             #exit status is printed to solverStatus.txt  'good' (successful run); 'collapsed' (ts below threshold) ; 'diverged' otherwise        
             #Xolotl is launched again (same paramter and network files) until run successfully, or up to maxCollapseLoop tries,
 
-            while self.xolotlExitStatus=='collapsed':
-                
-                self.collapsedLoops+=1
-                print(' ')
+            while self.xolotlExitStatus=='collapsed' or self.xolotlExitStatus=='overgrid':
+
+                if self.xolotlExitStatus=='collapsed':
+                    self.collapsedLoops+=1
+                    print(' ')
 
                 #set a maximum number of tries
                 if self.collapsedLoops<=int(self.driver['MAX_COLLAPSE_LOOPS']):
@@ -822,9 +824,14 @@ driver['LOOP_TIME_STEP'])))
                         print('END IPS SIMULATION \n')
                         quit()
                     elif self.xolotlExitStatus=='overgrid':
-                        print('\t ERROR: XOLOTL OVERGRID ')
-                        print('END IPS SIMULATION \n')
-                        quit()
+                        print('\t WARNING: XOLOTL OVERGRID ')
+                        #print('END IPS SIMULATION \n')
+                        #quit()
+			print('\t RUNNING transferGrid...')
+                        #xolotlStop already copied as _overgrid within xolotl_comp; no need to copy here again
+			#shutil.copyfile('xolotlStop.h5', self.xp.parameters['networkFile']) 
+			transferGrid.transferGrid('xolotlStop.h5') #self.xp.parameters['networkFile'])
+			print('\t DONE RUNNING transferGrid!')
                     elif self.xolotlExitStatus=='collapsed':
                         print('\t WARNING: simulation exited loop with status collapse')
                         print(('\t try number {0} out of {1}\n'.format(self.collapsedLoops,self.maxCollapseLoops)))                    
