@@ -19,17 +19,21 @@ def transferGrid(networkFile):
 	f0 = h5py.File(networkFile, 'r+')
 	## Read the grid to know which grid point is which depth
 	gridDset0 = f0['headerGroup/grid']
+	oldGridSize = len(gridDset0)
 
 	## Look for the original grid position
 	for i in range(1,len(gridDset0)):
 		if (gridDset0[i] - gridDset0[i-1] > 0.11): break
 	initSurf = i - 25
 	## Compute the current void portion
-	voidPortion = 100.0 * float(initSurf) / float(len(gridDset0))
-	print('Old void portion:', voidPortion, 'with', len(gridDset0), 'grid points.')
+	oldVoidPortion = 100.0 * float(initSurf) / float(len(gridDset0))
+	print('\t \t Old void portion:', oldVoidPortion, 'with', oldGridSize, 'grid points.')
+        
 	## Compute the new one
-	voidPortion = 100.0 * float(initSurf + nPoints) / float(len(gridDset0) + nPoints)
-	print('New void portion:', voidPortion, 'with', len(gridDset0) + nPoints, 'grid points.')
+	newGridSize = oldGridSize + nPoints
+	#print('TEST: oldGridSize=', oldGridSize, '; newGridSize=', newGridSize)
+	newVoidPortion = 100.0 * float(initSurf + nPoints) / float(newGridSize) #len(gridDset0) + nPoints)
+	print('\t \t New void portion:', newVoidPortion, 'with', newGridSize, ' grid points.')
 
 	## Add points to the new grid if nPoints>0
 	newGrid = []
@@ -59,6 +63,12 @@ def transferGrid(networkFile):
 	concGroup0 = f0['concentrationsGroup']
 	timestep = concGroup0.attrs['lastTimeStep']
 	## Open the concentration group at this time step
+	#print('TEST: time step is', timestep)
+	if (timestep == -1):
+		print('WARNING: network file was empty (timestep -1)')
+		print('\t will return old values')
+		return [oldGridSize, oldVoidPortion]
+	#if timestep exists, continue:		
 	groupName ='concentration_' + str(timestep)
 	subConcGroup0 = concGroup0[groupName]
 	## Read the concentration and index datasets
@@ -106,3 +116,6 @@ def transferGrid(networkFile):
 	del subConcGroup0['concs_startingIndices']
 	dataset = subConcGroup0.create_dataset('concs_startingIndices', (len(indexArray),), dtype=np.uint32)
 	dataset[...] = indexArray
+
+	#print('TEST: from transferGrid, returning newGridSize, voidPortion = ', newGridSize, newVoidPortion)
+	return [newGridSize, newVoidPortion]

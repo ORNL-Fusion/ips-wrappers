@@ -121,7 +121,12 @@ class xolotlWorker(Component):
 
             #if out of grid space, do not keep on trying
             if exitStatus=='overgrid':
-                print("aborting run, out of void space in grid: fix network file in next restart")
+                #if I try to copy this later, it's not working
+                #xolotlLogFile_overgrid='xolotl_t%f_%d_overgrid.log' %(self.driverTime,i)
+                #shutil.copyfile(xolotlLogFile,xolotlLogFile_overgrid)
+                #print("aborting run, out of void space in grid: fix network file in next restart")
+                print("aborting run, out of void space in grid: add grid points and try again")
+                self.services.update_plasma_state()
                 break
 
             if (ret_val == 0):
@@ -215,6 +220,9 @@ class xolotlWorker(Component):
             #shutil.copyfile('xolotlStop.h5',xp_parameters['networkFile'])
             #os.rename(currentXolotlNetworkFile,networkFile_unfinished)
 
+            xolotlLogFile_overgrid='xolotl_t%f_%d_overgrid.log' %(self.driverTime,i)
+            shutil.copyfile(xolotlLogFile,xolotlLogFile_overgrid)
+            
             retentionFile = self.RET_FILE
             rententionUnfinished = 'retention_t%f_overgrid.out' %self.driverTime
             shutil.copyfile(retentionFile,rententionUnfinished)
@@ -225,7 +233,7 @@ class xolotlWorker(Component):
             
             #self.services.error('xolotl_worker: out of grid space, modify network file to continue')
             #raise Exception("Aborting simulation: run out of grid space in Xolotls grid")
-
+            self.services.update_plasma_state()
         else:
             print('\t simulation exited loop with status good (not collapsed or overgrid)')
 

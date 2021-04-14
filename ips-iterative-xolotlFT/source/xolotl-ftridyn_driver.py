@@ -827,11 +827,33 @@ driver['LOOP_TIME_STEP'])))
                         print('\t WARNING: XOLOTL OVERGRID ')
                         #print('END IPS SIMULATION \n')
                         #quit()
-			print('\t RUNNING transferGrid...')
+                        print('\t RUNNING transgerGrid...')
                         #xolotlStop already copied as _overgrid within xolotl_comp; no need to copy here again
-			#shutil.copyfile('xolotlStop.h5', self.xp.parameters['networkFile']) 
-			transferGrid.transferGrid('xolotlStop.h5') #self.xp.parameters['networkFile'])
-			print('\t DONE RUNNING transferGrid!')
+                        #shutil.copyfile('xolotlStop.h5', self.xp.parameters['networkFile'])
+
+                        #also need to update the values of grid and voidPortion to match what's in the network file:
+                        shutil.copyfile(self.xp.parameters['networkFile'],self.xp.parameters['networkFile']+'_overgrid')
+                        shutil.move('xolotlStop.h5', self.xp.parameters['networkFile'])
+                        #if os.path.exists(self.xp.parameters['networkFile']):
+                        #    print('TEST: networkfile exists before transferGrid')
+                        [newGridSize, newVoidPortion] = transferGrid.transferGrid(self.xp.parameters['networkFile']) #'xolotlStop.h5') #self.xp.parameters['networkFile'])
+                        if os.path.exists(self.xp.parameters['networkFile']):
+                            #make sure xolotlStop exists
+                            shutil.copyfile(self.xp.parameters['networkFile'],'xolotlStop.h5')
+                            #print('TEST: networkfile exists after transferGrid')
+                        else:
+                            print('\t WARNING: networkFile does not exists after transferGrid')
+                            print('\t keep old one')
+                            shutil.copyfile(self.xp.parameters['networkFile']+'_overgrid',self.xp.parameters['networkFile'])
+                        print('\t in file ', self.xp.parameters['networkFile'])    
+                        print('\t \t updated the values of grid to ', newGridSize)
+                        print('\t \t updated the values of voidPortion to ', newVoidPortion)
+                        print('\t DONE RUNNING transferGrid!')
+                        sys.stdout.flush()
+                        self.xp.parameters['grid'][0] = newGridSize
+                        self.xp.parameters['voidPortion'] = newVoidPortion
+                        self.services.update_plasma_state()
+                        
                     elif self.xolotlExitStatus=='collapsed':
                         print('\t WARNING: simulation exited loop with status collapse')
                         print(('\t try number {0} out of {1}\n'.format(self.collapsedLoops,self.maxCollapseLoops)))                    
