@@ -79,24 +79,26 @@ class ftridynWorker(Component):
 
             elif (weightAngle[j] > 0.0):
                 generate_ftridyn_input.Prj_Tg_xolotl(IQ0=ftridyn['iQ0'],number_layers=ftridyn['nDataPts'],depth=ftridyn['nTT'],number_histories=ftridyn['nImpacts'],incident_energy=energyIn,incident_angle=angleIn[j],projectile_name=str(prj),target1_name=str(tg[0]), target2_name=str(tg[1]),target3_name=str(tg[2]),target4_name=str(tg[3]))
-
+                sys.stdout.flush()
+                
             pathFolder = self.ft_folder+'/ANGLE'+str(angleIn[j])# + "_"+str(energyInW[j])
             #if not os.path.exists(pathFolder):
             os.makedirs(pathFolder)            
             shutil.copyfile(fInFile, pathFolder+'/'+'FTridyn.IN')
-
+            
             if otherInFiles:
                 for f in otherInFiles:
                     shutil.copyfile(f, pathFolder+"/"+f)
-
+                    
             if energyIn < 0:
                 shutil.copyfile(origEnergyFilePath+'/'+origEnergyFilePattern[0]+str(int(j))+origEnergyFilePattern[1],pathFolder+"/"+energyFileName)
-
+                
         print('\t DONE with GenerateInput \n')
 
         sys.stdout.flush()
         self.services.update_plasma_state()
 
+        
     def step(self, timeStamp=0.0,**keywords):
 
         cwd = self.services.get_working_dir()

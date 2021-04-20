@@ -228,19 +228,19 @@ driver['LOOP_TIME_STEP'])))
                 print(('\t reading string GITR input parameter {0} = {1} '.format( k, v))) 
                 self.gitr[k]=v
                 
-        #if 'gitrOutputDir' in self.gitr:
-        #    print('\t GITR output will be read from {} \n'.format(self.gitr['gitrOutputDir']+'_'+prj))
+        if 'gitrOutputDir' in self.gitr:
+            print('\t GITR output will be read from {} \n'.format(self.gitr['gitrOutputDir']+'_'+prj))
 
         ##NOT SURE IF THERE ARE MORE XOLOTL OR FT PARAMETERS THAT NEED TO OVERWRITTEN
         if 'flux' in self.gitr:
-            self.xp.parameters['flux']=self.gitr['flux']
-            print(('replaced flux in Xolotl by value given by GITR {}\n'.format(self.gitr['flux'])))  
+            self.xp.parameters['flux']=self.gitr['flux']*1.0e-18
+            print(('replaced flux in Xolotl (in ion/nm2s = 1e-18 ion/m2s) by value given by GITR {} (in ion/m2s) \n'.format(self.gitr['flux'])))
         else:
             print(('no flux specified in GITR, so using values in Xolotl {} \n'.format(self.xp.parameters['flux'])))
 
         if 'heat' in self.gitr:
-            self.xp.parameters['heat']=self.gitr['heat']
-            print(('replaced heat flux in Xolotl by value given by GITR {}\n'.format(self.gitr['heat'])))
+            self.xp.parameters['heat']=self.gitr['heat']*1.0e-18
+            print(('replaced heat flux in Xolotl (in W/nm2s = 1e-18 W/m2s) by value given by GITR {} (W/m2s)\n'.format(self.gitr['heat'])))
         elif 'heat' in self.xp.parameters:
             print(('no heat flux specified in GITR, so using values in Xolotl {} \n'.format(self.xp.parameters['heat'])))
         elif 'startTemp' in self.gitr:
@@ -495,6 +495,9 @@ driver['LOOP_TIME_STEP'])))
                             targetList.append(prj)
                         else:                        
                             targetList.append('') #leave empty
+                    else:
+                        targetList.append('') #leave empty
+                        
                 print(('\t passing to F-Tridyn the list of targets t{} \n'.format(targetList)))
 
                 #Xolotl only outputs He_W0001.LAY; but it's same substrate composition for running all projectiles
@@ -524,11 +527,12 @@ driver['LOOP_TIME_STEP'])))
                 if (self.gitr['fluxFraction'][i] > 0.0) and not (all(k==0 for k in self.weightAngle[i])):
                     print(('running F-Tridyn for {0} with flux fraction = {1}\n'.format(prj, self.gitr['fluxFraction'][i])))
                     print(('\t and not all angle weights are zero; max angleWeight is {}\n'.format(max(self.weightAngle[i]))))
-
+                    sys.stdout.flush()
+                    
                     #component/method calls now include arguments (variables)
-
                     self.services.call(ftridyn, 'init', timeStamp, dTime=time, fPrj=prj, fTargetList=targetList, ftParameters=self.ftridyn , fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], ft_folder=self.FT_OUTPUT_FOLDER, input_file=self.ft_input_file[i], otherInFiles=[self.FT_SURFACE_FILE,self.ftx_lay_file[i]], energy_file_name=self.FT_energy_file_name[i], orig_energy_files_path=self.GITR_eadist_output_path[i], orig_energy_files_pattern=self.GITR_eadist_output_file[i], output_file=outFile)
-
+                    sys.stdout.flush()
+                    
                     self.services.call(ftridyn, 'step', timeStamp, ftParameters=self.ftridyn, fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], output_file=outFile)
                     sys.stdout.flush()
                     self.services.stage_plasma_state()
@@ -795,6 +799,8 @@ driver['LOOP_TIME_STEP'])))
             #exit status is printed to solverStatus.txt  'good' (successful run); 'collapsed' (ts below threshold) ; 'diverged' otherwise        
             #Xolotl is launched again (same paramter and network files) until run successfully, or up to maxCollapseLoop tries,
 
+            n_overgrid_loops=0
+            
             while self.xolotlExitStatus=='collapsed' or self.xolotlExitStatus=='overgrid':
 
                 if self.xolotlExitStatus=='collapsed':
@@ -805,7 +811,7 @@ driver['LOOP_TIME_STEP'])))
                 if self.collapsedLoops<=int(self.driver['MAX_COLLAPSE_LOOPS']):
 
                     self.services.call(xolotl, 'init', timeStamp, dTime=time, xParameters=self.xp.parameters, output_file=outFile) #, xFtCoupling=self.driver['FTX_COUPLING'])
-                    self.services.call(xolotl, 'step', timeStamp, dTime=time, xHe_conc=self.petsc_heConc, xParameters=self.xp.parameters, output_file=outFile, dZipOutput=self.driver['ZIP_XOLOTL_OUTPUT'])
+                    self.services.call(xolotl, 'step', timeStamp, dTime=time, xHe_conc=self.petsc_heConc, xParameters=self.xp.parameters, output_file=outFile, dZipOutput=self.driver['ZIP_XOLOTL_OUTPUT'], n_overgrid_loops=n_overgrid_loops)
 
                     sys.stdout.flush()
                     self.services.stage_plasma_state()
@@ -824,15 +830,17 @@ driver['LOOP_TIME_STEP'])))
                         print('END IPS SIMULATION \n')
                         quit()
                     elif self.xolotlExitStatus=='overgrid':
+                        n_overgrid_loops+=1
                         print('\t WARNING: XOLOTL OVERGRID ')
+                        print('\t RUNNING transgerGrid...')
                         #print('END IPS SIMULATION \n')
                         #quit()
-                        print('\t RUNNING transgerGrid...')
+
                         #xolotlStop already copied as _overgrid within xolotl_comp; no need to copy here again
                         #shutil.copyfile('xolotlStop.h5', self.xp.parameters['networkFile'])
 
                         #also need to update the values of grid and voidPortion to match what's in the network file:
-                        shutil.copyfile(self.xp.parameters['networkFile'],self.xp.parameters['networkFile']+'_overgrid')
+                        shutil.copyfile(self.xp.parameters['networkFile'],self.xp.parameters['networkFile']+'_overgrid_'+str(n_overgrid_loops))
                         shutil.move('xolotlStop.h5', self.xp.parameters['networkFile'])
                         #if os.path.exists(self.xp.parameters['networkFile']):
                         #    print('TEST: networkfile exists before transferGrid')
@@ -844,7 +852,7 @@ driver['LOOP_TIME_STEP'])))
                         else:
                             print('\t WARNING: networkFile does not exists after transferGrid')
                             print('\t keep old one')
-                            shutil.copyfile(self.xp.parameters['networkFile']+'_overgrid',self.xp.parameters['networkFile'])
+                            shutil.copyfile(self.xp.parameters['networkFile']+'_overgrid_'+str(n_overgrid_loops),self.xp.parameters['networkFile'])
                         print('\t in file ', self.xp.parameters['networkFile'])    
                         print('\t \t updated the values of grid to ', newGridSize)
                         print('\t \t updated the values of voidPortion to ', newVoidPortion)
