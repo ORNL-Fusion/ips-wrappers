@@ -4,7 +4,7 @@ vmec_nli_filename = 'input.simple_cq.vmec',
 ! Reconstruction Controls
 my_task = 'reconstruct_a1',
 nrstep = 20,
-dg2_stop = 0.01,
+dg2_stop = 1.0E-6,
 cut_svd = 2.0E-5,
 cut_eff = 1.0E-4,
 cut_marg_eff = 0.0,

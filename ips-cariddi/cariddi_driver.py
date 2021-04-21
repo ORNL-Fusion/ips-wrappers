@@ -124,16 +124,10 @@ class cariddi_driver(Component):
                                     inner_loop_time_stamp)
         ScreenWriter.screen_output(self, 'quiet', 'Initialization: Time Stamp = {}'.format(time_stamp))
 
-#  FIXME: Make non blocking so that the axis can be saved while the currents are
-#         computed.
         self.services.call(self.cariddi_port, 'init', time_stamp)
         self.services.call(self.cariddi_port, 'step', time_stamp,
                            task_list=['get_current',
                                       'make_eddy'])
-
-#  While the surface current is being computed, extract the current woutfile to
-#  get the stopping criteria.
-        magnetic_axis = self.get_magnetic_axis()
 
 #  Start outer loop. FIXME: Need a time counter for the outter loop.
 #--  Outer Loop  ---------------------------------------------------------------
@@ -170,15 +164,16 @@ class cariddi_driver(Component):
                                    task_list=['get_current',
                                               'set_mgrid'])
 
+                new_magnetic_axis = self.get_magnetic_axis()
+                if inner_loop_time_stamp > 0:
+                    delta_magnetic_axis = abs(new_magnetic_axis - magnetic_axis)
+                magnetic_axis = new_magnetic_axis
+                if delta_magnetic_axis < 1.0E-7:
+                    break
+
                 self.services.call(self.eq_worker['driver'], 'init', float(time_stamp))
                 self.services.call(self.eq_worker['driver'], 'step', float(time_stamp), force_update=True)
                 self.get_updated_substate(time_stamp)
-
-                new_magnetic_axis = self.get_magnetic_axis()
-                delta_magnetic_axis = abs(new_magnetic_axis - magnetic_axis)
-                magnetic_axis = new_magnetic_axis
-                if delta_magnetic_axis < 1.0E-10:
-                    break
 
                 self.services.call(self.cariddi_port, 'init', time_stamp)
                 self.services.call(self.cariddi_port, 'step', time_stamp,

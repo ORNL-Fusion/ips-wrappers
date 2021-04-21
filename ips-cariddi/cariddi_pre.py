@@ -74,7 +74,7 @@ def set_current(path, time_index, file_name):
 
         i = numpy.zeros(numpy.shape(c[:].data))
         if time_index > 0:
-            i = numpy.matmul(c1x, ax) + numpy.matmul(c1y, ay) + numpy.matmul(c1y, az) + c[:].data
+            i = numpy.matmul(c1x, ax) + numpy.matmul(c1y, ay) + numpy.matmul(c1z, az) + c[:].data
 
         c[:] = -numpy.matmul(c1x, ax) - numpy.matmul(c1y, ay) - numpy.matmul(c1z, az) + numpy.matmul(c2, i)
 

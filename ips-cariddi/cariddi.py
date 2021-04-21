@@ -204,7 +204,7 @@ class cariddi(Component):
                                                           '--matrix_path={}'.format(self.cariddi_matrix_path),
                                                           '--vmec_current=A1.nc',
                                                           '--scale_fields',
-                                                          logfile = 'cariddi_bin_set_mgrid_{}.log'.format(timeStamp))
+                                                          logfile = 'cariddi_bin_scale_fields_{}.log'.format(timeStamp))
                     self.services.wait_task(task_wait)
                     continue
         else:

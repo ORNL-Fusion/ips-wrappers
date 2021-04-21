@@ -56,9 +56,9 @@ class eddy(carriddi_file):
         self.k1zy = self.data.variables['k1zy'][:].data
         self.k1zz = self.data.variables['k1zz'][:].data
 
-        self.bx = self.data.variables['bx'][:].data
-        self.by = self.data.variables['by'][:].data
-        self.bz = self.data.variables['bz'][:].data
+        self.bx = self.data.variables['bx']
+        self.by = self.data.variables['by']
+        self.bz = self.data.variables['bz']
 
         self.ax = self.data.variables['ax']
         self.ay = self.data.variables['ay']
@@ -138,17 +138,17 @@ class mgrid(carriddi_file):
 
 #  Use Fortran ordering in reshaping. May need to account for the change in
 #  coordinate from
-        br = numpy.reshape(numpy.matmul(eddyfile.k1xx, a1file.ax) +
-                           numpy.matmul(eddyfile.k1xy, a1file.ay) +
-                           numpy.matmul(eddyfile.k1xz, a1file.az) +
+        br = numpy.reshape(numpy.dot(eddyfile.k1xx, a1file.ax) +
+                           numpy.dot(eddyfile.k1xy, a1file.ay) +
+                           numpy.dot(eddyfile.k1xz, a1file.az) +
                            eddyfile.dx, shape, order='F')
-        bp = numpy.reshape(numpy.matmul(eddyfile.k1yx, a1file.ax) +
-                           numpy.matmul(eddyfile.k1yy, a1file.ay) +
-                           numpy.matmul(eddyfile.k1yz, a1file.az) +
+        bp = numpy.reshape(numpy.dot(eddyfile.k1yx, a1file.ax) +
+                           numpy.dot(eddyfile.k1yy, a1file.ay) +
+                           numpy.dot(eddyfile.k1yz, a1file.az) +
                            eddyfile.dy, shape, order='F')
-        bz = numpy.reshape(numpy.matmul(eddyfile.k1zx, a1file.ax) +
-                           numpy.matmul(eddyfile.k1zy, a1file.ay) +
-                           numpy.matmul(eddyfile.k1zz, a1file.az) +
+        bz = numpy.reshape(numpy.dot(eddyfile.k1zx, a1file.ax) +
+                           numpy.dot(eddyfile.k1zy, a1file.ay) +
+                           numpy.dot(eddyfile.k1zz, a1file.az) +
                            eddyfile.dz, shape, order='F')
 
 #  Save vector potential to compute alpha
@@ -194,27 +194,29 @@ class mgrid(carriddi_file):
             bp = self.bp[1,:,:]
             bz = self.bz[1,:,:]
 
-        delta_bx = numpy.reshape(br, length, order='F') - eddyfile.bx
-        delta_by = numpy.reshape(bp, length, order='F') - eddyfile.by
-        delta_bz = numpy.reshape(bz, length, order='F') - eddyfile.bz
+        delta_bx = numpy.reshape(br, length, order='F') - eddyfile.bx[:].data
+        delta_by = numpy.reshape(bp, length, order='F') - eddyfile.by[:].data
+        delta_bz = numpy.reshape(bz, length, order='F') - eddyfile.bz[:].data
+        delta_b = delta_bx + delta_by + delta_bz
 
-        print(eddyfile.bx)
+        delta_ax = a1file.ax - eddyfile.ax[:].data
+        delta_ay = a1file.ay - eddyfile.ay[:].data
+        delta_az = a1file.az - eddyfile.az[:].data
 
-        delta_ax = a1file.ax - eddyfile.ax
-        delta_ay = a1file.ay - eddyfile.ay
-        delta_az = a1file.az - eddyfile.az
+        temp_x = delta_bx - numpy.dot(eddyfile.k1xx, delta_ax) - numpy.dot(eddyfile.k1xy, delta_ay) - numpy.dot(eddyfile.k1xz, delta_az)
+        temp_y = delta_by - numpy.dot(eddyfile.k1yx, delta_ax) - numpy.dot(eddyfile.k1yy, delta_ay) - numpy.dot(eddyfile.k1yz, delta_az)
+        temp_z = delta_bz - numpy.dot(eddyfile.k1zx, delta_ax) - numpy.dot(eddyfile.k1zy, delta_ay) - numpy.dot(eddyfile.k1zz, delta_az)
+        temp = temp_x + temp_y + temp_z
 
-        temp_x = delta_bx - numpy.matmul(eddyfile.k1xx, delta_ax) - numpy.matmul(eddyfile.k1xy, delta_ay) - numpy.matmul(eddyfile.k1xz, delta_az)
-        temp_y = delta_by - numpy.matmul(eddyfile.k1yx, delta_ax) - numpy.matmul(eddyfile.k1yy, delta_ay) - numpy.matmul(eddyfile.k1yz, delta_az)
-        temp_z = delta_bz - numpy.matmul(eddyfile.k1zx, delta_ax) - numpy.matmul(eddyfile.k1zy, delta_ay) - numpy.matmul(eddyfile.k1zz, delta_az)
+        alpha = numpy.dot(temp, delta_bx + delta_by + delta_bz)/numpy.dot(temp, temp)
 
-        alpha_x = numpy.matmul(numpy.transpose(temp_x), delta_bx)/numpy.matmul(numpy.transpose(temp_x), temp_x)
-        alpha_y = numpy.matmul(numpy.transpose(temp_y), delta_by)/numpy.matmul(numpy.transpose(temp_y), temp_y)
-        alpha_z = numpy.matmul(numpy.transpose(temp_z), delta_bz)/numpy.matmul(numpy.transpose(temp_z), temp_z)
+        br = eddyfile.bx + alpha*delta_bx
+        bp = eddyfile.by + alpha*delta_by
+        bz = eddyfile.bz + alpha*delta_bz
 
-        br = eddyfile.bx + alpha_x*delta_bx
-        bp = eddyfile.by + alpha_y*delta_by
-        bz = eddyfile.bz + alpha_z*delta_bz
+        eddyfile.bx[:] = br
+        eddyfile.by[:] = bp
+        eddyfile.bz[:] = bz
 
         if shape[0] == 1:
             for k in range(self.nphi):
