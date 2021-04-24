@@ -356,7 +356,13 @@ driver['LOOP_TIME_STEP'])))
                 #where all the energy distribution files are located
                 #self.GITR_eadist_output_path.append(self.gitr['gitrOutputDir'].strip())#+'_'+prj)
                 self.GITR_eadist_output_path.append(self.gitr[gitr_output_dir].strip())
-                self.GITR_eadist_output_file.append(['dist','.dat'])#(self.GITR_EADIST_FILE)
+                try:
+                    self.GITR_EADIST_FILE 
+                    self.GITR_eadist_output_file.append(self.GITR_EADIST_FILE)
+                    print('\t using energy distribution file format given in config file', self.GITR_EADIST_FILE)
+                except: #default file format ['dist','.dat']
+                    self.GITR_eadist_output_file.append(['dist','.dat'])
+                    print("\t using default energy distribution file format, ['dist','.dat']")
             else:
                 self.FT_energy_file_name.append('')
                 self.GITR_eadist_output_path.append('')
