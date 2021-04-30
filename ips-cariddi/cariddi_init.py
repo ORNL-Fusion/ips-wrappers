@@ -7,9 +7,9 @@
 #
 #-------------------------------------------------------------------------------
 
-from component import Component
-from utilities import ZipState
-from utilities import ScreenWriter
+from ipsframework import Component
+from ips_component_utilities import ZipState
+from ips_component_utilities import ScreenWriter
 import os
 
 #-------------------------------------------------------------------------------
@@ -31,7 +31,6 @@ class cariddi_init(Component):
         ScreenWriter.screen_output(self, 'verbose', 'cariddi_init: init')
 
 #  Get config filenames.
-        current_cariddi_input = self.services.get_config_param('CARIDDI_INPUT')
         current_cariddi_state = self.services.get_config_param('CURRENT_CARIDDI_STATE')
 
         current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
@@ -89,9 +88,6 @@ class cariddi_init(Component):
 #  both. If both files were staged, replace the input file. If the input file is
 #  present flag the state as needing to be updated.
         with ZipState.ZipState(current_cariddi_state, 'a') as zip_ref:
-            if os.path.exists(current_cariddi_input):
-                zip_ref.write(current_cariddi_input)
-                zip_ref.set_state(state='needs_update')
             zip_ref.write(current_v3fit_state)
 
         self.services.update_state()

@@ -71,7 +71,8 @@ import string
 import math
 from netCDF4 import *
 from  component import Component
-from simple_file_editing_functions import get_lines, put_lines, edit_nml_file
+from simple_file_editing_functions import get_lines, put_lines, edit_nml_file,\
+										read_var_from_nml_lines
 from get_IPS_config_parameters import get_global_param, get_component_param
 
 parameterList = ['Te_0', 'Te_edge', 'alpha_Te_1', 'alpha_Te_2', 'ne_0', 'ne_edge',\
@@ -183,7 +184,7 @@ class model_EPA_mdescr(Component):
                     t_final = float(DT_paramsList[1])
                     
                     # Get initial value of parameter from the initial namelist file
-                    Value_init = self.read_var_from_nml_lines(initial_nml_Lines, param, separator = ',')
+                    Value_init = read_var_from_nml_lines(self, initial_nml_Lines, param, separator = ',')
                     print('intial '+param, ' = ', Value_init)
                     
                     #Value_init = float(DT_paramsList[2])
@@ -201,7 +202,7 @@ class model_EPA_mdescr(Component):
                     Value_final = float(DT_paramsList[2])
                     
                     # Get initial value of parameter from the initial namelist file
-                    Value_init = self.read_var_from_nml_lines(initial_nml_Lines, param, separator = ',')
+                    Value_init = read_var_from_nml_lines(self, initial_nml_Lines, param, separator = ',')
                     print('intial '+param, ' = ', Value_init)
                     
                     print('t_initial = ',t_initial, \
@@ -273,4 +274,3 @@ class model_EPA_mdescr(Component):
     # Linear time advance f(timestamp) = f(t0) + (timestamp - t0)*DT
     def linear_DT(self, f0, t, t0, DT):
         return f0 + (t - t0)*DT
-

@@ -7,12 +7,12 @@
 #
 #-------------------------------------------------------------------------------
 
-from component import Component
+from ipsframework import Component
 from omfit.classes.omfit_namelist import OMFITnamelist
 from omfit.classes.omfit_nc import OMFITnc
-from utilities import ZipState
-from utilities import ScreenWriter
-from utilities import NamelistItem
+from ips_component_utilities import ZipState
+from ips_component_utilities import ScreenWriter
+from ips_component_utilities import NamelistItem
 import json
 import os
 
