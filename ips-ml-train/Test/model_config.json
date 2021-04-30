@@ -12,6 +12,6 @@
 	    {"name" : "betan_ped", "upper_range" : 1.2,  "lower_range" : 0.5}
 	],
 	"outputs" : [
-	    {"name" : "q95", "upper_range" : 7.0, "lower_range" : 4.0}
+	    {"name" : "fbs", "upper_range" : 1.0, "lower_range" : 0≈.0}
 	]
 }
