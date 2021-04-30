@@ -8,12 +8,13 @@ import subprocess
 import numpy
 import shutil
 import translate_xolotl_to_ftridyn
-import translate_ftridyn_to_xolotl
+import translate_ftridyn_to_xolotl_launch
 import get_yields
 import binTRIDYN
 import param_handler
 import traceback
 import transferGrid
+import pickle
 
 class xolotlFtridynDriver(Component):
     def __init__(self, services, config):
@@ -579,7 +580,40 @@ driver['LOOP_TIME_STEP'])))
                         print(('\t maximum projectile range for {} is {} [A]'.format(prj, maxRange)))
                         ft_output_file=self.ft_output_file[i]
                         #get implantation profile
-                        translate_ftridyn_to_xolotl.ftridyn_to_xolotl(ftridynOnePrjOutput=ft_output_prj_file, ftridynFolder=angleFolder, angle=self.angleIn[i], weightAngle=self.weightAngle[i], prjRange=maxRange, nBins=self.xp.parameters['grid'][0], logFile=outFile) #gAngleDistrib=self.angleDistrFile[i]
+                        #pass values as dictionary
+                        ft_implProfiles_dictionary={}
+                        ft_implProfiles_dictionary['ftridynOnePrjOutput']=ft_output_prj_file
+                        ft_implProfiles_dictionary['ftridynFolder']=angleFolder
+                        ft_implProfiles_dictionary['angle']=self.angleIn[i]
+                        ft_implProfiles_dictionary['weightAngle']=self.weightAngle[i]
+                        ft_implProfiles_dictionary['prjRange']=maxRange
+                        ft_implProfiles_dictionary['nBins']=self.xp.parameters['grid'][0]
+                        ft_implProfiles_dictionary['logFile']=outFile
+
+
+                        pkl_file=cwd+'/ft_implProfiles.pkl'  ## define name in config file, here give abs path
+                        pickle.dump(ft_implProfiles_dictionary, open(pkl_file, "wb" ) )
+
+                        #LATER DEFINE THESE IN CONFIG FILE
+                        #ft_implProfile_path=self.BIN_PATH+'/ips-iterative-xolotlFT/python_scripts_for_coupling/devel_and_older_versions/parallelize_ft_analysis_March2021/'
+                        #ft_implProfile_script=ft_implProfile_path+'translate_ftridyn_to_xolotl_launch.py'
+
+                        try:
+                            self.TRANSLATE_FT2XOL
+                            ft_implProfile_script=self.TRANSLATE_FT2XOL
+                            print('Launch task of running python ', ft_implProfile_script)
+                            
+                        except: #DEFAULT: $IPS_WRAPPER_PATH/ips-iterative-xolotlFT/python_scripts_for_coupling/translate_ftridyn_to_xolotl_launch.py 
+                            ft_implProfile_script = self.BIN_PATH+'/ips-iterative-xolotlFT/python_scripts_for_coupling/translate_ftridyn_to_xolotl_launch.py'
+                            print('Launch task of running default python script ', ft_implProfile_script)
+
+                        sys.stdout.flush()
+
+                        task_id = self.services.launch_task(1,self.services.get_working_dir(),    #self.NPROC=1
+                                                            'python', ft_implProfile_script, logfile='tridynPlotting.log')
+                        ret_val = self.services.wait_task(task_id)
+
+                        #ORIG METHOD translate_ftridyn_to_xolotl.ftridyn_to_xolotl(ftridynOnePrjOutput=ft_output_prj_file, ftridynFolder=angleFolder, angle=self.angleIn[i], weightAngle=self.weightAngle[i], prjRange=maxRange, nBins=self.xp.parameters['grid'][0], logFile=outFile) #gAngleDistrib=self.angleDistrFile[i]
                         sys.stdout.flush()
 
                     else: #if len(maxDepth)==0
