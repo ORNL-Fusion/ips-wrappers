@@ -1,10 +1,12 @@
 {
-    "--activation"       : "tanh",
-    "--iterations"       : 10,
-    "--epochs"           : 1000,
-    "--num_layers"       : 10,
-    "--layer_width"      : 10,
-    "--l1_factor"        : 0.0,
-    "--l2_factor"        : 0.0,
-    "--validation_split" : 0.0
+    "--activation"          : "tanh",
+    "--iterations"          : 10,
+    "--epochs"              : 1000,
+    "--num_layers"          : 10,
+    "--layer_width"         : 10,
+    "--l1_factor"           : 0.0,
+    "--l2_factor"           : 0.0,
+    "--validation_split"    : 0.0,
+    "--locations"           : 100,
+    "--adaptive_percentage" : 0.01
 }

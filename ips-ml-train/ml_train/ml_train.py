@@ -6,9 +6,9 @@
 #
 #-------------------------------------------------------------------------------
 
-from component import Component
-from utilities import ScreenWriter
-from utilities import ZipState
+from ipsframework import Component
+from ips_component_utilities import ZipState
+from ips_component_utilities import ScreenWriter
 import json
 import os
 
@@ -93,6 +93,8 @@ class ml_train(Component):
                                                       '--validation_split={}'.format(self.args['--validation_split']),
                                                       '--module_path={}'.format(self.constraint_path),
                                                       '--module={}'.format(self.constraint_name),
+                                                      '--locations={}'.format(self.args['--locations']),
+                                                      '--adaptive_percentage={}'.format(self.args['--adaptive_percentage']),
                                                       logfile = 'ml_train_{}.log'.format(timeStamp))
             else:
                 task_wait = self.services.launch_task(self.NPROC,
@@ -115,6 +117,8 @@ class ml_train(Component):
                                                       '--validation_split={}'.format(self.args['--validation_split']),
                                                       '--module_path={}'.format(self.constraint_path),
                                                       '--module={}'.format(self.constraint_name),
+                                                      '--locations={}'.format(self.args['--locations']),
+                                                      '--adaptive_percentage={}'.format(self.args['--adaptive_percentage']),
                                                       logfile = 'ml_train_{}.log'.format(timeStamp))
 
 
