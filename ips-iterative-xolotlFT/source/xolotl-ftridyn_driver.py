@@ -9,7 +9,7 @@ import numpy
 import shutil
 import translate_xolotl_to_ftridyn
 import translate_ftridyn_to_xolotl_launch
-import get_yields
+import get_yields_launch
 import binTRIDYN
 import param_handler
 import traceback
@@ -573,11 +573,11 @@ driver['LOOP_TIME_STEP'])))
                                 maxDepth.append(max(depth))
                     
                     if len(maxDepth)>0:
-                        print("something was implanted.")
+                        print("something was implanted:")
                         maxRange=max(maxDepth)
                         self.maxRangeXolotl[i]=maxRange/10.0 #range in nm for Xolotl 
-                        print(' ')
                         print(('\t maximum projectile range for {} is {} [A]'.format(prj, maxRange)))
+                        print(' ')
                         ft_output_file=self.ft_output_file[i]
                         #get implantation profile
                         #pass values as dictionary
@@ -591,8 +591,8 @@ driver['LOOP_TIME_STEP'])))
                         ft_implProfiles_dictionary['logFile']=outFile
 
 
-                        pkl_file=cwd+'/ft_implProfiles.pkl'  ## define name in config file, here give abs path
-                        pickle.dump(ft_implProfiles_dictionary, open(pkl_file, "wb" ) )
+                        pkl_impl_file=cwd+'/ft_implProfiles.pkl'  ## define name in config file, here give abs path
+                        pickle.dump(ft_implProfiles_dictionary, open(pkl_impl_file, "wb" ) )
 
                         #LATER DEFINE THESE IN CONFIG FILE
                         #ft_implProfile_path=self.BIN_PATH+'/ips-iterative-xolotlFT/python_scripts_for_coupling/devel_and_older_versions/parallelize_ft_analysis_March2021/'
@@ -604,14 +604,14 @@ driver['LOOP_TIME_STEP'])))
                             print('Launch task of running python ', ft_implProfile_script)
                             
                         except: #DEFAULT: $IPS_WRAPPER_PATH/ips-iterative-xolotlFT/python_scripts_for_coupling/translate_ftridyn_to_xolotl_launch.py 
-                            ft_implProfile_script = self.BIN_PATH+'/ips-iterative-xolotlFT/python_scripts_for_coupling/translate_ftridyn_to_xolotl_launch.py'
+                            ft_implProfile_script = self.BIN_PATH+'/ips-iterative-xolotlFT/python_scripts_for_coupling/translate_ftridyn_to_xolotl.py'
                             print('Launch task of running default python script ', ft_implProfile_script)
 
                         sys.stdout.flush()
 
-                        task_id = self.services.launch_task(1,self.services.get_working_dir(),    #self.NPROC=1
+                        task_id_impl = self.services.launch_task(1,self.services.get_working_dir(),    #self.NPROC=1
                                                             'python', ft_implProfile_script, logfile='tridynPlotting.log')
-                        ret_val = self.services.wait_task(task_id)
+                        ret_val_impl = self.services.wait_task(task_id_impl)
 
                         #ORIG METHOD translate_ftridyn_to_xolotl.ftridyn_to_xolotl(ftridynOnePrjOutput=ft_output_prj_file, ftridynFolder=angleFolder, angle=self.angleIn[i], weightAngle=self.weightAngle[i], prjRange=maxRange, nBins=self.xp.parameters['grid'][0], logFile=outFile) #gAngleDistrib=self.angleDistrFile[i]
                         sys.stdout.flush()
@@ -630,7 +630,57 @@ driver['LOOP_TIME_STEP'])))
 
                     #3) get the sputtering yield (or use fixed value)                   
                     print(' ')
-                    yields=get_yields.sputtering_and_reflection(ftridynOneOutOutput=ft_output_file, ftridynFolder=angleFolder, fNImpacts=self.ftridyn['nImpacts'], angle=self.angleIn[i], weightAngle=self.weightAngle[i], logFile=outFile)
+                    #pass values as dictionary
+                    ft_getYields_dictionary={}
+                    ft_getYields_dictionary['ftridynOneOutOutput']=ft_output_file
+                    ft_getYields_dictionary['ftridynFolder']=angleFolder
+                    ft_getYields_dictionary['angle']=self.angleIn[i]
+                    ft_getYields_dictionary['weightAngle']=self.weightAngle[i]
+                    ft_getYields_dictionary['fNImpacts']=self.ftridyn['nImpacts']
+                    ft_getYields_dictionary['logFile']=outFile
+                    
+                    #print('TEST: dict passed from driver to get_yields contains')
+                    #print('\t ftridynOneOutOutput=',  ft_getYields_dictionary['ftridynOneOutOutput'])
+                    #print('\t ftridynFolder=', ft_getYields_dictionary['ftridynFolder'])
+                    #print('\t angle=', ft_getYields_dictionary['angle'])
+                    #print('\t weightAngle=', ft_getYields_dictionary['weightAngle'])
+                    #print('\t fNImpacts=', ft_getYields_dictionary['fNImpacts'])
+                    #print('\t logFile=', ft_getYields_dictionary['logFile'])
+
+                    pkl_gy_file=cwd+'/ft_getYields.pkl'  ## define name in config file, here give abs path
+                    #we need to close this file later (to open it again and read yields), so use alternative to
+                    #pickle.dump(ft_getYields_dictionary, open(pkl_gy_file, "wb" ) )
+                    with open(pkl_gy_file, "wb") as pf:
+                        pickle.dump(ft_getYields_dictionary, pf)
+                    pf.close()
+                    sys.stdout.flush()
+                    
+                    try:
+                        self.GET_YIELDS
+                        ft_getYields_script=self.GET_YIELDS
+                        print('Launch task of running python ', ft_getYields_script)
+                        
+                    except: #DEFAULT: $IPS_WRAPPER_PATH/ips-iterative-xolotlFT/python_scripts_for_coupling/get_yields.py
+                        ft_getYields_script = self.BIN_PATH+'/ips-iterative-xolotlFT/python_scripts_for_coupling/get_yields.py'
+                        print('Launch task of running default python script ', ft_getYields_script)
+
+                    sys.stdout.flush()
+
+                    task_id_gy = self.services.launch_task(1,self.services.get_working_dir(),    #self.NPROC=1
+                                                        'python', ft_getYields_script, logfile='get_yields.log')
+                    ret_val_gy = self.services.wait_task(task_id_gy)
+
+                    if os.path.exists(pkl_gy_file):
+                        with open(pkl_gy_file, "rb") as pf:
+                            getYields_dic = pickle.load(pf)
+                            yields=getYields_dic['yields']
+                        pf.close()
+                        print('reading the pickle file, get_yields returned [total SpY, total RY] = ', yields)
+                    else:
+                        print('WARNING! could not read yield from get_yields pickle file. Set to zero')
+                        yields=[0.0, 0.0]
+                    #ORIG METHOD yields=get_yields.sputtering_and_reflection(ftridynOneOutOutput=ft_output_file, ftridynFolder=angleFolder, fNImpacts=self.ftridyn['nImpacts'], angle=self.angleIn[i], weightAngle=self.weightAngle[i], logFile=outFile)
+                    
                     #overwrite spY value if mode is 'calculate'
                     if self.spYieldMode[i]=='calculate':
                         self.spYield[i]=float(yields[0])

@@ -9,6 +9,9 @@ import numpy as np
 import math
 import numpy.polynomial.polynomial as poly
 import sys
+import pickle
+import os
+
 #import matplotlib.pyplot as plt
 #from   pylab import spicy # *
 #from scipy.optimize import curve_fit
@@ -20,13 +23,24 @@ import sys
 #      b) a distribution of angles; a distribution of energies for each angle
 #            --> run Ftridyn for each angle, with the given Ein
 
-def sputtering_and_reflection(ftridynOneOutOutput='He_WOUT.dat',
-                      ftridynFolder="angle",                      
-                      fNImpacts=1.0e5,
-                      angle=[0.0],
-                      weightAngle=[1.0],
-                      logFile=None
+def sputtering_and_reflection_launch(ftridynOneOutOutput='He_WOUT.dat',
+                                     ftridynFolder="angle",
+                                     angle=[0.0],
+                                     weightAngle=[1.0],
+                                     fNImpacts=1.0e5,
+                                     logFile=None
                   ):
+
+    #if pikle file exists, read from pkl file:
+    cwd = os.getcwd()
+    pkl_file=cwd+'/ft_getYields.pkl'
+    if os.path.exists(pkl_file):
+        #dic = pickle.load( open( pkl_file, "rb" ) )
+        with open(pkl_file, "rb") as pf:
+            dic = pickle.load(pf)
+        #first check the log file, to print everything there
+        if 'logFile' in dic:
+            logFile=dic['logFile']
 
     if logFile  is not None:
         print(('redirect getYields output of to:', logFile))
@@ -36,13 +50,69 @@ def sputtering_and_reflection(ftridynOneOutOutput='He_WOUT.dat',
     else:
         print ('no log file defined in getYields')
         print ('print output to default sys.stdout')
+
+    sys.stdout.flush()
+
+    #if pikle file exists, read from pkl file:
+    if os.path.exists(pkl_file):
+        #dic = pickle.load( open( pkl_file, "rb" ) ) #already above
+        print('In get_yields,  dictionary defined in pkl file: ')
+        print(pkl_file)
+        sys.stdout.flush()
+
+        #print('TEST: dictionary in pkl file contains:')
+        #print(dic)
         
+        #for each of the possible inputs to the script, check if given in pkl file
+
+        if 'ftridynOneOutOutput' in dic:
+            ftridynOneOutOutput=dic['ftridynOneOutOutput']
+            print('\t from pkl file, set dict value to ftridynOneOutOutput=',dic['ftridynOneOutOutput'])
+        else:
+            print('\t no value defined in pkl; use default for ftridynOneOutOutput=', ftridynOneOutOutput)
+
+        if 'ftridynFolder' in dic:
+            ftridynFolder=dic['ftridynFolder']
+            print('\t from pkl file, set dict value to ftridynFolder=', dic['ftridynFolder'])
+        else:
+            print('\t no value defined in pkl; use default for ftridynFolder=', ftridynFolder)
+
+        if 'angle' in dic:
+            angle=dic['angle']
+            print('\t from pkl file, set dict value to angle=', dic['angle'])
+        else:
+            print('\t no value defined in pkl; use default for angle=', angle)
+
+        if 'weightAngle' in dic:
+            weightAngle=dic['weightAngle']
+            print('\t from pkl file, set dict value to weightAngle=', dic['weightAngle'])
+        else:
+            print('\t no value defined in pkl; use default for weightAngle=', weightAngle)
+
+        if 'fNImpacts' in dic:
+            fNImpacts=dic['fNImpacts']
+            print('\t from pkl file, set dict value to fNImpacts=', dic['fNImpacts'])
+        else:
+            print('\t no value defined in pkl; use default for fNImpacts=', fNImpacts)
+
+        if 'logFile' in dic:
+            print('\t from pkl file, set dict value to logFile=', dic['logFile'])
+        else:
+            print('\t no value defined in pkl; use default for logFile=', logFile)
+
+    else:
+        print('In get_yields, did not find pkl file, run with default values')
+    sys.stdout.flush()
+
+    #close file after reading values so that we can use it to print yields
+    pf.close()
+    
     print(' ')
     print('getYields:')
 
     totalSpYield=0.0;
     totalRYield=0.0
-    yields=[]
+    yieldOutput=[]
 
 
     if len(angle)>1:
@@ -93,13 +163,25 @@ def sputtering_and_reflection(ftridynOneOutOutput='He_WOUT.dat',
 
     print(' ')
     print("\t average sputtering yield is ", totalSpYield)
-    yields.append(totalSpYield)
+    yieldOutput.append(totalSpYield)
     print("\t average reflection yield is ", totalRYield)
-    yields.append(totalRYield)
+    yieldOutput.append(totalRYield)
 
+    #print('TEST: yieldOutput = ', yieldOutput)
+    
     sys.stdout.flush()
 
-    return yields
+    #if pkl file exists, use it to return yields
+    if os.path.exists(pkl_file):
+        yields_dic={}
+        yields_dic['yields']=yieldOutput
+        with open(pkl_file, "wb") as pf:
+            pickle.dump(yields_dic, pf)
+        pf.close()
+        return
+    else: #if pkl file / dic not present, try returning yields directly
+        return yields
+    
 
 ################# END OF NEW PYTHON SCRIPT  ####################
 
@@ -107,4 +189,4 @@ if __name__ == '__main__':
 
    import shutil
 
-   sputtering_and_reflection()
+   sputtering_and_reflection_launch()
