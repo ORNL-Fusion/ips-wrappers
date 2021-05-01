@@ -8,8 +8,8 @@ import subprocess
 import numpy
 import shutil
 import translate_xolotl_to_ftridyn
-import translate_ftridyn_to_xolotl_launch
-import get_yields_launch
+#import translate_ftridyn_to_xolotl_launch
+#import get_yields_launch
 import binTRIDYN
 import param_handler
 import traceback
