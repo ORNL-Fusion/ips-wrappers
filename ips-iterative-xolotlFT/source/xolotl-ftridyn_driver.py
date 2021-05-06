@@ -86,9 +86,7 @@ class xolotlFtridynDriver(Component):
 
         self.driverMode=self.driver['START_MODE']
         print('\n')
-        print(('running IPS from t = {0} , to t = {1} , in steps of dt = {2}'.format(self.driver['INIT_TIME'], self.driver['END_TIME'], self.\
-driver['LOOP_TIME_STEP'])))
-
+        print(('running IPS from t = {0} , to t = {1} , in steps of dt = {2}'.format(self.driver['INIT_TIME'], self.driver['END_TIME'], self.driver['LOOP_TIME_STEP'])))
 
         #### XOLOTL PARAMETERS ##### 
 
@@ -438,8 +436,23 @@ driver['LOOP_TIME_STEP'])))
         
         self.services.stage_plasma_state() 
 
+        #check that loop doesnt go over the end time
         time=self.driver['INIT_TIME']
+
+        if time+self.driver['LOOP_TIME_STEP']>self.driver['END_TIME']:
+            self.driver['LOOP_TIME_STEP']=self.driver['END_TIME']-time
+            print(' ')
+            print('\t WARNING: time step given in config file longer than needed for last loop ')
+            print(('\t before starting time-loop, adapt driver time step to {} to reach exactly endTime '.format( self.driver['LOOP_TIME_STEP'])))
+            self.xp.parameters['petscArgs']['-start_stop']=self.driver['LOOP_TIME_STEP']/10.0
+            print(('\t accordingly, Xolotls data is saved every (start_stop) = {} '.format( self.xp.parameters['petscArgs']['-start_stop'])))
+        else:
+            print('\t before starting time-loop, checked that time step given in config file is not longer than needed to reach the end of the simulation')
+
+        print('\n')
         sys.stdout.flush()
+
+        
 
         #for time in numpy.arange(self.initTime,self.endTime,self.timeStep):
         while time<self.driver['END_TIME']:
