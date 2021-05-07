@@ -22,13 +22,16 @@
 #SBATCH --image=docker:registry.services.nersc.gov/rwp53/ips-massive-serial:latest
 #SBATCH --volume="/global/cscratch1/sd/rwp/tmpfiles:/tmp:perNodeCache=size=1G"
 
-module load cray-netcdf gcc tensorflow/gpu-2.2.0-py37
-
 export ATOM=/global/common/software/atom/cori
+
+source activate ml_train_env
+
+module load cray-netcdf gcc tensorflow/intel-2.4.1
+
 export LOCAL=$ATOM/cesol_dev
 export IPSCONFIG_DIR=$LOCAL/conf
 
-export PYTHONPATH="$PYTHONPATH:$HOME/systemcode:$ATOM/cesol/share/python:$ATOM/cesol/ips_fastran/src:$HOME/ips-wrappers:$HOME/systemcode/ml"
+export PYTHONPATH="$PYTHONPATH:$HOME/systemcode:$ATOM/cesol/share/python:$ATOM/cesol/ips_fastran/src:$HOME/systemcode/ml"
 
 export IPS_ROOT=$ATOM/ips-framework
 export DAKOTA_ROOT=$ATOM/dakota
@@ -77,13 +80,14 @@ export NFREYA_DATA_ROOT=/project/projectdirs/atom/users/parkjm
 export PSTOOL=$PSTOOL_BIN_DIR/$PSTOOL_BIN_NAME
 export PS_BACKEND=pyps
 
-WORK_DIRECTORY=test_ml_train_debug
+WORK_DIRECTORY=test_ml_train_debug_fbs
 
 rm -rf $SCRATCH/$WORK_DIRECTORY
 mkdir $SCRATCH/$WORK_DIRECTORY
 cp -rd * $SCRATCH/$WORK_DIRECTORY
 cd $SCRATCH/$WORK_DIRECTORY
 
-python $IPS_ROOT/bin/ips.py --platform=platform.conf --simulation=ips.ml_train.config
+which ips.py
+/global/homes/m/markcian/.local/cori/3.8-anaconda-2020.11/bin/ips.py --platform=platform.conf --simulation=ips.ml_train.config
 
 wait
