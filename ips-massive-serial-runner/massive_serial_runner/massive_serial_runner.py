@@ -42,7 +42,6 @@ class massive_serial_runner(Component):
 
 #  IPS framework config parameters.
             os.environ['PWD'] = os.getcwd()
-            self.ips_path = self.services.get_config_param('IPS_PATH')
 
             self.msr_config = self.services.get_config_param('MSR_CONFIG')
             self.msr_global_config = self.services.get_config_param('MSR_GLOBAL_CONFIG')
@@ -92,7 +91,6 @@ class massive_serial_runner(Component):
 #  Run the massive serial workflow.
         if 'state' in flags and flags['state'] == 'needs_update':
             process = subprocess.Popen([self.MASSIVE_SERIAL_EXE,
-                                        self.ips_path,
                                         self.platform_file,
                                         self.msr_global_config,
                                         '{}'.format(timeStamp)],

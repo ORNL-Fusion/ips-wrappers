@@ -1,3 +1,3 @@
 conda activate subenv
-python $1/ips.py --platform=$2 --simulation=$3 --log=massive_serial_$4.log
+ips.py --platform=$1 --simulation=$2 --log=massive_serial_$3.log
 conda deactivate
