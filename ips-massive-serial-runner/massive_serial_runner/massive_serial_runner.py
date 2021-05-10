@@ -91,12 +91,18 @@ class massive_serial_runner(Component):
 
 #  Run the massive serial workflow.
         if 'state' in flags and flags['state'] == 'needs_update':
-            process = subprocess.Popen(['python3',
-                                        '{}/ips.py'.format(self.ips_path),
-                                        '--platform={}'.format(self.platform_file),
-                                        '--simulation={}'.format(self.msr_global_config),
-                                        '--log=massive_serial_{}.log'.format(timeStamp)],
+            process = subprocess.Popen([self.MASSIVE_SERIAL_EXE,
+                                        self.ips_path,
+                                        self.platform_file,
+                                        self.msr_global_config,
+                                        '{}'.format(timeStamp)],
                                        env=os.environ)
+#            process = subprocess.Popen(['python3',
+#                                        '{}/ips.py'.format(self.ips_path),
+#                                        '--platform={}'.format(self.platform_file),
+#                                        '--simulation={}'.format(self.msr_global_config),
+#                                        '--log=massive_serial_{}.log'.format(timeStamp)],
+#                                       env=os.environ)
 
             database = 'db_{}.dat'.format(timeStamp)
 
