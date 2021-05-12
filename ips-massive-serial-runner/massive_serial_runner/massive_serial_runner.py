@@ -90,7 +90,8 @@ class massive_serial_runner(Component):
 
 #  Run the massive serial workflow.
         if 'state' in flags and flags['state'] == 'needs_update':
-            process = subprocess.Popen([self.MASSIVE_SERIAL_EXE,
+            process = subprocess.Popen(['bash',
+                                        self.MASSIVE_SERIAL_EXE,
                                         self.platform_file,
                                         self.msr_global_config,
                                         '{}'.format(timeStamp)],
