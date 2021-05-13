@@ -137,7 +137,13 @@ class xolotlFtridynDriver(Component):
         print('\n')
         print('replacing PETSC arguments from ips config file:\n')
         for k,v in self.XOLOTL_INPUT_PETSCARGS.items():
-            if param_handler.is_int(v):
+            if (v == 'False'):
+                if (k in self.xp.parameters['petscArgs']) :
+                    del self.xp.parameters['petscArgs'][k]
+                    print('removed ', k, 'from petsc arguments')
+                else:
+                    print ('WARNING: could not remove ', k, ' from petsc arguments. It does not exists in template ')
+            elif param_handler.is_int(v):
                 print(('\t integer {0} = {1} with {2} '.format(k , self.xp.parameters['petscArgs'][k] , v)))
                 self.xp.parameters['petscArgs'][k]=int(v)
             elif param_handler.is_float(v):
