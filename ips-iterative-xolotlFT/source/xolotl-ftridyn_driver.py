@@ -130,6 +130,12 @@ class xolotlFtridynDriver(Component):
                         values.append(val)
                 print(('\t reading list input parameter {0} = {1} '.format(k, values)))
                 self.xp.parameters[k]=values
+            elif v=='False':
+                if k in self.xp.parameters:
+                    print(('\t input parameter {0} = {1} and thus will delete it from the xolotl parameters'.format(k, v)))
+                    del self.xp.parameters[k]
+                else:
+                    print(('\t WARNING: input parameter {0} = {1} not present in xolotl parameters. Do nothing. '.format(k , v)))
             else:                
                 print(('\t reading string input parameter {0} = {1}'.format(k, v )))
                 self.xp.parameters[k]=v
@@ -244,15 +250,30 @@ class xolotlFtridynDriver(Component):
             print(('no flux specified in GITR, so using values in Xolotl {} \n'.format(self.xp.parameters['flux'])))
 
         if 'heat' in self.gitr:
-            self.xp.parameters['heat']=self.gitr['heat']*1.0e-18
+            print('TEST 05.18: heat given in GITR is ', self.gitr['heat'], ' and its of type', type(self.gitr['heat']))
+            sys.stdout.flush() #TEST 05.18
+            if 'heat' in self.xp.parameters:
+                print('TEST 05.18: modify value of heat given in xolotls params')
+                self.xp.parameters['heat'][0]=self.gitr['heat'][0]*1.0e-18
+                print(('replaced heat flux in Xolotl (in W/nm2s = 1e-18 W/m2s) by value given by GITR {} (W/m2s)\n'.format(self.gitr['heat'])))
+            else:
+                print('TEST 05.18: heat not defined in xolotl parameters yet; add')                
+                self.xp.parameters['heat']=[self.gitr['heat'][0]*1.0e-18,self.gitr['heat'][1]]
             print(('replaced heat flux in Xolotl (in W/nm2s = 1e-18 W/m2s) by value given by GITR {} (W/m2s)\n'.format(self.gitr['heat'])))
+            sys.stdout.flush() #TEST 05.18
+            if 'startTemp' in self.xp.parameters:
+                del self.xp.parameters['startTemp']
+                print('\t and removed startTemp from xolotl parameters')
         elif 'heat' in self.xp.parameters:
             print(('no heat flux specified in GITR, so using values in Xolotl {} \n'.format(self.xp.parameters['heat'])))
+            if 'startTemp' in self.xp.parameters:
+                del self.xp.parameters['startTemp']
+                print('\t and removed startTemp from xolotls parameters')
         elif 'startTemp' in self.gitr:
             self.xp.parameters['startTemp']=self.gitr['startTemp']
             print(('no heat flux provided by GITR or Xolotl; use fixed temperature specified by GITR {}\n'.format(self.gitr['startTemp'])))
         else:
-            print(('no heat flux provided by GITR or Xolotl; use fixed temperature specified by Xolotl {}\n'.format(self.xp.parameters['startTemp'])))
+            print(('no heat flux provided by GITR or Xolotl; use fixed temperature specified by Xolotl (in config or default) {}\n'.format(self.xp.parameters['startTemp'])))
 
         #### FTRIDYN PARAMETERS ##### 
         ##LOOP OVER LIST OF PLASMA SPECIES SPECIES #########
@@ -800,7 +821,12 @@ class xolotlFtridynDriver(Component):
             #for prj in ['He', 'W', 'D', 'T']:
                 #i=self.gitr['plasmaSpecies'].index(prj)
 
-            netParam = self.XOLOTL_INPUT_PARAMETERS['netParam'].split() #split(',')
+            if 'netParam' in self.XOLOTL_INPUT_PARAMETERS:
+                netParam = self.XOLOTL_INPUT_PARAMETERS['netParam'].split() #split(',')
+            else:
+                print('WARNING: no netParam provided; I assume a network file will be loaded')
+                print('\t and will write tridyn.dat entry for all entries in plasmaSpecies')
+                
             for i in range(len(self.gitr['plasmaSpecies'])):
                 prj=self.gitr['plasmaSpecies'][i]                
                 ft_output_profile_temp_prj=timeFolder+'/'+self.FT_OUTPUT_PROFILE_TEMP+'_'+prj
@@ -813,16 +839,23 @@ class xolotlFtridynDriver(Component):
                 if prj!='W': #then the name in the tridyn.dat line is the same as prj
                              #& need to check if it exists in the network: 
                     if prj=='He': #if He,  check He's position in netParam, i.e., index i=0                                                
-                        if netParam[i]!="0":
+                        if ('netParam' in self.XOLOTL_INPUT_PARAMETERS) and (netParam[i]=="0"):
+                            print('\t Species ' , prj, 'given in plasmaSpecies, but entry in netParam is zero ; will skip in tridyn.dat')
+                        else:
                             combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.gitr['fluxFraction'][i]*(1-self.rYield[i])))) 
                             combinedFile.write("%s\n" %(combinedTridynString))
-                    else: #if prj=='D' or prj=='T':
-                        if netParam[i-1]!="0": #if D or T,  check position in netParam, i.e., index i=2,3 -> i-1 = 1 or 2 (no W in netParam)
+                    elif prj=='D' or prj=='T': #if prj=='D' or prj=='T':
+                        if ('netParam' in self.XOLOTL_INPUT_PARAMETERS) and (netParam[i-1]=="0"): #if D or T,  check position in netParam, i.e., index i=2,3 -> i-1 = 1 or 2 (no W in netParam)
+                            print('\t Species ' , prj, 'given in plasmaSpecies, but entry in netParam is zero ; will skip in tridyn.dat')
+                        else:
                             combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.gitr['fluxFraction'][i]*(1-self.rYield[i])))) 
                             combinedFile.write("%s\n" %(combinedTridynString))
                 elif prj=='W': #W is called interstitial in tridyn.dat, i.e., "I" & always exists in the network (no need to check)
                     combinedFile.write("%s %s %s\n" %('I',str(1),str(self.gitr['fluxFraction'][i]*(1-self.rYield[i]))))
                     combinedFile.write("%s\n" %(combinedTridynString))
+                else:
+                    print('WARNING: species ', prj, 'cannot be handled by Xolotl yet.')
+                    print('\t it has been used so far (for spY, etc), but will skip writing into tridyn.dat')
                 profile.close()
             combinedFile.close()
 
@@ -875,16 +908,27 @@ class xolotlFtridynDriver(Component):
             if self.driverMode == 'INIT':
                 if os.path.exists(self.INPUT_DIR+'/'+self.NETWORK_FILE):
                     print('\t init mode: modify xolotl parameters that might change at every loop, and load networkFile file \n')                
-                    self.xp.parameters['networkFile'] = self.XOLOTL_NETWORK_FILE
+                    self.xp.parameters['networkFile'] = self.XOLOTL_NETWORK_FILE                    
                 else:
                     #no network file in input dir -- do not add to param dictionary, so it's not in param file and doesn't try to load
                     print('\t init mode: modify xolotl parameters that might change at every loop \n')
                     print('\t \t WARNING: no network file in input dir; will create (not load) the network \n')
             elif self.driverMode == 'RESTART':
                 #add (or replace) networkFile line to parameter file
-                print('\t restart mode: modify xolotl parameters that might change at every loop, including networkFile \n')
+                print('\t restart mode: modify xolotl parameters that might change at every loop, including adding the networkFile \n')
                 self.xp.parameters['networkFile'] = self.XOLOTL_NETWORK_FILE
+                if 'netParam' in self.xp.parameters:
+                    print('\t \t and delete netParam from xolotl parameters (i.e., from the parameter file)')
+                    del self.xp.parameters['netParam']
+                else:
+                    print('\t \t netParam does not exist in the xolotl parameters. No need to delete it')
+                if 'grouping' in self.xp.parameters:
+                    print('\t \t and delete grouping from xolotl parameters (i.e., from the parameter file)')
+                    del self.xp.parameters['grouping']
+                else:
+                    print('\t \t grouping does not exist in the xolotl parameters. No need to delete it')
 
+                    
             #determine if he_conc true/false ; if true, add '-he_conc' to petsc arguments 
             if self.driver['XOLOTL_HE_CONC']=='Last':
                 if time+1.5*self.driver['LOOP_TIME_STEP']>self.driver['END_TIME']:  #*1.5, to give marging of error
