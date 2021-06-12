@@ -465,9 +465,17 @@ class xolotlFtridynDriver(Component):
 
         #check that loop doesnt go over the end time
         time=self.driver['INIT_TIME']
+        end_time=self.driver['END_TIME']
 
-        if time+self.driver['LOOP_TIME_STEP']>self.driver['END_TIME']:
-            self.driver['LOOP_TIME_STEP']=self.driver['END_TIME']-time
+        if time >= end_time:
+            print('init time ', time , ' >= end time', end_time)
+            print("EXIT SIMULATION")
+            sys.stdout.flush()
+            return
+
+
+        if time+self.driver['LOOP_TIME_STEP']>end_time: #self.driver['END_TIME']:
+            self.driver['LOOP_TIME_STEP']=end_time-time #self.driver['END_TIME']-time
             print(' ')
             print('\t WARNING: time step given in config file longer than needed for last loop ')
             print(('\t before starting time-loop, adapt driver time step to {} to reach exactly endTime '.format( self.driver['LOOP_TIME_STEP'])))
@@ -482,7 +490,7 @@ class xolotlFtridynDriver(Component):
         
 
         #for time in numpy.arange(self.initTime,self.endTime,self.timeStep):
-        while time<self.driver['END_TIME']:
+        while time<end_time: #self.driver['END_TIME']:
 
             self.services.stage_plasma_state()
             print(('driver time (in loop) {} \n'.format(time)))
@@ -931,10 +939,10 @@ class xolotlFtridynDriver(Component):
                     
             #determine if he_conc true/false ; if true, add '-he_conc' to petsc arguments 
             if self.driver['XOLOTL_HE_CONC']=='Last':
-                if time+1.5*self.driver['LOOP_TIME_STEP']>self.driver['END_TIME']:  #*1.5, to give marging of error
+                if time+1.5*self.driver['LOOP_TIME_STEP']>end_time: #self.driver['END_TIME']:  #*1.5, to give marging of error
                     self.petsc_heConc=True
                     print('printing He concentrations in the last loop')
-                elif time<(self.driver['END_TIME']-self.driver['LOOP_TIME_STEP']):
+                elif time<(end_time-self.driver['LOOP_TIME_STEP']): #self.driver['END_TIME']-self.driver['LOOP_TIME_STEP']):
                     self.petsc_heConc=False
             elif self.driver['XOLOTL_HE_CONC']=='True':
                 print('\t he_conc printed in this (and every) loop')
@@ -1093,8 +1101,8 @@ class xolotlFtridynDriver(Component):
             else:
                 print(('\t driver time step (({0}) ane start_stop ({1}) unchanged (factor=1) \n'.format( self.driver['LOOP_TIME_STEP'], self.xp.parameters['petscArgs']['-start_stop'])))
 
-            if time+self.driver['LOOP_TIME_STEP']>self.driver['END_TIME']:
-                self.driver['LOOP_TIME_STEP']=self.driver['END_TIME']-time
+            if time+self.driver['LOOP_TIME_STEP']>end_time: #self.driver['END_TIME']:
+                self.driver['LOOP_TIME_STEP']=end_time-time #self.driver['END_TIME']-time
                 print(' ')
                 print('\t time step longer than needed for last loop ')
                 print(('\t adapting driver time step to {} to reach exactly endTime '.format( self.driver['LOOP_TIME_STEP'])))
