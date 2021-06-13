@@ -250,16 +250,16 @@ class xolotlFtridynDriver(Component):
             print(('no flux specified in GITR, so using values in Xolotl {} \n'.format(self.xp.parameters['flux'])))
 
         if 'heat' in self.gitr:
-            print('TEST 05.18: heat given in GITR is ', self.gitr['heat'], ' and its of type', type(self.gitr['heat']))
-            sys.stdout.flush() #TEST 05.18
+            #print('TEST 05.18: heat given in GITR is ', self.gitr['heat'], ' and its of type', type(self.gitr['heat']))
+            #sys.stdout.flush() #TEST 05.18
             if 'heat' in self.xp.parameters:
-                print('TEST 05.18: modify value of heat given in xolotls params')
+                print('modify value of heat given in xolotls params')
                 self.xp.parameters['heat'][0]=self.gitr['heat'][0]*1.0e-18
                 print(('replaced heat flux in Xolotl (in W/nm2s = 1e-18 W/m2s) by value given by GITR {} (W/m2s)\n'.format(self.gitr['heat'])))
             else:
-                print('TEST 05.18: heat not defined in xolotl parameters yet; add')                
+                print('heat not defined in xolotl parameters yet; add')                
                 self.xp.parameters['heat']=[self.gitr['heat'][0]*1.0e-18,self.gitr['heat'][1]]
-            print(('replaced heat flux in Xolotl (in W/nm2s = 1e-18 W/m2s) by value given by GITR {} (W/m2s)\n'.format(self.gitr['heat'])))
+                print(('added heat flux to Xolotl (in W/nm2s = 1e-18 W/m2s) with a value given by GITR {} (W/m2s)\n'.format(self.gitr['heat'])))
             sys.stdout.flush() #TEST 05.18
             if 'startTemp' in self.xp.parameters:
                 del self.xp.parameters['startTemp']
@@ -829,8 +829,8 @@ class xolotlFtridynDriver(Component):
             #for prj in ['He', 'W', 'D', 'T']:
                 #i=self.gitr['plasmaSpecies'].index(prj)
 
-            if 'netParam' in self.XOLOTL_INPUT_PARAMETERS:
-                netParam = self.XOLOTL_INPUT_PARAMETERS['netParam'].split() #split(',')
+            if 'netParam' in self.xp.parameters: 
+                netParam = self.xp.parameters['netParam'].split() 
             else:
                 print('WARNING: no netParam provided; I assume a network file will be loaded')
                 print('\t and will write tridyn.dat entry for all entries in plasmaSpecies')
@@ -843,19 +843,22 @@ class xolotlFtridynDriver(Component):
                 combinedTridynString=str(tridynString)+str(self.maxRangeXolotl[i])
                 print(('for {0}, fraction in plasma = {1} , and reflection = {2} '.format(prj,self.gitr['fluxFraction'][i], self.rYield[i])))
                 print(('\t effective fraction (in plasma * (1-reflection)) = {} '.format(self.gitr['fluxFraction'][i]*(1-self.rYield[i]))))
+                sys.stdout.flush()
+                
                 #the format of tridyn.dat is different for the pulsed & UQ executables of Xolotl:
                 if prj!='W': #then the name in the tridyn.dat line is the same as prj
                              #& need to check if it exists in the network: 
                     if prj=='He': #if He,  check He's position in netParam, i.e., index i=0                                                
-                        if ('netParam' in self.XOLOTL_INPUT_PARAMETERS) and (netParam[i]=="0"):
+                        if ('netParam' in self.xp.parameters ) and (netParam[i]=="0"): 
                             print('\t Species ' , prj, 'given in plasmaSpecies, but entry in netParam is zero ; will skip in tridyn.dat')
                         else:
                             combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.gitr['fluxFraction'][i]*(1-self.rYield[i])))) 
                             combinedFile.write("%s\n" %(combinedTridynString))
                     elif prj=='D' or prj=='T': #if prj=='D' or prj=='T':
-                        if ('netParam' in self.XOLOTL_INPUT_PARAMETERS) and (netParam[i-1]=="0"): #if D or T,  check position in netParam, i.e., index i=2,3 -> i-1 = 1 or 2 (no W in netParam)
+                        if ('netParam' in self.xp.parameters) and (netParam[i-1]=="0"): #if D or T,  check position in netParam, i.e., index i=2,3 -> i-1 = 1 or 2 (no W in netParam)
                             print('\t Species ' , prj, 'given in plasmaSpecies, but entry in netParam is zero ; will skip in tridyn.dat')
                         else:
+                            print('no netParam used in Xolotl ; for D or T, write line into combined file')
                             combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.gitr['fluxFraction'][i]*(1-self.rYield[i])))) 
                             combinedFile.write("%s\n" %(combinedTridynString))
                 elif prj=='W': #W is called interstitial in tridyn.dat, i.e., "I" & always exists in the network (no need to check)
@@ -865,6 +868,7 @@ class xolotlFtridynDriver(Component):
                     print('WARNING: species ', prj, 'cannot be handled by Xolotl yet.')
                     print('\t it has been used so far (for spY, etc), but will skip writing into tridyn.dat')
                 profile.close()
+                sys.stdout.flush()
             combinedFile.close()
 
             #compress output
