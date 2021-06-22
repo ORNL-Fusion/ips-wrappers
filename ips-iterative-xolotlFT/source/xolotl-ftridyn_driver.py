@@ -183,28 +183,6 @@ class xolotlFtridynDriver(Component):
         print(('processes included in Xolotl are: {}\n'.format(processString.strip())))
         self.xp.parameters['process']=processString.strip()
 
-        #print "THIS IS A TEST: final Xolotl parameters: "
-        #print self.xp.parameters
-
-
-        #INCLUDE IF NEEDED (already debugged)
-        #explicitly delete 'grouping' from xolotl params if grouping is OFF (groupHeV > MaxVSize)
-
-        #if 'grouping' in self.xp.parameters:
-        #    print 'this is a test: check if we should keep grouping'
-
-        #    netParamList=self.xp.parameters['netParam'].split()      #maxVSize=netParamList[3]
-        #    print 'this is test: netParamList is ', netParamList        
-        #    groupingList=self.xp.parameters['grouping'].split()      #groupHeV=groupingList[0]
-        #    print 'this is test: groupingList is ', groupingList
-
-        #    if float(groupingList[0]) > float(netParamList[3]):
-        #        del self.xp.parameters['grouping']
-        #        print 'this is a test: grouping deleted as groupHeV=', groupingList[0], ' and maxVSize=', netParamList[3]
-        #else:
-        #    print 'this is a test: no grouping exists in xp.parameters dictionary'
-
-
 
         ### GITR RELATED PARAMETERS ###
 
@@ -829,11 +807,14 @@ class xolotlFtridynDriver(Component):
             #for prj in ['He', 'W', 'D', 'T']:
                 #i=self.gitr['plasmaSpecies'].index(prj)
 
-            if 'netParam' in self.xp.parameters: 
-                netParam = self.xp.parameters['netParam'].split() 
-            else:
-                print('WARNING: no netParam provided; I assume a network file will be loaded')
-                print('\t and will write tridyn.dat entry for all entries in plasmaSpecies')
+            ##block commented out on 06.19:
+            ##there's no need for all these checks of netParam;
+            ##if something is given by GITR, i.e., exists in plasma, assume we'll run it in Xolotl too
+            #if 'netParam' in self.xp.parameters: 
+            #    netParam = self.xp.parameters['netParam'].split() 
+            #else:
+            #    print('WARNING: no netParam provided; I assume a network file will be loaded')
+            #    print('\t and will write tridyn.dat entry for all entries in plasmaSpecies')
                 
             for i in range(len(self.gitr['plasmaSpecies'])):
                 prj=self.gitr['plasmaSpecies'][i]                
@@ -847,21 +828,28 @@ class xolotlFtridynDriver(Component):
                 
                 #the format of tridyn.dat is different for the pulsed & UQ executables of Xolotl:
                 if prj!='W': #then the name in the tridyn.dat line is the same as prj
-                             #& need to check if it exists in the network: 
-                    if prj=='He': #if He,  check He's position in netParam, i.e., index i=0                                                
-                        if ('netParam' in self.xp.parameters ) and (netParam[i]=="0"): 
-                            print('\t Species ' , prj, 'given in plasmaSpecies, but entry in netParam is zero ; will skip in tridyn.dat')
-                        else:
-                            combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.gitr['fluxFraction'][i]*(1-self.rYield[i])))) 
-                            combinedFile.write("%s\n" %(combinedTridynString))
-                    elif prj=='D' or prj=='T': #if prj=='D' or prj=='T':
-                        if ('netParam' in self.xp.parameters) and (netParam[i-1]=="0"): #if D or T,  check position in netParam, i.e., index i=2,3 -> i-1 = 1 or 2 (no W in netParam)
-                            print('\t Species ' , prj, 'given in plasmaSpecies, but entry in netParam is zero ; will skip in tridyn.dat')
-                        else:
-                            print('no netParam used in Xolotl ; for D or T, write line into combined file')
-                            combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.gitr['fluxFraction'][i]*(1-self.rYield[i])))) 
-                            combinedFile.write("%s\n" %(combinedTridynString))
-                elif prj=='W': #W is called interstitial in tridyn.dat, i.e., "I" & always exists in the network (no need to check)
+                             #& need to check if it exists in the network:
+                    ##change 06.19: skip all these checks of netParam; 
+                    ##if something is given by GITR, i.e., exists in plasma, assume we'll run it in Xolotl too:
+
+                    ##if He,  check He's position in netParam, i.e., index i=0  
+                    if prj=='He': 
+                        #if ('netParam' in self.xp.parameters ) and (netParam[i]=="0"): 
+                        #print('\t Species ' , prj, 'given in plasmaSpecies, but entry in netParam is zero ; will skip in tridyn.dat')
+                        #else:
+                        combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.gitr['fluxFraction'][i]*(1-self.rYield[i])))) 
+                        combinedFile.write("%s\n" %(combinedTridynString))
+                    ##if D or T,  check position in netParam, i.e., index i=2,3 -> i-1 = 1 or 2 (no W in netParam)
+                    elif prj=='D' or prj=='T': 
+                        #if ('netParam' in self.xp.parameters) and (netParam[i-1]=="0"): 
+                        #print('\t Species ' , prj, 'given in plasmaSpecies, but entry in netParam is zero ; will skip in tridyn.dat')
+                        #else:
+                        #print('no netParam used in Xolotl ; for D or T, write line into combined file')
+                        combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.gitr['fluxFraction'][i]*(1-self.rYield[i])))) 
+                        combinedFile.write("%s\n" %(combinedTridynString))
+
+                ##W is called interstitial in tridyn.dat, i.e., "I" & always exists in the network (no need to check) 
+                elif prj=='W':
                     combinedFile.write("%s %s %s\n" %('I',str(1),str(self.gitr['fluxFraction'][i]*(1-self.rYield[i]))))
                     combinedFile.write("%s\n" %(combinedTridynString))
                 else:
