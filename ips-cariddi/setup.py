@@ -5,12 +5,17 @@ import os
 
 class build_deps(build):
     def run(self):
-        os.system("python3 ../ips-v3fit/setup.py build")
+        pwd = os.getcwd()
+        os.chdir("../ips-v3fit")
+        os.system("python3 setup.py build")
         build.run(self)
 
 class install_deps(install):
     def run(self):
-        os.system("python3 ../ips-v3fit/setup.py install")
+        pwd = os.getcwd()
+        os.chdir("../ips-v3fit")
+        os.system("python3 setup.py install")
+        os.chdir(pwd)
         install.run(self)
 
 setup(

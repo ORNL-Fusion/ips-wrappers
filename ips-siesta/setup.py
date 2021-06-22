@@ -5,12 +5,18 @@ import os
 
 class build_deps(build):
     def run(self):
-        os.system("python3 ../ips-vmec/setup.py build")
+        pwd = os.getcwd()
+        os.chdir("../ips-vmec")
+        os.system("python3 setup.py build")
+        os.chdir(pwd)
         build.run(self)
 
 class install_deps(install):
     def run(self):
-        os.system("python3 ../ips-vmec/setup.py install")
+        pwd = os.getcwd()
+        os.chdir("../ips-vmec")
+        os.system("python3 setup.py install")
+        os.chdir(pwd)
         install.run(self)
 
 setup(
