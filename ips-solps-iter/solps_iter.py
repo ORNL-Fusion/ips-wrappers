@@ -9,7 +9,7 @@
 
 from component import Component
 import os
-from omfit.classes.omfit_namelist import OMFITnamelist
+from omfit_classes.omfit_namelist import OMFITnamelist
 from utilities import ZipState
 from utilities import ScreenWriter
 
