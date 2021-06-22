@@ -10,7 +10,7 @@ class build_deps(build):
 
 class install_deps(install):
     def run(self):
-        os.system("sudo python3 ../utilities/setup.py install")
+        os.system("python3 ../utilities/setup.py install")
         install.run(self)
 
 setup(
