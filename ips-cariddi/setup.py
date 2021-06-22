@@ -18,7 +18,7 @@ setup(
     version="1.0.0",
     install_requires=["ips_v3fit"],
     packages=find_packages(),
-    scripts=["cariddi_pre.py","cariddi_bin.py"]
+    scripts=["cariddi_pre.py","cariddi_bin.py"],
     cmdclass={
         'build'   : build_deps,
         'install' : install_deps
