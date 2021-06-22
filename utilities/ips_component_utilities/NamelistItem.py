@@ -5,7 +5,7 @@
 #
 #-------------------------------------------------------------------------------
 
-from omfit.classes.namelist import fortran_environment
+from omfit_classes.namelist import fortran_environment
 
 def set(namelist, key, value):
     if '(' in key:
