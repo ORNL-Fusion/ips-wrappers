@@ -8,6 +8,7 @@ class build_deps(build):
         pwd = os.getcwd()
         os.chdir("../ips-v3fit")
         os.system("python3 setup.py build")
+        os.chdir(pwd)
         build.run(self)
 
 class install_deps(install):
