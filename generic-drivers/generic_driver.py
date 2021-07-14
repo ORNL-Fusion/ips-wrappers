@@ -95,7 +95,7 @@ import shutil
 import math
 from ipsframework import Component
 from netCDF4 import *
-from get_IPS_config_parameters import get_global_param, get_component_param
+from ips_component_utilities.get_IPS_config_parameters import get_global_param, get_component_param
 
 
 class generic_driver(Component):

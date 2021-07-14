@@ -101,8 +101,8 @@ import getopt
 import shutil
 import string
 from ipsframework import Component
-from get_IPS_config_parameters import get_global_param, get_component_param
-from simple_file_editing_functions import get_lines, lines_to_variable_dict
+from ips_component_utilities.get_IPS_config_parameters import get_global_param, get_component_param
+from ips_component_utilities.simple_file_editing_functions import get_lines, lines_to_variable_dict
 
 class cql3d(Component):
     def __init__(self, services, config):

@@ -205,7 +205,7 @@ import time
 import datetime
 
 from ipsframework import Component
-from get_IPS_config_parameters import get_global_param, get_component_param
+from ips_component_utilities.get_IPS_config_parameters import get_global_param, get_component_param
 
 # Import the necessary Numeric and netCDF modules
 from netCDF4 import *

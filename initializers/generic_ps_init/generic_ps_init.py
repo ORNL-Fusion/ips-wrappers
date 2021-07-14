@@ -166,8 +166,8 @@ import string
 import datetime
 from ipsframework import Component
 from netCDF4 import *
-from simple_file_editing_functions import put_lines
-from get_IPS_config_parameters import get_global_param, get_component_param
+from ips_component_utilities.simple_file_editing_functions import put_lines
+from ips_component_utilities.get_IPS_config_parameters import get_global_param, get_component_param
 
 component_dict = {'PLASMA':10, 'EQ':2, 'NBI':9, 'IC':6, 'LH':7, 'EC':2,\
              'RUNAWAY':13, 'FUS':4, 'RAD':11, 'GAS':5, 'LMHD':8, 'RIPPLE':12, 'ANOM':1}
