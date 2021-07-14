@@ -9,7 +9,6 @@ OBJS = $(F90_SRC:%.f90=%.o)
 F90_MOD_INCLUDE =  $(F90_MOD_INCLUDE_PREFIX). $(F90_MOD_INCLUDE_PREFIX)$(IPS_ROOT)/include
 
 EXECUTABLES = generic_ps_init
-SCRIPTS = generic_ps_init.py
 
 TARGETS =  $(EXECUTABLES)
 
@@ -27,7 +26,7 @@ generic_ps_init: generic_ps_init.o
 	$(F90) -o $@ $@.o $(LIBS)
 
 install:
-	-$(INSTALL) $(EXECUTABLES) $(SCRIPTS) $(IPS_ROOT)/bin
+	-$(INSTALL) $(EXECUTABLES) $(DESTDIR)/bin
 
 clean:
 	$(RM) *.a *.mod *.o $(EXECUTABLES)

@@ -10,7 +10,6 @@ OBJS = $(F90_SRC:%.f90=$(OBJDIR)/%.o) $(F_SRC:%.f=$(OBJDIR)/%.o)
 F90_MOD_INCLUDE =  $(F90_MOD_INCLUDE_PREFIX). $(F90_MOD_INCLUDE_PREFIX)$(IPS_ROOT)/include $(F90_INCLUDE_PREFIX)$(NETCDFHOME)/include
 
 EXECUTABLES = prepare_cql3d_input process_cql3d_output
-SCRIPTS = fp_cql3d_general.py
 
 TARGETS = $(EXECUTABLES) 
 
@@ -31,7 +30,7 @@ process_cql3d_output: process_cql3d_output.o
 	$(F90) -o $@ $^ $(LIBS)
 
 install:
-	$(INSTALL) $(EXECUTABLES) $(SCRIPTS) $(IPS_ROOT)/bin
+	$(INSTALL) $(EXECUTABLES) $(DESTDIR)/bin
 
 clean:
 	$(RM) $(OBJS) *.a *.mod $(TARGETS)

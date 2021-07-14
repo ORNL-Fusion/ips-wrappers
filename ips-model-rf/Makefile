@@ -9,7 +9,6 @@ OBJS = $(F90_SRC:%.f90=$(OBJDIR)/%.o) $(F95_SRC:%.f95=$(OBJDIR)/%.o)
 F90_MOD_INCLUDE =  $(F90_MOD_INCLUDE_PREFIX). $(F90_MOD_INCLUDE_PREFIX)$(IPS_ROOT)/include $(F90_MOD_INCLUDE_PREFIX)$(NETCDFHOME)/include
 
 EXECUTABLES = model_RF_IC model_RF_IC_2 model_RF_IC_2_mcmd py_model_RF_IC_2_mcmd zero_RF_IC_power zero_RF_EC_power model_RF_IC_3 load_mdescr_sconfig
-SCRIPTS = model_RF_IC.py model_RF_IC_2.py model_RF_IC_2_mcmd.py py_model_RF_IC_2_mcmd.py model_RF_IC_3.py
 
 TARGETS =  $(EXECUTABLES)
 
@@ -40,7 +39,7 @@ load_mdescr_sconfig: load_mdescr_sconfig.o
 	$(F90) -o $@  $@.o $(LIBS)
 
 install:
-	$(INSTALL) $(EXECUTABLES) $(SCRIPTS) $(IPS_ROOT)/bin
+	$(INSTALL) $(EXECUTABLES) $(DESTDIR)/bin
 
 clean:
 	$(RM) $(OBJS) *.a *.mod $(TARGETS)

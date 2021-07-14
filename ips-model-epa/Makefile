@@ -17,7 +17,6 @@ F90_MOD_INCLUDE =  $(F90_MOD_INCLUDE_PREFIX). $(F90_MOD_INCLUDE_PREFIX)$(IPS_ROO
 #LIBS = $(PLASMA_STATE_LIB) $(NTCCLIB) $(MDSPLUSLIB) $(NETCDFLIB) $(LAPACKLIB) -L$(IPS_ROOT)/lib -lswim-utils
 
 EXECUTABLES = model_epa model_epa_ps_file_init model_epa_ps_file_init_no_RF model_EPA_mdescr
-SCRIPTS = model_epa.py model_epa_ps_init.py model_epa_ps_file_init.py  py_model_epa_ps_init.py model_epa_ps_file_init_no_RF.py model_EPA_mdescr.py
 
 TARGETS = $(EXECUTABLES)
 
@@ -44,7 +43,7 @@ model_EPA_mdescr:model_EPA_mdescr.o
 	$(F90) -o $@ $@.o $(LIBS)
 
 install:
-	$(INSTALL) $(EXECUTABLES) $(SCRIPTS) $(IPS_ROOT)/bin
+	$(INSTALL) $(EXECUTABLES) $(DESTDIR)/bin
 
 clean:
 	$(RM) $(OBJS) *.a *.mod $(TARGETS)

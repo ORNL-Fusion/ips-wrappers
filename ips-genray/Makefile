@@ -11,7 +11,6 @@ F90_MOD_INCLUDE =  $(F90_MOD_INCLUDE_PREFIX). $(F90_MOD_INCLUDE_PREFIX)$(IPS_ROO
 
 #BH130927:EXECUTABLES = prepare_genray_input process_genray_output process_genray_output_mcmd 
 EXECUTABLES = prepare_genray_input process_genray_output
-SCRIPTS = rf_genray.py genray_xmhd.py rf_genray_LH.py rf_genray_EC.py rf_genray_EC_p.py rf_genray_EC_dbb.py
 
 TARGETS = $(EXECUTABLES) 
 
@@ -35,14 +34,14 @@ process_genray_output: process_genray_output.o bcast.o
 #BH130927:	$(F90) -o $@ $^ $(LIBS)
 
 install:
-	$(INSTALL) $(EXECUTABLES) $(SCRIPTS) $(IPS_ROOT)/bin
+	$(INSTALL) $(EXECUTABLES) $(DESTDIR)/bin
 
 clean:
 	$(RM) $(OBJS) *.a *.mod $(TARGETS)
 
 distclean: clean 
 	$(RM) .depend
-	
+
 .depend: $(F90MOD_SRC) $(F90_SRC)
 	$(MAKEDEPF90) -b . $(F90MOD_SRC) $(F90_SRC) > $@
 
