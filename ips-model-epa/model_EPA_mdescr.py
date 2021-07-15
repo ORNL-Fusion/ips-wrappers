@@ -105,7 +105,7 @@ class model_EPA_mdescr(Component):
 
         self.services.stage_input_files(self.INPUT_FILES)
         cur_state_file = get_global_param(self, services,'CURRENT_STATE')
-        bin = os.path.join(self.BIN_PATH, 'model_EPA_mdescr')
+        bin = 'model_EPA_mdescr'
 
         print('Executing ', [bin, cur_state_file, 'INIT', timeStamp])
         retcode = subprocess.call([bin, cur_state_file, 'INIT', timeStamp])
@@ -219,7 +219,7 @@ class model_EPA_mdescr(Component):
             self.put_lines('model_EPA_mdescr_input.nml', lines)
 
 # Call model_EPA_mdescr
-        bin = os.path.join(self.BIN_PATH, 'model_EPA_mdescr')
+        bin = 'model_EPA_mdescr'
         print('Executing ', [bin, cur_state_file, 'STEP', timeStamp])
         retcode = subprocess.call([bin, cur_state_file, 'STEP', timeStamp])
         if (retcode != 0):

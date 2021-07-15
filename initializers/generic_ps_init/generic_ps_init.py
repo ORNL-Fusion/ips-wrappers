@@ -336,7 +336,7 @@ class generic_ps_init (Component):
                     nml_lines.append('/\n')
                     put_lines('generic_ps_init.nml', nml_lines)
 
-                    init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
+                    init_bin = 'generic_ps_init'
                     print('Executing ', init_bin)
                     retcode = subprocess.call(init_bin)
                     if (retcode != 0):
@@ -406,7 +406,7 @@ class generic_ps_init (Component):
                 nml_lines.append('/\n')
                 put_lines('generic_ps_init.nml', nml_lines)
 
-                init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
+                init_bin = 'generic_ps_init'
                 print('Executing ', init_bin)
                 retcode = subprocess.call(init_bin)
                 if (retcode != 0):

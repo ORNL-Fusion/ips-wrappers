@@ -135,11 +135,9 @@ class cql3d(Component):
     # later
 
         NPROC = get_component_param(self, services, 'NPROC')
-        BIN_PATH = get_component_param(self, services, 'BIN_PATH')
         INPUT_FILES = get_component_param(self, services, 'INPUT_FILES')
         OUTPUT_FILES = get_component_param(self, services, 'OUTPUT_FILES')
         RESTART_FILES = get_component_param(self, services, 'RESTART_FILES')
-        BIN_PATH = get_component_param(self, services, 'BIN_PATH')
         CQL3D_BIN = get_component_param(self, services, 'CQL3D_BIN')
         cql3d_mode = get_component_param(self, services, 'CQL3D_MODE')
         cql3d_output = get_component_param(self, services, 'CQL3D_OUTPUT')
@@ -221,7 +219,7 @@ class cql3d(Component):
                 services.error('Error copying cur_dql_file -> genray.nc')
                 raise Exception('Error copying cur_dql_file -> genray.nc')
 
-        prepare_input_bin = os.path.join(self.BIN_PATH, 'prepare_cql3d_input')
+        prepare_input_bin = 'prepare_cql3d_input'
 
     # Call prepare_input - init
         print('fp_cql3d: calling prepare_input init')        
@@ -348,9 +346,8 @@ class cql3d(Component):
            raise Exception('Error in cql3d: step (): No services')
         services = self.services
 
-        prepare_input_bin = os.path.join(self.BIN_PATH, 'prepare_cql3d_input')
-        process_output_bin  = os.path.join(self.BIN_PATH, 'process_cql3d_output')
-        cql3d_bin = os.path.join(self.BIN_PATH, 'cql3d')
+        prepare_input_bin = 'prepare_cql3d_input'
+        process_output_bin  = 'process_cql3d_output'
 
     # Copy plasma state files over to working directory
         try:

@@ -86,8 +86,8 @@ change log:
 import sys
 import os
 
-from plt_XY_Curves import *
-from simple_config import *
+from ips_monitor.plt_XY_Curves import *
+from ips_monitor.simple_config import *
 #from Scientific.IO.NetCDF import *
 #from scipy.io.netcdf import *
 from netCDF4 import *

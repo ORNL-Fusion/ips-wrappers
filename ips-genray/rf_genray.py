@@ -323,7 +323,6 @@ class genray(Component):
         INPUT_FILES = get_component_param(self, services, 'INPUT_FILES')
         OUTPUT_FILES = get_component_param(self, services, 'OUTPUT_FILES')
         RESTART_FILES = get_component_param(self, services, 'RESTART_FILES')
-        BIN_PATH = get_component_param(self, services, 'BIN_PATH')
         GENRAY_BIN = get_component_param(self, services, 'GENRAY_BIN')
         RFMODE = get_component_param(self, services, 'RFMODE')
         ISOURCE_STRING = get_component_param(self, services, 'ISOURCE_STRING')
@@ -383,7 +382,7 @@ class genray(Component):
             services.error('Error copying cur_eqdsk_file -> eqdsk')
             raise Exception('Error copying cur_eqdsk_file -> eqdsk')
 
-        prepare_input_bin = os.path.join(self.BIN_PATH, 'prepare_genray_input')
+        prepare_input_bin = 'prepare_genray_input'
 
         rfmode = self.RFMODE
         isource_string = self.ISOURCE_STRING
@@ -526,9 +525,8 @@ class genray(Component):
         services = self.services
         global programming, times_parameters_list
 
-        prepare_input_bin = os.path.join(self.BIN_PATH, 'prepare_genray_input')
-        process_output_bin = os.path.join(
-            self.BIN_PATH, 'process_genray_output')
+        prepare_input_bin = 'prepare_genray_input'
+        process_output_bin = 'process_genray_output'
 
     # Copy plasma state files over to working directory
         try:

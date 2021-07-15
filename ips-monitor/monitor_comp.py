@@ -1121,7 +1121,7 @@ class monitor(Component):
         services.stage_state()
         cur_state_file = services.get_config_param('CURRENT_STATE')
 
-        monitor = os.path.join(self.BIN_PATH, 'monitor_comp')
+        monitor = 'monitor_comp'
 
     # Call Load new data into monitor file
         retcode = self.update_monitor_file(cur_state_file, timeStamp)
