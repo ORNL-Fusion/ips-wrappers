@@ -13,7 +13,7 @@ import shutil
 import math
 from component import Component
 from netCDF4 import *
-import Numeric
+#import Numeric
 
 
 class generic_driver(Component):
