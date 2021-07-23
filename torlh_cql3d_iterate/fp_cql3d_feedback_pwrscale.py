@@ -6,7 +6,6 @@ Adapted from fp_cql3d_general.py to support iteration of pwrscale parameter.
 The actual iteration logic is in the driver -> driver_torlh_iterate_pwrscale.py
 
 """
-from __future__ import print_function
 
 #**********************************************************
 # Working notes
@@ -116,8 +115,7 @@ import getopt
 import shutil
 import string
 from  component import Component
-#from Numeric import *                        #Use numpy instead?? BH
-from Scientific.IO.NetCDF import *           #Use scipy.io.netcdf implentation??  BH
+#from Scientific.IO.NetCDF import *           #Use scipy.io.netcdf implentation??  BH
 
 class cql3d(Component):
     def __init__(self, services, config):
@@ -310,7 +308,7 @@ class cql3d(Component):
      
     # Archive output files
     # N.B.  prepare_cql3d_input in init mode does not produce a complete set 
-    #       of ourput files.  This causes an error in stage_output_files().
+    #       of output files.  This causes an error in stage_output_files().
     #       To solve this we generate a dummy set of output files here with 
     #       system call 'touch'
         for file in self.OUTPUT_FILES.split():
@@ -341,8 +339,6 @@ class cql3d(Component):
          print('Error in cql3d: step (): No services')
          services.error('Error in cql3d: step (): No services')
          raise Exception('Error in cql3d: step (): No services')
-
-#ptb&SS      services = self.services
 
     # Get restart files listed in config file.        
       try:
