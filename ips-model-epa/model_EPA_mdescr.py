@@ -4,7 +4,7 @@
 model_EPA_mdescr.py version 1.1 3/31/2017 (Batchelor)
 
 EPA component script to drive model_EPA_mdescr_mdescr.f90 executable.  See comment header
-in model_EPA_mdescr_mdescr.f90 for details.  
+in model_EPA_mdescr_mdescr.f90 for details.
 
 Note: Time evolution for the models is implemented in this script.  The fortran,
       model_EPA_mdescr_mdescr.f90, generates profiles and communicates with plasma state.
@@ -26,7 +26,7 @@ The names of the parameters to be evolved, the name of the time dependance model
 parameters of the evolution models are specified in the [[EPA]] section of the simulation
 configuration file.  The list of changeable parameters is in parameterList below.
 
-Specification of a parameter to be evolved requires a line in the configuration file of 
+Specification of a parameter to be evolved requires a line in the configuration file of
 the form:
 
 <parameter>_DT_model = <model name>    (e.g. Te_0_DT_model = ramp_initial_to_final)
@@ -36,7 +36,7 @@ There must also be a line giving the parameters of the evolution model of the fo
 <parameter>_DT_params = <space separated list of values of the parameters of the evolution model>
 
 (e.g. Te_0_DT_params = <time to start ramp> <time to end ramp> <final temperature>
-N.B. We expect to get the intial value of the parameter from the initial input 
+N.B. We expect to get the intial value of the parameter from the initial input
      namelist file model_EPA_mdescr_input.nml)
 
 Eventually I should make these keyword based, but for now you just have to know what the
@@ -54,7 +54,7 @@ The list of evolution models implemented so far is very short, two:
 
 # 9-12-2019
 # Eliminated import get_lines, put_lines, edit_nml_file, get_global_param, and
-# get_component_param.  Get these from /ips-wrappers/utilities.  Needs to be on 
+# get_component_param.  Get these from /ips-wrappers/utilities.  Needs to be on
 # PYTHON_PATH.
 
 # 3-31-2017
@@ -118,7 +118,7 @@ class model_EPA_mdescr(Component):
 
 # Update (original) plasma state
         services.update_plasma_state()
-        
+
 # "Archive" output files in history directory
         services.stage_output_files(timeStamp, self.OUTPUT_FILES)
 
@@ -166,8 +166,8 @@ class model_EPA_mdescr(Component):
                             'ramp_initial_to_final': self.ramp_initial_to_final}
         print(' ')
         print('evolution_models = ', list(evolution_models.keys()))
-        
-        # Look in config file for parameters to evolve, get the evolution model and its  
+
+        # Look in config file for parameters to evolve, get the evolution model and its
         # arguments
         params_to_change = False
         for param in parameterList:
@@ -176,48 +176,48 @@ class model_EPA_mdescr(Component):
             if model_name != None:
                 model_name = model_name.strip()
                 params_to_change = True
-        
+
                 if model_name == 'ramp_initial_to_final':
                     print('model_EPA_mdescr: ramp_initial_to_final')
                     DT_paramsList = get_component_param(self, services, param + '_DT_params').split()
                     t_initial = float(DT_paramsList[0])
                     t_final = float(DT_paramsList[1])
-                    
+
                     # Get initial value of parameter from the initial namelist file
-                    Value_init = read_var_from_nml_lines(self, initial_nml_Lines, param, separator = ',')
+                    Value_init = read_var_from_nml_lines(initial_nml_Lines, param, separator = ',')
                     print('intial '+param, ' = ', Value_init)
-                    
+
                     #Value_init = float(DT_paramsList[2])
                     Value_final = float(DT_paramsList[2])
                     print('t_initial = ',t_initial, ' t_final = ', t_final,\
                     '  Value_init =  ', Value_init, '  Value_final =  ', Value_final)
                     newValue = self.ramp_initial_to_final(float(timeStamp), t_initial,\
                                t_final, Value_init, Value_final)
-        
+
                 if model_name == 'exp_initial_to_final':
                     print('model_EPA_mdescr: exp_initial_to_final')
                     DT_paramsList = get_component_param(self, services, param + '_DT_params').split()
                     t_initial = float(DT_paramsList[0])
                     tau = float(DT_paramsList[1])
                     Value_final = float(DT_paramsList[2])
-                    
+
                     # Get initial value of parameter from the initial namelist file
-                    Value_init = read_var_from_nml_lines(self, initial_nml_Lines, param, separator = ',')
+                    Value_init = read_var_from_nml_lines(initial_nml_Lines, param, separator = ',')
                     print('intial '+param, ' = ', Value_init)
-                    
+
                     print('t_initial = ',t_initial, \
                     '  Value_init =  ', Value_init, '  Value_final =  ', Value_final)
-                    
+
                     newValue = self.exp_initial_to_final(float(timeStamp), t_initial,\
                                tau, Value_init, Value_final)
-                               
+
                 print('t = ', float(timeStamp), ' ', param, ' = ', newValue)
                 # modify that parameter in namelist file
-                lines = self.edit_nml_file(inputLines, param, [newValue], separator = ',')
-        
-        # write modified namelist file        
+                lines = edit_nml_file(inputLines, param, [newValue], separator = ',')
+
+        # write modified namelist file
         if params_to_change:
-            self.put_lines('model_EPA_mdescr_input.nml', lines)
+            put_lines('model_EPA_mdescr_input.nml', lines)
 
 # Call model_EPA_mdescr
         bin = os.path.join(self.BIN_PATH, 'model_EPA_mdescr')
@@ -260,17 +260,17 @@ class model_EPA_mdescr(Component):
             print(message)
             services.exception(message)
             raise
-        
+
         if t <= t0: return f0
         if t <= t1: return f0 + (f1 - f0)*(t - t0)/(t1 - t0)
         if t > t1:  return f1
 
     # f = f0 for t < t0, f= f1*(1 - exp((t-t0)/tau) ) for t >  t1
     def exp_initial_to_final(self, t, t0, tau, f0, f1):
-        
+
         if t <= t0: return f0
         if t > t0: return f1*(1.0 - math.exp(-(t - t0)/tau) )
-        
+
     # Linear time advance f(timestamp) = f(t0) + (timestamp - t0)*DT
     def linear_DT(self, f0, t, t0, DT):
         return f0 + (t - t0)*DT
