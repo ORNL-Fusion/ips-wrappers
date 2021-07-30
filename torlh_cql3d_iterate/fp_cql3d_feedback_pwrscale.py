@@ -115,7 +115,7 @@ import getopt
 import shutil
 import string
 from  component import Component
-#from Scientific.IO.NetCDF import *           #Use scipy.io.netcdf implentation??  BH
+from netCDF4 import *
 
 class cql3d(Component):
     def __init__(self, services, config):
@@ -412,8 +412,11 @@ class cql3d(Component):
 
 # Check if LHRF power is zero (or effectively zero).  If true don't run Genray
 
-        ps = NetCDFFile(cur_state_file, 'r')
-        power_lh = ps.variables['power_lh'].getValue()[0]
+        ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
+        power_lh = ps.variables['power_lh'][0]
+
+#        ps = NetCDFFile(cur_state_file, 'r')
+#        power_lh = ps.variables['power_lh'].getValue()[0]
         ps.close()
         print('power = ', power_lh)
         if(power_lh > 1.0E-04):
