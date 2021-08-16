@@ -123,6 +123,7 @@ import shutil
 import string
 from  component import Component
 from netCDF4 import *
+from simple_file_editing_functions import get_lines, lines_to_variable_dict
 
 class cql3d(Component):
     def __init__(self, services, config):
