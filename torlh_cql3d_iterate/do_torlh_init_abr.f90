@@ -76,7 +76,6 @@ PROGRAM do_torlh_init
   INQUIRE(inp_unit, exist=lex)
   IF (lex) THEN
      READ(inp_unit, nml = toricainp)
-     READ(inp_unit, nml = nonthermals)
   ELSE
      WRITE(*,*) &
           'machine.inp does not exist or there was a read error'

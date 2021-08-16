@@ -153,6 +153,7 @@ class cql3d(Component):
     # later
         try:
             NPROC = self.NPROC
+            NPPN = self.NPPN
             BIN_PATH = self.BIN_PATH
             INPUT_FILES = self.INPUT_FILES
             OUTPUT_FILES = self.OUTPUT_FILES
@@ -415,8 +416,6 @@ class cql3d(Component):
         ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
         power_lh = ps.variables['power_lh'][0]
 
-#        ps = NetCDFFile(cur_state_file, 'r')
-#        power_lh = ps.variables['power_lh'].getValue()[0]
         ps.close()
         print('power = ', power_lh)
         if(power_lh > 1.0E-04):
@@ -496,12 +495,16 @@ class cql3d(Component):
 #     Launch cql3d - N.B: Path to executable is in config parameter CQL3D_BIN
           print('fp_cql3d: launching cql3d')
           cwd = services.get_working_dir()
-          task_id = services.launch_task(self.NPROC, cwd, self.CQL3D_BIN, task_ppn=10, logfile='log.cql3d')
+          task_id = services.launch_task(self.NPROC, cwd, self.CQL3D_BIN, task_ppn=self.NPPN, logfile='log.cql3d')
           retcode = services.wait_task(task_id)
+
+#          command = 'srun -N 12 -n 64  -c 6 /project/projectdirs/m77/CompX/CQL3D/master/xcql3d_mpi_intel.cori 2>>log.stdErr 1>>log.stdOut'
+#          retcode = subprocess.call(command.split(), stdout = log_file,\
+#                                    stderr = subprocess.STDOUT)
           if (retcode != 0):
               print('Error executing command: ', cql3d_bin)
-             # services.error('Error executing cql3d')
-             # raise Exception, 'Error executing cql3d'
+              services.error('Error executing cql3d')
+              raise
 
 # If this is the first step in a pwrscale iteration, and restart = 'disabled' (i.e. this
 # is first time cql3d has run) save the cql3d.nc file to initial_distrfunc.nc.   

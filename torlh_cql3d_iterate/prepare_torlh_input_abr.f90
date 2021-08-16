@@ -70,6 +70,7 @@
       character(10):: arg_inumin_Mode = 'Maxwell'
       character(1):: arg_isol_Mode = '1'
       character(16):: arg_enorm = 'None'
+      character(16):: arg_npar = 'None' !sfrnk
 
 !------Namelist inputs-------------
 ! see the rf component write-up in the svn repository for more description of
@@ -129,15 +130,17 @@
 !  ~~~~~~~~~~~~~~~~~
       integer, parameter :: max_runs = 50    !max number of nphi
       character(80), dimension(:) :: files_toric(max_runs)
-      character(80) :: path, file_felice
-      integer :: num_runs, nfel_nphi, iread_felice
-      integer :: nteq, nch, iairy, inotres, iwrite=0
-      real(rspec) :: d_u, d_psi, enorm=0._rspec, uasp=1.0, pwtot=1.0
-      real(rspec) :: deltapsi, iphaseref
+      character(80) :: path, file_felice, smooth, consv
+      character(80) :: sumtrunc
+      integer :: num_runs, nfel_nphi, iread_felice, npsi_qld
+      integer :: wndwtrunc
+      real(rspec) :: d_u, enorm=0._rspec, uasp=1.0, pwtot=1.0
+      real(rspec) :: deltapsi,ntres
       real(rspec) :: psi_min, psi_max
       real(rspec) :: u_extr = 10._rspec
-      real(rspec):: uperp0
-
+      real(rspec), dimension(:) :: pw_nphi(max_runs),psimap(51), &
+                                   phimap(51)
+      
 ! Namelist inputs for control of the output, most are off to avoid too much data dumped
       integer ::   iout=0, ipltht=0, idlout=1
 ! NetCDF output for plots on by default.  torica.sol file has solutions but not necessarily
@@ -188,6 +191,7 @@
      &                         (/10._rspec,10._rspec,10._rspec,10._rspec/)
       real(rspec) ::  dist_plafars=0._rspec, dist_plaant=0.5_rspec
       real(rspec) ::  so_thickness=0.5_rspec
+      real(rspec) :: gldn=0.5_rspec,glte=0.5_rspec
 
 ! Namelist /TORICAINP/ inputs specifically for TORLH (added by DBB 8/22/16 re J. Lee)
       integer :: IJRF = 2   !option for current drive estimation
@@ -262,10 +266,10 @@
 
 ! originally in t0_mod_qldce.F
       namelist /qldceinp/ &
-     &     num_runs, path, iread_felice, files_toric, file_felice, &
-     &     d_u, u_extr, d_psi, psi_min, psi_max, enorm, iwrite,  &
-     &     nteq, nch, inotres, iairy, deltapsi, uasp, pwtot,  &
-     &     iphaseref
+     &     num_runs, path, iread_felice, files_toric,  &
+     &     file_felice, d_u, psi_min, psi_max, npsi_qld, enorm, &
+     &     ntres, deltapsi, uasp, pw_nphi, pwtot, psimap, phimap, &
+     &     smooth, consv, sumtrunc, wndwtrunc
 !uasp yet to be validated, do not use this option in production JCW 22 JUNE 2011
 !enorm if non zero puts qldce on a momentum space mesh as used by CQL3D
 !otherwise qldce is on a v/vte mesh.
@@ -283,7 +287,8 @@
 !      &   nspec, iudsym, mainsp, atm,  azi, so_thickness,  &
 !      &   dist_plafars,   dist_plaant,    dist_plawall,  &
 !      &   inputpath,      equil_file,     profnt_file
-     &   nspec, mainsp, atm,  azi, so_thickness,  &
+     &   GLDN, GLTE, GLTI, &   
+     &   nspec, mainsp, atm,  azi, so_thickness,  &   
      &   dist_plafars,   dist_plaant,    dist_plawall,  &
      &   equil_file,     profnt_file
 
@@ -533,7 +538,7 @@
          
          toricmode = trim(arg_toric_Mode)
          if (toricmode == 'qldce') then
-            toricmode = 'qldce2'
+            toricmode = 'qldce'
          endif
          
 		 if (trim(arg_inumin_Mode) == 'Maxwell') then
@@ -552,7 +557,41 @@
 		 else
 			write (*,*) 'prepare_torlh_input_abr: unknown arg_isol_Mode = ', arg_isol_Mode
 			stop
+                 end if
+
+      case(6)
+         call get_arg(1,cur_state_file)
+         call get_arg(2,arg_toric_Mode)
+         call get_arg(3,arg_inumin_Mode)
+         call get_arg(4,arg_isol_Mode)
+         call get_arg(5,arg_enorm)
+         call get_arg(6,arg_npar)
+         
+         toricmode = trim(arg_toric_Mode)
+         if (toricmode == 'qldce') then
+            toricmode = 'qldce'
+         endif
+         
+		 if (trim(arg_inumin_Mode) == 'Maxwell') then
+			inumin = INUMIN_Maxwell
+		 else if (trim(arg_inumin_Mode) == 'nonMaxwell') then
+			inumin = INUMIN_nonMaxwell
+		 else
+			write (*,*) 'prepare_torlh_input_abr: unknown arg_inumin_Mode = ', arg_inumin_Mode
+			stop
 		 end if
+
+		 if (trim(arg_isol_Mode) == '0') then
+			isol = 0
+		 else if (trim(arg_isol_Mode) == '1') then
+			isol = 1
+		 else
+			write (*,*) 'prepare_torlh_input_abr: unknown arg_isol_Mode = ', arg_isol_Mode
+			stop
+                 end if
+                 
+                               
+
 
       case(2:3)
          write(0,*) 'Error. Illegal number of arguments.'
@@ -563,7 +602,7 @@
        	 		arg_isol_Mode, arg_enorm'
        	 stop 'incorrect command line arguments'
 
-      case(6:)
+      case(7:)
          write(0,*) 'Error. Illegal number of arguments.'
          write(0,*) 'prepare torlh usage: '
        	 write(0,*) 'zero args: uses default state file name'
@@ -607,7 +646,7 @@
               form='formatted')
       INQUIRE(inp_unit, exist=lex)
       IF (lex) THEN
-         IF (trim(toricmode) == 'qldce2') THEN
+         IF (trim(toricmode) == 'qldce') THEN
              write (*,*) 'reading namelist qldceinp'
        			 read(inp_unit, nml = qldceinp)
        			 !WRITE (*, nml = qldceinp)
@@ -616,7 +655,6 @@
 
          read(inp_unit, nml = toricainp)
          read(inp_unit, nml = equidata)
-         read(inp_unit, nml = nonthermals)
       ELSE
          write(*,*) &
             'machine.inp does not exist or there was a read error'
@@ -631,12 +669,21 @@
 
       freqcy = ps%freq_lh(isrc) !Hz
       pwtot =  ps%power_lh(isrc) !watts
-
+      
 	  if (trim(arg_enorm) /= 'None') then
 		read(arg_enorm,*) enorm
 	  end if
 
+          if (trim(arg_npar) /= 'None') then
+                read(arg_npar,*) anzedg
+          end if
+!SF Overwrite psimap and phimap if in qldce mode
+      IF (trim(toricmode) == 'qldce') THEN
+         phimap = ps%rho
+         psimap = sqrt(ps%psipol/ps%psipol(ps%nrho))        
+      END IF   
 
+          
 !radial profiles generation, these are output to equilequ_file
       s_nrho_n = ps%nrho
       s_nrho_t = ps%nrho
@@ -706,6 +753,7 @@
       WRITE (*,*) 'isol = ', isol
       WRITE (*,*) 'pwtot = ', pwtot
       WRITE (*,*) 'enorm = ', enorm
+      WRITE (*,*) 'npar = ', anzedg
 
       write(out_unit, nml = toric_mode)
       write(out_unit, nml = qldceinp)
@@ -749,7 +797,7 @@
 !
      do irho = 1,nprodt-1
         x_orig(irho) = 0.5 * (ps%rho(irho) + ps%rho(irho+1))
-      end do
+     end do
 ! PTB end
 
 ! TORIC uses only one radial mesh for density and temperature profiles that is
