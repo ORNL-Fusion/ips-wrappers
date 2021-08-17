@@ -540,10 +540,19 @@ class cql3d(Component):
           retcode = subprocess.call(command.split(), stdout = log_file,\
                                     stderr = subprocess.STDOUT)                                  
           if (retcode != 0):
-              print('Error executing cql3d init ', process_output_bin)
+              print('Error executing cql3d cql3d process_output ', process_output_bin)
               services.error('Error executing cql3d process_output')
               raise Exception('Error executing cql3d process_output')
-        
+
+# Copy cql3d_output_file to cql3d.nc which is the filename that imchizz is expecting  
+          try:
+              shutil.copyfile(cql3d_output_file, 'cql3d.nc' )
+          except IOError as xxx_todo_changeme2:
+              (errno, strerror) = xxx_todo_changeme2.args
+              print('Error copying file %s to %s' % (cql3d_output_file, 'cql3d.nc', strerror))
+              raise
+
+   
     # Copy generic cql3d partial plasma state file -> FP_CQL3D_cur_state_file  [correct??, BH]
           try:
               partial_file = cwd + '/FP_CQL3D_' + cur_state_file
