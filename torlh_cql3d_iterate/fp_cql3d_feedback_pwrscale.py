@@ -10,6 +10,13 @@ The actual iteration logic is in the driver -> driver_torlh_iterate_pwrscale.py
 #**********************************************************
 # Working notes
 #**********************************************************
+#
+# Version 0.2 Batchelor 8-16-2021
+# Added coding to read the cqlinput file, extract mnemonic <--> cql3d_output_file and
+# add that as a command line argument to process_cql3d_output.f90.  This coding is lifted
+# from fp_cql3d_general.py which was added there on 2-19-2020.
+
+
 # Version 0.1 Batchelor 9-17-2017
 # Added coding so that each cql3d run inside a pwrscale iteration starts from the final
 # distribution function of the previous outer iteration
@@ -116,6 +123,7 @@ import shutil
 import string
 from  component import Component
 from netCDF4 import *
+from simple_file_editing_functions import get_lines, lines_to_variable_dict
 
 class cql3d(Component):
     def __init__(self, services, config):
@@ -515,9 +523,15 @@ class cql3d(Component):
 
     # Call process_output - step
           print('fp_cql3d step: calling process_output')          
+
+# Get cql3d_output_file file name <--> mnemonic from cqlinput file
+          lines = get_lines('cqlinput')
+          cql3d_output_file = lines_to_variable_dict(lines)['MNEMONIC'].strip("'") + ".nc"
+          print('cql3d_output_file = ', cql3d_output_file)
+  
           log_file = open('log_process_cql3d_output', 'w')
           mode = 'step'
-          command = process_output_bin + ' ' +  cql3d_output    
+          command = process_output_bin + ' ' +  cql3d_output+ ' ' +  cql3d_output_file   
 
           print('running', command)
           services.send_portal_event(event_type = 'COMPONENT_EVENT',\
@@ -526,10 +540,19 @@ class cql3d(Component):
           retcode = subprocess.call(command.split(), stdout = log_file,\
                                     stderr = subprocess.STDOUT)                                  
           if (retcode != 0):
-              print('Error executing cql3d init ', process_output_bin)
+              print('Error executing cql3d cql3d process_output ', process_output_bin)
               services.error('Error executing cql3d process_output')
               raise Exception('Error executing cql3d process_output')
-        
+
+# Copy cql3d_output_file to cql3d.nc which is the filename that imchizz is expecting  
+          try:
+              shutil.copyfile(cql3d_output_file, 'cql3d.nc' )
+          except IOError as xxx_todo_changeme2:
+              (errno, strerror) = xxx_todo_changeme2.args
+              print('Error copying file %s to %s' % (cql3d_output_file, 'cql3d.nc', strerror))
+              raise
+
+   
     # Copy generic cql3d partial plasma state file -> FP_CQL3D_cur_state_file  [correct??, BH]
           try:
               partial_file = cwd + '/FP_CQL3D_' + cur_state_file
