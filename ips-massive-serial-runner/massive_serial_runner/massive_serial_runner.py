@@ -80,6 +80,7 @@ class massive_serial_runner(Component):
                 'LOG_FILE'     : 'log.{}_vmec.warning'.format(self.services.get_config_param('SIM_NAME'))
             }
 
+            self.worker = {}
             (self.worker['sim_name'],
              self.worker['init'],
              self.worker['driver']) = self.services.create_sub_workflow('massive_serial',
