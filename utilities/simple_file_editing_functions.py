@@ -154,7 +154,7 @@ def edit_nml_file(lines, var, values, separator = ','):
             double_quote_index = next_line.find('"')
             if double_quote_index > -1 and double_quote_index < eq_index:
                 test = False
-        elif next_line[-1] == '/':  # At end of line means end of group
+        elif next_line[-2] == '/':  # At end of line means end of group. [-1] is newline
             test = True
         else:
             var_lines += 1
