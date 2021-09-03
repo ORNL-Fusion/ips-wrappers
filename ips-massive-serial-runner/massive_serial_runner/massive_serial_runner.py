@@ -102,6 +102,7 @@ class massive_serial_runner(Component):
         if 'state' in flags and flags['state'] == 'needs_update':
             self.services.call(self.worker['init'], 'init', timeStamp)
             self.services.call(self.worker['driver'], 'init', timeStamp)
+            self.services.call(self.worker['driver'], 'step', timeStamp)
 
             database = 'db_{}.dat'.format(timeStamp)
 
