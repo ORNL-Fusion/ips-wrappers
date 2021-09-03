@@ -78,6 +78,20 @@ class massive_serial_runner(Component):
                 input_ref.extractall()
             os.chdir('../')
 
+#  Setup a subworkflow to to run
+            keys = {
+                'PWD'          : self.services.get_config_param('PWD'),
+                'SIM_NAME'     : '{}_massive_serial'.format(self.services.get_config_param('SIM_NAME')),
+                'LOG_FILE'     : 'log.{}_vmec.warning'.format(self.services.get_config_param('SIM_NAME'))
+            }
+
+            (self.worker['sim_name'],
+             self.worker['init'],
+             self.worker['driver']) = self.services.create_sub_workflow('massive_serial',
+                                                                        self.msr_global_config,
+                                                                        keys,
+                                                                        'input')
+
 #-------------------------------------------------------------------------------
 #
 #  Massive Serial Runner Component step method. Not used.
@@ -90,18 +104,8 @@ class massive_serial_runner(Component):
 
 #  Run the massive serial workflow.
         if 'state' in flags and flags['state'] == 'needs_update':
-            process = subprocess.Popen(['bash',
-                                        self.MASSIVE_SERIAL_EXE,
-                                        self.platform_file,
-                                        self.msr_global_config,
-                                        '{}'.format(timeStamp)],
-                                       env=os.environ)
-#            process = subprocess.Popen(['python3',
-#                                        '{}/ips.py'.format(self.ips_path),
-#                                        '--platform={}'.format(self.platform_file),
-#                                        '--simulation={}'.format(self.msr_global_config),
-#                                        '--log=massive_serial_{}.log'.format(timeStamp)],
-#                                       env=os.environ)
+            self.services.call(self.worker['init'], 'init', timeStamp)
+            self.services.call(self.worker['driver'], 'init', timeStamp)
 
             database = 'db_{}.dat'.format(timeStamp)
 
