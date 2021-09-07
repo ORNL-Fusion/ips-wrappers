@@ -79,7 +79,7 @@ class massive_serial_runner(Component):
 
 #  Setup a subworkflow to to run
             keys = {
-                'PWD'          : self.services.get_config_param('PWD'),
+                'PWD'          : os.getcwd(),
                 'SIM_NAME'     : '{}_massive_serial'.format(self.services.get_config_param('SIM_NAME')),
                 'LOG_FILE'     : 'log.{}_vmec.warning'.format(self.services.get_config_param('SIM_NAME'))
             }
