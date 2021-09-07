@@ -10,6 +10,7 @@ from ipsframework import Component
 from ips_component_utilities import ZipState
 from ips_component_utilities import ScreenWriter
 import os
+import shutil
 import json
 import subprocess
 import math
@@ -68,7 +69,9 @@ class massive_serial_runner(Component):
 #  the orginal working directory after extraction.
             self.zip_ref.extract('input.zip')
             os.makedirs('input')
+
             os.chdir('input')
+	    shutil.copyfile(self.msr_model_config, 'input')
             with ZipState.ZipState('../input.zip', 'r') as input_ref:
                 input_ref.extractall()
             os.chdir('../')
