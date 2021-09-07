@@ -71,6 +71,7 @@ class massive_serial_runner(Component):
             os.makedirs('input')
 
             shutil.copy(self.msr_config, 'input')
+            shutil.copy(self.msr_platform_conf, 'input')
             os.chdir('input')
             with ZipState.ZipState('../input.zip', 'r') as input_ref:
                 input_ref.extractall()
