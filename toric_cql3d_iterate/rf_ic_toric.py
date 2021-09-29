@@ -1,46 +1,34 @@
 #! /usr/bin/env python
 
 """
-TORLH component.  Adapted from rf_lh_torlh.py. (7-24-2015)
+TORLH component.  Adapted from RF_LH_toric_abr_mcmd.py. (5-14-2016)
 
 """
 from __future__ import print_function
-# Working notes:  DBB 10-5-2017 
-# Because of random crashes on EDISON, we had previously introduced config parameter 
-# TORLH_TIME_LIMIT so that if TORLH does crash it won't just sit there and burn up the 
-# whole allocation.  Now making that an optional config parameter.
-# Also now adding capability to do multiple tries of TORLH if it crashes or times out.
-# To use this set optional config parameter NUM_TORLH_TRIES > 1.
-
-# Working notes:  DBB 9-22-2017
-# Added config parameter NPROC_QLDCE so that torlh can run in qldce mode with different
-# number of processors than in toric mode.  Added config parameter TORLH_TIME_LIMIT to set
-# a time limit for an individual run of TORLH using Wael's new optional arguments to 
-# services.wait_task()
-#
-# Working notes: DBB 7-28-2017
-# TORLH runs in either of two modes.  
-# toric_Mode = 'toric' -> normal torlh run that solves wave equation
-# toric_Mode = 'tqldce' -> does not solve wave equation, generates QL operator file toric_qlde.cdf
-# This is controlled by optional keyword argument to STEP function 'toric_mode'
-#
-# There are 2 additional keyword args to STEP that set the parameters 'inumin' and 'isol'.
-# These 3 parameters are communicated as command line args to the prepare_torlh_input_abr.f90
-# code, which in turn writes them into the 'torica.inp' file, which is the actual input file
-# to TORLH.
-#  
-# The optional command line arguments to prepare_torlh_input_abr.f90 are:
-# arg_toric_Mode = 'toric' or 'qldce'
-# arg_inumin_Mode = Maxwell (sets inumin = (0,0,0,0)) or nonMaxwell (sets inumin = (3,0,0,0))
-# arg_isol_Mode = 0 or 1 (Normally = 1)
-#
-# The defaults are arg_toric_Mode = 'toric', arg_inumin_Mode = 'Maxwell', arg_isol_Mode = 1
-# So if no keyword args are provided to the call to STEP the component functions as a normal
-# TORLH RF component.
-#
 # Working notes: DBB 5-11-2017
 # Modified to pick up enorm as global config parameter and pass to prepare_torlh_input
 # through a command line argument
+#
+# Working notes: DBB 9-5-2016 (updated 4-17-2017)
+# Modified to run in two modes.  A normal torlh mode in which it acts as a normal IPS
+# component.  There is a new optional config parameter, CQL_COUPLE_MODE.  If this parameter
+# is either absent or == False then in component STEP torlh runs in toricmode with inumin
+# set for Maxwellian inumin = (0,0,0,0).
+#
+# But if optional parameter CQL_COUPLE_MODE = True in the config file then the action is 
+# as follows: 
+# 1) During the INIT do_torlh_init_abr.f90 runs, then torlh runs in toric mode with inumin
+#    set for Maxwellian, inumin = (0,0,0,0), then toric runs in qldce mode, then mapin runs.
+# 2) During STEP ImChizz runs, then torlh runs in toric mode with inumin set for
+#    nonMaxwellian, inumin = (3,0,0,0), then torlh runs in qldce mode, then mapin runs.
+#
+# This requires that some parameters must be adjusted in the torica.inp file:
+# toricmode, inumin, and isol.  This is implemented by using command line arguments
+# to the prepare_torlh_input_abr.f90, which writes the torica.inp file.
+# The optional command line arguments are arg_toric_Mode, arg_inumin_Mode, and arg_isol_Mode.
+# arg_toric_Mode = toric or qldce
+# arg_inumin_Mode = Maxwell or nonMaxwell
+# arg_isol_Mode = 0 or 1 (Normally = 1)
 #
 # Nota Bene: This component uses services.update_plasma_state() which overwrites all state
 # files. To use this in a concurrent simulation should use merge_plasma_state instead.
@@ -97,20 +85,19 @@ from __future__ import print_function
 #      For now this code lives in: /ips/trunk//components/rf/model_RF_LH and it gets built and
 #      installed by the Makefile there.
 
-from builtins import range
 import sys
 import os
 import subprocess
 import getopt
 import shutil
 import string
-import numpy as np
-import scipy.io.netcdf as nc
-import matplotlib.pyplot as plt
-from scipy.interpolate import griddata
-from netCDF4 import *
-#from Scientific.IO.NetCDF import *
 from  component import Component
+#Numeric should be replace by numpy, if needed -JCW
+from Numeric import *
+from Scientific.IO.NetCDF import *
+
+INIT_Complete = False
+CQL_COUPLE_MODE = False
 
 class torlh (Component):
 
@@ -143,21 +130,11 @@ class torlh (Component):
         BIN_PATH = self.try_get_component_param(services,'BIN_PATH')
         RESTART_FILES = self.try_get_component_param(services,'RESTART_FILES')
         NPROC = self.try_get_component_param(services,'NPROC')
-        NPROC_QLDCE = self.try_get_component_param(services,'NPROC_QLDCE', \
+        global CQL_COUPLE_MODE
+        CQL_COUPLE_MODE = self.try_get_component_param(services,'CQL_COUPLE_MODE', \
                                 optional = True)
 
-        self.TORLH_TIME_LIMIT = self.try_get_component_param(services,'TORLH_TIME_LIMIT', \
-                                optional = True)
-        if self.TORLH_TIME_LIMIT == None: 
-            self.TORLH_TIME_LIMIT = -1
-            
-        self.NUM_TORLH_TRIES = self.try_get_component_param(services,'NUM_TORLH_TRIES', \
-                                optional = True)
-        if self.NUM_TORLH_TRIES == None: 
-            self.NUM_TORLH_TRIES = 1
-        
         torlh_log = os.path.join(workdir, 'log.torlh')
-        
 
       # Copy plasma state files over to working directory
         try:
@@ -195,8 +172,8 @@ class torlh (Component):
         if have_suffix:
             try:
                 shutil.copyfile('machine.inp' + suffix, 'machine.inp')
-            except IOError as xxx_todo_changeme:
-                (errno, strerror) = xxx_todo_changeme.args
+            except IOError as xxx_todo_changeme1:
+                (errno, strerror) = xxx_todo_changeme1.args
                 print('Error copying file %s to %s' % ('machine.inp' + suffix, 'machine.inp', strerror))
                 logMsg = 'Error copying machine.inp_<suffix> -> machine.inp'
                 services.exception(logMsg)
@@ -232,6 +209,12 @@ class torlh (Component):
             logMsg = 'Error in call to stage_output_files()'
             self.services.exception(logMsg)
             raise 
+
+        if CQL_COUPLE_MODE in [True, 'true', 'True', 'TRUE']:
+            self.step(timeStamp)
+            
+        global INIT_Complete
+        INIT_Complete = True
 
         return 0
 
@@ -277,7 +260,7 @@ class torlh (Component):
 #
 # ------------------------------------------------------------------------------
 
-    def step(self, timeStamp, **kwargs):
+    def step(self, timeStamp):
         """Take a step for the torlh component.  Really a complete run."""
         print('\ntorlh.step() called')
 
@@ -324,15 +307,15 @@ class torlh (Component):
         if have_suffix:
             try:
                 shutil.copyfile('machine.inp' + suffix, 'machine.inp')
-            except IOError as xxx_todo_changeme1:
-                (errno, strerror) = xxx_todo_changeme1.args
+            except IOError as xxx_todo_changeme2:
+                (errno, strerror) = xxx_todo_changeme2.args
                 print('Error copying file %s to %s' % ('machine.inp' + suffix,
                 'machine.inp', strerror))
                 logMsg = 'Error copying machine.inp_<suffix> -> machine.inp'
                 services.exception(logMsg)
                 raise 
 
-        prepare_input = os.path.join(self.BIN_PATH, 'prepare_torlh_input_abr_qldce2')
+        prepare_input = os.path.join(self.BIN_PATH, 'prepare_torlh_input_abr')
         process_output  = os.path.join(self.BIN_PATH, 'process_torlh_output_mcmd')
 
         zero_RF_LH_power = self.ZERO_LH_POWER_BIN
@@ -354,13 +337,9 @@ class torlh (Component):
 # Check if LH power is zero (or effectively zero).  If true don't run torlh just
 # run zero_RF_LH_power fortran code
         print('cur_state_file = ', cur_state_file)
-#         ps = NetCDFFile(cur_state_file, 'r')
-#         power_lh = ps.variables['power_lh'].getValue()[0]
-#         ps.close()
-        ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
-        power_lh = ps.variables['power_lh'][0]
+        ps = NetCDFFile(cur_state_file, 'r')
+        power_lh = ps.variables['power_lh'].getValue()[0]
         ps.close()
-        
         print('power = ', power_lh)
         if(-0.02 < power_lh < 0.02):
             print(zero_RF_LH_power)
@@ -387,23 +366,53 @@ class torlh (Component):
             print('continuing power from previous time step')
             ps.variables['power_lh'].assignValue(-power_lh)
             ps.close()
-# ------------------------------------------------------------------------------                
 
     # Or actually run torlh
 
         else:
+
             if not os.path.isfile(prepare_input):
                 logMsg = 'Cannot find torlh prepare_input binary: ' + prepare_input
                 self.services.error(logMsg)
                 raise Exception(logMsg)
 
-            # Call torlh prepare_input to generate torlh.inp
+# ------------------------------------------------------------------------------                
+            global run_ImChizz
+            if CQL_COUPLE_MODE in [True, 'true', 'True', 'TRUE'] and INIT_Complete == True: # Will be False during INIT
+                try:
+                    print('\nRunning ImChizz')
+                    subprocess.call(['cp', cur_cql_file, 'cql3d.cdf' ])
+                except Exception:
+                    message = 'generic_ps_init: Error copying CURRENT_CQL_FILE to cql3d.cdf'
+                    print(message)
+                    services.exception(message)
+                    raise              
+                imchzz_bin = self.ImChizz_BIN
+                cmd_imchizz=self.ImChizz_BIN
+                try:
+                   services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+                      event_comment =  'running ' + cmd_imchizz)
+                   P=subprocess.Popen(cmd_imchizz,stdin=subprocess.PIPE,stdout=subprocess.PIPE,\
+                      stderr=subprocess.STDOUT, bufsize=1)
+                #      stderr=subprocess.STDOUT, bufsize=1)
+                except :
+                   logMsg = "Error executing" + cmd_imchizz
+                   self.services.error(logMsg)
+                   raise
+               # P.stdin.write("b\n")
+                print(P.communicate("b\n"))
+                #P.wait()
+                print('Finished ImChizz')
 
-            arg_toric_Mode = kwargs.get('toric_Mode', 'toric')
-            arg_isol_Mode = kwargs.get('isol_Mode', '1')           
-            arg_inumin_Mode = kwargs.get('inumin_Mode', 'Maxwell')
-            if arg_toric_Mode == 'qldce':
-                torlh_log = os.path.join(workdir, 'log.torlh_qldce')
+# ------------------------------------------------------------------------------                
+        # Run in toricmode = 'toric'
+            # Call torlh prepare_input to generate torlha.inp
+
+            arg_toric_Mode = 'toric'
+            arg_isol_Mode = '1'           
+            arg_inumin_Mode = 'Maxwell'
+            if INIT_Complete and CQL_COUPLE_MODE:
+                arg_inumin_Mode = 'nonMaxwell'                
             
             cmd_prepare_input = [prepare_input, cur_state_file, arg_toric_Mode,\
                       arg_inumin_Mode,arg_isol_Mode, arg_enorm]
@@ -429,179 +438,79 @@ class torlh (Component):
                 self.services.error(logMsg)
                 raise Exception(logMsg)
 
-            # For toric mode and nonMaxwellian run ImChizz
-            if arg_toric_Mode == 'toric' and arg_inumin_Mode == 'nonMaxwell':
-                print('\nRunning ImChizz')
-                try:
-                    subprocess.call(['cp', cur_cql_file, 'cql3d.cdf' ])
-                except Exception:
-                    message = 'generic_ps_init: Error copying CURRENT_CQL_FILE to cql3d.cdf'
-                    print(message)
-                    services.exception(message)
-                    raise              
-                imchzz_bin = self.ImChizz_BIN
-                cmd_imchizz= self.ImChizz_BIN
-                #try:
-                #   services.send_portal_event(event_type = 'COMPONENT_EVENT',\
-                #      event_comment =  'running ' + cmd_imchizz)
-                #   P=subprocess.Popen(cmd_imchizz,stdin=subprocess.PIPE,stdout=subprocess.PIPE,\
-                #      stderr=subprocess.STDOUT, bufsize=1)
-                #except :
-                #   logMsg = "Error executing" + cmd_imchizz
-                #   self.services.error(logMsg)
-                #   raise
-                #print(P.communicate("b\n"))
-                
-                #P.wait()
-                #print('Finished ImChizz')
-                cwd = services.get_working_dir()
-                imchzz_log = os.path.join(workdir, 'log.imchzz')
-                task_id = services.launch_task(60,cwd,imchzz_bin, logfile=imchzz_log)
-                retcode = services.wait_task(task_id, timeout = 1800.0, delay = 60.)
-                if (retcode != 0):
-                    services.error("ImChizz Failed")
-                    raise Exception("ImChizz Failed")
-                print('Finished ImChizz')
-
-
             # Launch torlh executable
+            print('torlh processors = ', self.NPROC)
             cwd = services.get_working_dir()
-            
-            # Set number of processors depending on toric_mode
-            run_nproc = self.NPROC
-            if arg_toric_Mode == 'qldce':
-                run_nproc = self.NPROC_QLDCE
-
-            print('arg_toric_Mode = ', arg_toric_Mode, '   torlh processors = ', run_nproc)
-            time_limit = float(self.TORLH_TIME_LIMIT)
-            # Try to launch TORLH multiple times if TORLH_TRIES > 1 in config file
-            for i in range(int(self.NUM_TORLH_TRIES)):
-                print(' TORLH try number ', i + 1)
-                task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
-                retcode = services.wait_task(task_id, timeout = time_limit, delay = 60.)
-                if (retcode == 0):
-                    break
-            else:
-                services.error("TORLH failed after %d trials" % int(self.NUM_TORLH_TRIES))
-                raise Exception("TORLH failed after %d trials" % int(self.NUM_TORLH_TRIES))
-
-
-#             print 'arg_toric_Mode = ', arg_toric_Mode, '   torlh processors = ', run_nproc
-#             task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
-#             time_limit = float(self.TORLH_TIME_LIMIT)
-#             retcode = services.wait_task(task_id, timeout = time_limit, delay = 60.)
-#             if (retcode != 0):
-#                 logMsg = 'Error executing command: ' + torlh_bin
-#                 self.services.error(logMsg)
-#                 raise Exception(logMsg)
+            task_id = services.launch_task(self.NPROC, cwd, torlh_bin, logfile=torlh_log)
+            retcode = services.wait_task(task_id)
+            if (retcode != 0):
+                logMsg = 'Error executing command: ' + torlh_bin
+                self.services.error(logMsg)
+                raise Exception(logMsg)
                 
-            # Preserve torica.out from run to distinguish toric mode = 'toric' from 'qldce'
-            new_file_name = 'torica_' + arg_toric_Mode + '.out'
+            # Preserve torica.out from run in toric mode
             try:
-                shutil.copyfile('torica.out', new_file_name)
-            except IOError as xxx_todo_changeme2:
-                (errno, strerror) = xxx_todo_changeme2.args
-                logMsg =  'Error copying file %s to %s' % ('torica.out', new_file_name\
+                shutil.copyfile('torica.out', 'torica_toricMode.out')
+            except IOError as xxx_todo_changeme3:
+                (errno, strerror) = xxx_todo_changeme3.args
+                logMsg =  'Error copying file %s to %s' % ('torica.out', 'torica_toricMode.out'\
                         , strerror)
                 print(logMsg)
                 services.exception(logMsg)
                 raise 
             
-            # For qldce mode need to also run mapin
-            if arg_toric_Mode == 'qldce':
-                #Quick and dirty remap for the qldce2 routine
-                qlde_ncdf = nc.netcdf_file("toric_qlde.cdf",'r')
-                cart_qlde_ncdf = nc.netcdf_file("toric_qlde_rec.cdf",'w')
-
-                enorm   = qlde_ncdf.variables['enorm'].getValue()
-                dqlpsi  = qlde_ncdf.variables['Psi'].data
-                rhotor  = qlde_ncdf.variables['rho_tor'].data
-                rhopol  = qlde_ncdf.variables['rho_pol'].data
-                Den     = qlde_ncdf.variables['Den'].data
-                Tem     = qlde_ncdf.variables['Tem'].data
-                Epsi    = qlde_ncdf.variables['Epsi'].data
-                q       = qlde_ncdf.variables['q'].data
-                norqldce= qlde_ncdf.variables['norqldce'].data
-                boundtp = qlde_ncdf.variables['boundtp'].data
-                Vol     = qlde_ncdf.variables['Vol'].data
-                Pwr     = qlde_ncdf.variables['Pwr'].data
-                cqlb    = qlde_ncdf.variables['Qldce_LD'].data
-                u       = qlde_ncdf.variables['u'].data
-                utheta  = qlde_ncdf.variables['utheta'].data
-                nu      = qlde_ncdf.dimensions['VelDim']
-                nutheta = qlde_ncdf.dimensions['VelPrpDim']
-                npsi    = qlde_ncdf.dimensions['RadDim']
-                radmapdim = qlde_ncdf.dimensions['RadMapDim']
                 
-                t, r = np.meshgrid(utheta,u)
-                
-                r = r.flatten()
-                t = t.flatten()
-                x = r*np.cos(t)
-                y = r*np.sin(t)
+# ------------------------------------------------------------------------------                
+        # Run in toricmode = 'qldce' if needed
+            if CQL_COUPLE_MODE in [True, 'true', 'True', 'TRUE']:
 
-                # We create the x and y axes of the output cartesian data
-                du=0.00125
-                nupar=int(2.0/du)
-                nuprp=int(1.0/du)
-                upar = np.linspace(-1.0, 1.0, nupar)
-                uprp= np.linspace(0.0, 1.0, nuprp)
+                arg_toric_Mode = 'qldce'
+                arg_isol_Mode = '1'            
+                arg_inumin_Mode = 'Maxwell'
+                if INIT_Complete:
+                    arg_inumin_Mode = 'nonMaxwell'
 
-                xgrid, ygrid = np.meshgrid(upar, uprp)
+                cmd_prepare_input = [prepare_input, cur_state_file, arg_toric_Mode,\
+                      arg_inumin_Mode,arg_isol_Mode, arg_enorm]
+                print('running = ', cmd_prepare_input)
+                services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+                  event_comment =  cmd_prepare_input)
+                retcode = subprocess.call(cmd_prepare_input)
+                if (retcode != 0):
+                    logMsg = 'Error executing ' + prepare_input
+                    self.services.error(logMsg)
+                    raise Exception(logMsg)
+# 
+#                 print '\nRunning torlh in qldce mode, inumin_Mode = ', arg_inumin_Mode
+#                 retcode = subprocess.call([prepare_input, cur_state_file, arg_toric_Mode,\
+#                       arg_inumin_Mode,arg_isol_Mode])
+#                 if (retcode != 0):
+#                     logMsg = 'Error executing ' + prepare_input
+#                     self.services.error(logMsg)
+#                     raise Exception(logMsg)
 
-                cart_qlde_ncdf.createDimension('RadDim',npsi)
-                cart_qlde_ncdf.createDimension('VelDim',nupar)
-                cart_qlde_ncdf.createDimension('VelPrpDim',nuprp)
-                cart_qlde_ncdf.createDimension('RadMapDim',radmapdim)
+                # Launch torlh executable
+                print('torlh processors = ', self.NPROC)
+                cwd = services.get_working_dir()
+                task_id = services.launch_task(self.NPROC, cwd, torlh_bin, logfile=torlh_log)
+                retcode = services.wait_task(task_id)
+                if (retcode != 0):
+                    logMsg = 'Error executing command: ' + torlh_bin
+                    self.services.error(logMsg)
+                    raise Exception(logMsg)
 
-                enormnew  = cart_qlde_ncdf.createVariable('enorm','double',[])
-                enormnew.assignValue(enorm)
-                psinew    = cart_qlde_ncdf.createVariable('Psi','d',('RadDim',))
-                psinew[:] = dqlpsi[:]
-                rhotornew = cart_qlde_ncdf.createVariable('rho_tor','d',('RadMapDim',))
-                rhotornew[:] = rhotor[:]
-                rhopolnew = cart_qlde_ncdf.createVariable('rho_pol','d',('RadMapDim',))
-                rhopolnew[:] = rhopol[:]
-                newDen    = cart_qlde_ncdf.createVariable('Den','d',('RadDim',))
-                newDen[:] = Den[:]
-                newTem    = cart_qlde_ncdf.createVariable('Tem','d',('RadDim',))
-                newTem[:] = Tem[:]
-                newEpsi   = cart_qlde_ncdf.createVariable('Epsi','d',('RadDim',))
-                newEpsi[:]= Epsi[:]
-                newq      = cart_qlde_ncdf.createVariable('q','d',('RadDim',))
-                newq[:]   = q[:]
-                newnorqldce = cart_qlde_ncdf.createVariable('norqldce','d',('RadDim',))
-                newnorqldce[:] = norqldce[:]
-                newboundtp= cart_qlde_ncdf.createVariable('boundtp','d',('RadDim',))
-                newboundtp[:] = boundtp[:]
-                newVol    = cart_qlde_ncdf.createVariable('Vol','d',('RadDim',))
-                newVol[:] = Vol[:]
-                newPwr    = cart_qlde_ncdf.createVariable('Pwr','d',('RadDim',))
-                newPwr[:] = Pwr[:]
-                nunew     = cart_qlde_ncdf.createVariable('Nu','i',('RadDim',))
-                nunew[:]  = nupar
-                newumin   = cart_qlde_ncdf.createVariable('Umin','d',('RadDim',))
-                newumin[:]= -1.0
-                newumax   = cart_qlde_ncdf.createVariable('Umax','d',('RadDim',))
-                newumax[:]= 1.0
-                cqlbnew   = cart_qlde_ncdf.createVariable('Qldce_LD','d',('RadDim','VelPrpDim','VelDim'))
-                cqlmxd    = cart_qlde_ncdf.createVariable('Qldce_MXD','d',('RadDim','VelDim'))
-                cqlmxd[:,:] = 0.0 
-                cqlttm    = cart_qlde_ncdf.createVariable('Qldce_TTM','d',('RadDim','VelDim'))
-                cqlttm[:,:] = 0.0
-                newRtor = cart_qlde_ncdf.createVariable('Rtor','d',[])
-                newRtor.assignValue(67.5002802486)
-
-                for i_psi in range(np.size(dqlpsi)):
-                    print(i_psi)
-                    z=cqlb[i_psi,:,:].transpose()
-                    z = z.flatten()
-                    zgrid = griddata((x,y),z, (xgrid, ygrid), fill_value=0)
-                    cqlbnew[i_psi,:,:]=zgrid
-
-                qlde_ncdf.close()
-                cart_qlde_ncdf.close()
-                
+            # Preserve torica.out from run in qldce mode
+                try:
+                    shutil.copyfile('torica.out', 'torica_qldceMode.out')
+                except IOError as xxx_todo_changeme:
+                    (errno, strerror) = xxx_todo_changeme.args
+                    logMsg =  'Error copying file %s to %s' % ('torica.out', 'torica_qldceMode.out'\
+                            , strerror)
+                    print(logMsg)
+                    services.exception(logMsg)
+                    raise
+                     
+            # Run mapin
                 mapin_bin = self.try_get_component_param(services,'MAPIN_BIN')
                 print('\nRunning ' + mapin_bin)
                 services.send_portal_event(event_type = 'COMPONENT_EVENT', \
@@ -611,19 +520,37 @@ class torlh (Component):
                     logMsg = 'Error executing ' + mapin_bin
                     self.services.error(logMsg)
                     raise Exception(logMsg)
+                    
+            # Call process_output
+            # First rename default fort.* to expected names by component method as of torlh5 r918 from ipp
+            #os.rename('fort.9','torlh_cfg.nc')
+            #os.rename('fort.21','torlh.nc')
+            # No process_output code yet.  And don't find fort.9 or fort.21 in work directory.
+            # retcode = subprocess.call([process_output, cur_state_file])
+#             if (retcode != 0):
+#                 logMsg = 'Error executing' + process_output
+#                 self.services.error(logMsg)
+#                 raise Exception(logMsg)
 
-# For toric mode merge partial plasma state containing updated IC data
-        if arg_toric_Mode == 'toric':
-            try:
-                partial_file = cwd + '/RF_LH_' + cur_state_file
-                # No process_output code yet
-                #services.merge_current_plasma_state(partial_file, logfile='log.update_state')
-                #print 'merged torlh plasma state data ', partial_file
-                print('No process_output code yet, so no plasma state merge')
-            except:
-                logMsg = 'Error in call to merge_current_plasma_state(' + partial_file + ')'
-                self.services.exception(logMsg)
-                raise 
+# Merge partial plasma state containing updated IC data
+        try:
+            partial_file = cwd + '/RF_LH_' + cur_state_file
+            # No process_output code yet
+            #services.merge_current_plasma_state(partial_file, logfile='log.update_state')
+            #print 'merged torlh plasma state data ', partial_file
+            print('No process_output code yet, so no plasma state merge')
+        except:
+            logMsg = 'Error in call to merge_current_plasma_state(' + partial_file + ')'
+            self.services.exception(logMsg)
+            raise 
+
+# Run IDL script if requested
+#         do_idl_plots = self.try_get_component_param(services, 'DO_IDL_PLOTS', optional = True)
+#         if do_idl_plots != None:
+#             if do_idl_plots:
+#                 print 'running run_IDL_toricplot()'
+#                 self.run_IDL_toricplot()
+
 
       # Update plasma state files in plasma_state work directory
         try:
@@ -640,11 +567,6 @@ class torlh (Component):
             logMsg = 'Error in call to stage_output_files()'
             self.services.exception(logMsg)
             raise 
-
-        if 'last_pwr' in kwargs:
-            ps = Dataset(cur_state_file, 'w', format = 'NETCDF3_CLASSIC')
-            ps.variables['power_lh'][0] = saved_pwr
-            ps.close()
 
         return 0
 
@@ -711,3 +633,17 @@ class torlh (Component):
             raise
 
         return value
+
+    # IDL plots
+    def run_IDL_toricplot(self):
+
+         cmd_toricplot_pro=".r pltoriclhg.pro\n"
+         P=subprocess.Popen(["idl"],stdin=subprocess.PIPE, stdout=subprocess.PIPE, \
+         stderr=subprocess.STDOUT)
+         P.stdin.write(cmd_toricplot_pro)
+         P.stdin.write("1\n")
+         P.stdin.write("0\n")
+         P.stdin.write("1\n")
+         print("Make a file(torica.ps)")
+         
+         return

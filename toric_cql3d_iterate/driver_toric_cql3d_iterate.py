@@ -1,21 +1,10 @@
 #! /usr/bin/env python
-"""
-driver_torlh_iterate_pwrscale.py  Version 0.0 (Batchelor 9/12/2017)
+""" Version 1 (Batchelor 7/23/2017)
 Driver for torlh/cql3d iteration with logic exposed here rather than buried in the 
-components.  Adapted from generic_driver.py. Added coding from previous MIT script to
-iterate CQL3D variable pwrscale until CQL3D power matches desired input power.
+ components.  Adapted from generic_driver.py
 """
 from __future__ import print_function
-from __future__ import division
 
-# Working notes:
-# 9/17/2017 (DBB)
-# Changed to set initial pwrscale = 1 on first outer iteration..  On subsequent outer 
-# iterations it retains its value from the previous pwrscale iteration loop.
-
-from builtins import str
-from builtins import range
-from past.utils import old_div
 import sys
 import os
 import subprocess
@@ -24,8 +13,6 @@ import shutil
 import math
 from component import Component
 from netCDF4 import *
-import Numeric
-
 
 class generic_driver(Component):
 
@@ -246,20 +233,6 @@ class generic_driver(Component):
                 services.exception(message)
                 raise 
 
-        # Set initial pwrscale = 1.  On subsequent iterations it retains its value. 
-        # But don't set it if this is a restart run.
-        if sim_mode == 'NORMAL' :
-            pwrscale=1.0
-            pwrscale_file = open('current_pwrscale.dat','w')
-            pwrscale_file.write(str(pwrscale))
-            pwrscale_file.close
-            print('sim_mode == ', sim_mode, '  wrote current_pwrscale.dat, pwrscale=  ', pwrscale)
-        else:   # Use pwrscale from previous outer iteration
-            pwrscale_file = open('current_pwrscale.dat','r')
-            pwrscale = float(pwrscale_file.read())
-            pwrscale_file.close
-            print('sim_mode == ', sim_mode, '  read current_pwrscale.dat, pwrscale=  ', pwrscale)
-                
         # Iterate through the timeloop, or in this case iteration loop
         for t in tlist_str[1:len(timeloop)]:
             print (' ')
@@ -279,87 +252,13 @@ class generic_driver(Component):
             if 'EPA' in port_names:
                 self.component_call(services, 'EPA', epaComp, 'step', t)
 
-        #*********************************************************************************
-        # Iterate CQL3D pwrscale to match power_lh
-        #*********************************************************************************
-
-            icount=0
-            running= True
-            hist_pwrscale=[]
-            hist_pwr_result=[]
-            
-            # Get power_lh <--> goal_pwr from plasma state
-            ps = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
-            goal_pwr = ps.variables['power_lh'][0]
-            ps.close()
-            while running :
-                icount=icount+1
-                hist_pwrscale.append(pwrscale)
-                print('Running,  icount = ', icount, ' pwrscale = ', pwrscale)
-               
-                # Run CQL3D
-                try:
-                    services.call(fpComp, 'step', t, icount_arg = icount, pwrscale_arg = pwrscale)
-                except Exception:
-                    message = 'FP step failed'
-                    print(message)
-                    services.exception(message)
-                    raise 
-
-                services.stage_state()
-                ps = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
-                pelh = ps.variables['pelh'][:]
-                ps.close()
-                print('pelh = ', pelh)
-                tot_pwr = sum(pelh)
-                comment =  'pwrscale iteration, icount = ' + str(icount) + ' pwrscale = '\
-                            + str(pwrscale) + ' goal_pwr = ' + str(goal_pwr) + ' tot_pwr = '\
-                            + str(tot_pwr)
-                print(comment)
-                services.send_portal_event(event_type = 'COMPONENT_EVENT',\
-                  event_comment =  comment)
-
-                hist_pwr_result.append(tot_pwr)
-                print("history of pwrscale")
-                print(hist_pwrscale)
-                print("history of power results")
-                print(hist_pwr_result)
-             
-                 # Iteration logic
-                if ((tot_pwr<(1.02*goal_pwr)) and (tot_pwr>(0.98*goal_pwr))) or icount>10:
-                     running= False           
-                else:
-                     if icount==1:
-                         new_pwrscale=old_div(pwrscale*goal_pwr,tot_pwr)
-                     else:
-                         new_pwrscale=pwrscale+old_div((hist_pwrscale[icount-1]-hist_pwrscale[icount-2]),(hist_pwr_result[icount-1]-hist_pwr_result[icount-2]))*(goal_pwr-tot_pwr)
-                         if new_pwrscale<0:
-                            new_pwrscale=old_div(pwrscale*goal_pwr,tot_pwr) 
-                     pwrscale=new_pwrscale
-                     
-            # After convergence record pwrscale history
-            
-            pwrscale_file = open('current_pwrscale.dat','w')
-            pwrscale_file.write(str(pwrscale))
-            pwrscale_file.close
-          
-            f=open('pwrscale.dat','w')
-            str_icount=str(icount)
-            f.write("\nnumber of feedback\n") 
-            f.write(str_icount+"\n")
-            f.write("pwrscale\n")
-            for j in range(icount):
-                str_pwrscale=str(hist_pwrscale[j])+"  "
-                f.write(str_pwrscale)
-            f.write("\n power in cql3D\n")
-            for j in range(icount):
-                str_pwr_result=str(hist_pwr_result[j])+"  "
-                f.write(str_pwr_result)
-
-
-        #*********************************************************************************
-        # End pwrscale iteration
-        #*********************************************************************************
+            try:
+                services.call(fpComp, 'step', t)
+            except Exception:
+                message = 'FP step failed'
+                print(message)
+                services.exception(message)
+                raise 
 
             try:
                 services.call(rf_lhComp, 'step', t, toric_Mode = 'toric', \

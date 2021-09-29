@@ -104,10 +104,6 @@ import subprocess
 import getopt
 import shutil
 import string
-import numpy as np
-import scipy.io.netcdf as nc
-import matplotlib.pyplot as plt
-from scipy.interpolate import griddata
 from netCDF4 import *
 #from Scientific.IO.NetCDF import *
 from  component import Component
@@ -331,7 +327,7 @@ class torlh (Component):
                 services.exception(logMsg)
                 raise 
 
-        prepare_input = os.path.join(self.BIN_PATH, 'prepare_torlh_input_abr_qldce2')
+        prepare_input = os.path.join(self.BIN_PATH, 'prepare_torlh_input_abr')
         process_output  = os.path.join(self.BIN_PATH, 'process_torlh_output_mcmd')
 
         zero_RF_LH_power = self.ZERO_LH_POWER_BIN
@@ -361,7 +357,7 @@ class torlh (Component):
         ps.close()
         
         print('power = ', power_lh)
-        if(-0.02 < power_lh < 0.02):
+        if(-0.0001 < power_lh < 0.0001):
             print(zero_RF_LH_power)
             services.send_portal_event(event_type = 'COMPONENT_EVENT',\
               event_comment =  'running ' + zero_RF_LH_power)
@@ -440,20 +436,15 @@ class torlh (Component):
                     raise              
                 imchzz_bin = self.ImChizz_BIN
                 cmd_imchizz=self.ImChizz_BIN
-                try:
-                   services.send_portal_event(event_type = 'COMPONENT_EVENT',\
-                      event_comment =  'running ' + cmd_imchizz)
-                   P=subprocess.Popen(cmd_imchizz,stdin=subprocess.PIPE,stdout=subprocess.PIPE,\
-                      stderr=subprocess.STDOUT, bufsize=1)
-                except :
-                   logMsg = "Error executing" + cmd_imchizz
-                   self.services.error(logMsg)
-                   raise
-                print(P.communicate("b\n"))
-                
-                #P.wait()
-                print('Finished ImChizz')
 
+                cwd = services.get_working_dir()
+                imchzz_log = os.path.join(workdir, 'log.imchzz')
+                task_id = services.launch_task(60,cwd,imchzz_bin, logfile=imchzz_log)
+                retcode = services.wait_task(task_id, timeout = 1800.0, delay = 60.)
+                if (retcode != 0):
+                    services.error("ImChizz Failed")
+                    raise Exception("ImChizz Failed")
+                print('Finished ImChizz')
 
             # Launch torlh executable
             cwd = services.get_working_dir()
@@ -495,112 +486,20 @@ class torlh (Component):
                         , strerror)
                 print(logMsg)
                 services.exception(logMsg)
-                raise 
-            
+                raise
+
+            #SF removed mapin direct mapping now used
             # For qldce mode need to also run mapin
-            if arg_toric_Mode == 'qldce':
-                #Quick and dirty remap for the qldce2 routine
-                qlde_ncdf = nc.netcdf_file("toric_qlde.cdf",'r')
-                cart_qlde_ncdf = nc.netcdf_file("toric_qlde_rec.cdf",'w')
-
-                enorm   = qlde_ncdf.variables['enorm'].getValue()
-                dqlpsi  = qlde_ncdf.variables['Psi'].data
-                rhotor  = qlde_ncdf.variables['rho_tor'].data
-                rhopol  = qlde_ncdf.variables['rho_pol'].data
-                Den     = qlde_ncdf.variables['Den'].data
-                Tem     = qlde_ncdf.variables['Tem'].data
-                Epsi    = qlde_ncdf.variables['Epsi'].data
-                q       = qlde_ncdf.variables['q'].data
-                norqldce= qlde_ncdf.variables['norqldce'].data
-                boundtp = qlde_ncdf.variables['boundtp'].data
-                Vol     = qlde_ncdf.variables['Vol'].data
-                Pwr     = qlde_ncdf.variables['Pwr'].data
-                cqlb    = qlde_ncdf.variables['Qldce_LD'].data
-                u       = qlde_ncdf.variables['u'].data
-                utheta  = qlde_ncdf.variables['utheta'].data
-                nu      = qlde_ncdf.dimensions['VelDim']
-                nutheta = qlde_ncdf.dimensions['VelPrpDim']
-                npsi    = qlde_ncdf.dimensions['RadDim']
-                radmapdim = qlde_ncdf.dimensions['RadMapDim']
-                
-                t, r = np.meshgrid(utheta,u)
-                
-                r = r.flatten()
-                t = t.flatten()
-                x = r*np.cos(t)
-                y = r*np.sin(t)
-
-                # We create the x and y axes of the output cartesian data
-                du=0.00125
-                nupar=int(2.0/du)
-                nuprp=int(1.0/du)
-                upar = np.linspace(-1.0, 1.0, nupar)
-                uprp= np.linspace(0.0, 1.0, nuprp)
-
-                xgrid, ygrid = np.meshgrid(upar, uprp)
-
-                cart_qlde_ncdf.createDimension('RadDim',npsi)
-                cart_qlde_ncdf.createDimension('VelDim',nupar)
-                cart_qlde_ncdf.createDimension('VelPrpDim',nuprp)
-                cart_qlde_ncdf.createDimension('RadMapDim',radmapdim)
-
-                enormnew  = cart_qlde_ncdf.createVariable('enorm','double',[])
-                enormnew.assignValue(enorm)
-                psinew    = cart_qlde_ncdf.createVariable('Psi','d',('RadDim',))
-                psinew[:] = dqlpsi[:]
-                rhotornew = cart_qlde_ncdf.createVariable('rho_tor','d',('RadMapDim',))
-                rhotornew[:] = rhotor[:]
-                rhopolnew = cart_qlde_ncdf.createVariable('rho_pol','d',('RadMapDim',))
-                rhopolnew[:] = rhopol[:]
-                newDen    = cart_qlde_ncdf.createVariable('Den','d',('RadDim',))
-                newDen[:] = Den[:]
-                newTem    = cart_qlde_ncdf.createVariable('Tem','d',('RadDim',))
-                newTem[:] = Tem[:]
-                newEpsi   = cart_qlde_ncdf.createVariable('Epsi','d',('RadDim',))
-                newEpsi[:]= Epsi[:]
-                newq      = cart_qlde_ncdf.createVariable('q','d',('RadDim',))
-                newq[:]   = q[:]
-                newnorqldce = cart_qlde_ncdf.createVariable('norqldce','d',('RadDim',))
-                newnorqldce[:] = norqldce[:]
-                newboundtp= cart_qlde_ncdf.createVariable('boundtp','d',('RadDim',))
-                newboundtp[:] = boundtp[:]
-                newVol    = cart_qlde_ncdf.createVariable('Vol','d',('RadDim',))
-                newVol[:] = Vol[:]
-                newPwr    = cart_qlde_ncdf.createVariable('Pwr','d',('RadDim',))
-                newPwr[:] = Pwr[:]
-                nunew     = cart_qlde_ncdf.createVariable('Nu','i',('RadDim',))
-                nunew[:]  = nupar
-                newumin   = cart_qlde_ncdf.createVariable('Umin','d',('RadDim',))
-                newumin[:]= -1.0
-                newumax   = cart_qlde_ncdf.createVariable('Umax','d',('RadDim',))
-                newumax[:]= 1.0
-                cqlbnew   = cart_qlde_ncdf.createVariable('Qldce_LD','d',('RadDim','VelPrpDim','VelDim'))
-                cqlmxd    = cart_qlde_ncdf.createVariable('Qldce_MXD','d',('RadDim','VelDim'))
-                cqlmxd[:,:] = 0.0 
-                cqlttm    = cart_qlde_ncdf.createVariable('Qldce_TTM','d',('RadDim','VelDim'))
-                cqlttm[:,:] = 0.0
-                newRtor = cart_qlde_ncdf.createVariable('Rtor','d',[])
-                newRtor.assignValue(67.5002802486)
-
-                for i_psi in range(np.size(dqlpsi)):
-                    print(i_psi)
-                    z=cqlb[i_psi,:,:].transpose()
-                    z = z.flatten()
-                    zgrid = griddata((x,y),z, (xgrid, ygrid), fill_value=0)
-                    cqlbnew[i_psi,:,:]=zgrid
-
-                qlde_ncdf.close()
-                cart_qlde_ncdf.close()
-                
-                mapin_bin = self.try_get_component_param(services,'MAPIN_BIN')
-                print('\nRunning ' + mapin_bin)
-                services.send_portal_event(event_type = 'COMPONENT_EVENT', \
-                     event_comment = 'running ' + mapin_bin)
-                retcode = subprocess.call([mapin_bin])
-                if (retcode != 0):
-                    logMsg = 'Error executing ' + mapin_bin
-                    self.services.error(logMsg)
-                    raise Exception(logMsg)
+#            if arg_toric_Mode == 'qldce':
+#                mapin_bin = self.try_get_component_param(services,'MAPIN_BIN')
+#                print('\nRunning ' + mapin_bin)
+#                services.send_portal_event(event_type = 'COMPONENT_EVENT', \
+#                     event_comment = 'running ' + mapin_bin)
+#                retcode = subprocess.call([mapin_bin])
+#                if (retcode != 0):
+#                    logMsg = 'Error executing ' + mapin_bin
+#                    self.services.error(logMsg)
+#                    raise Exception(logMsg)
 
 # For toric mode merge partial plasma state containing updated IC data
         if arg_toric_Mode == 'toric':
