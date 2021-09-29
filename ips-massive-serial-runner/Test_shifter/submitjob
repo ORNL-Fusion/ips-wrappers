@@ -27,6 +27,8 @@ mkdir $SCRATCH/test_massive_serial_runner_shifter
 cp -rd * $SCRATCH/test_massive_serial_runner_shifter
 cd $SCRATCH/test_massive_serial_runner_shifter
 
+unzip input.zip -d input
+
 ips.py --platform=platform.conf --simulation=ips.massive_serial_runner.config
 
 wait
