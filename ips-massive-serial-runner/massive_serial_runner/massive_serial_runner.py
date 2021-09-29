@@ -46,7 +46,6 @@ class massive_serial_runner(Component):
 
             self.msr_config = self.services.get_config_param('MSR_CONFIG')
             self.msr_global_config = self.services.get_config_param('MSR_GLOBAL_CONFIG')
-            self.msr_model_config = self.services.get_config_param('MSR_MODEL_CONFIG')
             self.msr_platform_conf = self.services.get_config_param('MSR_PLATFORM_FILE')
 
 #  Stage state.
@@ -61,7 +60,6 @@ class massive_serial_runner(Component):
             self.zip_ref.extract(self.database_config)
             self.zip_ref.extract(self.msr_config)
             self.zip_ref.extract(self.msr_global_config)
-            self.zip_ref.extract(self.msr_model_config)
             self.zip_ref.extract(self.msr_platform_conf)
 
 #  We need the input directory to exist in a directory called input.

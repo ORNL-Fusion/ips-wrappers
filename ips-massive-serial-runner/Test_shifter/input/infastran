@@ -1,0 +1,66 @@
+&infastran
+
+  dt = 1.0
+  maxiter_relax = 100
+  error = 1.0e-7
+
+  nrho  = 100 !200
+  nrho_transport = 100 !200
+  nrho_bdry = 90 !180
+
+  alpha_e   = 1.0 
+  alpha_i   = 1.0
+  alpha_v   = 1.0
+  alpha_n   = 1.0
+  alpha_chi = 0.1
+
+  error_e   = 1.0e-4 
+  error_i   = 1.0e-4
+  error_v   = 1.0e-4
+  error_n   = 1.0e-4
+
+  isolver   = -1
+
+  irelax    = 'picard' ! 'secant' 'picard'
+
+  solve_mhd = -1
+  solve_ne  = 0
+  solve_te  = 1
+  solve_ti  = 1
+  solve_v   = 0
+  solve_j   = 0
+
+  relax_j   = 0
+
+  model_chi = 'tglf'
+  model_bootstrap = 'sauter'
+  model_neoclass = 'chang-hinton'
+
+  iexb = 0 
+
+  multi_neo_e = 1.0
+  multi_neo_i = 1.0
+  multi_neo_n = 1.0
+  multi_neo_v = 1.0
+
+  multi_chi_e = 1.0
+  multi_chi_i = 1.0
+  multi_chi_n = 1.0
+  multi_chi_v = 1.0
+
+  const_chi_e = 0.0
+  const_chi_i = 0.0
+  const_chi_n = 0.0
+  const_chi_v = 0.0
+
+  dt_relax_j = 100.0
+  dt_step_relax_j = 0.01
+
+  glf23_exb = 1.0
+  glf23_alpha = 0.0
+
+  include_fusion = 1 
+  include_nhe = 0
+  taup = 12.5
+  model_ftrap = 1 
+/
