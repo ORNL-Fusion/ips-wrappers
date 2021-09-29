@@ -48,12 +48,20 @@ class massive_serial_runner(Component):
             self.msr_global_config = self.services.get_config_param('MSR_GLOBAL_CONFIG')
             self.msr_platform_conf = self.services.get_config_param('MSR_PLATFORM_FILE')
 
+            self.msr_input_dir = self.services.get_config_param('MSR_INPUT_DIR')
+
 #  Stage state.
         self.services.stage_state()
 
 #  Unzip files from the state. Use mode a so files an be read and written to.
         self.zip_ref = ZipState.ZipState(self.current_state, 'a')
         self.zip_ref.extract('inscan')
+
+#  This is a hack to work around problems with massive serial workflow expecting 
+#  input files from the wrong place. Note because of this, there is now possible
+#  way to run multiple parallel instances of the massive serial. Copy the inscan
+#  file to input directory which is all the way back in the ips root.
+        shutil.copy('inscan', self.msr_input_dir)
 
 #  These files should never change so only extract them once.
         if timeStamp == 0.0:
