@@ -17,6 +17,7 @@ class install_deps(install):
         os.chdir("../utilities")
         os.system("python3 setup.py install")
         os.chdir(pwd)
+	os.system("pip install numpy")
         install.run(self)
 
 setup(
