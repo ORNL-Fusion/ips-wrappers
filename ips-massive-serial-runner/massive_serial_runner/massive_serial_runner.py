@@ -92,16 +92,10 @@ class massive_serial_runner(Component):
         if 'state' in flags and flags['state'] == 'needs_update':
             process = subprocess.Popen(['bash',
                                         self.MASSIVE_SERIAL_EXE,
-                                        self.platform_file,
-                                        self.msr_global_config,
-                                        '{}'.format(timeStamp)],
+                                        '--platform={}'.format(self.platform_file),
+                                        '--simulation={}'.format(self.msr_global_config),
+                                        '--log=massive_serial_{}.log'.format(timeStamp)],
                                        env=os.environ)
-#            process = subprocess.Popen(['python3',
-#                                        '{}/ips.py'.format(self.ips_path),
-#                                        '--platform={}'.format(self.platform_file),
-#                                        '--simulation={}'.format(self.msr_global_config),
-#                                        '--log=massive_serial_{}.log'.format(timeStamp)],
-#                                       env=os.environ)
 
             database = 'db_{}.dat'.format(timeStamp)
 
@@ -109,6 +103,7 @@ class massive_serial_runner(Component):
             if process.wait():
                 self.services.error('massive_serial_runner: step failed to run massive serial')
 
+            print('here1')
             task_wait = self.services.launch_task(1, self.services.get_working_dir(),
                                                   self.MAKE_DATABASE_EXE,
                                                   '--rdir=output',
@@ -122,6 +117,7 @@ class massive_serial_runner(Component):
             self.services.stage_output_files(timeStamp, database)
 
 #  Convert the database file to json format.
+            print('here2')
             task_wait = self.services.launch_task(1, self.services.get_working_dir(),
                                                   self.TO_JSON_EXE,
                                                   '--input_file={}'.format(database),

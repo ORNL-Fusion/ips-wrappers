@@ -1,5 +1,0 @@
- #!/bin/bash
-
-conda activate fastran
-ips.py --platform=$1 --simulation=$2 --log=massive_serial_$3.log
-conda deactivate
