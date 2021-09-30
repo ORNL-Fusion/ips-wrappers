@@ -22,7 +22,7 @@ class install_deps(install):
 setup(
     name="massive_serial_runner",
     version="1.0.0",
-    install_requires=["ips_component_utilities"],
+    install_requires=["ips_component_utilities","numpy"],
     packages=find_packages(),
     scripts=["launch"],
     cmdclass={
