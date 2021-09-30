@@ -24,7 +24,7 @@ setup(
     version="1.0.0",
     install_requires=["ips_component_utilities"],
     packages=find_packages(),
-    scripts=["launch"]
+    scripts=["launch"],
     cmdclass={
         'build'   : build_deps,
         'install' : install_deps
