@@ -45,6 +45,7 @@ class massive_serial_runner_init(Component):
             self.current_state = self.services.get_config_param('CURRENT_MSR_STATE')
             self.msr_config = self.services.get_config_param('MSR_CONFIG')
             self.msr_global_config = self.services.get_config_param('MSR_GLOBAL_CONFIG')
+            self.msr_model_config = self.services.get_config_param('MSR_MODEL_CONFIG')
             self.msr_platform_conf = self.services.get_config_param('MSR_PLATFORM_FILE')
             self.current_batch = self.services.get_config_param('CURRENT_BATCH')
             self.database_config = self.services.get_config_param('DATABASE_CONFIG')
@@ -61,14 +62,20 @@ class massive_serial_runner_init(Component):
 #  Load or create a masive serial runner zip state.
         with ZipState.ZipState(self.current_state, 'a') as zip_ref:
 
-#  Overwrite database_config file if they were stagedas input files. Over the 
-#  write inscan_config if it was staged. otherwise extract it. These files are 
-#  not expected to change so we only need todo this once.
+#  Overwrite the msr_model_config and database_config file if they were staged
+#  as input files. Over the write inscan_config if it was staged. otherwise
+#  extract it. These files are not expected to change so we only need todo this
+#  once.
             zip_ref.write_or_extract(self.inscan_config_file)
             zip_ref.write_or_check(self.database_config)
             zip_ref.write_or_check(self.msr_config)
             zip_ref.write_or_check(self.msr_global_config)
+            zip_ref.write_or_check(self.msr_model_config)
             zip_ref.write_or_check(self.msr_platform_conf)
+
+#  This is the inputs to fastran. Should only need todo this once.
+            if timeStamp == 0.0:
+                zip_ref.write('input.zip')
 
 #  Batch files are optional. If a batch file was not staged as an input, extract
 #  if from the plasma state if one exists inside it.
