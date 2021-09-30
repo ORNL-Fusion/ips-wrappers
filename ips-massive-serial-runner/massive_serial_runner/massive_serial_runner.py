@@ -48,7 +48,7 @@ class massive_serial_runner(Component):
             self.msr_model_config = self.services.get_config_param('MSR_MODEL_CONFIG')
             self.msr_platform_conf = self.services.get_config_param('MSR_PLATFORM_FILE')
             self.msr_node_conf = self.services.get_config_param('MSR_NODE_FILE')
-            os.environ['PLATFORM'] = self.msr_platform_conf
+            os.environ['MSR_PLATFORM_FILE'] = self.msr_platform_conf
             os.environ['MSR_CONFIG'] = self.services.get_config_param('MSR_CONFIG')
             os.environ['MSR_MODEL_CONFIG'] = self.msr_model_config
             os.environ['NNODES'] = self.services.get_config_param('NNODES')
