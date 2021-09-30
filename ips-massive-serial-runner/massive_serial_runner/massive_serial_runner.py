@@ -46,8 +46,8 @@ class massive_serial_runner(Component):
             self.msr_config = self.services.get_config_param('MSR_CONFIG')
             self.msr_global_config = self.services.get_config_param('MSR_GLOBAL_CONFIG')
             self.msr_model_config = self.services.get_config_param('MSR_MODEL_CONFIG')
-            self.platform_file = self.services.get_config_param('PLATFORM_FILE')
             self.msr_platform_conf = self.services.get_config_param('MSR_PLATFORM_FILE')
+            self.msr_node_conf = self.services.get_config_param('MSR_NODE_FILE')
             os.environ['PLATFORM'] = self.msr_platform_conf
             os.environ['MSR_CONFIG'] = self.services.get_config_param('MSR_CONFIG')
             os.environ['MSR_MODEL_CONFIG'] = self.msr_model_config
@@ -67,6 +67,7 @@ class massive_serial_runner(Component):
             self.zip_ref.extract(self.msr_global_config)
             self.zip_ref.extract(self.msr_model_config)
             self.zip_ref.extract(self.msr_platform_conf)
+            self.zip_ref.extract(self.msr_node_conf)
 
 #  We need the input directory to exist in a directory called input. So we must
 #  make that directory first than extract the files. Remember to change back to
@@ -92,7 +93,7 @@ class massive_serial_runner(Component):
         if 'state' in flags and flags['state'] == 'needs_update':
             process = subprocess.Popen(['bash',
                                         self.MASSIVE_SERIAL_EXE,
-                                        '--platform={}'.format(self.platform_file),
+                                        '--platform={}'.format(self.msr_platform_conf),
                                         '--simulation={}'.format(self.msr_global_config),
                                         '--log=massive_serial_{}.log'.format(timeStamp)],
                                        env=os.environ)
