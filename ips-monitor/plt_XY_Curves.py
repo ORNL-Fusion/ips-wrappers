@@ -32,6 +32,8 @@ change log:
  rcParam "max_open_warning".  However I found that just closing each figure after it is
  saved in plot_XY_Curves_Fig also does it.  So that's what I did.
  
+ 11/21/2021 (DBB)
+ Modified XY_Curves_Fig to accept matplotlib xlim and ylim as keyword args
  
 """
 
@@ -40,8 +42,6 @@ from matplotlib import use
 #use('MacOSX')
 use('pdf')
 
-#import matplotlib as mp
-#mp.rc('figure', max_open_warning = 1000)
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as font_mgr
 from matplotlib.backends.backend_pdf import PdfPages
@@ -229,9 +229,19 @@ class XY_Curves_Fig:
             self.figsize = kwargs['figsize']
             print('figsize = ', self.figsize)
         
-        plt.figure(figsize=self.figsize) # the first figure
+        fig = plt.figure(figsize=self.figsize) # the first figure
         plt.axes([0.15, 0.1, 0.6, 0.75])
-        
+
+        if 'xlim' in kwargs:
+            self.xlim = kwargs['xlim']
+            print('xlim = ', self.xlim)
+            plt.xlim(self.xlim)
+
+        if 'ylim' in kwargs:
+            self.ylim = kwargs['ylim']
+            print('ylim = ', self.ylim)
+            plt.ylim(self.ylim)
+
         # Note to DBB: Annotating figure number below is confusing because it doesn't coincide with
         # page number.  Change this to add page number instead.
         #str_fig_number = str(figure_count)
@@ -254,7 +264,8 @@ class XY_Curves_Fig:
             print('scaleX = ', scaleX)
             print('self.xlabel = ', self.xlabel)
             print('self.ylabel = ', self.ylabel)
-
+            
+        return
 #_________________________________________________________________________________________________
 
 class XY_curve:
@@ -367,6 +378,8 @@ def close_file_XY_Curves_Fig():
             
 if __name__ == '__main__':
 
+    import math
+
     open_file_XY_Curves_Fig('plot_output.pdf')
     
     x = [0.1*i for i in range(11)]
@@ -390,6 +403,31 @@ if __name__ == '__main__':
     title = 'Even better stuff' 
     plot2 = XY_Curves_Fig(curve_list, title, xlabel, ylabel)
     plot_XY_Curves_Fig(plot2)
+
+    x = []
+    y = []
+    vx = []
+    vy = []
+    vscale = []
+    for i in range(16):
+        t = 0.1*3.1415926*i 
+        x.append(math.cos(t))
+        y.append(math.sin(t))
+        vx.append(math.cos(t))
+        vy.append(math.sin(t))
+        vscale.append(0.1*t)
+
+    title = 'Parametric Plot'
+    xlabel = 'x(cm)'
+    ylabel = 'y(cm)'
+    curve_list = [XY_curve(x, y)]
+    plot3 = XY_Curves_Fig(curve_list, title, xlabel, ylabel,figsize = (8., 8.))
+
+    for i in range(16):
+        plt.arrow(x[i], y[i], vscale[i]*vx[i], vscale[i]*vy[i], shape='full', head_width = 0.02)
+ #       plot3.arrow(x[i], y[i], vscale[i]*vx[i], vscale[i]*vy[i], shape='full', head_width = 0.02)
+
+    plot_XY_Curves_Fig(plot3)
 
     global_attributes = [['Global_label = ', 'Global_label'], ['RunID = ', 'RunID'],\
                       ['tokamak_id = ', 'tokamak_id'], ['shot_number = ', str(2)] ]    
