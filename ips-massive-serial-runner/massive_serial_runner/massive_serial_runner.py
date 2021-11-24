@@ -10,7 +10,6 @@ from ipsframework import Component
 from ips_component_utilities import ZipState
 from ips_component_utilities import ScreenWriter
 import os
-import shutil
 import json
 import subprocess
 import math
@@ -48,6 +47,11 @@ class massive_serial_runner(Component):
             self.msr_global_config = self.services.get_config_param('MSR_GLOBAL_CONFIG')
             self.msr_model_config = self.services.get_config_param('MSR_MODEL_CONFIG')
             self.msr_platform_conf = self.services.get_config_param('MSR_PLATFORM_FILE')
+            self.msr_node_conf = self.services.get_config_param('MSR_NODE_FILE')
+            os.environ['MSR_PLATFORM_FILE'] = self.msr_platform_conf
+            os.environ['MSR_CONFIG'] = self.services.get_config_param('MSR_CONFIG')
+            os.environ['MSR_MODEL_CONFIG'] = self.msr_model_config
+            os.environ['NNODES'] = self.services.get_config_param('NNODES')
 
 #  Stage state.
         self.services.stage_state()
@@ -63,34 +67,17 @@ class massive_serial_runner(Component):
             self.zip_ref.extract(self.msr_global_config)
             self.zip_ref.extract(self.msr_model_config)
             self.zip_ref.extract(self.msr_platform_conf)
+            self.zip_ref.extract(self.msr_node_conf)
 
 #  We need the input directory to exist in a directory called input. So we must
 #  make that directory first than extract the files. Remember to change back to
 #  the orginal working directory after extraction.
             self.zip_ref.extract('input.zip')
             os.makedirs('input')
-
-            shutil.copy(self.msr_config, 'input')
-            shutil.copy(self.msr_platform_conf, 'input')
             os.chdir('input')
             with ZipState.ZipState('../input.zip', 'r') as input_ref:
                 input_ref.extractall()
             os.chdir('../')
-
-#  Setup a subworkflow to to run
-            keys = {
-                'PWD'          : os.getcwd(),
-                'SIM_NAME'     : '{}_massive_serial'.format(self.services.get_config_param('SIM_NAME')),
-                'LOG_FILE'     : 'log.{}_vmec.warning'.format(self.services.get_config_param('SIM_NAME'))
-            }
-
-            self.worker = {}
-            (self.worker['sim_name'],
-             self.worker['init'],
-             self.worker['driver']) = self.services.create_sub_workflow('massive_serial',
-                                                                        self.msr_global_config,
-                                                                        keys,
-                                                                        'input')
 
 #-------------------------------------------------------------------------------
 #
@@ -104,12 +91,19 @@ class massive_serial_runner(Component):
 
 #  Run the massive serial workflow.
         if 'state' in flags and flags['state'] == 'needs_update':
-            self.services.call(self.worker['init'], 'init', timeStamp)
-            self.services.call(self.worker['driver'], 'init', timeStamp)
-            self.services.call(self.worker['driver'], 'step', timeStamp)
+            process = subprocess.Popen([self.MASSIVE_SERIAL_EXE,
+                                        '--platform={}'.format(self.msr_platform_conf),
+                                        '--simulation={}'.format(self.msr_global_config),
+                                        '--log=massive_serial_{}.log'.format(timeStamp)],
+                                       env=os.environ)
 
             database = 'db_{}.dat'.format(timeStamp)
 
+#  Collect results of the workflow into the database file.
+            if process.wait():
+                self.services.error('massive_serial_runner: step failed to run massive serial')
+
+            print('here1')
             task_wait = self.services.launch_task(1, self.services.get_working_dir(),
                                                   self.MAKE_DATABASE_EXE,
                                                   '--rdir=output',
@@ -123,6 +117,7 @@ class massive_serial_runner(Component):
             self.services.stage_output_files(timeStamp, database)
 
 #  Convert the database file to json format.
+            print('here2')
             task_wait = self.services.launch_task(1, self.services.get_working_dir(),
                                                   self.TO_JSON_EXE,
                                                   '--input_file={}'.format(database),

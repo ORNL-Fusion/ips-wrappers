@@ -17,12 +17,13 @@ class install_deps(install):
         os.chdir("../utilities")
         os.system("python3 setup.py install")
         os.chdir(pwd)
+        os.system("pip install joblib")
         install.run(self)
 
 setup(
     name="massive_serial_runner",
     version="1.0.0",
-    install_requires=["ips_component_utilities"],
+    install_requires=["ips_component_utilities","joblib"],
     packages=find_packages(),
     cmdclass={
         'build'   : build_deps,

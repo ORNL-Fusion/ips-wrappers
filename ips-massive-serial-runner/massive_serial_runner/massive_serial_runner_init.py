@@ -47,6 +47,7 @@ class massive_serial_runner_init(Component):
             self.msr_global_config = self.services.get_config_param('MSR_GLOBAL_CONFIG')
             self.msr_model_config = self.services.get_config_param('MSR_MODEL_CONFIG')
             self.msr_platform_conf = self.services.get_config_param('MSR_PLATFORM_FILE')
+            self.msr_node_conf = self.services.get_config_param('MSR_NODE_FILE')
             self.current_batch = self.services.get_config_param('CURRENT_BATCH')
             self.database_config = self.services.get_config_param('DATABASE_CONFIG')
             self.inscan_config_file = self.services.get_config_param('INSCAN_CONFIG')
@@ -72,6 +73,7 @@ class massive_serial_runner_init(Component):
             zip_ref.write_or_check(self.msr_global_config)
             zip_ref.write_or_check(self.msr_model_config)
             zip_ref.write_or_check(self.msr_platform_conf)
+            zip_ref.write_or_check(self.msr_node_conf)
 
 #  This is the inputs to fastran. Should only need todo this once.
             if timeStamp == 0.0:

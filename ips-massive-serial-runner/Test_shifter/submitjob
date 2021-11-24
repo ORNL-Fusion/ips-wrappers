@@ -20,13 +20,12 @@
 #SBATCH --image=docker:registry.services.nersc.gov/rwp53/ips-massive-serial:latest
 #SBATCH --volume="/global/cscratch1/sd/rwp/tmpfiles:/tmp:perNodeCache=size=1G"
 
-conda activate fastran
-
 rm -rf $SCRATCH/test_massive_serial_runner_shifter
 mkdir $SCRATCH/test_massive_serial_runner_shifter
 cp -rd * $SCRATCH/test_massive_serial_runner_shifter
 cd $SCRATCH/test_massive_serial_runner_shifter
 
+conda activate fastran
 ips.py --platform=platform.conf --simulation=ips.massive_serial_runner.config
 
 wait
