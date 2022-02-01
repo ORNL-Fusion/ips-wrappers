@@ -204,7 +204,8 @@ c-----------------------------------
       character(len = 128) :: deltat_str, nsteps_str, enorm_str = ' '
       character(len = 128) :: nlrestrt_str
       REAL(KIND=rspec) :: deltat
-      LOGICAL :: enorm_str_present
+      LOGICAL :: enorm_str_present,nsteps_str_present,
+     +           deltat_str_present
 
       integer nj,njp1,nrho
       integer nsteps
@@ -265,6 +266,8 @@ c     Defaults:
       nsteps_str='10'
       deltat_str='0.1e-3'  !secs
       ps_add_nml='disabled'
+      nsteps_str_present = .FALSE.
+      deltat_str_present = .FALSE.
       enorm_str_present = .FALSE.
 
 c     F2003-syntax: command_argument_count()/get_command_argument(,)
@@ -274,9 +277,9 @@ c     F2003-syntax: command_argument_count()/get_command_argument(,)
          write(*,*)'prepare_cql3d_input usage: '
          write(*,*)'Up to nine command line arguments, '
          write(*,*)
-     +   'ips_mode cql3d_mode cql3d_output cql3d_nml restart nsteps_str '
-     +   //'deltat_str ps_add_nml (refer to code)'
-     +   //'enorm (optional)'
+     +   'ips_mode cql3d_mode cql3d_output cql3d_nml restart  '
+     +   //' ps_add_nml (refer to code)'
+     +   //'nsteps_str deltat_str enorm (optional)'
       endif
 
       if (iargs.ge.1)   call get_command_argument(1,ips_mode)
@@ -284,9 +287,20 @@ c     F2003-syntax: command_argument_count()/get_command_argument(,)
       if (iargs.ge.3)   call get_command_argument(3,cql3d_output)
       if (iargs.ge.4)   call get_command_argument(4,cql3d_nml)
       if (iargs.ge.5)   call get_command_argument(5,restart)
-      if (iargs.ge.6)   call get_command_argument(6,nsteps_str)
-      if (iargs.ge.7)   call get_command_argument(7,deltat_str)
-      if (iargs.ge.8)   call get_command_argument(8,ps_add_nml)
+      if (iargs.ge.6)   call get_command_argument(6,ps_add_nml)
+
+      if (iargs.ge.7)then
+         call get_command_argument(7,nsteps_str)
+         nsteps_str_present = .TRUE.
+         nsteps_str=trim(nsteps_str)
+      endif
+      
+      if (iargs.ge.8)then
+         call get_command_argument(8,deltat_str)
+         deltat_str_present = .TRUE.
+         deltat_str=trim(deltat_str)
+      endif
+      
       if (iargs.ge.9) then
         call get_command_argument(9,enorm_str)
         enorm_str_present = .TRUE.
@@ -304,8 +318,10 @@ c     F2003-syntax: command_argument_count()/get_command_argument(,)
 
       write(*,*)'prepare_cql3d_input command line arguments: ',
      +  ips_mode,'  ',cql3d_mode,'  ',cql3d_output,'  ',cql3d_nml,
-     +  '  ',restart,'  ',nsteps_str,'  ',deltat_str,'  ',ps_add_nml
-      if (enorm_str_present == .TRUE.) write(*,*) 'enorm_str'
+     +  '  ',restart,'  ',ps_add_nml
+      if (nsteps_str_present == .TRUE.) write(*,*) nsteps_str
+      if (deltat_str_present == .TRUE.) write(*,*) deltat_str
+      if (enorm_str_present == .TRUE.) write(*,*) enorm_str
 
 
 c-----------------------------------------------------------------------
@@ -723,19 +739,24 @@ c           Initialize arrays,
 
       read(nsteps_str, '(i10)') nsteps
 ! ptb:      read(nsteps_string, '(i10)') nsteps
-      nstop=nsteps     !Reset these variables in namelist
-      nplot=nsteps
-      nplt3d=nsteps
-      read(deltat_str, '(e14.7)') deltat
+      if (nsteps_str_present .and. trim(nsteps_str) .ne. 'None')then
+         read(nsteps_str, '(i10)') nsteps
+         nstop=nsteps     !Reset these variables in namelist
+         nplot=nsteps
+         nplt3d=nsteps
+         write(*,*) 'nsteps from nsteps_string = ', nsteps  ! ptb:
+      endif
 ! ptb:      read(deltat_string, '(e15.7)') deltat
-      dtr=deltat
-      write(*,*) 'deltat from deltat_string = ', deltat  ! ptb:
-      write(*,*) 'nsteps from nsteps_string = ', nsteps  ! ptb:
+      if (deltat_str_present .and. trim(deltat_str) .ne. 'None')then
+         read(deltat_str, '(e14.7)') deltat
+         dtr=deltat
+         write(*,*) 'deltat from deltat_string = ', deltat  ! ptb:
 
-	 if (enorm_str_present .and. trim(enorm_str) /= 'None') then
+      endif
+      if (enorm_str_present .and. trim(enorm_str) /= 'None') then
         write(*,*) 'enorm_str = ', enorm_str
-		read(enorm_str,*) enorm
-	 end if
+        read(enorm_str,*) enorm
+      end if
 
 !.......................................................................
 c     If only need electron profiles plus zeff (ngen=1 and 

@@ -135,6 +135,7 @@ class cql3d(Component):
     # later
 
         NPROC = get_component_param(self, services, 'NPROC')
+        NPPN = get_component_param(self, services, 'NPPN')
         BIN_PATH = get_component_param(self, services, 'BIN_PATH')
         INPUT_FILES = get_component_param(self, services, 'INPUT_FILES')
         OUTPUT_FILES = get_component_param(self, services, 'OUTPUT_FILES')
@@ -144,8 +145,8 @@ class cql3d(Component):
         cql3d_mode = get_component_param(self, services, 'CQL3D_MODE')
         cql3d_output = get_component_param(self, services, 'CQL3D_OUTPUT')
         cql3d_nml = get_component_param(self, services, 'CQL3D_NML')
-        nsteps_str = get_component_param(self, services, 'NSTEPS_STR')
-        deltat_str = get_component_param(self, services, 'DELTAT_STR')
+        nsteps_str = get_component_param(self, services, 'NSTEPS_STR',optional=True)
+        deltat_str = get_component_param(self, services, 'DELTAT_STR',optional=True)
         ps_add_nml = get_component_param(self, services, 'PS_ADD_NML')
 
         # enorm which is used here and in cql3d
@@ -244,11 +245,16 @@ class cql3d(Component):
     # ptb:    command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
     # ptb:    cql3d_output + ' ' + cql3d_nml + ' ' + nsteps_str + ' ' + ps_add_nml
         command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
-        cql3d_output + ' ' + cql3d_nml + ' ' + restart + ' ' + nsteps_str + ' ' +\
-        ' ' + deltat_str + ' ' + ps_add_nml
+        cql3d_output + ' ' + cql3d_nml + ' ' + restart + ' '+ ps_add_nml
+        if nsteps_str != None:
+            command = command + ' ' + nsteps_str
+
+        if deltat_str != None:
+            command = command + ' ' + deltat_str
+             
         if arg_enorm != None:
             command = command  + ' ' + arg_enorm
-        
+
         print('running = ', command)
         services.send_portal_event(event_type = 'COMPONENT_EVENT',\
           event_comment =  command)
@@ -397,8 +403,8 @@ class cql3d(Component):
         cql3d_mode = get_component_param(self, services, 'CQL3D_MODE')
         cql3d_output = get_component_param(self, services, 'CQL3D_OUTPUT')
         cql3d_nml = get_component_param(self, services, 'CQL3D_NML')
-        nsteps_str = get_component_param(self, services, 'NSTEPS_STR')
-        deltat_str = get_component_param(self, services, 'DELTAT_STR')
+        nsteps_str = get_component_param(self, services, 'NSTEPS_STR',optional=True)
+        deltat_str = get_component_param(self, services, 'DELTAT_STR',optional=True)
         ps_add_nml = get_component_param(self, services, 'PS_ADD_NML')
         cur_ImChizz_inp_file = get_global_param(self, services,'CURRENT_ImChizz_inp', optional = True)
 
@@ -428,8 +434,13 @@ class cql3d(Component):
 # ptb:    command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
 # ptb:    cql3d_output + ' ' + cql3d_nml + ' ' + nsteps_str + ' ' + ps_add_nml
         command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
-        cql3d_output + ' ' + cql3d_nml + ' ' + restart + ' ' + nsteps_str + ' ' +\
-        ' ' + deltat_str + ' ' + ps_add_nml
+        cql3d_output + ' ' + cql3d_nml + ' ' + restart + ' ' + ps_add_nml
+        if nsteps_str != None:
+            command = command+ ' ' + steps_str
+
+        if deltat_str != None:
+            command = command+' ' + deltat_str
+
         if arg_enorm != None:
           command = command  + ' ' + arg_enorm
 
@@ -449,7 +460,7 @@ class cql3d(Component):
 # ptb: Need to first copy the cqlinput_new file to cqlinput
         shutil.copyfile('cqlinput_new', 'cqlinput')
         cwd = services.get_working_dir()
-        task_id = services.launch_task(self.NPROC, cwd, self.CQL3D_BIN, logfile='log.cql3d')
+        task_id = services.launch_task(self.NPROC, cwd, self.CQL3D_BIN, task_ppn=self.NPPN, logfile='log.cql3d')
         retcode = services.wait_task(task_id)
         if (retcode != 0):
           print('Error executing command: ', cql3d_bin)
