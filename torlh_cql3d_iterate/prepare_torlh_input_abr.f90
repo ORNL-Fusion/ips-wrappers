@@ -130,14 +130,11 @@
 !  ~~~~~~~~~~~~~~~~~
       integer, parameter :: max_runs = 50    !max number of nphi
       character(80), dimension(:) :: files_toric(max_runs)
-      character(80) :: path, file_felice, smooth, consv
-      character(80) :: sumtrunc
-      integer :: num_runs, nfel_nphi, iread_felice, npsi_qld
-      integer :: wndwtrunc
-      real(rspec) :: d_u, enorm=0._rspec, uasp=1.0, pwtot=1.0
-      real(rspec) :: deltapsi,ntres
-      real(rspec) :: psi_min, psi_max
-      real(rspec) :: u_extr = 10._rspec
+      character(80) :: sumtrunc, path
+      integer :: num_runs, npsi_qld,wndwtrunc, ibessel
+      real(rspec) :: d_u, enorm=1000._rspec, pwtot=1.0
+      real(rspec) :: deltapsi
+      real(rspec) :: rho_min, rho_max
       real(rspec), dimension(:) :: pw_nphi(max_runs),psimap(51), &
                                    phimap(51)
       
@@ -248,28 +245,21 @@
 !originally in t0_torica.F
 !specifies general wave parameters, some numerical parameters
       namelist /toricainp/ &
-!      &   nvrb,   nmod,   ntt,    nelm,   nptvac, mxmvac, &
-!      &   freqcy, anzedg, ibcant,  antlen, antlc,  theant, &
-!      &   iflr,   ibpol,  iqtor,  icoll,  enhcol, &
-!      &   imdedg, iezvac, ibweld, icosig, iregax, &
-!      &   isol,   mastch,         iout,   idlout, io_ncdf, &
-!      &   iwdisk, ipltht, zeff,   iclres, dnures, tnures, &
-!      &   timing_on, scratchpath, bscale, use_incore, pcblock
-     &  nmod,   ntt,    nelm,   nptvac, mxmvac, &
+     &   nmod,   ntt,    nelm, nptvac, mxmvac, &
      &   freqcy, anzedg, ibcant,  antlen, antlc,  nant, &
-     &   theant, iflr,   ibpol,  icoll,  enhcol, &
+     &   theant, iflr, icoll,  enhcol, &
      &   iregax, &
-     &   isol,   mastch,         iout,   idlout, &
+     &   isol,   mastch, iout,   idlout, &
      &   iwdisk, zeff, &
      &   timing_on, inumin, scratchpath, use_incore, pcblock, inputpath, &
      &   IJRF, IPWDIM, ICLPLO
 
 ! originally in t0_mod_qldce.F
       namelist /qldceinp/ &
-     &     num_runs, path, iread_felice, files_toric,  &
-     &     file_felice, d_u, psi_min, psi_max, npsi_qld, enorm, &
-     &     ntres, deltapsi, uasp, pw_nphi, pwtot, psimap, phimap, &
-     &     smooth, consv, sumtrunc, wndwtrunc
+     &     num_runs, path, files_toric,  &
+     &     d_u, rho_min, rho_max, npsi_qld, enorm, &
+     &     deltapsi, pw_nphi, pwtot, ibessel, psimap, phimap, &
+     &     sumtrunc, wndwtrunc
 !uasp yet to be validated, do not use this option in production JCW 22 JUNE 2011
 !enorm if non zero puts qldce on a momentum space mesh as used by CQL3D
 !otherwise qldce is on a v/vte mesh.
