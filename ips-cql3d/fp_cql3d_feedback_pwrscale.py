@@ -447,6 +447,21 @@ class cql3d(Component):
         # enorm which is used here and in cql3d
           arg_enorm = 'None'
           arg_enorm = self.try_get_config_param(services,'ENORM', optional = True)
+
+        #if deltat_str .eq. 0 then use timestep ramp from GENRAY/CQL sims
+          t0 = float(timeStamp)
+          if(deltat_str=='0'):
+              if(t0 < 5):
+                  deltat_str = '0.00001'
+              elif(t0<10):
+                  deltat_str = '0.0001'
+              elif(t0<30):
+                  deltat_str = '0.001'
+              elif(t0<40):
+                  deltat_str = '0.005'
+              else:
+                  deltat_str = '0.01'
+
           
     # Call prepare_input - step
           print('fp_cql3d step: calling prepare_input')
