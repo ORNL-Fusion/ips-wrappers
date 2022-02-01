@@ -321,7 +321,7 @@ PROGRAM model_EPA_mdescr
 	   
 			WRITE (*,*) 'model_EPA_mdescr: About to allocate thermal profile arrays'
 			CALL    ps_alloc_plasma_state(ierr)
-			WRITE (*,*) 'model_EPA_mdescr:  Thermal profile arrays allocated'
+                        WRITE (*,*) 'model_EPA_mdescr:  Thermal profile arrays allocated ierr= ',ierr
 			WRITE (*,*)
 	
 		!---------------------------------------------------------------------------------
@@ -367,8 +367,7 @@ WRITE(*,*)
 
 		IF (TRIM(Te_profile_model_name) == 'Power_Parabolic') THEN
 			CALL Power_Parabolic(Te_0, Te_edge, alpha_Te_1, alpha_Te_2, zone_center, ps%Ts(:, 0))
-			WRITE (*,*) 'model_EPA_mdescr:  initial Te profile = ', ps%Ts(:, 0)
-			WRITE (*,*)
+                        WRITE (*,*) 'model_EPA_mdescr:  initial Te profile = ', ps%Ts(:, 0)
 		END IF
 
 		IF (TRIM(ne_profile_model_name) == 'Power_Parabolic') THEN
@@ -680,7 +679,7 @@ CONTAINS
       integer, parameter :: nspmx = 8
                              ! A maximum of 8 ion species allowed
 
-      integer ::   idprof, nspec,  mainsp, nprodt
+      integer ::   idprof, nspec,  mainsp, nprodt,isp
       integer :: kdiff_idens, kdiff_itemp, nsptmp, iatm, iazi
 
       REAL(KIND=rspec), dimension(:), allocatable :: psipro
@@ -700,7 +699,8 @@ CONTAINS
 !
 !  Reading the first variable name and the number of radial mesh points
 !
-         read(lun22, *)  var_name, nprodt
+         read(lun22,'(A10,5i4)')  var_name, nprodt, nspec, mainsp, &
+                                  kdiff_idens, kdiff_itemp
          write (*,*) 'var_name = ', var_name, '  nprodt = ', nprodt
 !
 ! On INIT just set nrho to nprodt and return (DBB)
@@ -710,6 +710,10 @@ CONTAINS
 			close(lun22)
 			return
 		ENDIF
+         do  isp=1,nspec
+            read(lun22,'(2i4)')  iatm, iazi
+         enddo
+
 !
 ! Allocations
 !
@@ -727,6 +731,7 @@ CONTAINS
 !  edge, and is linear in SQRT(Psi_poloidal). An equidistant
 !  mesh is required for the interpolation in toric.
 !
+         read(lun22,'(A10)')  var_name
          read(lun22, *)  tbpsi
          write (*,*) 'tbpsi = ', tbpsi
 
@@ -738,22 +743,28 @@ CONTAINS
 !
 !  Reading the particle densities (hardwired ni = ne and one ion species)
 !
-         read(lun22,*)  var_name, nprodt
+         read(lun22,*)  var_name
          read(lun22, *)  tbne
          write (*,*) 'tbne = ', tbne
-         ps%ns(:,0) = zone_centered_profile(nprodt, tbne)
-         ps%ns(:,1) = ps%ns(:,0)
+         ps%ns(:,0) = zone_centered_profile(nprodt, tbne*1.0e6)
 !
 !  Reading the electron temperature (units: keV)
 !
-         read(lun22,*)  var_name, nprodt
+         read(lun22,*)  var_name
          read(lun22,*)  tbte(1:nprodt)
          write (*,*) 'tbte = ', tbte
          ps%Ts(:,0) = zone_centered_profile(nprodt, tbte)
 !
+!  Reading the particle densities (hardwired ni = ne and one ion species)
+!
+         read(lun22,*)  var_name
+         read(lun22, *)  tbni
+         write (*,*) 'tbni = ', tbni
+         ps%ns(:,1) = zone_centered_profile(nprodt, tbni*1.0e6)
+!
 !  Reading the ion temperature
 !
-         read(lun22,*)  var_name, nprodt
+         read(lun22,*)  var_name
 	     read(lun22,*)  tbti(1:nprodt)
          write (*,*) 'tbti = ', tbti
 
