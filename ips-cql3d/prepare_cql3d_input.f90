@@ -311,9 +311,7 @@ c     F2003-syntax: command_argument_count()/get_command_argument(,)
       cql3d_mode=trim(cql3d_mode)
       cql3d_output=trim(cql3d_output)
       cql3d_nml=trim(cql3d_nml)
-      restart=trim(restart)
-      nsteps_str=trim(nsteps_str)
-      deltat_str=trim(deltat_str)
+      restart=trim(restart)      
       ps_add_nml=trim(ps_add_nml)
 
       write(*,*)'prepare_cql3d_input command line arguments: ',
@@ -737,7 +735,7 @@ c           Initialize arrays,
       write(*,*) 'nsteps_str = ', nsteps_str
       write(*,*) 'deltat_str = ', deltat_str
 
-      read(nsteps_str, '(i10)') nsteps
+      
 ! ptb:      read(nsteps_string, '(i10)') nsteps
       if (nsteps_str_present .and. trim(nsteps_str) .ne. 'None')then
          read(nsteps_str, '(i10)') nsteps
@@ -745,7 +743,10 @@ c           Initialize arrays,
          nplot=nsteps
          nplt3d=nsteps
          write(*,*) 'nsteps from nsteps_string = ', nsteps  ! ptb:
-      endif
+      endif   
+
+      
+      
 ! ptb:      read(deltat_string, '(e15.7)') deltat
       if (deltat_str_present .and. trim(deltat_str) .ne. 'None')then
          read(deltat_str, '(e14.7)') deltat
@@ -753,6 +754,7 @@ c           Initialize arrays,
          write(*,*) 'deltat from deltat_string = ', deltat  ! ptb:
 
       endif
+
       if (enorm_str_present .and. trim(enorm_str) /= 'None') then
         write(*,*) 'enorm_str = ', enorm_str
         read(enorm_str,*) enorm
@@ -808,15 +810,17 @@ c---------------------------------------------------------------
       if (njene.ne.101) then
          write(*,*)'Resetting njene for uniform, 101-pt plasma profs'
          njene=101
-         nj=njene    !local variable
-         njp1=nj+1   !local variable
+         !nj=njene    !local variable
+         !njp1=nj+1   !local variable
          if (njene.gt.njenea) then
             write(*,*)'Stop:  Need njenea bigger in param.h'
             stop
          endif
       endif
 
-
+      nj=101    !local variable
+      njp1=nj+1   !local variable
+      
 c     Make sure cql3d namelist density and temp scaling turned off,
 c     except introduce any required unit changes here.
       enescal=1.d-6
@@ -1177,7 +1181,7 @@ c     Equispaced, bin-boundary grid for profiles to cql3d
       do l=1,nj
          ryain(l)=(l-1)*dryain
       enddo
-
+      WRITE(*,*) 'nj njp1 ',nj,njp1 
       allocate(rho_bdy_rezon(njp1))
       rho_bdy_rezon(1)=ryain(1)
       rho_bdy_rezon(njp1)=ryain(nj)

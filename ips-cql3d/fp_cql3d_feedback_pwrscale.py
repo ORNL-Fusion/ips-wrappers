@@ -284,9 +284,16 @@ class cql3d(Component):
     # ptb:    command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
     # ptb:    cql3d_output + ' ' + cql3d_nml + ' ' + nsteps_str + ' ' + ps_add_nml
         command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
-        cql3d_output + ' ' + cql3d_nml + ' ' + restart + ' ' + nsteps_str + ' ' +\
-        ' ' + deltat_str + ' ' + ps_add_nml + ' ' + arg_enorm
-        
+        cql3d_output + ' ' + cql3d_nml + ' ' + restart + ' '+ ps_add_nml
+        if nsteps_str != None:
+            command = command + ' ' + nsteps_str
+
+        if deltat_str != None:
+            command = command + ' ' + deltat_str
+             
+        if arg_enorm != None:
+            command = command  + ' ' + arg_enorm
+            
         print('running = ', command)
         services.send_portal_event(event_type = 'COMPONENT_EVENT',\
           event_comment =  command)
@@ -493,9 +500,16 @@ class cql3d(Component):
     # ptb:    command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
     # ptb:    cql3d_output + ' ' + cql3d_nml + ' ' + nsteps_str + ' ' + ps_add_nml
           command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
-          cql3d_output + ' ' + cql3d_nml + ' ' + restart + ' ' + nsteps_str + ' ' +\
-          ' ' + deltat_str + ' ' + ps_add_nml+ ' ' + arg_enorm
+          cql3d_output + ' ' + cql3d_nml + ' ' + restart + ' '+ ps_add_nml
+          if nsteps_str != None:
+            command = command + ' ' + nsteps_str
 
+          if deltat_str != None:
+            command = command + ' ' + deltat_str
+             
+          if arg_enorm != None:
+            command = command  + ' ' + arg_enorm
+            
           print('running', command)
           services.send_portal_event(event_type = 'COMPONENT_EVENT',\
               event_comment =  command)
