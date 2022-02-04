@@ -59,7 +59,7 @@ c--------------------------------------------------------------
 
 cSAP080711
 c-----genray input file: genray.in or genray.dat
-      character*10 genray_in_dat
+      character*16 genray_in_dat
 
       save ndim  ! to give ndim to
                  ! subroutine write_all_namelists
@@ -159,7 +159,7 @@ c--------------------------------------------------------------
 c---------------------------------------------------------------------------
 c-----output
       integer ndim,nray
-      character*10 genray_in_dat
+      character(len=*) genray_in_dat
 c-----local
       integer kode,icheck,i,k,j,nbulk1,i1,i_unit,
      &i_genray_in_transformation
