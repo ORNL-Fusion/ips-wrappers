@@ -48,7 +48,7 @@ class massive_serial_runner(Component):
                 'PWD'            : self.services.get_config_param('PWD'),
                 'SIM_NAME'       : 'massive_serial_runner',
                 'LOG_FILE'       : 'log.massive_serial_runner',
-                'NNODES'         : keywords['NNODES'],
+                'NNODES'         : self.services.get_config_param('MSR_NNODES'),
                 'INPUT_DIR_SIM'  : 'massive_serial_runner_input_dir',
                 'OUTPUT_DIR_SIM' : '{}/massive_serial_runner_output_dir'.format(os.getcwd())
             }
