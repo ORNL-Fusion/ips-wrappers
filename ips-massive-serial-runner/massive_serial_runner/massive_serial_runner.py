@@ -45,6 +45,8 @@ class massive_serial_runner(Component):
 #  Get config filenames.
         if timeStamp == 0.0:
             self.database_config = self.services.get_config_param('DATABASE_CONFIG')
+            self.zip_ref.extract(self.database_config)
+
             self.current_batch = self.services.get_config_param('CURRENT_BATCH')
 
             self.constraint_path = self.services.get_config_param('MODULE_PATH')
@@ -134,7 +136,7 @@ class massive_serial_runner(Component):
 
             task_wait = self.services.launch_task(1, self.services.get_working_dir(),
                                                   self.MAKE_DATABASE_EXE,
-                                                  '--rdir=output',
+                                                  '--rdir=massive_serial_runner_output_dir',
                                                   '--input={}'.format(self.database_config),
                                                   '--output={}'.format(database),
                                                   logfile='make_db_{}.log'.format(timeStamp))
