@@ -28,7 +28,7 @@ class massive_serial_runner(Component):
 #  Massive Serial Runner Component init method. This method prepairs the state.
 #
 #-------------------------------------------------------------------------------
-    def init(self, timeStamp=0.0):
+    def init(self, timeStamp=0.0, **keywords):
         ScreenWriter.screen_output(self, 'verbose', 'massive_serial_runner: init')
 
 #  Get config filenames.
@@ -41,17 +41,34 @@ class massive_serial_runner(Component):
             self.constraint_name = self.services.get_config_param('MODULE_NAME')
 
 #  IPS framework config parameters.
-            os.environ['PWD'] = os.getcwd()
+            ms_state = self.services.get_config_param('MASSIVE_SERIAL_STATE')
 
-            self.msr_config = self.services.get_config_param('MSR_CONFIG')
-            self.msr_global_config = self.services.get_config_param('MSR_GLOBAL_CONFIG')
-            self.msr_model_config = self.services.get_config_param('MSR_MODEL_CONFIG')
-            self.msr_platform_conf = self.services.get_config_param('MSR_PLATFORM_FILE')
-            self.msr_node_conf = self.services.get_config_param('MSR_NODE_FILE')
-            os.environ['MSR_PLATFORM_FILE'] = self.msr_platform_conf
-            os.environ['MSR_CONFIG'] = self.services.get_config_param('MSR_CONFIG')
-            os.environ['MSR_MODEL_CONFIG'] = self.msr_model_config
-            os.environ['NNODES'] = self.services.get_config_param('NNODES')
+#  Keys for the massiver serial subworkflow.
+            keys = {
+                'PWD'            : self.services.get_config_param('PWD'),
+                'SIM_NAME'       : 'massive_serial_runner',
+                'LOG_FILE'       : 'log.massive_serial_runner',
+                'NNODES'         : keywords['NNODES'],
+                'INPUT_DIR_SIM'  : 'massive_serial_runner_input_dir',
+                'OUTPUT_DIR_SIM' : '{}/massive_serial_runner_output_dir'.format(os.getcwd())
+            }
+
+            if os.path.exists('massive_serial_runner_input_dir'):
+                shutil.rmtree('massive_serial_runner_input_dir')
+            os.mkdir('massive_serial_runner_input_dir')
+
+            self.massive_serial_worker = {
+                'sim_name' : None,
+                'init'     : None,
+                'driver'   : None
+            }
+
+            (self.massive_serial_worker['sim_name'],
+             self.massive_serial_worker['init'],
+             self.massive_serial_worker['driver']) = self.services.create_sub_workflow('massive_serial',
+                                                                                       self.services.get_config_param('MSR_GLOBAL_CONFIG'),
+                                                                                       keys,
+                                                                                       'massive_serial_runner_input_dir')
 
 #  Stage state.
         self.services.stage_state()
@@ -59,24 +76,33 @@ class massive_serial_runner(Component):
 #  Unzip files from the state. Use mode a so files an be read and written to.
         self.zip_ref = ZipState.ZipState(self.current_state, 'a')
         self.zip_ref.extract('inscan')
+        shutil.copy2('inscan', 'massive_serial_runner_input_dir')
 
 #  These files should never change so only extract them once.
         if timeStamp == 0.0:
-            self.zip_ref.extract(self.database_config)
-            self.zip_ref.extract(self.msr_config)
-            self.zip_ref.extract(self.msr_global_config)
-            self.zip_ref.extract(self.msr_model_config)
-            self.zip_ref.extract(self.msr_platform_conf)
-            self.zip_ref.extract(self.msr_node_conf)
+            ms_state = self.services.get_config_param('MSR_SERIAL_STATE')
+
+            self.zip_ref.extract(ms_state)
+            shutil.copy2(ms_state, 'massive_serial_runner_input_dir')
+
+            os.chdir('massive_serial_runner_input_dir')
 
 #  We need the input directory to exist in a directory called input. So we must
 #  make that directory first than extract the files. Remember to change back to
 #  the orginal working directory after extraction.
-            self.zip_ref.extract('input.zip')
-            os.makedirs('input')
-            os.chdir('input')
-            with ZipState.ZipState('../input.zip', 'r') as input_ref:
+            with ZipState.ZipState(self.msr_state, 'r') as zip_ref:
+                zip_ref.extractall()
+            with ZipState.ZipState('input.zip', 'r') as input_ref:
                 input_ref.extractall()
+
+            override = ConfigObj(infile=self.services.get_config_param('MSR_SERIAL_NODE_CONFIG'), interpolation='template', file_error=True)
+            override['INPUT_DIR_SIM'] = os.getcwd()
+            override.write()
+
+            override2 = ConfigObj(infile=self.services.get_config_param('MSR_MODEL_CONFIG'), interpolation='template', file_error=True)
+            override2['INPUT_DIR_SIM'] = os.getcwd()
+            override2.write()
+
             os.chdir('../')
 
 #-------------------------------------------------------------------------------
@@ -91,19 +117,16 @@ class massive_serial_runner(Component):
 
 #  Run the massive serial workflow.
         if 'state' in flags and flags['state'] == 'needs_update':
-            process = subprocess.Popen([self.MASSIVE_SERIAL_EXE,
-                                        '--platform={}'.format(self.msr_platform_conf),
-                                        '--simulation={}'.format(self.msr_global_config),
-                                        '--log=massive_serial_{}.log'.format(timeStamp)],
-                                       env=os.environ)
+            self.services.call(self.massive_serial_worker['init'], 'init', timeStamp)
+            self.services.call(self.massive_serial_worker['driver'], 'init', timeStamp)
+            wait = self.services.call_nonblocking(self.massive_serial_worker['driver'], 'step', timeStamp)
 
             database = 'db_{}.dat'.format(timeStamp)
 
 #  Collect results of the workflow into the database file.
-            if process.wait():
+            if self.services.wait_call(self.wait, True):
                 self.services.error('massive_serial_runner: step failed to run massive serial')
 
-            print('here1')
             task_wait = self.services.launch_task(1, self.services.get_working_dir(),
                                                   self.MAKE_DATABASE_EXE,
                                                   '--rdir=output',
@@ -117,7 +140,6 @@ class massive_serial_runner(Component):
             self.services.stage_output_files(timeStamp, database)
 
 #  Convert the database file to json format.
-            print('here2')
             task_wait = self.services.launch_task(1, self.services.get_working_dir(),
                                                   self.TO_JSON_EXE,
                                                   '--input_file={}'.format(database),

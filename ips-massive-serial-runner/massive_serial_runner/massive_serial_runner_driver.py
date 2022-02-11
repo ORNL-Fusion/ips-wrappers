@@ -26,7 +26,7 @@ class massive_serial_runner_driver(Component):
 #  file.
 #
 #------------------------------------------------------------------------------
-    def init(self, timeStamp=0.0):
+    def init(self, timeStamp=0.0, **keywords):
         ScreenWriter.screen_output(self, 'verbose', 'massive_serial_runner_driver: init')
 
 #  Get config filenames.
@@ -35,7 +35,7 @@ class massive_serial_runner_driver(Component):
 #  Initialize the massive serial runner.
         self.massive_serial_runner_port = self.services.get_port('MSR')
         self.wait = self.services.call_nonblocking(self.massive_serial_runner_port,
-                                                   'init', timeStamp)
+                                                   'init', timeStamp, **keywords)
 
 #-------------------------------------------------------------------------------
 #
