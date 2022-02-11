@@ -31,6 +31,12 @@ class massive_serial_runner(Component):
     def init(self, timeStamp=0.0, **keywords):
         ScreenWriter.screen_output(self, 'verbose', 'massive_serial_runner: init')
 
+#  Stage state.
+        self.services.stage_state()
+
+#  Unzip files from the state. Use mode a so files an be read and written to.
+        self.zip_ref = ZipState.ZipState(self.current_state, 'a')
+
 #  Get config filenames.
         if timeStamp == 0.0:
             self.current_state = self.services.get_config_param('CURRENT_MSR_STATE')
@@ -63,18 +69,16 @@ class massive_serial_runner(Component):
                 'driver'   : None
             }
 
+            msr_global = self.services.get_config_param('MSR_GLOBAL_CONFIG')
+            self.zip_ref.extract(msr_global)
+
             (self.massive_serial_worker['sim_name'],
              self.massive_serial_worker['init'],
              self.massive_serial_worker['driver']) = self.services.create_sub_workflow('massive_serial',
-                                                                                       self.services.get_config_param('MSR_GLOBAL_CONFIG'),
+                                                                                       msr_global,
                                                                                        keys,
                                                                                        'massive_serial_runner_input_dir')
 
-#  Stage state.
-        self.services.stage_state()
-
-#  Unzip files from the state. Use mode a so files an be read and written to.
-        self.zip_ref = ZipState.ZipState(self.current_state, 'a')
         self.zip_ref.extract('inscan')
         shutil.copy2('inscan', 'massive_serial_runner_input_dir')
 
