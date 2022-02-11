@@ -41,7 +41,7 @@ class massive_serial_runner(Component):
             self.constraint_name = self.services.get_config_param('MODULE_NAME')
 
 #  IPS framework config parameters.
-            ms_state = self.services.get_config_param('MASSIVE_SERIAL_STATE')
+            ms_state = self.services.get_config_param('MSR_SERIAL_STATE')
 
 #  Keys for the massiver serial subworkflow.
             keys = {
