@@ -49,9 +49,6 @@ class massive_serial_runner(Component):
             self.constraint_path = self.services.get_config_param('MODULE_PATH')
             self.constraint_name = self.services.get_config_param('MODULE_NAME')
 
-#  IPS framework config parameters.
-            ms_state = self.services.get_config_param('MSR_SERIAL_STATE')
-
 #  Keys for the massiver serial subworkflow.
             keys = {
                 'PWD'            : self.services.get_config_param('PWD'),
@@ -97,7 +94,7 @@ class massive_serial_runner(Component):
 #  We need the input directory to exist in a directory called input. So we must
 #  make that directory first than extract the files. Remember to change back to
 #  the orginal working directory after extraction.
-            with ZipState.ZipState(self.msr_state, 'r') as zip_ref:
+            with ZipState.ZipState(ms_state, 'r') as zip_ref:
                 zip_ref.extractall()
             with ZipState.ZipState('input.zip', 'r') as input_ref:
                 input_ref.extractall()
