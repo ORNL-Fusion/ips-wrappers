@@ -35,11 +35,13 @@ class massive_serial_runner(Component):
         self.services.stage_state()
 
 #  Unzip files from the state. Use mode a so files an be read and written to.
+        if timeStamp == 0.0:
+            self.current_state = self.services.get_config_param('CURRENT_MSR_STATE')
+
         self.zip_ref = ZipState.ZipState(self.current_state, 'a')
 
 #  Get config filenames.
         if timeStamp == 0.0:
-            self.current_state = self.services.get_config_param('CURRENT_MSR_STATE')
             self.database_config = self.services.get_config_param('DATABASE_CONFIG')
             self.current_batch = self.services.get_config_param('CURRENT_BATCH')
 
