@@ -54,7 +54,7 @@ class massive_serial_runner(Component):
 #  Keys for the massiver serial subworkflow.
             keys = {
                 'PWD'            : self.services.get_config_param('PWD'),
-                'SIM_NAME'       : 'massive_serial_runner',
+                'SIM_NAME'       : 'massive_serial_runner_sub',
                 'LOG_FILE'       : 'log.massive_serial_runner',
                 'NNODES'         : self.services.get_config_param('MSR_NNODES'),
                 'INPUT_DIR_SIM'  : 'massive_serial_runner_input_dir',
