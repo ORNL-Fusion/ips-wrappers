@@ -66,6 +66,7 @@ class massive_serial_runner_init(Component):
                 zip_ref.write_or_extract(self.inscan_config_file)
                 zip_ref.write_or_check(self.database_config)
                 zip_ref.write_or_check(self.msr_global_config)
+                zip_ref.write_or_check(self.services.get_config_param('MSR_SERIAL_STATE'))
 
 #  Batch files are optional. If a batch file was not staged as an input, extract
 #  if from the plasma state if one exists inside it.
