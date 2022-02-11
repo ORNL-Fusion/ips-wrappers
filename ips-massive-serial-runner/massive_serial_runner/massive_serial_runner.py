@@ -129,7 +129,7 @@ class massive_serial_runner(Component):
             database = 'db_{}.dat'.format(timeStamp)
 
 #  Collect results of the workflow into the database file.
-            if self.services.wait_call(self.wait, True):
+            if self.services.wait_call(wait, True):
                 self.services.error('massive_serial_runner: step failed to run massive serial')
 
             task_wait = self.services.launch_task(1, self.services.get_working_dir(),
