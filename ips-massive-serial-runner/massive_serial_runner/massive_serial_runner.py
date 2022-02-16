@@ -139,6 +139,7 @@ class massive_serial_runner(Component):
                                                   '--rdir=massive_serial_runner_output_dir',
                                                   '--input={}'.format(self.database_config),
                                                   '--output={}'.format(database),
+                                                  '--ndir=0', #  FIXME: This command option works around a bug in makedb which shouldn't get called.
                                                   logfile='make_db_{}.log'.format(timeStamp))
             if self.services.wait_task(task_wait):
                 self.services.error('massive_serial_runner: step failed to make database')
