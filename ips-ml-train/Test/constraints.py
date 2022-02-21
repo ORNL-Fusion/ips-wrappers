@@ -56,7 +56,7 @@ manifest = [
     {'function' : aratio,           'args' : ['r','a']},
     {'function' : q95_input,        'args' : ['r','a','bt','ip','kappa','delta']},
     {'function' : q95,              'args' : ['q95_input']},
-    {'function' : greenwald,        'args' : ['ip','a','neped']}
+    {'function' : greenwald,        'args' : ['ip','a','neped']},
     {'function' : r_limits,         'args' : ['r']},
     {'function' : a_limits,         'args' : ['a']},
     {'function' : kappa_limits,     'args' : ['kappa']},
