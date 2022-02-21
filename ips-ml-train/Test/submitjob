@@ -24,7 +24,7 @@
 
 module load gcc
 
-WORK_DIRECTORY=test_ml_train_debug_fbs
+WORK_DIRECTORY=test_ml_train
 
 rm -rf $SCRATCH/$WORK_DIRECTORY
 mkdir $SCRATCH/$WORK_DIRECTORY
