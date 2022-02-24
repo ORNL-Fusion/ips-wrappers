@@ -31,7 +31,7 @@ mkdir $SCRATCH/$WORK_DIRECTORY
 cp -rd * $SCRATCH/$WORK_DIRECTORY
 cd $SCRATCH/$WORK_DIRECTORY
 
-conda activate subworkflow
+source activate /global/common/software/atom/cori/adaptive/conda
 ips.py --platform=platform.conf --simulation=ips.ml_train.config
 
 wait

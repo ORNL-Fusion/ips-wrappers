@@ -52,20 +52,20 @@ def ibs_limits(ibs):
     return (ibs >= 0.74) & (ibs <= 12.0)
 
 manifest = [
-    {'function' : fbs,              'args' : ['ip','ibs']  },
-    {'function' : aratio,           'args' : ['r','a']},
-    {'function' : q95_input,        'args' : ['r','a','bt','ip','kappa','delta']},
-    {'function' : q95,              'args' : ['q95_input']},
-    {'function' : greenwald,        'args' : ['ip','a','neped']},
-    {'function' : r_limits,         'args' : ['r']},
-    {'function' : a_limits,         'args' : ['a']},
-    {'function' : kappa_limits,     'args' : ['kappa']},
-    {'function' : delta_limits,     'args' : ['delta']},
-    {'function' : bt_limits,        'args' : ['bt']},
-    {'function' : ip_limits,        'args' : ['ip']},
-    {'function' : fgw_ped_limits,   'args' : ['fgw_ped']},
-    {'function' : nepeak_limits,    'args' : ['nepeak']},
-    {'function' : betan_limits,     'args' : ['betan']},
-    {'function' : betan_ped_limits, 'args' : ['betan_ped']},
-    {'function' : ibs_limits,       'args' : ['ibs']}
+    {'function' : fbs,              'args' : ['ip','ibs']                        },
+    {'function' : aratio,           'args' : ['r','a']                           },
+    {'function' : q95_input,        'args' : ['r','a','bt','ip','kappa','delta'] },
+    {'function' : q95,              'args' : ['q95_input']                       },
+    {'function' : greenwald,        'args' : ['ip','a','neped']                  },
+    {'function' : r_limits,         'args' : ['r']                               },
+    {'function' : a_limits,         'args' : ['a']                               },
+    {'function' : kappa_limits,     'args' : ['kappa']                           },
+    {'function' : delta_limits,     'args' : ['delta']                           },
+    {'function' : bt_limits,        'args' : ['bt']                              },
+    {'function' : ip_limits,        'args' : ['ip']                              },
+    {'function' : fgw_ped_limits,   'args' : ['fgw_ped']                         },
+    {'function' : nepeak_limits,    'args' : ['nepeak']                          },
+    {'function' : betan_limits,     'args' : ['betan']                           },
+    {'function' : betan_ped_limits, 'args' : ['betan_ped']                       },
+    {'function' : ibs_limits,       'args' : ['ibs']                             }
 ]
