@@ -23,6 +23,7 @@
 #SBATCH --volume="/global/cscratch1/sd/rwp/tmpfiles:/tmp:perNodeCache=size=1G"
 
 module load gcc
+module load python
 
 WORK_DIRECTORY=test_ml_train
 
