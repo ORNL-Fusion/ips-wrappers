@@ -24,14 +24,14 @@
 
 module load gcc
 
-WORK_DIRECTORY=test_ml_train_debug_fbs
+WORK_DIRECTORY=test_ml_train
 
 rm -rf $SCRATCH/$WORK_DIRECTORY
 mkdir $SCRATCH/$WORK_DIRECTORY
 cp -rd * $SCRATCH/$WORK_DIRECTORY
 cd $SCRATCH/$WORK_DIRECTORY
 
-conda activate subworkflow
+source activate /global/common/software/atom/cori/adaptive/conda
 ips.py --platform=platform.conf --simulation=ips.ml_train.config
 
 wait

@@ -28,7 +28,7 @@ mkdir $SCRATCH/test_massive_serial_runner
 cp -rd * $SCRATCH/test_massive_serial_runner
 cd $SCRATCH/test_massive_serial_runner
 
-conda activate subworkflow
+source activate /global/common/software/atom/cori/adaptive/conda
 ips.py --platform=platform.conf --simulation=ips.massive_serial_runner.config
 
 wait
