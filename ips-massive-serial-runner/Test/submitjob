@@ -21,6 +21,7 @@
 #SBATCH --volume="/global/cscratch1/sd/rwp/tmpfiles:/tmp:perNodeCache=size=1G"
 
 module load gcc
+module load python
 
 rm -rf $SCRATCH/test_massive_serial_runner
 mkdir $SCRATCH/test_massive_serial_runner
