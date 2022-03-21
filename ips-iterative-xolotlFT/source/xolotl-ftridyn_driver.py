@@ -15,6 +15,7 @@ import param_handler
 import traceback
 import transferGrid
 import pickle
+import keepLastTS
 
 class xolotlFtridynDriver(Component):
     def __init__(self, services, config):
@@ -112,12 +113,15 @@ class xolotlFtridynDriver(Component):
                     print(('\t reading string input parameter {0} = {1} '.format( k, v)))
                     self.time[k]=v
 
+            #print('TEST: after reading parameters from config file time section, the time dictionary is:')
+            #print(self.time)
+
         except Exception as e:
             print(e)
             print('no [TIME_PARAMETERS] defined in config file')
             sys.stdout.flush()
             
-            print('INIT, STEP, END TIME and other paramters (LPPS_TS, START_MODE) are defined in driver section of config file')
+            print('check if INIT, STEP, END TIME and other paramters (LPPS_TS, START_MODE) are defined in driver section of config file')
             if ('INIT_TIME' in self.driver):
                 self.time['INIT_TIME']=self.driver['INIT_TIME']
             if ('END_TIME' in self.driver):
@@ -132,23 +136,29 @@ class xolotlFtridynDriver(Component):
                 self.time['LOOP_TS_NLOOPS']=self.driver['LOOP_TS_NLOOPS']
             if ('START_MODE' in self.driver):
                 self.time['START_MODE']=self.driver['START_MODE']
-                
+
+            #print('TEST: after reading parameters from config file driver section, the time dictionary is:')
+            #print(self.time)
+
         #Check if/what's given in input file
         #overwrite config file values
         try:
             self.TIME_FILE
             print('\t use input from time file defined in config file (overwirte config file values)')
             print(self.INPUT_DIR+'/'+self.TIME_FILE)
-            self.time=param_handler.read(self.INPUT_DIR+'/'+self.TIME_FILE)
-
-
+            self.time_temp=param_handler.read(self.INPUT_DIR+'/'+self.TIME_FILE)            
+            
+            #print('TEST: after reading parameters from time file, the time_temp dictionary is:')
+            #print(self.time_temp)
+            
             ## for testing purposes, a more thorough print line:
             ## use these three afterwards
             #for k,v, in self.time.items():
             #    print(('\t {0} : {1}'.format(k, v)))
             #print(' ')
 
-            for k,v in self.time.items():
+            for k,v in self.time_temp.items():
+                self.time[k]=v
                 if param_handler.is_int(v):
                     print(( '\t reading integer input parameter {0} = {1}'.format( k, v)))
                 elif param_handler.is_float(v):
@@ -165,6 +175,9 @@ class xolotlFtridynDriver(Component):
                     print(('\t reading list input parameter {0} = {1}'.format( k, values)))
                 else:
                     print(('\t reading string input parameter {0} = {1} '.format( k, v)))
+
+            #print('TEST: after copyting values from time_temp, the time dictionary is:')
+            #print(self.time_temp)
             
         except Exception as e:
             print(e)
@@ -340,19 +353,24 @@ class xolotlFtridynDriver(Component):
         try:
             self.PLASMA_OUTPUT_FILE
             plasmaExists='T'
-            print('use input from PLASMA, as its output file is defined in config file')
+            print('use input from PLASMA output file defined in config file')
             print(('read PLASMA parameters (from file) : {}\n'.format(self.INPUT_DIR+'/'+self.PLASMA_OUTPUT_FILE)))
             print('these inputs will overwrite values given in config file ')
-            self.plasma=param_handler.read(self.INPUT_DIR+'/'+self.PLASMA_OUTPUT_FILE)
+            self.plasma_temp=param_handler.read(self.INPUT_DIR+'/'+self.PLASMA_OUTPUT_FILE)
 
-            for k,v, in self.plasma.items():
-                print(('{0} : {1}'.format(k, v)))
+            for k,v, in self.plasma_temp.items():
+                print(('\t {0} : {1}'.format(k, v)))
+                self.plasma[k]=v
             print(' ')
+            sys.stdout.flush()
             
         except Exception as e:
             print(e)
             print('no PLASMA_OUTPUT_FILE defined in config file. ')
             sys.stdout.flush()
+
+        #print('TEST: final PLASMA dictionary is: ')
+        #print(self.plasma)
             
         if (plasmaExists == 'T'):
             if 'plasmaOutputDir' in self.plasma:
@@ -1089,14 +1107,12 @@ class xolotlFtridynDriver(Component):
             #Xolotl parameter modifications that need to be done at every loop:
 
             #list modules right before running Xolotl:
-            modList=os.system('module list')
-            print('TEST: we are running Xolotl with the following modules loaded: ', modList)
-
+            #modList=os.system('module list')
+            #print('TEST: we are running Xolotl with the following modules loaded: ', modList)
             print('load cray-hdf5-parallel')
             os.system('module load cray-hdf5-parallel')
-
-            modList=os.system('module list')
-            print('TEST: we are running Xolotl with the following modules loaded: ', modList)
+            #modList=os.system('module list')
+            #print('TEST: we are running Xolotl with the following modules loaded: ', modList)
             sys.stdout.flush()
             
             #calculate effective sputtering yield; i.e., weighted by relative flux of W-to-He
@@ -1125,20 +1141,53 @@ class xolotlFtridynDriver(Component):
                     print('\t init mode: modify xolotl parameters that might change at every loop \n')
                     print('\t \t WARNING: no network file in input dir; will create (not load) the network \n')
             elif self.driverMode == 'RESTART':
+
                 #add (or replace) networkFile line to parameter file
                 print('\t restart mode: modify xolotl parameters that might change at every loop, including adding the networkFile \n')
                 self.xp.parameters['networkFile'] = self.XOLOTL_NETWORK_FILE
+
+                ## check if we need to keep netParam in parameter file of restart
                 if 'netParam' in self.xp.parameters:
-                    print('\t \t and delete netParam from xolotl parameters (i.e., from the parameter file)')
-                    del self.xp.parameters['netParam']
+                    try:
+                        if self.driver['netParam_restart']=='keep':
+                            print('\t \t netParam_restart says to keep netParams in restart')
+                            print('\t \t will run restart loop with Xolotls netParam = ', self.xp.parameters['netParam'])
+                        elif self.driver['netParam_restart']=='delete':
+                            print('\t \t netParam_restart says to remove netParams from Xolotls inputs in restart')
+                            del self.xp.parameters['netParam']
+                        else:
+                            print('\t \t netParam_restart not recognized: ', self.driver['netParam_restart'])
+                            print('\t \t default is to delete netParam from Xolotls inputs in restart')
+                            del self.xp.parameters['netParam']
+                    except Exception as e:
+                        print(e)
+                        print('\t \t failed to check if netParam should be deleted in restart')
+                        print('\t \t by default, remove netParams from Xolotls inputs in restart')
+                        del self.xp.parameters['netParam']
                 else:
                     print('\t \t netParam does not exist in the xolotl parameters. No need to delete it')
+
+                ## check if we need to keep grouping in parameter file of restart 
                 if 'grouping' in self.xp.parameters:
-                    print('\t \t and delete grouping from xolotl parameters (i.e., from the parameter file)')
-                    del self.xp.parameters['grouping']
+                    try:
+                        if self.driver['grouping_restart']=='keep':
+                            print('\t \t grouping_restart says to keep grouping in restart')
+                            print('\t \t will run restart loop with Xolotls grouping = ', self.xp.parameters['grouping'])
+                        elif self.driver['grouping_restart']=='delete':
+                            print('\t \t grouping_restart says to remove grouping from Xolotls inputs in restart')
+                            del self.xp.parameters['grouping']
+                        else:
+                            print('\t \t grouping_restart not recognized: ', self.driver['grouping_restart'])
+                            print('\t \t default is to delete grouping from Xolotls inputs in restart')
+                            del self.xp.parameters['grouping']
+                    except Exception as e:
+                        print(e)
+                        print('\t \t failed to check if grouping should be deleted in restart')
+                        print('\t \t by default, remove grouping from Xolotls inputs in restart')
+                        del self.xp.parameters['grouping']
                 else:
                     print('\t \t grouping does not exist in the xolotl parameters. No need to delete it')
-
+                sys.stdout.flush()
                     
             #determine if he_conc true/false ; if true, add '-he_conc' to petsc arguments 
             if self.driver['XOLOTL_HE_CONC']=='Last':
@@ -1235,8 +1284,32 @@ class xolotlFtridynDriver(Component):
             #UPDATE: Xolotl generates HDF5 file of TRIDYN, copied as 'last_TRIDYN_toBin.h5'
             #thus no need to copy it; and binTRIDYN will transform it to text file, 'last_TRIDYN.dat' 
             print('bin Xolotls output')
-            binTRIDYN.binTridyn()
-            print('...succesfull')
+
+            ## try using binTridyn defined in config file -- not working
+            ## back to calling as default w/ explicit IO file names
+            #try:
+            #    self.BINTRIDYN_SCRIPT
+            #    print('\t Use binTTRIDYN script defined in config file: ', self.BINTRIDYN_SCRIPT)
+            #    #from binTRIDYN import binTridyn
+            #    binTRIDYN_import_str='from '+self.BINTRIDYN_SCRIPT+'import '+self.BINTRIDYN_FUNCTION
+            #    print('\t TEST: calling: ', binTRIDYN_import_str)
+            #    binTRIDYN_import_str
+            #    bintridynPythonString=self.BINTRIDYN_SCRIPT+'.'+self.BINTRIDYN_FUNCTION+"(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat')"
+            #    print('running binTridyn as: ', bintridynPythonString)
+            #    #binTRIDYN.binTridyn(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat')
+            #    bintridynPythonString
+            #    print ('\t ... succesfully ran ', self.BINTRIDYN_SCRIPT)
+            #    print('\t TEST DONE CONFIG BINTRIDYN TEST DONE CONFIG BINTRIDYN  TEST ')
+            #except Exception as e: #default binTridyn
+            #    print(e)
+            #    print('\t TEST DEFAULT TEST DEFAULT TEST DEFAULT')
+            #    print('\t No binTTRIDYN script defined in config file. Use default script, most likely located in python_scripts_for_coupling')
+            #    binTRIDYN.binTridyn()
+            #    print('...succesfully ran default binTRIDYN')
+            #sys.stdout.flush()
+            binTRIDYN.binTridyn(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat') #instead of binTRIDYN.binTridyn() 
+            print('...succesfully ran binTRIDYN') 
+            print(' ')
             
             #store xolotls profile output for each loop (not plasma state)          
             #UPDATE: 'toBin' is .h5 format instead of .dat
@@ -1244,11 +1317,6 @@ class xolotlFtridynDriver(Component):
             shutil.copyfile('last_TRIDYN_toBin.h5', currentXolotlOutputFileToBin)
             currentXolotlOutputFile='last_TRIDYN_%f.dat' %time
             shutil.copyfile('last_TRIDYN.dat', currentXolotlOutputFile)
-
-            #copy last_TRIDYN.dat and netowrk file to input dir as well:
-            print('coy last_TRIDYN.dat and ', self.xp.parameters['networkFile'], 'to ', self.INPUT_DIR )
-            shutil.copyfile('last_TRIDYN.dat', self.INPUT_DIR+'/last_TRIDYN.dat')
-            shutil.copyfile(self.xp.parameters['networkFile'], self.INPUT_DIR+'/'+self.xp.parameters['networkFile'])
             
             #append output:
             #retention
@@ -1268,7 +1336,32 @@ class xolotlFtridynDriver(Component):
             #save network file with a different name to use in the next time step
             currentXolotlNetworkFile='xolotlStop_%f.h5' %time
             shutil.copyfile('xolotlStop.h5',currentXolotlNetworkFile)
-            shutil.copyfile('xolotlStop.h5',self.XOLOTL_NETWORK_FILE)
+            ## try using keepLastTS to produce netfile with only info from the last TS
+            print('produce new network file using xolotlStop:')
+            try:
+                iF=cwd+'/xolotlStop.h5'
+                oF= cwd+'/'+self.xp.parameters['networkFile']
+                os.remove(oF) #can not exist & it's copied as w/ time-stamp above
+                print('\t run keepLastTS with: ')
+                print('\t \t inFile = ', iF)
+                print( '\t \t outFile = ', oF)
+                keepLastTS.keepLastTS(inFile=iF, outFile=oF)
+                print('\t ... keepLastTS done')
+                sys.stdout.flush()
+            #if fails, use old method of copying entire xolotlStop as networkFile
+            except Exception as e:                                     
+                print(e)
+                print('\t running keepLastTS failed')
+                print('\t just copy xolotlStop as networkFile')
+                shutil.copyfile('xolotlStop.h5',self.XOLOTL_NETWORK_FILE)
+            print('done writing a new network file')
+            print(' ')
+            
+            #copy last_TRIDYN.dat and netowrk file to input dir as well:
+            print('copy last_TRIDYN.dat and ', self.xp.parameters['networkFile'], 'to ', self.INPUT_DIR )
+            shutil.copyfile('last_TRIDYN.dat', self.INPUT_DIR+'/last_TRIDYN.dat')
+            shutil.copyfile(self.xp.parameters['networkFile'], self.INPUT_DIR+'/'+self.xp.parameters['networkFile'])
+            print(' ')
 
             #update driver mode after the 1st loop, from INIT to RESTART
             if self.driverMode == 'INIT':
@@ -1297,7 +1390,7 @@ class xolotlFtridynDriver(Component):
                 else:
                     print(('\t no update to driver time step ({0}) or start_stop ({1}) \n'.format(self.time['LOOP_TIME_STEP'] , self.xp.parameters['petscArgs']['-start_stop'])))
             else:
-                print(('\t driver time step (({0}) ane start_stop ({1}) unchanged (factor=1) \n'.format( self.time['LOOP_TIME_STEP'], self.xp.parameters['petscArgs']['-start_stop'])))
+                print(('\t driver time step (({0}) and start_stop ({1}) unchanged (factor=1) \n'.format( self.time['LOOP_TIME_STEP'], self.xp.parameters['petscArgs']['-start_stop'])))
 
             if time+self.time['LOOP_TIME_STEP']>end_time: 
                 self.time['LOOP_TIME_STEP']=end_time-time 
@@ -1309,13 +1402,13 @@ class xolotlFtridynDriver(Component):
 
             print('\n')
 
-            if self.time['XOLOTL_MAXTS_FACTOR'] != 1:
+            if self.driver['XOLOTL_MAXTS_FACTOR'] != 1:
                 if (self.time['LOOP_N']%self.driver['XOLOTL_MAXTS_NLOOPS']==0):
                     print(('\t change in Xolotls maximum time step after loop {} '.format( self.time['LOOP_N'])))
-                    self.xp.parameters['petscArgs']['-ts_adapt_dt_max']*=self.time['XOLOTL_MAXTS_FACTOR']
+                    self.xp.parameters['petscArgs']['-ts_adapt_dt_max']*=self.driver['XOLOTL_MAXTS_FACTOR']
                     print(('\t multiply time step by {0}, for a new time step = {1} \n'.format(self.driver['XOLOTL_MAXTS_FACTOR'] , self.xp.parameters['petscArgs']['-ts_adapt_dt_max'])))
-                    if self.xp.parameters['petscArgs']['-ts_adapt_dt_max'] > self.time['XOLOTL_MAX_TS']:
-                        self.xp.parameters['petscArgs']['-ts_adapt_dt_max']=self.time['XOLOTL_MAX_TS']
+                    if self.xp.parameters['petscArgs']['-ts_adapt_dt_max'] > self.driver['XOLOTL_MAX_TS']:
+                        self.xp.parameters['petscArgs']['-ts_adapt_dt_max']=self.driver['XOLOTL_MAX_TS']
                         print(('\t Xolotls time-step reached the maximum allowed; set to limit value, {} \n'.format(self.driver['XOLOTL_MAX_TS'])))
                 else:
                     print(( '\t continue with xolotl dt max {} \n'.format(self.xp.parameters['petscArgs']['-ts_adapt_dt_max'])))
