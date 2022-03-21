@@ -241,7 +241,7 @@ class parent_driver(Component):
                 for k,v, in self.solpsParams.items():
                     print(('\t {0} : {1}'.format(k, v)))
                 print(' ')
-
+                sys.stdout.flush()
 
                 #format float to list if needed
                 #currently implemented for inputEnergy, Ti, Te, inputAngle, bfieldAngle
@@ -325,9 +325,9 @@ class parent_driver(Component):
 
                 ### 2.a.i: parameters with a single value
                 
-                ### particle flux: /m2s --> /nm2s
+                ### particle flux: /m2s --> /nm2s done in ftx driver
                 if ('flux' in self.solpsParams):
-                    self.ftxInputs['flux'] = self.solpsParams['flux']/1.0e18
+                    self.ftxInputs['flux'] = self.solpsParams['flux'] #/1.0e18
                     print('\t TEST: ftx[flux] = ', self.ftxInputs['flux'])
                 sys.stdout.flush()
                     
@@ -340,10 +340,10 @@ class parent_driver(Component):
                     self.ftxInputs['tempHandler'] = 'heat'
                     #if solps heatflux contains 2 fields, assume it's bulkT given, then assume room T
                     if (len(self.solpsParams['heatFlux']) == 2):  
-                        self.ftxInputs['tempParam'] = (self.solpsParams['heatFlux'][0]/1.0e18, self.solpsParams['heatFlux'][1])
+                        self.ftxInputs['tempParam'] = (self.solpsParams['heatFlux'][0], self.solpsParams['heatFlux'][1]) #/m2s --> /nm2s done in ftx driver 
                     #if a single field given, assume bulkT = room T
                     elif (len(self.solpsParams['heatFlux']) == 1):
-                        self.ftxInputs['tempParam'] = (self.solpsParams['heatFlux']/1.0e18, 300.0)
+                        self.ftxInputs['tempParam'] = (self.solpsParams['heatFlux'], 300.0)  #/m2s --> /nm2s done in ftx driver 
                         print ('\t \t WARNING: no bulkT given; assume room T = 300 K')
                     print('\t \t TEST: heat flux tempHandler =', self.ftxInputs['tempHandler'], 'and temparam =', self.ftxInputs['tempParam'])
                     print('\n')
@@ -564,9 +564,6 @@ class parent_driver(Component):
                 sys.stdout.flush()
                 
                 # 3 - print ftxIn.txt - DONE
-                # if this doesn't work, use a pkl dictionary
-                #        	pkl_impl_file=cwd+'/ft_implProfiles.pkl'  
-                #               pickle.dump(ft_implProfiles_dictionary, open(pkl_impl_file, "wb" ) )
                 print('\t write FTX input file:')
                 ftxInFileFormat=list(self.services.get_config_param('FTX_INPUT_FORMAT'))
                 ftxInFileName=ftxInFileFormat[0]+str(i)+'.'+ftxInFileFormat[1]
@@ -586,36 +583,46 @@ class parent_driver(Component):
                         print(('\t \t {0} : {1}'.format(k, v_string)))
                         ftxInFile.write(('{0}={1}\n'.format(k, v_string)))
                         del v_string
-                print(' ')
-                    
-                # 4 - add timeStap to ftxIn if needed
-                print('\t \t INIT_TIME = ', timeStamp)
-                print('\t \t END_TIME = ', timeStamp + self.time_step)
-                print('\t \t LOOP_TIME_STEP = ', self.time_step)
-                print('\t \t LOOP_N = ', t_count)
-                ftxInFile.write('INIT_TIME={0}\n'.format(timeStamp))
-                ftxInFile.write('END_TIME={0}\n'.format(timeStamp + self.time_step))
-                ftxInFile.write('LOOP_TIME_STEP={0}\n'.format(self.time_step))
-                ftxInFile.write('LOOP_N={0}\n'.format(t_count))
-                print(' ')
-                
-                #set start mode based on loop number ; change to driver's start mode is we implement restarting capabilities
-                if (t_count == 0):
-                    print('\t \t START_MODE = INIT')
-                    ftxInFile.write('START_MODE = INIT \n')
-                else:
-                    print('\t \t START_MODE = RESTART')
-                    ftxInFile.write('START_MODE = RESTART \n')
                 ftxInFile.close()
                 print(' ')
                 
-                # 5 - copy ftxIn to ftx input directory
+                    
+                # 4 - add timeStap to its own file
+                print('\t write time input file:')
+                timeFileName=self.services.get_config_param('TIME_FILE_NAME')
+                print('\t \t file name: ', timeFileName)
+                timeFile=open(timeFileName, "w")
+                print('\t \t INIT_TIME : ', timeStamp)
+                print('\t \t END_TIME : ', timeStamp + self.time_step)
+                print('\t \t LOOP_TIME_STEP : ', self.time_step)
+                print('\t \t LOOP_N : ', t_count)
+                timeFile.write('INIT_TIME={0}\n'.format(timeStamp))
+                timeFile.write('END_TIME={0}\n'.format(timeStamp + self.time_step))
+                timeFile.write('LOOP_TIME_STEP={0}\n'.format(self.time_step))
+                timeFile.write('LOOP_N={0}\n'.format(t_count))
+                print(' ')
+
+                #set start mode based on loop number ; change to driver's start mode is we implement restarting capabilities
+                if (t_count == 0):
+                    print('\t \t START_MODE = INIT')
+                    timeFile.write('START_MODE=INIT\n')
+                else:
+                    print('\t \t START_MODE = RESTART')
+                    timeFile.write('START_MODE=RESTART\n')
+                timeFile.close()
+                print(' ')
+                
+                # 5 - copy ftxIn and timeFile to ftx input directory
                 #ftxInFilePath=self.SUBMIT_DIR+'/'+ftxInFileName
                 print('\t copying input to FTX file from ', ftxInFileName, 'to ', self.child_components[child_comp]['INPUT_DIR']+'/ftxInput.txt')
                 shutil.copyfile(ftxInFileName,self.child_components[child_comp]['INPUT_DIR']+'/ftxInput.txt')
+                print('\t copying input to FTX file from ', timeFileName, 'to ', self.child_components[child_comp]['INPUT_DIR']+'/'+timeFileName)
+                shutil.copyfile(timeFileName,self.child_components[child_comp]['INPUT_DIR']+'/'+timeFileName)
+
                 print('\n')
+                sys.stdout.flush()
                 
-            ## END OF solpsOut --> ftxIn
+            ## END OF solpsOut --> ftxIn and time-parameters
             
             #RUN init AND step OF CHILD (FT-X) SUB-WORKFLOW
             
@@ -639,23 +646,37 @@ class parent_driver(Component):
                                                                                                                      timeStamp,
                                                                                                                      **child) #**keys
             print(' ')
+            sys.stdout.flush()
+            
             #  Loop over the children and all the initize driver component.
             for child_comp, child in list(self.child_components.items()): #.values():
-
                 print(' ')
                 print('for child ', child_comp, ' with sim_name ', child['sim_name']) 
                 print('\t Wait for driver:init to be done')
                 self.services.wait_call(self.running_components['{}:driver:init'.format(child['sim_name'])], True)
                 print('\t Done waiting for driver:init')
                 print('\t Call driver:step now')
+                sys.stdout.flush()
                 
                 #child['LOG_FILE']='log.step.{}'.format(child_comp)
                 self.running_components['{}:driver:step'.format(child['sim_name'])] = self.services.call_nonblocking(child['driver'],
                                                                                                                      'step', 
                                                                                                                      timeStamp,
                                                                                                                      **child) #**keys)
-                del self.running_components['{}:driver:init'.format(child['sim_name'])]
+                sys.stdout.flush()
                 
+            for child_comp, child in list(self.child_components.items()):
+                print(' ')
+                print('for child ', child_comp, ' with sim_name ', child['sim_name'])
+                print('\t Wait for driver:step to be done')
+                self.services.wait_call(self.running_components['{}:driver:step'.format(child['sim_name'])], True)
+                print('\t Done waiting for driver:step')
+                sys.stdout.flush()
+
+            for child_comp, child in list(self.child_components.items()):
+                del self.running_components['{}:driver:init'.format(child['sim_name'])]
+                del self.running_components['{}:driver:step'.format(child['sim_name'])] 
+                sys.stdout.flush()
 
             timeStamp+=self.time_step
             t_count+=1

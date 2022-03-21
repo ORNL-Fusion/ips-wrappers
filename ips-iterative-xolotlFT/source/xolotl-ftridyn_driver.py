@@ -70,7 +70,7 @@ class xolotlFtridynDriver(Component):
 
         #### DRIVER PARAMETERS #####
         
-        print('reading DRIVER parameters from ips config file: \n')
+        print('reading DRIVER parameters from FTX config file: \n')
         
         self.driver={}
         for k,v in self.DRIVER_INPUT_PARAMETERS.items():
@@ -83,11 +83,128 @@ class xolotlFtridynDriver(Component):
             else:
                 print(('\t other {0} input parameter {1} = {2}'.format(type(v), k , v)))
                 self.driver[k]=v
-
-        self.driverMode=self.driver['START_MODE']
         print('\n')
-        print(('running IPS from t = {0} , to t = {1} , in steps of dt = {2}'.format(self.driver['INIT_TIME'], self.driver['END_TIME'], self.driver['LOOP_TIME_STEP'])))
 
+        ## TIME CHARACTERISTICS: START, STEP, END
+        ## MIGHT BE GIVEN IN CONFIG FILE OR IN SEPARATE (INPUT) FILE:
+        self.time = {}
+
+        #check what/if given in config file in its own section:
+        try:
+            self.TIME_PARAMETERS
+            print('reading TIME parameters from FTX config file: \n')
+            for k,v in self.TIME_PARAMETERS.items():
+                if param_handler.is_int(v):
+                    print(( '\t reading integer input parameter {0} = {1}'.format( k, v)))
+                    self.time[k]=int(v)
+                elif param_handler.is_float(v):
+                    print(( '\t reading float input parameter {0} = {1}'.format( k, v)))
+                    self.time[k]=float(v)
+                elif param_handler.is_list(v):
+                    values = []
+                    for val in v.split(' '):
+                        if param_handler.is_int(val):
+                            values.append(int(val))
+                        elif param_handler.is_float(val):
+                            values.append(float(val))
+                        else:
+                            values.append(val)
+                    print(('\t reading list input parameter {0} = {1}'.format( k, values)))
+                    self.time[k]=values
+                else:
+                    print(('\t reading string input parameter {0} = {1} '.format( k, v)))
+                    self.time[k]=v
+
+        except Exception as e:
+            print(e)
+            print('no [TIME_PARAMETERS] defined in config file')
+            sys.stdout.flush()
+            
+            print('INIT, STEP, END TIME and other paramters (LPPS_TS, START_MODE) are defined in driver section of config file')
+            if ('INIT_TIME' in self.driver):
+                self.time['INIT_TIME']=self.driver['INIT_TIME']
+            if ('END_TIME' in self.driver):
+                self.time['END_TIME']=self.driver['END_TIME']
+            if ('LOOP_TIME_STEP' in self.driver):
+                self.time['LOOP_TIME_STEP']=self.driver['LOOP_TIME_STEP']
+            if ('LOOP_N' in self.driver):
+                self.time['LOOP_N']=self.driver['LOOP_N']
+            if ('LOOP_TS_FACTOR' in self.driver):
+                self.time['LOOP_TS_FACTOR']=self.driver['LOOP_TS_FACTOR']
+            if ('LOOP_TS_NLOOPS' in self.driver):
+                self.time['LOOP_TS_NLOOPS']=self.driver['LOOP_TS_NLOOPS']
+            if ('START_MODE' in self.driver):
+                self.time['START_MODE']=self.driver['START_MODE']
+                
+        #Check if/what's given in input file
+        #overwrite config file values
+        try:
+            self.TIME_FILE
+            print('\t use input from time file defined in config file (overwirte config file values)')
+            print(self.INPUT_DIR+'/'+self.TIME_FILE)
+            self.time=param_handler.read(self.INPUT_DIR+'/'+self.TIME_FILE)
+
+
+            ## for testing purposes, a more thorough print line:
+            ## use these three afterwards
+            #for k,v, in self.time.items():
+            #    print(('\t {0} : {1}'.format(k, v)))
+            #print(' ')
+
+            for k,v in self.time.items():
+                if param_handler.is_int(v):
+                    print(( '\t reading integer input parameter {0} = {1}'.format( k, v)))
+                elif param_handler.is_float(v):
+                    print(( '\t reading float input parameter {0} = {1}'.format( k, v)))
+                elif param_handler.is_list(v):
+                    values = []
+                    for val in v.split(' '):
+                        if param_handler.is_int(val):
+                            values.append(int(val))
+                        elif param_handler.is_float(val):
+                            values.append(float(val))
+                        else:
+                            values.append(val)
+                    print(('\t reading list input parameter {0} = {1}'.format( k, values)))
+                else:
+                    print(('\t reading string input parameter {0} = {1} '.format( k, v)))
+            
+        except Exception as e:
+            print(e)
+            print('no TIME_FILE defined. Use time-parameters defined in config file')
+            sys.stdout.flush()
+
+        
+        print('time characteristics are')
+        for k,v, in self.time.items():
+            print(('\t {0} : {1}'.format(k, v)))
+        print(' ')
+        print(('running FTX from t = {0} , to t = {1} , in steps of dt = {2}'.format(self.time['INIT_TIME'], self.time['END_TIME'], self.time['LOOP_TIME_STEP'])))
+        print('\t with START_MODE = ', self.time['START_MODE'])
+        
+        self.driverMode=self.time['START_MODE']
+        print('\n')
+        
+        #### FTRIDYN PARAMETERS #####
+
+        print(' ')
+        print('reading FTRIDYN parameters from ips config file: \n')
+
+
+        self.ftridyn={}
+        for k,v in self.FTRIDYN_INPUT_PARAMETERS.items():
+            if param_handler.is_int(v):
+                print(('\t integer input parameter {0} = {1}'.format(k, v)))
+                self.ftridyn[k]=int(v)
+            elif param_handler.is_float(v):
+                print(('\t float input parameter {0} = {1}'.format(k, v)))
+                self.ftridyn[k]=float(v)
+            else:
+                print(('\t other {0} input parameter {1} = {2}'.format(type(v), k, v)))
+                self.ftridyn[k]=v
+        print('\n')
+
+        
         #### XOLOTL PARAMETERS ##### 
 
         print('\n')
@@ -194,20 +311,15 @@ class xolotlFtridynDriver(Component):
         #       - might need tweaking if input from both codes isn't handled identically
         #       - assume there won't be 2 inputs??
 
-        #two methods to check: try or if
+        #keep track if gitrs input (file or config file) exists with string (F = false, T = true)
+        gitrExists='F'
+        self.gitr = {}
         try:
-            self.GITR_OUTPUT_FILE        
-            print('use input from GITR, as its output file is defined in config file')
-            print(('read GITR parameters (from file) : {}\n'.format(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE)))
-            self.gitr = {} #xolotl_param_handler.xolotl_params()
-            self.gitr=param_handler.read(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE)
-            #print('read GITR parameters (from file) : {}\n'.format(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE))
+            self.GITR_INPUT_PARAMETERS
+            gitrExists='T'
+            print('Read GITR inputs defined in config file.')
 
-            for k,v, in self.gitr.items():
-                print(('{0} : {1}'.format(k, v)))
-            print(' ')
-
-            for k,v in self.GITR_INPUT_PARAMETERS.items(): #self.gitr.parameters.iteritems():
+            for k,v in self.GITR_INPUT_PARAMETERS.items():
                 if param_handler.is_int(v):
                     print(( '\t reading integer GITR input parameter {0} = {1}'.format( k, v)))
                     self.gitr[k]=int(v)
@@ -228,11 +340,35 @@ class xolotlFtridynDriver(Component):
                 else:
                     print(('\t reading string GITR input parameter {0} = {1} '.format( k, v))) 
                     self.gitr[k]=v
-                
+
+        except Exception as e:
+            print(e)
+            print('no GITR_INPUT_PARAMETERS defined in config file. ')
+            sys.stdout.flush()
+                    
+        try:
+            self.GITR_OUTPUT_FILE
+            gitrExists='T'
+            print('use input from GITR, as its output file is defined in config file')
+            print(('read GITR parameters (from file) : {}\n'.format(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE)))
+            print('these inputs will overwrite values given in config file ')
+            self.gitr=param_handler.read(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE)
+
+            for k,v, in self.gitr.items():
+                print(('{0} : {1}'.format(k, v)))
+            print(' ')
+            
+        except Exception as e:
+            print(e)
+            print('no GITR_OUTPUT_FILE defined in config file. ')
+            sys.stdout.flush()
+            
+        if (gitrExists == 'T'):
             if 'gitrOutputDir' in self.gitr:
                 print('\t GITR output will be read from {} \n'.format(self.gitr['gitrOutputDir']+'_'+prj))
 
-            ##NOT SURE IF THERE ARE MORE XOLOTL OR FT PARAMETERS THAT NEED TO OVERWRITTEN
+            ## OVERWRITE FTX PARAMETERS WITH INPUTS FROM GITR 
+            
             if 'flux' in self.gitr:
                 self.xp.parameters['flux']=self.gitr['flux']*1.0e-18
                 print(('replaced flux in Xolotl (in ion/nm2s = 1e-18 ion/m2s) by value given by GITR {} (in ion/m2s) \n'.format(self.gitr['flux'])))
@@ -240,7 +376,7 @@ class xolotlFtridynDriver(Component):
                 print(('no flux specified in GITR, so using values in Xolotl {} \n'.format(self.xp.parameters['flux'])))
 
             #xp.parameters['tempModel']=='twoLine':
-            if 'tempHandler' in self.xp.parameters or 'tempHandler' in self.gitr: # or 'tempParam' in self.xp.parameters or 'tempParam' in self.gitr:
+            if 'tempHandler' in self.xp.parameters or 'tempHandler' in self.gitr: 
                 if 'heat' in self.gitr:
                     print('TEST: use heat defined by GITR')
                     self.xp.parameters['tempHandler']='heat'
@@ -305,25 +441,21 @@ class xolotlFtridynDriver(Component):
                 
             sys.stdout.flush()
             
-        except Exception as e:
-            print(e)
-            print('no GITR input file defined in config file. ')
+        else:
+            print('no GITR input file or paramters defined in config file')
+            print('Check for input from SOLPS ')
             sys.stdout.flush()
+
             #only try to read SOLPS OUTPUT FILE is that of GITR doesn't exist, to avoid conficts & overwriting parameters
+            #keep track if SOLPS input (file or config file) exists with string (F = false, T = true)
+            solpsExists='F'
+            self.solps = {}
             try:
-                self.SOLPS_OUTPUT_FILE
-                print('use input from SOLPS, as its output file is defined in config file')
-                print(('read SOLPS parameters (from file) : {}\n'.format(self.INPUT_DIR+'/'+self.SOLPS_OUTPUT_FILE)))
-                sys.stdout.flush()
-                
-                self.solps = {} 
-                self.solps=param_handler.read(self.INPUT_DIR+'/'+self.SOLPS_OUTPUT_FILE)
-                
-                for k,v, in self.solps.items():
-                    print(('{0} : {1}'.format(k, v)))
-                print(' ')
-            
-                for k,v in self.SOLPS_INPUT_PARAMETERS.items(): #self.gitr.parameters.iteritems():
+                self.SOLPS_INPUT_PARAMETERS
+                solpsExists='T'
+                print('Read SOLPS inputs defined in config file:')
+
+                for k,v in self.SOLPS_INPUT_PARAMETERS.items():
                     if param_handler.is_int(v):
                         print(( '\t reading integer SOLPS input parameter {0} = {1}'.format( k, v)))
                         self.solps[k]=int(v)
@@ -344,7 +476,31 @@ class xolotlFtridynDriver(Component):
                     else:
                         print(('\t reading string SOLPS input parameter {0} = {1} '.format( k, v)))
                         self.solps[k]=v
+            except Exception as e:
+                print(e)
+                print('no SOLPS_INPUT_PARAMETERS defined in config file. ')
+                sys.stdout.flush()
 
+            try:
+                self.SOLPS_OUTPUT_FILE
+                solpsExists='T'
+                print('use input from SOLPS, as its output file is defined in config file')
+                print(('read SOLPS parameters (from file) : {}\n'.format(self.INPUT_DIR+'/'+self.SOLPS_OUTPUT_FILE)))
+                print('these inputs will overwrite values given in config file')
+                sys.stdout.flush()
+
+                self.solps=param_handler.read(self.INPUT_DIR+'/'+self.SOLPS_OUTPUT_FILE)
+
+                for k,v, in self.solps.items():
+                    print(('{0} : {1}'.format(k, v)))
+                print(' ')
+
+            except Exception as e:
+                print(e)
+                print('no SOLPS_OUTPUT_FILE defined in config file. ')
+                sys.stdout.flush()
+
+            if (solpsExists=='T'):
                 if 'solpsOutputDir' in self.solps:
                     print('\t SOLPS output will be read from {} \n'.format(self.solps['solpsOutputDir']+'_'+prj))
             
@@ -356,7 +512,7 @@ class xolotlFtridynDriver(Component):
                     print(('no flux specified in SOLPS, so using values in Xolotl {} \n'.format(self.xp.parameters['flux'])))
 
                 #xp.parameters['tempModel']=='twoLine': 
-                if 'tempHandler' in self.xp.parameters or 'tempHandler' in self.solps:# or 'tempParam' in self.xp.parameters or 'tempParam' in self.solps:
+                if 'tempHandler' in self.xp.parameters or 'tempHandler' in self.solps:
                     if 'heat' in self.solps:                        
                         print('TEST: use heat defined by SOLPS')
                         self.xp.parameters['tempHandler']='heat'
@@ -415,34 +571,13 @@ class xolotlFtridynDriver(Component):
 
                 sys.stdout.flush()
 
-            except Exception as e2:
-                print(e2)
-                print('no input from SOLPS or GITR')
+            else:
+                print('no SOLPS input file or paramters defined in config file (nor of GITR)')
                 print('please define inputs in config file')
                 #might need to make sure that, if given in the config file, things are in the correct dictionary
                 sys.stdout.flush()
 
             
-            
-        #### FTRIDYN PARAMETERS ##### 
-        ##LOOP OVER LIST OF PLASMA SPECIES SPECIES #########
-        print(' ')
-        print('reading FTRIDYN parameters from ips config file: \n')
-
-
-        self.ftridyn={}
-        for k,v in self.FTRIDYN_INPUT_PARAMETERS.items():
-            if param_handler.is_int(v):
-                print(('\t integer input parameter {0} = {1}'.format(k, v))) 
-                self.ftridyn[k]=int(v)
-            elif param_handler.is_float(v):                
-                print(('\t float input parameter {0} = {1}'.format(k, v)))
-                self.ftridyn[k]=float(v)
-            else:
-                print(('\t other {0} input parameter {1} = {2}'.format(type(v), k, v)))  
-                self.ftridyn[k]=v
-        print('\n')
-
         #initialize lists that will contain values for each species
         #input parameters
         self.energyIn=[]
@@ -643,7 +778,7 @@ class xolotlFtridynDriver(Component):
 
 
         #stage initial network File (INIT mode) OR restart files (RESTART mode)
-        if (self.driver['START_MODE']=='INIT'):
+        if (self.driverMode=='INIT'):
             #print 'check if theres a network file in the input directory'
             #print self.INPUT_DIR+'/'+self.NETWORK_FILE
             #print os.path.exists(self.INPUT_DIR+'/'+self.NETWORK_FILE)
@@ -657,7 +792,7 @@ class xolotlFtridynDriver(Component):
                 print(('\t WARNING: INIT mode: SKIP staging  {}\n'.format(self.NETWORK_FILE)))
                 
 
-        elif (self.driver['START_MODE']=='RESTART'):
+        elif (self.driverMode=='RESTART'):
             restart_files = self.services.get_config_param('RESTART_FILES') 
             print(('\t RESTART mode: stage restart files {} \n'.format(restart_files)))
             restart_list = restart_files.split()
@@ -708,8 +843,8 @@ class xolotlFtridynDriver(Component):
         self.services.stage_plasma_state() 
 
         #check that loop doesnt go over the end time
-        time=self.driver['INIT_TIME']
-        end_time=self.driver['END_TIME']
+        time=self.time['INIT_TIME']
+        end_time=self.time['END_TIME']
 
         if time >= end_time:
             print('init time ', time , ' >= end time', end_time)
@@ -718,12 +853,12 @@ class xolotlFtridynDriver(Component):
             return
 
 
-        if time+self.driver['LOOP_TIME_STEP']>end_time: #self.driver['END_TIME']:
-            self.driver['LOOP_TIME_STEP']=end_time-time #self.driver['END_TIME']-time
+        if time+self.time['LOOP_TIME_STEP']>end_time:
+            self.time['LOOP_TIME_STEP']=end_time-time
             print(' ')
             print('\t WARNING: time step given in config file longer than needed for last loop ')
-            print(('\t before starting time-loop, adapt driver time step to {} to reach exactly endTime '.format( self.driver['LOOP_TIME_STEP'])))
-            self.xp.parameters['petscArgs']['-start_stop']=self.driver['LOOP_TIME_STEP']/10.0
+            print(('\t before starting time-loop, adapt driver time step to {} to reach exactly endTime '.format( self.time['LOOP_TIME_STEP'])))
+            self.xp.parameters['petscArgs']['-start_stop']=self.time['LOOP_TIME_STEP']/10.0
             print(('\t accordingly, Xolotls data is saved every (start_stop) = {} '.format( self.xp.parameters['petscArgs']['-start_stop'])))
         else:
             print('\t before starting time-loop, checked that time step given in config file is not longer than needed to reach the end of the simulation')
@@ -746,7 +881,7 @@ class xolotlFtridynDriver(Component):
                 os.makedirs(timeFolder)
             print(('output of this time-loop will be saved in {} \n'.format(timeFolder)))
 
-            self.driver['LOOP_N']+=1
+            self.time['LOOP_N']+=1
             self.collapsedLoops=0 #reset 
             self.xolotlExitStatus='collapsed'
 
@@ -1190,12 +1325,12 @@ class xolotlFtridynDriver(Component):
             self.xp.parameters['sputtering'] = totalSpYield            
             
             #time and time-step related parameters
-            self.xp.parameters['petscArgs']['-ts_final_time']=time+self.driver['LOOP_TIME_STEP']
+            self.xp.parameters['petscArgs']['-ts_final_time']=time+self.time['LOOP_TIME_STEP']
             print('\n')
             print('XOLOTL: ')
             print(('\t Run from t = {}'.format(time)))
             print(('\t to t = {}'.format(self.xp.parameters['petscArgs']['-ts_final_time'])))
-            print(('\t and time-step = {} '.format( self.driver['LOOP_TIME_STEP'])))
+            print(('\t and time-step = {} '.format( self.time['LOOP_TIME_STEP'])))
 
             if self.driverMode == 'INIT':
                 if os.path.exists(self.INPUT_DIR+'/'+self.NETWORK_FILE):
@@ -1223,10 +1358,10 @@ class xolotlFtridynDriver(Component):
                     
             #determine if he_conc true/false ; if true, add '-he_conc' to petsc arguments 
             if self.driver['XOLOTL_HE_CONC']=='Last':
-                if time+1.5*self.driver['LOOP_TIME_STEP']>end_time: #self.driver['END_TIME']:  #*1.5, to give marging of error
+                if time+1.5*self.time['LOOP_TIME_STEP']>end_time: #self.driver['END_TIME']:  #*1.5, to give marging of error
                     self.petsc_heConc=True
                     print('printing He concentrations in the last loop')
-                elif time<(end_time-self.driver['LOOP_TIME_STEP']): #self.driver['END_TIME']-self.driver['LOOP_TIME_STEP']):
+                elif time<(end_time-self.time['LOOP_TIME_STEP']): #self.driver['END_TIME']-self.driver['LOOP_TIME_STEP']):
                     self.petsc_heConc=False
             elif self.driver['XOLOTL_HE_CONC']=='True':
                 print('\t he_conc printed in this (and every) loop')
@@ -1334,7 +1469,11 @@ class xolotlFtridynDriver(Component):
             currentXolotlOutputFile='last_TRIDYN_%f.dat' %time
             shutil.copyfile('last_TRIDYN.dat', currentXolotlOutputFile)
 
-
+            #copy last_TRIDYN.dat and netowrk file to input dir as well:
+            print('coy last_TRIDYN.dat and ', self.xp.parameters['networkFile'], 'to ', self.INPUT_DIR )
+            shutil.copyfile('last_TRIDYN.dat', self.INPUT_DIR+'/last_TRIDYN.dat')
+            shutil.copyfile(self.xp.parameters['networkFile'], self.INPUT_DIR+'/'+self.xp.parameters['networkFile'])
+            
             #append output:
             #retention
             tempfileRet = open(self.XOLOTL_RETENTION_TEMP,"r")
@@ -1360,47 +1499,47 @@ class xolotlFtridynDriver(Component):
                 self.driverMode = 'RESTART'
                 print(('switched driverMode to {} \n'.format(self.driverMode)))
 
-            if self.driver['START_MODE'] != 'NEUTRAL':
-                self.driver['START_MODE'] = 'NEUTRAL'
-                print(('switched startMode to {} \n'.format(self.driver['START_MODE'])))
+            if self.driverMode != 'NEUTRAL':
+                self.driverMode = 'NEUTRAL'
+                print(('switched startMode to {} \n'.format(self.driverMode)))
 
             #using while instead of loop to accomodate variable drive time step 
             #--> update time explicitely before (possibly) increasing time step
-            time+=self.driver['LOOP_TIME_STEP']
+            time+=self.time['LOOP_TIME_STEP']
             print(' ')
-            print(('after loop {}, check for updates in time steps '.format(self.driver['LOOP_N'])))
+            print(('after loop {}, check for updates in time steps '.format(self.time['LOOP_N'])))
 
             #update Xolotl and driver time steps if needed
-            if self.driver['LOOP_TS_FACTOR'] != 1:
-                if (self.driver['LOOP_N']%self.driver['LOOP_TS_NLOOPS']==0):
+            if self.time['LOOP_TS_FACTOR'] != 1:
+                if (self.time['LOOP_N']%self.time['LOOP_TS_NLOOPS']==0):
                     print('\t update driver time step and start_stop ')
-                    self.driver['LOOP_TIME_STEP']*=self.driver['LOOP_TS_FACTOR']
-                    self.xp.parameters['petscArgs']['-start_stop']*=self.driver['LOOP_TS_FACTOR']
-                    print(('\t multiplied time step and start_stop by {} '.format(self.driver['LOOP_TS_FACTOR']))) 
-                    print(('\t for a new time step = {0} and start_stop ={1} \n'.format(self.driver['LOOP_TIME_STEP'], self.xp.parameters['petscArgs']['-start_stop'])))
+                    self.time['LOOP_TIME_STEP']*=self.time['LOOP_TS_FACTOR']
+                    self.xp.parameters['petscArgs']['-start_stop']*=self.time['LOOP_TS_FACTOR']
+                    print(('\t multiplied time step and start_stop by {} '.format(self.time['LOOP_TS_FACTOR']))) 
+                    print(('\t for a new time step = {0} and start_stop ={1} \n'.format(self.time['LOOP_TIME_STEP'], self.xp.parameters['petscArgs']['-start_stop'])))
 
                 else:
-                    print(('\t no update to driver time step ({0}) or start_stop ({1}) \n'.format(self.driver['LOOP_TIME_STEP'] , self.xp.parameters['petscArgs']['-start_stop'])))
+                    print(('\t no update to driver time step ({0}) or start_stop ({1}) \n'.format(self.time['LOOP_TIME_STEP'] , self.xp.parameters['petscArgs']['-start_stop'])))
             else:
-                print(('\t driver time step (({0}) ane start_stop ({1}) unchanged (factor=1) \n'.format( self.driver['LOOP_TIME_STEP'], self.xp.parameters['petscArgs']['-start_stop'])))
+                print(('\t driver time step (({0}) ane start_stop ({1}) unchanged (factor=1) \n'.format( self.time['LOOP_TIME_STEP'], self.xp.parameters['petscArgs']['-start_stop'])))
 
-            if time+self.driver['LOOP_TIME_STEP']>end_time: #self.driver['END_TIME']:
-                self.driver['LOOP_TIME_STEP']=end_time-time #self.driver['END_TIME']-time
+            if time+self.time['LOOP_TIME_STEP']>end_time: #self.driver['END_TIME']:
+                self.time['LOOP_TIME_STEP']=end_time-time #self.driver['END_TIME']-time
                 print(' ')
                 print('\t time step longer than needed for last loop ')
-                print(('\t adapting driver time step to {} to reach exactly endTime '.format( self.driver['LOOP_TIME_STEP'])))
-                self.xp.parameters['petscArgs']['-start_stop']=self.driver['LOOP_TIME_STEP']/10.0
+                print(('\t adapting driver time step to {} to reach exactly endTime '.format(self.time['LOOP_TIME_STEP'])))
+                self.xp.parameters['petscArgs']['-start_stop']=self.time['LOOP_TIME_STEP']/10.0
                 print(('\t and Xolotls data is saved every (start_stop) = {} '.format( self.xp.parameters['petscArgs']['-start_stop'])))
 
             print('\n')
 
-            if self.driver['XOLOTL_MAXTS_FACTOR'] != 1:
-                if (self.driver['LOOP_N']%self.driver['XOLOTL_MAXTS_NLOOPS']==0):
-                    print(('\t change in Xolotls maximum time step after loop {} '.format( self.driver['LOOP_N'])))
-                    self.xp.parameters['petscArgs']['-ts_adapt_dt_max']*=self.driver['XOLOTL_MAXTS_FACTOR']
+            if self.time['XOLOTL_MAXTS_FACTOR'] != 1:
+                if (self.time['LOOP_N']%self.driver['XOLOTL_MAXTS_NLOOPS']==0):
+                    print(('\t change in Xolotls maximum time step after loop {} '.format( self.time['LOOP_N'])))
+                    self.xp.parameters['petscArgs']['-ts_adapt_dt_max']*=self.time['XOLOTL_MAXTS_FACTOR']
                     print(('\t multiply time step by {0}, for a new time step = {1} \n'.format(self.driver['XOLOTL_MAXTS_FACTOR'] , self.xp.parameters['petscArgs']['-ts_adapt_dt_max'])))
-                    if self.xp.parameters['petscArgs']['-ts_adapt_dt_max'] > self.driver['XOLOTL_MAX_TS']:
-                        self.xp.parameters['petscArgs']['-ts_adapt_dt_max']=self.driver['XOLOTL_MAX_TS']
+                    if self.xp.parameters['petscArgs']['-ts_adapt_dt_max'] > self.time['XOLOTL_MAX_TS']:
+                        self.xp.parameters['petscArgs']['-ts_adapt_dt_max']=self.time['XOLOTL_MAX_TS']
                         print(('\t Xolotls time-step reached the maximum allowed; set to limit value, {} \n'.format(self.driver['XOLOTL_MAX_TS'])))
                 else:
                     print(( '\t continue with xolotl dt max {} \n'.format(self.xp.parameters['petscArgs']['-ts_adapt_dt_max'])))
