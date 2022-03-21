@@ -1,0 +1,8 @@
+plasmaSpecies=D C_f
+fluxFraction=1.0 0.05
+flux=1.5e22
+Ti=6.5
+Te=5.5
+Z=1.0 2.0
+bfieldAngle=85.0 85.0
+heat=1.5e6 350
