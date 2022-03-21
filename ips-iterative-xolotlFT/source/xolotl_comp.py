@@ -52,7 +52,13 @@ class xolotlWorker(Component):
 
         currentXolotlParamFile='params_%f.txt' %self.driverTime
         shutil.copyfile('params.txt',currentXolotlParamFile) 
- 
+
+        try:
+            shutil.copyfile(xp.parameters['networkFile'],xp.parameters['networkFile']+'_t'+str(self.driverTime))
+        except Exception as e:
+            print(e)
+            print('could not save network file for t = ', str(self.driverTime))            
+            
         sys.stdout.flush()
         self.services.update_plasma_state()
 
@@ -136,7 +142,25 @@ class xolotlWorker(Component):
                 #if it failed, save last networkFile before a new try and set newest network file to use in the
                 # next try, so that it starts from the last saved time step, not from the beginning of the loop
                 shutil.copyfile(xp_parameters['networkFile'],'networkFile_%f_%d.h5' %(self.driverTime,i))
-                shutil.copyfile('xolotlStop.h5',xp_parameters['networkFile'])
+                ## use keepLastTS to produce netfile with only info from the last TS
+                print('\t produce new network file using xolotlStop:')
+                try:
+                    iF=cwd+'/xolotlStop.h5'
+                    oF= cwd+'/'+self.xp.parameters['networkFile']
+                    os.remove(oF) #can not exist & it's copied as w/ time-stamp above
+                    print('\t \t run keepLastTS with:')
+                    print('\t \t \t inFile = ', iF)
+                    print('\t \t \t  outFile = ', oF)
+                    keepLastTS.keepLastTS(inFile=iF, outFile=oF)
+                    print('\t \t ... keepLastTS done')
+                #if fails, use old method of copying entire xolotlStop as networkFile
+                except Exception as e:
+                    print(e)
+                    print('\t \t running keepLastTS failed')
+                    print('\t \t just copy xolotlStop as networkFile')
+                    shutil.copyfile('xolotlStop.h5',xp_parameters['networkFile'])
+                print('\t done writing a new network file')
+                sys.stdout.flush()
 
         else:
             self.services.error('xolotl_worker: Aborting after %d num_trials trials' %num_trials)
@@ -211,12 +235,10 @@ class xolotlWorker(Component):
 
             print('\t \t rename output files as overgrid before exiting')
 
-            #currentXolotlNetworkFile='xolotlStop_%f.h5' %self.driverTime
+            
             networkFile_unfinished='xolotlStop_%f_overgrid_%d.h5' %(self.driverTime,n_overgrid_loops)
-            shutil.copyfile('xolotlStop.h5',networkFile_unfinished) #currentXolotlNetworkFile) 
-            #shutil.copyfile(xp_parameters['networkFile'],networkFile_unfinished) #currentXolotlNetworkFile)
-            #shutil.copyfile('xolotlStop.h5',xp_parameters['networkFile'])
-            #os.rename(currentXolotlNetworkFile,networkFile_unfinished)
+            shutil.copyfile('xolotlStop.h5',networkFile_unfinished)
+
 
             xolotlLogFile_overgrid='xolotl_t%f_overgrid_%d.log' %(self.driverTime,n_overgrid_loops)
             shutil.copyfile(xolotlLogFile,xolotlLogFile_overgrid)
