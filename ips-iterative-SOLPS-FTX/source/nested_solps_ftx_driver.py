@@ -57,7 +57,7 @@ class parent_driver(Component):
         num_children = int(self.services.get_config_param('NUM_CHILDREN'))
         child_conf = self.services.get_config_param('CHILD_COMPONENT_CONF')
 
-        self.solps_output_file=list(self.services.get_config_param('SOLPS_OUTPUT_FILE'))
+        self.solps_output_file=list(self.services.get_config_param('SOLPS_OUTPUT_FORMAT'))
         print('will be reading solps output from:', self.solps_output_file)
         
         self.init_time = float(self.services.get_config_param('INIT_TIME'))
@@ -358,7 +358,8 @@ class parent_driver(Component):
                 ### for now, include all
                 if ('plasmaSpecies' in  self.solpsParams): 
                     #self.ftxInputs['plasmaSpecies'] = 'He W D T C'
-                    self.ftxInputs['plasmaSpecies'] = ['He','W', 'D', 'T', 'C'] 
+                    #C_f : different options for C in F-TRIDYN: _a, _b, _d... ; _f noted as "C for fusionn"
+                    self.ftxInputs['plasmaSpecies'] = ['He','W', 'D', 'T', 'C_f'] 
                     print('\t hard coded plasma species in ftx = ', self.ftxInputs['plasmaSpecies'] )
                     print('\n')
                     
@@ -562,16 +563,29 @@ class parent_driver(Component):
                 print('\n')
                 sys.stdout.flush()
                 
-                # 3 - print ftxIn.txt - DONE?
+                # 3 - print ftxIn.txt - DONE
                 # if this doesn't work, use a pkl dictionary
                 #        	pkl_impl_file=cwd+'/ft_implProfiles.pkl'  
                 #               pickle.dump(ft_implProfiles_dictionary, open(pkl_impl_file, "wb" ) )
                 print('\t write FTX input file:')
-                ftxInFileName='ftxInput_'+str(i)+'.txt'
+                ftxInFileFormat=list(self.services.get_config_param('FTX_INPUT_FORMAT'))
+                ftxInFileName=ftxInFileFormat[0]+str(i)+'.'+ftxInFileFormat[1]
+                print('\t \t file name: ', ftxInFileName)
                 ftxInFile=open(ftxInFileName, "w")
                 for k,v, in self.ftxInputs.items():
-                    print(('\t \t {0} : {1}'.format(k, v)))
-                    ftxInFile.write(('{0} = {1} \n'.format(k, v)))
+                    if (isinstance(v, int) or isinstance(v, float) or isinstance(v, dict) or isinstance(v, str)):
+                        print(('\t \t {0} : {1}'.format(k, v)))
+                        ftxInFile.write(('{0}={1}\n'.format(k, v)))
+                    else: #not float, int or string; assume it's list
+                        print('type of v is ', type(v))
+                        sys.stdout.flush()
+                        v_string=''
+                        for i in range(len(v)):
+                            v_string+=str(v[i])+' '
+                        v_string = v_string[:-1]
+                        print(('\t \t {0} : {1}'.format(k, v_string)))
+                        ftxInFile.write(('{0}={1}\n'.format(k, v_string)))
+                        del v_string
                 print(' ')
                     
                 # 4 - add timeStap to ftxIn if needed
@@ -579,10 +593,10 @@ class parent_driver(Component):
                 print('\t \t END_TIME = ', timeStamp + self.time_step)
                 print('\t \t LOOP_TIME_STEP = ', self.time_step)
                 print('\t \t LOOP_N = ', t_count)
-                ftxInFile.write('INIT_TIME = {0} \n'.format(timeStamp))
-                ftxInFile.write('END_TIME = {0} \n'.format(timeStamp + self.time_step))
-                ftxInFile.write('LOOP_TIME_STEP = {0} \n'.format(self.time_step))
-                ftxInFile.write('LOOP_N = {0} \n'.format(t_count))
+                ftxInFile.write('INIT_TIME={0}\n'.format(timeStamp))
+                ftxInFile.write('END_TIME={0}\n'.format(timeStamp + self.time_step))
+                ftxInFile.write('LOOP_TIME_STEP={0}\n'.format(self.time_step))
+                ftxInFile.write('LOOP_N={0}\n'.format(t_count))
                 print(' ')
                 
                 #set start mode based on loop number ; change to driver's start mode is we implement restarting capabilities

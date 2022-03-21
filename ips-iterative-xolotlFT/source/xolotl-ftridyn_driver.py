@@ -183,74 +183,247 @@ class xolotlFtridynDriver(Component):
         print(('processes included in Xolotl are: {}\n'.format(processString.strip())))
         self.xp.parameters['process']=processString.strip()
 
-
-        ### GITR RELATED PARAMETERS ###
-
-        print(('read GITR parameters (from file) : {}\n'.format(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE)))
-        self.gitr = {} #xolotl_param_handler.xolotl_params()
-        self.gitr=param_handler.read(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE)
-        #print('read GITR parameters (from file) : {}\n'.format(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE))
-
-        for k,v, in self.gitr.items():
-            print(('{0} : {1}'.format(k, v)))
-        print(' ')
-
-        for k,v in self.GITR_INPUT_PARAMETERS.items(): #self.gitr.parameters.iteritems():
-            if param_handler.is_int(v):
-                print(( '\t reading integer GITR input parameter {0} = {1}'.format( k, v)))
-                self.gitr[k]=int(v)
-            elif param_handler.is_float(v):
-                print(( '\t reading float GITR input parameter {0} = {1}'.format( k, v)))
-                self.gitr[k]=float(v)
-            elif param_handler.is_list(v):
-                values = []
-                for val in v.split(' '):
-                    if param_handler.is_int(val):
-                        values.append(int(val))
-                    elif param_handler.is_float(val):
-                        values.append(float(val))
-                    else:
-                        values.append(val)
-                print(('\t reading list GITR input parameter {0} = {1}'.format( k, values)))
-                self.gitr[k]=values                
-            else:
-                print(('\t reading string GITR input parameter {0} = {1} '.format( k, v))) 
-                self.gitr[k]=v
-                
-        if 'gitrOutputDir' in self.gitr:
-            print('\t GITR output will be read from {} \n'.format(self.gitr['gitrOutputDir']+'_'+prj))
-
-        ##NOT SURE IF THERE ARE MORE XOLOTL OR FT PARAMETERS THAT NEED TO OVERWRITTEN
-        if 'flux' in self.gitr:
-            self.xp.parameters['flux']=self.gitr['flux']*1.0e-18
-            print(('replaced flux in Xolotl (in ion/nm2s = 1e-18 ion/m2s) by value given by GITR {} (in ion/m2s) \n'.format(self.gitr['flux'])))
-        else:
-            print(('no flux specified in GITR, so using values in Xolotl {} \n'.format(self.xp.parameters['flux'])))
-
-        if 'heat' in self.gitr:
-            if 'heat' in self.xp.parameters:
-                print('modify value of heat given in xolotls params')
-                self.xp.parameters['heat'][0]=self.gitr['heat'][0]*1.0e-18
-                print(('replaced heat flux in Xolotl (in W/nm2s = 1e-18 W/m2s) by value given by GITR {} (W/m2s)\n'.format(self.gitr['heat'])))
-            else:
-                print('heat not defined in xolotl parameters yet; add')                
-                self.xp.parameters['heat']=[self.gitr['heat'][0]*1.0e-18,self.gitr['heat'][1]]
-                print(('added heat flux to Xolotl (in W/nm2s = 1e-18 W/m2s) with a value given by GITR {} (W/m2s)\n'.format(self.gitr['heat'])))
-            if 'startTemp' in self.xp.parameters:
-                del self.xp.parameters['startTemp']
-                print('\t and removed startTemp from xolotl parameters')
-        elif 'heat' in self.xp.parameters:
-            print(('no heat flux specified in GITR, so using values in Xolotl {} \n'.format(self.xp.parameters['heat'])))
-            if 'startTemp' in self.xp.parameters:
-                del self.xp.parameters['startTemp']
-                print('\t and removed startTemp from xolotls parameters')
-        elif 'startTemp' in self.gitr:
-            self.xp.parameters['startTemp']=self.gitr['startTemp']
-            print(('no heat flux provided by GITR or Xolotl; use fixed temperature specified by GITR {}\n'.format(self.gitr['startTemp'])))
-        else:
-            print(('no heat flux provided by GITR or Xolotl; use fixed temperature specified by Xolotl (in config or default) {}\n'.format(self.xp.parameters['startTemp'])))
         sys.stdout.flush()
         
+        ### GITR OR SOLPS RELATED PARAMETERS ###
+
+        #POSSIBLE FUTURE IMPROVEMENT:
+        # might be able to merge the solps and gitr sections together, because so far they do the same:
+        #       - come up with input-code agnostic dictionary
+        #       - use 'try:' only to see that there's a 'OUTPUT_FILE' & print which one in use
+        #       - might need tweaking if input from both codes isn't handled identically
+        #       - assume there won't be 2 inputs??
+
+        #two methods to check: try or if
+        try:
+            self.GITR_OUTPUT_FILE        
+            print('use input from GITR, as its output file is defined in config file')
+            print(('read GITR parameters (from file) : {}\n'.format(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE)))
+            self.gitr = {} #xolotl_param_handler.xolotl_params()
+            self.gitr=param_handler.read(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE)
+            #print('read GITR parameters (from file) : {}\n'.format(self.INPUT_DIR+'/'+self.GITR_OUTPUT_FILE))
+
+            for k,v, in self.gitr.items():
+                print(('{0} : {1}'.format(k, v)))
+            print(' ')
+
+            for k,v in self.GITR_INPUT_PARAMETERS.items(): #self.gitr.parameters.iteritems():
+                if param_handler.is_int(v):
+                    print(( '\t reading integer GITR input parameter {0} = {1}'.format( k, v)))
+                    self.gitr[k]=int(v)
+                elif param_handler.is_float(v):
+                    print(( '\t reading float GITR input parameter {0} = {1}'.format( k, v)))
+                    self.gitr[k]=float(v)
+                elif param_handler.is_list(v):
+                    values = []
+                    for val in v.split(' '):
+                        if param_handler.is_int(val):
+                            values.append(int(val))
+                        elif param_handler.is_float(val):
+                            values.append(float(val))
+                        else:
+                            values.append(val)
+                    print(('\t reading list GITR input parameter {0} = {1}'.format( k, values)))
+                    self.gitr[k]=values                
+                else:
+                    print(('\t reading string GITR input parameter {0} = {1} '.format( k, v))) 
+                    self.gitr[k]=v
+                
+            if 'gitrOutputDir' in self.gitr:
+                print('\t GITR output will be read from {} \n'.format(self.gitr['gitrOutputDir']+'_'+prj))
+
+            ##NOT SURE IF THERE ARE MORE XOLOTL OR FT PARAMETERS THAT NEED TO OVERWRITTEN
+            if 'flux' in self.gitr:
+                self.xp.parameters['flux']=self.gitr['flux']*1.0e-18
+                print(('replaced flux in Xolotl (in ion/nm2s = 1e-18 ion/m2s) by value given by GITR {} (in ion/m2s) \n'.format(self.gitr['flux'])))
+            else:
+                print(('no flux specified in GITR, so using values in Xolotl {} \n'.format(self.xp.parameters['flux'])))
+
+            #xp.parameters['tempModel']=='twoLine':
+            if 'tempHandler' in self.xp.parameters or 'tempHandler' in self.gitr: # or 'tempParam' in self.xp.parameters or 'tempParam' in self.gitr:
+                if 'heat' in self.gitr:
+                    print('TEST: use heat defined by GITR')
+                    self.xp.parameters['tempHandler']='heat'
+                    if len(self.gitr['heat'])>1:
+                        self.xp.parameters['tempParam']=[self.gitr['heat'][0]*1.0e-18, self.gitr['heat'][1]] #m2 -> /nm2
+                    else:
+                        self.xp.parameters['tempParam']=[self.gitr['heat']*1.0e-18, 300.0]
+                    print('use heat given by GITR ', self.xp.parameters['tempParam'], '(here used in W/nm2s = 1e-18 W/m2s)')
+                elif 'heat' in self.xp.parameters:
+                    print('TEST: use heat defined by Xolotl')
+                    self.xp.parameters['tempHandler']='heat'
+                    if len(self.xp.parameters['heat'])>1:
+                        self.xp.parameters['tempParam']=[self.xp.parameters['heat'][0], self.xp.parameters['heat'][1]]
+                    else:
+                        self.xp.parameters['tempParam']=[self.xp.parameters['heat'], 300.0]
+                    print('use heat given by Xolotl ', self.xp.parameters['tempParam']) #if given by Xolotl, assume it's in Xolotl's units                    
+                elif 'tempHandler' in self.gitr:
+                    print('no heat flux provided. Use temperature model defined in GITRs input (assume tempParam is given too):')
+                    print('\t tempHandler=', self.gitr['tempHandler'], ' and tempParam =', self.gitr['tempParam'])
+                elif 'tempHandler' in self.xp.parameters:
+                    print('no heat flux provided. Use temperature model defined in FTX config file (assume tempParam is given too):')
+                    print('\t tempHandler=', self.xp.parameters['tempHandler'], ' and tempParam =', self.xp.parameters['tempParam'])                    
+                else:
+                    print('\t WARNING: no heat or other temperature model given in GITR or Xolotl. Use constant temp at 300K')
+                    self.xp.parameters['tempHandler']='constant'
+                    self.xp.parameters['tempParam']=300.0
+                if 'startTemp' in self.xp.parameters:
+                    del self.xp.parameters['startTemp']
+                    print('\t and removed startTemp from xolotls parameters')
+
+
+            #xp.parameters['tempModel']=='oneLine':
+            #might need to check for more keywords if there're other one-line temp models 
+            elif ('heat' in self.gitr) or ('heat' in self.xp.parameter) or ('startTemp' in self.gitr) or ('startTemp' in self.xp.parameters):
+                if 'heat' in self.gitr:
+                    if len(self.gitr['heat'])>1:
+                        self.xp.parameters['heat']=[self.gitr['heat'][0]*1.0e-18,self.gitr['heat'][1]]
+                    else: #no bulkT given in xolotl
+                        self.xp.parameters['heat']=[self.gitr['heat'][0]*1.0e-18,300]
+                    print('use heat flux given by GITR ', self.xp.parameters['heat'] ,' (here in W/nm2s = 1e-18 W/m2s)')
+                    if 'startTemp' in self.xp.parameters:
+                        del self.xp.parameters['startTemp']
+                        print('\t and removed startTemp from xolotl parameters')
+                elif 'heat' in self.xp.parameters:
+                    print('no heat flux specified in GITR, so using values in Xolotl ', self.xp.parameters['heat'])
+                    if 'startTemp' in self.xp.parameters:
+                        del self.xp.parameters['startTemp']
+                        print('\t and removed startTemp from xolotls parameters')
+                elif 'startTemp' in self.gitr:
+                    self.xp.parameters['startTemp']=self.gitr['startTemp']
+                    print('no heat flux provided by GITR or Xolotl; use fixed temperature specified by GITR ', self.gitr['startTemp'])
+                elif 'startTemp' in self.xp.parameters:
+                    print('no heat flux provided by GITR or Xolotl; use fixed temperature specified by Xolotl (in config or default): ',self.xp.parameters['startTemp'])
+                else:
+                    print('no heat or temperature defined in GITRs output or Xolotls input. use default value T = 300K')
+                    self.xp.parameters['startTemp'] = 300.0
+            else:
+                print('\t WARNING: no surface temperature / heat flux model defined. will assume constant surface temeprature at 300K')
+                self.xp.parameters['startTemp']=300
+                if 'heat' in self.xp.parameters:
+                    del self.xp.parameters['heat']
+                
+            sys.stdout.flush()
+            
+        except Exception as e:
+            print(e)
+            print('no GITR input file defined in config file. ')
+            sys.stdout.flush()
+            #only try to read SOLPS OUTPUT FILE is that of GITR doesn't exist, to avoid conficts & overwriting parameters
+            try:
+                self.SOLPS_OUTPUT_FILE
+                print('use input from SOLPS, as its output file is defined in config file')
+                print(('read SOLPS parameters (from file) : {}\n'.format(self.INPUT_DIR+'/'+self.SOLPS_OUTPUT_FILE)))
+                sys.stdout.flush()
+                
+                self.solps = {} 
+                self.solps=param_handler.read(self.INPUT_DIR+'/'+self.SOLPS_OUTPUT_FILE)
+                
+                for k,v, in self.solps.items():
+                    print(('{0} : {1}'.format(k, v)))
+                print(' ')
+            
+                for k,v in self.SOLPS_INPUT_PARAMETERS.items(): #self.gitr.parameters.iteritems():
+                    if param_handler.is_int(v):
+                        print(( '\t reading integer SOLPS input parameter {0} = {1}'.format( k, v)))
+                        self.solps[k]=int(v)
+                    elif param_handler.is_float(v):
+                        print(( '\t reading float SOLPS input parameter {0} = {1}'.format( k, v)))
+                        self.solps[k]=float(v)
+                    elif param_handler.is_list(v):
+                        values = []
+                        for val in v.split(' '):
+                            if param_handler.is_int(val):
+                                values.append(int(val))
+                            elif param_handler.is_float(val):
+                                values.append(float(val))
+                            else:
+                                values.append(val)
+                        print(('\t reading list SOLPS input parameter {0} = {1}'.format( k, values)))
+                        self.solps[k]=values
+                    else:
+                        print(('\t reading string SOLPS input parameter {0} = {1} '.format( k, v)))
+                        self.solps[k]=v
+
+                if 'solpsOutputDir' in self.solps:
+                    print('\t SOLPS output will be read from {} \n'.format(self.solps['solpsOutputDir']+'_'+prj))
+            
+                ##NOT SURE IF THERE ARE MORE XOLOTL OR FT PARAMETERS THAT NEED TO OVERWRITTEN
+                if 'flux' in self.solps:
+                    self.xp.parameters['flux']=self.solps['flux']*1.0e-18
+                    print(('replaced flux in Xolotl (in ion/nm2s = 1e-18 ion/m2s) by value given by SOLPS {} (in ion/m2s) \n'.format(self.solps['flux'])))
+                else:
+                    print(('no flux specified in SOLPS, so using values in Xolotl {} \n'.format(self.xp.parameters['flux'])))
+
+                #xp.parameters['tempModel']=='twoLine': 
+                if 'tempHandler' in self.xp.parameters or 'tempHandler' in self.solps:# or 'tempParam' in self.xp.parameters or 'tempParam' in self.solps:
+                    if 'heat' in self.solps:                        
+                        print('TEST: use heat defined by SOLPS')
+                        self.xp.parameters['tempHandler']='heat'
+                        if len(self.solps['heat'])>1:
+                            self.xp.parameters['tempParam']=[self.solps['heat'][0]*1.0e-18, self.solps['heat'][1]] #m2 -> /nm2
+                        else:
+                            self.xp.parameters['tempParam']=[self.solps['heat']*1.0e-18, 300.0]
+                        print('use heat given by SOLPS ', self.xp.parameters['tempParam'], ' here in (here used in W/nm2s = 1e-18 W/m2s)')
+                    elif 'heat' in self.xp.parameters:
+                        print('TEST: use heat defined by Xolotl')
+                        self.xp.parameters['tempHandler']='heat'
+                        if len(self.xp.parameters['heat'])>1:
+                            self.xp.parameters['tempParam']=[self.xp.parameters['heat'][0], self.xp.parameters['heat'][1]]
+                        else:
+                            self.xp.parameters['tempParam'][1]=[self.xp.parameters['heat'], 300.0]
+                        print('use heat given by Xolotl ', self.xp.parameters['tempParam'])
+                    elif 'tempHandler' in self.solps:
+                        print('no heat flux provided. Use temperature model defined in SOLPS input (assume tempParam is given too):')
+                        print('\t tempHandler=', self.solps['tempHandler'], ' and tempParam =', self.solps['tempParam'])
+                    elif 'tempHandler' in self.xp.parameters:
+                        print('no heat flux provided. Use temperature model defined in FTX config file (assume tempParam is given too):')
+                        print('\t tempHandler=', self.xp.parameters['tempHandler'], ' and tempParam =', self.xp.parameters['tempParam'])
+                    else:
+                        print('\t WARNING: no heat or other temperature model given in SOLPS or Xolotl. Use constant temp at 300K')
+                        self.xp.parameters['tempHandler']='constant'
+                        self.xp.parameters['tempParam']=300.0
+                    if 'startTemp' in self.xp.parameters:
+                        del self.xp.parameters['startTemp']
+                        print('\t and removed startTemp from xolotls parameters')
+
+                #xp.parameters['tempModel']=='oneLine':
+                #might need to check for more keywords if there're other one-line temp models
+                elif ('heat' in self.solps) or ('heat' in self.xp.parameter) or ('startTemp' in self.solps) or ('startTemp' in self.xp.parameters):
+                    if 'heat' in self.solps:
+                        if len(self.solps['heat'])>1:
+                            self.xp.parameters['heat']=[self.solps['heat'][0]*1.0e-18,self.solps['heat'][1]]
+                        else: #no bulkT given in xolotl
+                            self.xp.parameters['heat']=[self.solps['heat'][0]*1.0e-18,300]
+                        print('use heat flux given by SOLPS ', self.xp.parameters['heat'],' (here in W/nm2s = 1e-18 W/m2s)')
+                        if 'startTemp' in self.xp.parameters:
+                            del self.xp.parameters['startTemp']
+                            print('\t and removed startTemp from xolotl parameters')
+                    elif 'heat' in self.xp.parameters:
+                        print('no heat flux specified in SOLPS, so using values in Xolotl: ', self.xp.parameters['heat'])
+                        if 'startTemp' in self.xp.parameters:
+                            del self.xp.parameters['startTemp']
+                            print('\t and removed startTemp from xolotls parameters')
+                    elif 'startTemp' in self.solps:
+                        self.xp.parameters['startTemp']=self.solps['startTemp']
+                        print('no heat flux provided by SOLPS or Xolotl; use fixed temperature specified by SOLPS: ', self.solps['startTemp'])
+                    elif 'startTemp' in self.xp.parameters:
+                        print('no heat flux provided by SOLPS or Xolotl; use fixed temperature specified by Xolotl (in config or default): ', self.xp.parameters['startTemp'])
+                    else:
+                        print('no heat or temperature defined in SOLPS output or Xolotls input. use default value T = 300K')
+                        self.xp.parameters['startTemp'] = 300.0
+
+                sys.stdout.flush()
+
+            except Exception as e2:
+                print(e2)
+                print('no input from SOLPS or GITR')
+                print('please define inputs in config file')
+                #might need to make sure that, if given in the config file, things are in the correct dictionary
+                sys.stdout.flush()
+
+            
+            
         #### FTRIDYN PARAMETERS ##### 
         ##LOOP OVER LIST OF PLASMA SPECIES SPECIES #########
         print(' ')
@@ -294,34 +467,100 @@ class xolotlFtridynDriver(Component):
         self.FT_energy_file_name=[]
         self.angleFile=[]
         self.aWeightFile=[]
-        self.GITR_eadist_output_path=[]
-        self.GITR_eadist_output_file=[]
-        
+        self.eadist_output_path=[]
+        self.eadist_output_file=[]
 
-        inputEnergy=self.gitr['inputEnergy']#.split(' ')
-        inputAngle=self.gitr['inputAngle']#.split(' ')
+        
+        try:
+            self.GITR_OUTPUT_FILE
+            print('read inputEnergy, inputAngle, plasmaSpecies and fluxFraction from GITR input file')
+            
+            if 'inputEnergy' in self.gitr:
+                inputEnergy=self.gitr['inputEnergy']
+            if 'inputAngle' in self.gitr:
+                inputAngle=self.gitr['inputAngle']
+            if 'plasmaSpecies' in self.gitr:
+                self.plasmaSpecies=self.gitr['plasmaSpecies']
+            if 'fluxFraction' in self.gitr:
+                self.fluxFraction=self.gitr['fluxFraction']
+
+        except Exception as e:
+            print(e)
+            print('check for input from SOLPS:')            
+            try:
+                self.SOLPS_OUTPUT_FILE
+                print('read inputEnergy, inputAngle, plasmaSpecies and fluxFraction from SOLPS input file')                
+
+                print('TEST: solps dictionary contains:')
+                print('\t \t', self.solps)
+                
+                if 'inputEnergy' in self.solps:
+                    inputEnergy=self.solps['inputEnergy']
+                else:
+                    print('\t no inputEnergy in SOLPS output')
+                if 'inputAngle' in self.solps:
+                    inputAngle=self.solps['inputAngle']
+                else:
+                    print('\t no inputAngle in SOLPS output')
+                if 'plasmaSpecies' in self.solps:
+                    self.plasmaSpecies=self.solps['plasmaSpecies']
+                else:
+                    print('\t no plasmaSpecies in SOLPS output')
+                if 'fluxFraction' in self.solps:
+                    self.fluxFraction=self.solps['fluxFraction']
+                else:
+                    print('no \tfluxFraction in SOLPS output')
+
+            except Exception as e2:
+                print(e2)
+                print('no input from SOLPS or GITR')
+                print('expect inputEnergy, inputAngle, plasmaSpecies and fluxFraction from config file (in FTRIDYN dictionary)')
+                print('will crash if not provided')
+                inputEnergy=self.ftridyn['inputEnergy']
+                inputAngle=self.ftridyn['inputAngle']
+                self.plasmaSpecies=self.ftridyn['plasmaSpecies']
+                self.fluxFraction=self.ftridyn['fluxFraction']
+                
         inputSpYield=self.ftridyn['inputSpYield'].split(' ')
         inputRYield=self.ftridyn['inputRYield'].split(' ')
         #inputFluxFraction=self.GITR_INPUT_PARAMETERS['inputFluxFraction'].split(' ')        
 
-        for i in range(len(self.gitr['plasmaSpecies'])): #self.plasmaSpecies.iteritems():
-            prj=self.gitr['plasmaSpecies'][i]
+        for i in range(len(self.plasmaSpecies)): #self.plasmaSpecies.iteritems():
+            prj=self.plasmaSpecies[i]
 
             self.energyIn.append(float(inputEnergy[i]))
             self.inAngle.append(float(inputAngle[i]))
             self.spYield.append(float(inputSpYield[i]))
             self.rYield.append(float(inputRYield[i]))
             #self.fluxFraction.append(float(inputFluxFraction[i]))
-            print(('\t index {0}, species {1} '.format( i, self.gitr['plasmaSpecies'][i])))
+            print(('\t index {0}, species {1} '.format( i, self.plasmaSpecies[i])))
             print(('\t energy {0}, angle {1} '.format( self.energyIn[i] ,self.inAngle[i])))
-            print(('\t spYield {0} , rYield {1} , fluxFraction {2} \n'.format(self.spYield[i], self.rYield[i], self.gitr['fluxFraction'][i] )))
+            print(('\t spYield {0} , rYield {1} , fluxFraction {2} \n'.format(self.spYield[i], self.rYield[i], self.fluxFraction[i] )))
 
             if self.inAngle[i] < 0 :
                 ##ADD +'_'+prj in the middle if the full path name for ITER cases, as multiple plasma species will follow distributions
-                gitr_output_dir='gitrOutputDir'+'_'+prj
-                print(('\t GITR output of angular distributions will be read from {} \n'.format(self.gitr[gitr_output_dir])))
-                self.angleFile.append(self.gitr[gitr_output_dir].strip()+'/'+self.GITR_ANGLE_FILE.strip()) #self.gitr['gitrOutputDir'].strip()
-                self.aWeightFile.append(self.gitr[gitr_output_dir].strip()+'/'+self.GITR_AWEIGHT_FILE.strip()) #self.gitr['gitrOutputDir'].strip()
+                try:
+                    self.GITR_OUTPUT_FILE
+                    print('angular distributions given by GITR')
+                    gitr_output_dir='gitrOutputDir'+'_'+prj
+                    print(('\t GITR output of angular distributions will be read from {} \n'.format(self.gitr[gitr_output_dir])))
+                    self.angleFile.append(self.gitr[gitr_output_dir].strip()+'/'+self.GITR_ANGLE_FILE.strip()) #self.gitr['gitrOutputDir'].strip()
+                    self.aWeightFile.append(self.gitr[gitr_output_dir].strip()+'/'+self.GITR_AWEIGHT_FILE.strip()) #self.gitr['gitrOutputDir'].strip()
+                #call it here SOLPS, but would likely come from hPIC or some other input:
+                except Exception as e:
+                    print(e)
+                    print('check for input from SOLPS:')
+                    try:
+                        self.SOLPS_OUTPUT_FILE
+                        print('angular distributions given by SOLPS')
+                        solps_output_dir='solpsOutputDir'+'_'+prj
+                        print(('\t SOLPS output of angular distributions will be read from {} \n'.format(self.solps[solps_output_dir])))
+                        self.angleFile.append(self.solps[solps_output_dir].strip()+'/'+self.SOLPS_ANGLE_FILE.strip()) #self.gitr['gitrOutputDir'].strip()
+                        self.aWeightFile.append(self.solps[solps_output_dir].strip()+'/'+self.SOLPS_AWEIGHT_FILE.strip()) #self.gitr['gitrOutputDir'].strip()
+                    except Exception as e2:
+                        print(e2)
+                        print('no input from SOLPS or GITR')
+                        
                 print(('\t reading angles and weights for {0} from {1} {2};\n'.format(prj, self.angleFile[i], self.aWeightFile[i])))
                 a = numpy.loadtxt(self.angleFile[i], usecols = (0,) , unpack=True)
                 w = numpy.loadtxt(self.aWeightFile[i], usecols = (0,) , unpack=True)
@@ -350,25 +589,54 @@ class xolotlFtridynDriver(Component):
             #prepare input files; i.e., those transferred from FT init (generateInput) to FT step (run code)
             #leave 'others' empty for a pure FT run
 
-            if self.energyIn[i] < 0:
-                gitr_output_dir='gitrOutputDir'+'_'+prj
-                print(('\t GITR output of energy distributions will be read from {} \n'.format(self.gitr[gitr_output_dir])))
-                ##ADD +'_'+prj in the middle if the full path name for ITER cases, as multiple plasma species will follow distributions
-                self.FT_energy_file_name.append(self.ft_energy_input_file[i]) #"He_W0001.ED1"
-                #where all the energy distribution files are located
-                #self.GITR_eadist_output_path.append(self.gitr['gitrOutputDir'].strip())#+'_'+prj)
-                self.GITR_eadist_output_path.append(self.gitr[gitr_output_dir].strip())
+            try:
+                self.GITR_OUTPUT_FILE                
+                if self.energyIn[i] < 0:
+                    gitr_output_dir='gitrOutputDir'+'_'+prj
+                    print(('\t GITR output of energy distributions will be read from {} \n'.format(self.gitr[gitr_output_dir])))
+                    ##ADD +'_'+prj in the middle if the full path name for ITER cases, as multiple plasma species will follow distributions
+                    self.FT_energy_file_name.append(self.ft_energy_input_file[i]) #"He_W0001.ED1"
+                    #where all the energy distribution files are located
+                    #self.GITR_eadist_output_path.append(self.gitr['gitrOutputDir'].strip())#+'_'+prj)
+                    self.eadist_output_path.append(self.gitr[gitr_output_dir].strip())
+                    try:
+                        self.GITR_EADIST_FILE 
+                        self.eadist_output_file.append(self.GITR_EADIST_FILE)
+                        print('\t using energy distribution file format given in GITR eadist file', self.GITR_EADIST_FILE)
+                    except : #default file format ['dist','.dat']
+                        self.eadist_output_file.append(['dist','.dat'])
+                        print("\t using default energy distribution file format, ['dist','.dat']")
+                else:       
+                    self.FT_energy_file_name.append('')		    
+                    self.eadist_output_path.append('')
+                    self.eadist_output_file.append([' ',' '])
+            except Exception as e:
+                print(e)
+                print('check for input from SOLPS:')
                 try:
-                    self.GITR_EADIST_FILE 
-                    self.GITR_eadist_output_file.append(self.GITR_EADIST_FILE)
-                    print('\t using energy distribution file format given in config file', self.GITR_EADIST_FILE)
-                except: #default file format ['dist','.dat']
-                    self.GITR_eadist_output_file.append(['dist','.dat'])
-                    print("\t using default energy distribution file format, ['dist','.dat']")
-            else:
-                self.FT_energy_file_name.append('')
-                self.GITR_eadist_output_path.append('')
-                self.GITR_eadist_output_file.append([' ',' '])#('')
+                    self.SOLPS_OUTPUT_FILE
+                    if self.energyIn[i] < 0:
+                        solps_output_dir='solpsOutputDir'+'_'+prj
+                        print(('\t SOLPS output of energy distributions will be read from {} \n'.format(self.solps[solps_output_dir])))
+                        ##ADD +'_'+prj in the middle if the full path name for ITER cases, as multiple plasma species will follow distributions
+                        self.FT_energy_file_name.append(self.ft_energy_input_file[i]) #"He_W0001.ED1"
+                        #where all the energy distribution files are located
+                        #self.GITR_eadist_output_path.append(self.gitr['gitrOutputDir'].strip())#+'_'+prj)
+                        self.eadist_output_path.append(self.solps[solps_output_dir].strip())
+                        try:
+                            self.SOLPS_EADIST_FILE
+                            self.eadist_output_file.append(self.SOLPS_EADIST_FILE)
+                            print('\t using energy distribution file format given in SOLPS eadist file', self.SOLPS_EADIST_FILE)
+                        except: #default file format ['dist','.dat']
+                            self.eadist_output_file.append(['dist','.dat'])
+                            print("\t using default energy distribution file format, ['dist','.dat']")
+                    else:
+                        self.FT_energy_file_name.append('')                
+                        self.eadist_output_path.append('')
+                        self.eadist_output_file.append([' ',' '])#('')
+                except Exception as e2:
+                    print(e2)
+                    print('no input from SOLPS or GITR')
 
             #initialize maxRangeXolotl list
             self.maxRangeXolotl.append(0.0)
@@ -495,13 +763,13 @@ class xolotlFtridynDriver(Component):
             # A) GET INPUT THAT MIGHT CHANGE EVERT LOOP READY
 
             #determine parameters related to init/restart
-            iW=self.gitr['plasmaSpecies'].index('W')
+            iW=self.plasmaSpecies.index('W')
             if (self.driverMode == 'INIT'):
                 print('\t init mode yes\n')
                 self.ftridyn['iQ0']=0
 
                 targetList=[]
-                targetList.append(self.gitr['plasmaSpecies'][iW]) #only W in the first loop
+                targetList.append(self.plasmaSpecies[iW]) #only W in the first loop
                 for i in range(1,4):
                     targetList.append('') #leave empty
 
@@ -518,11 +786,11 @@ class xolotlFtridynDriver(Component):
                 #prepare target strings for F-Tridyn:
                 #we always have W in the substrate  (tg1); others are optional; mixed material composition given by LAY file
                 targetList=[]
-                targetList.append(self.gitr['plasmaSpecies'][iW])
+                targetList.append(self.plasmaSpecies[iW])
                 for prj in ['He', 'D', 'T']: #generate_ftridyn_input expects max 4 target species; declare all, even if empty
-                    if prj in self.gitr['plasmaSpecies']:
-                        i=self.gitr['plasmaSpecies'].index(prj)
-                        if self.gitr['fluxFraction'][i]>0.0: #species exists and fraction > 0
+                    if prj in self.plasmaSpecies:
+                        i=self.plasmaSpecies.index(prj)
+                        if self.fluxFraction[i]>0.0: #species exists and fraction > 0
                             targetList.append(prj)
                         else:                        
                             targetList.append('') #leave empty
@@ -532,9 +800,9 @@ class xolotlFtridynDriver(Component):
                 print(('\t passing to F-Tridyn the list of targets t{} \n'.format(targetList)))
 
                 #Xolotl only outputs He_W0001.LAY; but it's same substrate composition for running all projectiles
-                iHe=self.gitr['plasmaSpecies'].index('He')
-                for i in range(len(self.gitr['plasmaSpecies'])): #self.plasmaSpecies.iteritems():
-                    prj=self.gitr['plasmaSpecies'][i]
+                iHe=self.plasmaSpecies.index('He')
+                for i in range(len(self.plasmaSpecies)): #self.plasmaSpecies.iteritems():
+                    prj=self.plasmaSpecies[i]
                     if prj!='He': #do not self-copy
                         print(('\t copy {0} as {1} '.format( self.ftx_lay_file[iHe], self.ftx_lay_file[i]))) 
                         shutil.copyfile(self.ftx_lay_file[iHe],self.ftx_lay_file[i])
@@ -552,16 +820,16 @@ class xolotlFtridynDriver(Component):
             # B) RUN FTRIDYN
 
             print(' ')
-            for i in range(len(self.gitr['plasmaSpecies'])): #self.plasmaSpecies.iteritems():
-                prj=self.gitr['plasmaSpecies'][i]
+            for i in range(len(self.plasmaSpecies)): #self.plasmaSpecies.iteritems():
+                prj=self.plasmaSpecies[i]
                 maxDepth=[]
-                if (self.gitr['fluxFraction'][i] > 0.0) and not (all(k==0 for k in self.weightAngle[i])):
-                    print(('running F-Tridyn for {0} with flux fraction = {1}\n'.format(prj, self.gitr['fluxFraction'][i])))
+                if (self.fluxFraction[i] > 0.0) and not (all(k==0 for k in self.weightAngle[i])):
+                    print(('running F-Tridyn for {0} with flux fraction = {1}\n'.format(prj, self.fluxFraction[i])))
                     print(('\t and not all angle weights are zero; max angleWeight is {}\n'.format(max(self.weightAngle[i]))))
                     sys.stdout.flush()
                     
                     #component/method calls now include arguments (variables)
-                    self.services.call(ftridyn, 'init', timeStamp, dTime=time, fPrj=prj, fTargetList=targetList, ftParameters=self.ftridyn , fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], ft_folder=self.FT_OUTPUT_FOLDER, input_file=self.ft_input_file[i], otherInFiles=[self.FT_SURFACE_FILE,self.ftx_lay_file[i]], energy_file_name=self.FT_energy_file_name[i], orig_energy_files_path=self.GITR_eadist_output_path[i], orig_energy_files_pattern=self.GITR_eadist_output_file[i], output_file=outFile)
+                    self.services.call(ftridyn, 'init', timeStamp, dTime=time, fPrj=prj, fTargetList=targetList, ftParameters=self.ftridyn , fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], ft_folder=self.FT_OUTPUT_FOLDER, input_file=self.ft_input_file[i], otherInFiles=[self.FT_SURFACE_FILE,self.ftx_lay_file[i]], energy_file_name=self.FT_energy_file_name[i], orig_energy_files_path=self.eadist_output_path[i], orig_energy_files_pattern=self.eadist_output_file[i], output_file=outFile)
                     sys.stdout.flush()
                     
                     self.services.call(ftridyn, 'step', timeStamp, ftParameters=self.ftridyn, fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], output_file=outFile)
@@ -611,7 +879,15 @@ class xolotlFtridynDriver(Component):
                         ft_implProfiles_dictionary['angle']=self.angleIn[i]
                         ft_implProfiles_dictionary['weightAngle']=self.weightAngle[i]
                         ft_implProfiles_dictionary['prjRange']=maxRange
-                        ft_implProfiles_dictionary['nBins']=self.xp.parameters['grid'][0]
+                        #different grid keywords depending on Xolotl version:
+                        if 'grid' in self.xp.parameters:
+                            ft_implProfiles_dictionary['nBins']=self.xp.parameters['grid'][0]
+                        elif 'gridParam' in  self.xp.parameters:
+                            ft_implProfiles_dictionary['nBins']=self.xp.parameters['gridParam'][0]
+                        else:
+                            ft_implProfiles_dictionary['nBins']=200
+                            print('\t WARNING: no grid or gridParam provided; assume nBins=200')
+                                
                         ft_implProfiles_dictionary['logFile']=outFile
 
 
@@ -730,8 +1006,8 @@ class xolotlFtridynDriver(Component):
                 #if (self.gitr['fluxFraction'][i] > 0.0) and not (all(k==0 for k in self.weightAngle[i])):
                 else:
                     print(('Skip running FTridyn for {0}'.format(prj))) #, as fraction in plasma is {1}\n'.format(prj, self.gitr['fluxFraction'][i]))
-                    if self.gitr['fluxFraction'][i]==0:
-                        print('\t as fraction in plasma is {}\n'.format(self.gitr['fluxFraction'][i]))
+                    if self.fluxFraction[i]==0:
+                        print('\t as fraction in plasma is {}\n'.format(self.fluxFraction[i]))
                     if all(k==0 for k in self.weightAngle[i]):
                         print('\t as all angle weights are zero\n')
                     self.spYield[i]=0.0
@@ -757,8 +1033,8 @@ class xolotlFtridynDriver(Component):
             yieldString=str(time)
             print('Sputtering and Reflection Yields due to:')
             
-            for i in range(len(self.gitr['plasmaSpecies'])): #self.plasmaSpecies.iteritems():  
-                prj=self.gitr['plasmaSpecies'][i]
+            for i in range(len(self.plasmaSpecies)): #self.plasmaSpecies.iteritems():  
+                prj=self.plasmaSpecies[i]
                 print(('\t{0} :  spY = {1} and rY = {2} '.format(prj,self.spYield[i], self.rYield[i])))
                 prjYieldsString=prj+' ' +str(self.spYield[i])+' '+str(self.rYield[i])
                 yieldString+=prjYieldsString
@@ -803,17 +1079,17 @@ class xolotlFtridynDriver(Component):
             ##    - assume the standard (species included if fluxFraction>0, not included if fluxFraction<0) if the network isn't given explicitely
             ##      I.e., now we try to merge two checks: it works in cases where more species passed by GITR, but not handled by Xolotl; or if fluxFraction=0.
             
-            for i in range(len(self.gitr['plasmaSpecies'])):
-                prj=self.gitr['plasmaSpecies'][i]                
+            for i in range(len(self.plasmaSpecies)):
+                prj=self.plasmaSpecies[i]                
                 ft_output_profile_temp_prj=timeFolder+'/'+self.FT_OUTPUT_PROFILE_TEMP+'_'+prj
                 profile=open(ft_output_profile_temp_prj, "r")
                 tridynString=profile.read().rstrip('\n')
                 combinedTridynString=str(tridynString)+str(self.maxRangeXolotl[i])
-                print(('for {0}, fraction in plasma = {1} , and reflection = {2} '.format(prj,self.gitr['fluxFraction'][i], self.rYield[i])))
-                print(('\t effective fraction (in plasma * (1-reflection)) = {} '.format(self.gitr['fluxFraction'][i]*(1-self.rYield[i]))))
+                print(('for {0}, fraction in plasma = {1} , and reflection = {2} '.format(prj,self.fluxFraction[i], self.rYield[i])))
+                print(('\t effective fraction (in plasma * (1-reflection)) = {} '.format(self.fluxFraction[i]*(1-self.rYield[i]))))
                 sys.stdout.flush()
 
-                if ( (self.gitr['fluxFraction'][i] > 0)):
+                if ( (self.fluxFraction[i] > 0)):
                     #the format of tridyn.dat is different for the pulsed & UQ executables of Xolotl:
                     if prj!='W': #then the name in the tridyn.dat line is the same as prj
                         ##if He,  check He's position in netParam, i.e., index i=0  
@@ -823,12 +1099,12 @@ class xolotlFtridynDriver(Component):
                                     print('\t Xolotl netowrk exists for ' , prj, 'given in plasmaSpecies, but entry in netParam is zero ; will skip in tridyn.dat')
                                 else:
                                     print('\t For ' , prj , 'netparam = ' ,self.xp.parameters['netParam'][i] , ' is used in Xolotl ; write line for ', prj , ' in tridyn.dat')
-                                    combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.gitr['fluxFraction'][i]*(1-self.rYield[i])))) 
+                                    combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.fluxFraction[i]*(1-self.rYield[i])))) 
                                     combinedFile.write("%s\n" %(combinedTridynString))
                             else:
                                 print('\t WARNING: netparam not given in Xolotl ; write line for ', prj , ' in tridyn.dat')
                                 print('\t \t this might give an ERROR if species isnt part of Xolotls network')
-                                combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.gitr['fluxFraction'][i]*(1-self.rYield[i]))))
+                                combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.fluxFraction[i]*(1-self.rYield[i]))))
                                 combinedFile.write("%s\n" %(combinedTridynString))
                         ##if D or T,  check position in netParam, i.e., index i=2,3 -> i-1 = 1 or 2 (no W in netParam)
                         elif prj=='D' or prj=='T':
@@ -837,19 +1113,19 @@ class xolotlFtridynDriver(Component):
                                     print('\t Xolotl network exists for ' , prj, 'given in plasmaSpecies, but entry in netParam is zero ; will skip in tridyn.dat')
                                 else:                                    
                                     print('\t For ' , prj , 'netparam = ' ,self.xp.parameters['netParam'][i-1] , ' is used in Xolotl ; write line for ', prj , ' in tridyn.dat')
-                                    combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.gitr['fluxFraction'][i]*(1-self.rYield[i])))) 
+                                    combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.fluxFraction[i]*(1-self.rYield[i])))) 
                                     combinedFile.write("%s\n" %(combinedTridynString))
                             else:
                                 print('\t WARNING: netparam not given in Xolotl ; write line for ', prj , ' in tridyn.dat')
                                 print('\t \t this might give an ERROR if species isnt part of Xolotls network')
-                                combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.gitr['fluxFraction'][i]*(1-self.rYield[i]))))
+                                combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.fluxFraction[i]*(1-self.rYield[i]))))
                                 combinedFile.write("%s\n" %(combinedTridynString))
                         ##W is called interstitial in tridyn.dat, i.e., "I" & always exists in the network (no need to check) 
                     elif prj=='W':
                         print('\t WARNING: the wrapper assumes that interstitials always exists in Xolotls network')
                         print('\t \t it will write line for ', prj , ' in tridyn.dat')
                         print('\t \t this might give an ERROR if interstitials arent part of Xolotls network')
-                        combinedFile.write("%s %s %s\n" %('I',str(1),str(self.gitr['fluxFraction'][i]*(1-self.rYield[i]))))
+                        combinedFile.write("%s %s %s\n" %('I',str(1),str(self.fluxFraction[i]*(1-self.rYield[i]))))
                         combinedFile.write("%s\n" %(combinedTridynString))
                     else:
                         print('\t WARNING: species ', prj, 'cannot be handled by Xolotl yet.')
@@ -893,12 +1169,23 @@ class xolotlFtridynDriver(Component):
             #if something was implanted:
             #Xolotl parameter modifications that need to be done at every loop:
 
+            #list modules right before running Xolotl:
+            modList=os.system('module list')
+            print('TEST: we are running Xolotl with the following modules loaded: ', modList)
+
+            print('load cray-hdf5-parallel')
+            os.system('module load cray-hdf5-parallel')
+
+            modList=os.system('module list')
+            print('TEST: we are running Xolotl with the following modules loaded: ', modList)
+            sys.stdout.flush()
+            
             #calculate effective sputtering yield; i.e., weighted by relative flux of W-to-He
             totalSpYield=0
-            for i in range(len(self.gitr['plasmaSpecies'])): #self.plasmaSpecies.iteritems():
-                prj=self.gitr['plasmaSpecies'][i]
-                print(('contribution of {0} to total sputtering yield = {1} '.format( prj, float(self.gitr['fluxFraction'][i])*float(self.spYield[i]))))
-                totalSpYield+=(float(self.gitr['fluxFraction'][i])*float(self.spYield[i])) #self.fluxFraction[i]
+            for i in range(len(self.plasmaSpecies)): #self.plasmaSpecies.iteritems():
+                prj=self.plasmaSpecies[i]
+                print(('contribution of {0} to total sputtering yield = {1} '.format( prj, float(self.fluxFraction[i])*float(self.spYield[i]))))
+                totalSpYield+=(float(self.fluxFraction[i])*float(self.spYield[i])) #self.fluxFraction[i]
             print(('total weighted sputtering yield = {} (passed to Xolotl)\n'.format(totalSpYield)))
             self.xp.parameters['sputtering'] = totalSpYield            
             
@@ -998,6 +1285,7 @@ class xolotlFtridynDriver(Component):
                         #shutil.copyfile('xolotlStop.h5', self.xp.parameters['networkFile'])
 
                         #also need to update the values of grid and voidPortion to match what's in the network file:
+                        #Most likely this will only work if using 'grid', not 'gridParam' in network file!!
                         shutil.copyfile(self.xp.parameters['networkFile'],self.xp.parameters['networkFile']+'_overgrid_'+str(n_overgrid_loops))
                         shutil.move('xolotlStop.h5', self.xp.parameters['networkFile'])
                         #if os.path.exists(self.xp.parameters['networkFile']):
