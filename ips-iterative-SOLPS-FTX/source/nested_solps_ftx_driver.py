@@ -616,11 +616,26 @@ class parent_driver(Component):
                 #ftxInFilePath=self.SUBMIT_DIR+'/'+ftxInFileName
                 print('\t copying input to FTX file from ', ftxInFileName, 'to ', self.child_components[child_comp]['INPUT_DIR']+'/ftxInput.txt')
                 shutil.copyfile(ftxInFileName,self.child_components[child_comp]['INPUT_DIR']+'/ftxInput.txt')
-                print('\t copying input to FTX file from ', timeFileName, 'to ', self.child_components[child_comp]['INPUT_DIR']+'/'+timeFileName)
+                print('\t copying time parameter file from ', timeFileName, 'to ', self.child_components[child_comp]['INPUT_DIR']+'/'+timeFileName)
                 shutil.copyfile(timeFileName,self.child_components[child_comp]['INPUT_DIR']+'/'+timeFileName)
-
+                print('\t copying output file of SOLPS from ', self.INPUT_DIR+'/'+solps_outFile, 'to ', self.child_components[child_comp]['INPUT_DIR']+'/solpsOut.txt')
+                shutil.copyfile(self.INPUT_DIR+'/'+solps_outFile,self.child_components[child_comp]['INPUT_DIR']+'/solpsOut.txt')
+                
                 print('\n')
                 sys.stdout.flush()
+
+                #save ftxIn and solpsOut for each loop (with time-stamp)
+                shutil.copyfile(self.INPUT_DIR+'/'+solps_outFile, solps_outFile+'_t'+str(timeStamp))
+                shutil.copyfile(ftxInFileName,ftxInFileName+'_t'+str(timeStamp))
+                shutil.copyfile(timeFileName,timeFileName+'_t'+str(timeStamp))
+                print('\t to save input files for each time-loop, copied:')
+                print('\t \t ', self.INPUT_DIR+'/'+solps_outFile, ' as ', solps_outFile+'_t'+str(timeStamp))
+                print('\t \t ', ftxInFileName, ' as ', ftxInFileName+'_t'+str(timeStamp))
+                print('\t \t ', timeFileName , ' as ', timeFileName+'_t'+str(timeStamp))
+
+                
+                #update plasma state file:
+                self.services.update_plasma_state()
                 
             ## END OF solpsOut --> ftxIn and time-parameters
             

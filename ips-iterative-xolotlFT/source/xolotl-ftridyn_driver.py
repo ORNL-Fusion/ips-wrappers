@@ -363,6 +363,17 @@ class xolotlFtridynDriver(Component):
                 self.plasma[k]=v
             print(' ')
             sys.stdout.flush()
+
+            #also take the opportunity to copy it here and update the plasma state:
+            print('copy ', self.PLASMA_OUTPUT_FILE, ' to cwd, so it can be updated in plasma state')
+            shutil.copyfile(self.INPUT_DIR+'/'+self.PLASMA_OUTPUT_FILE, self.PLASMA_OUTPUT_FILE)
+            try:
+                print('copy ', self.PLASMA_OUTPUT_ORIG, ' to cwd, so it can be updated in plasma state')
+                shutil.copyfile(self.INPUT_DIR+'/'+self.PLASMA_OUTPUT_ORIG, self.PLASMA_OUTPUT_ORIG)
+            except Exception as e:
+                print(e)
+            sys.stdout.flush()
+            self.services.update_plasma_state()
             
         except Exception as e:
             print(e)
@@ -917,19 +928,18 @@ class xolotlFtridynDriver(Component):
                         self.rYield[i]=float(yields[1])
 
                     #4) save tridyn.dat
-                    #append output to allTridynNN.dat for each species (and save to what folder?)        
+                    #append output to allTridyn.dat for each species
                     ft_output_profile_final=self.FT_OUTPUT_PROFILE_FINAL+'_'+prj
                     tempfile = open(self.FT_OUTPUT_PROFILE_TEMP,"r")
                     f = open(ft_output_profile_final, "a")                    
                     f.write('%s%s \n' %(tempfile.read().rstrip('\n'),self.maxRangeXolotl[i]))                    
                     f.close()
                     tempfile.close()
-                    
-                    #keep copies of tridyn.dat
+
+                    ## keep copies of tridyn.dat in timeFolder
                     ft_output_profile_temp_prj=self.FT_OUTPUT_PROFILE_TEMP+'_'+prj #for each species
-                    shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP,ft_output_profile_temp_prj)
                     shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP, timeFolder+'/'+ft_output_profile_temp_prj)
-            
+                    #shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP,ft_output_profile_temp_prj)
                 
                     #5) MOVE FOLDERS TO DIRECTORY WITH TIME-STAMP & RENAME FOR (Tg,Prj) SPECIES  
                 
@@ -954,11 +964,11 @@ class xolotlFtridynDriver(Component):
                     outputFTFile.write("0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 ")
                     outputFTFile.close()
 
-                    #keep copies of tridyn.dat    
+                    #keep copies of tridyn.dat in timeFolder    
                     ft_output_profile_temp_prj=self.FT_OUTPUT_PROFILE_TEMP+'_'+prj #for each species
-                    shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP,ft_output_profile_temp_prj)
                     shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP, timeFolder+'/'+ft_output_profile_temp_prj)
-
+                    #shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP,ft_output_profile_temp_prj)
+                    
                 sys.stdout.flush()
             #end of for loop:
 
@@ -1070,13 +1080,17 @@ class xolotlFtridynDriver(Component):
 
                 else:
                     print('\t Flux fraction for ', prj, 'is zero')
-                    print('\t \t for now, skip writing anything, even is prj exists in network (no checks in place)')
+                    print('\t \t for now, skip writing anything, even if prj exists in network (no checks in place)')
                     print('\t \t Xolotl will run, with no ', prj, ' implanted')
                     
             profile.close()
             sys.stdout.flush()
             combinedFile.close()
 
+            #save tridyn.dat (combined for all species) with time-stamp:
+            print('to keep ', self.FT_OUTPUT_PROFILE_TEMP, ' for every loop, save as ', self.FT_OUTPUT_PROFILE_TEMP+'_t'+str(time))
+            shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP, self.FT_OUTPUT_PROFILE_TEMP+'_t'+str(time))
+            
             #compress output
             if self.driver['ZIP_FTRIDYN_OUTPUT']=='True':
                 print(('zip F-TRIDYNs output: {} \n'.format(timeFolder)))
