@@ -10,7 +10,6 @@ import sys
 def keepLastTS(inFile='xolotlStop.h5', outFile='netFile'):
 
     print(' ')
-    print('TEST keepLastTS TEST keepLastTS TESTkeepLastTS keepLastTS TEST')
     print('keepLastTS, called with input:')
     print(inFile)
     sys.stdout.flush()

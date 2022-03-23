@@ -430,7 +430,7 @@ class xolotlFtridynDriver(Component):
 
             #xp.parameters['tempModel']=='oneLine':
             #might need to check for more keywords if there're other one-line temp models 
-            elif ('heat' in self.plasma) or ('heat' in self.xp.parameter) or ('startTemp' in self.plasma) or ('startTemp' in self.xp.parameters):
+            elif ('heat' in self.plasma) or ('heat' in self.xp.parameters) or ('startTemp' in self.plasma) or ('startTemp' in self.xp.parameters):
                 if 'heat' in self.plasma:
                     if len(self.plasma['heat'])>1:
                         self.xp.parameters['heat']=[self.plasma['heat'][0]*1.0e-18,self.plasma['heat'][1]]
@@ -605,14 +605,15 @@ class xolotlFtridynDriver(Component):
 
         #stage initial network File (INIT mode) OR restart files (RESTART mode)
         if (self.driverMode=='INIT'):
-            if os.path.exists(self.INPUT_DIR+'/'+self.NETWORK_FILE):
+            if ('networkFile' in self.xp.parameters) and (os.path.exists(self.INPUT_DIR+'/'+self.NETWORK_FILE)):
                 print(('\t INIT mode: stage initial network file {}\n'.format(self.NETWORK_FILE)))
                 self.services.stage_input_files(self.NETWORK_FILE)
                 print('\t \t ...initial network file staged succesfully {}\n')
             else:
-                print(('\t WARNING: INIT mode: could not find initial network file {}\n'.format(self.NETWORK_FILE)))
-                print(('\t WARNING: INIT mode: in input file directory {}\n'.format(self.INPUT_DIR)))
-                print(('\t WARNING: INIT mode: SKIP staging  {}\n'.format(self.NETWORK_FILE)))
+                print('\t WARNING: INIT mode network file:')
+                print('\t \t either networkFile not defined in config, ')
+                print('\t \t or could not find initial network file in input file directory {}\n'.format(self.INPUT_DIR))
+                print('\t \t SKIP staging  {}\n'.format(self.NETWORK_FILE))
                 
 
         elif (self.driverMode=='RESTART'):
@@ -869,7 +870,6 @@ class xolotlFtridynDriver(Component):
                         print("nothing was implanted. maxRange and profile = 0 ")
                         maxRange=0.0
                         self.maxRangeXolotl[i]=0.0
-                        #tridyn.dat = zeros
                         outputFTFile=open(self.FT_OUTPUT_PROFILE_TEMP, "w")
                         outputFTFile.write("0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 ")
                         outputFTFile.close()
@@ -931,7 +931,7 @@ class xolotlFtridynDriver(Component):
                     #append output to allTridyn.dat for each species
                     ft_output_profile_final=self.FT_OUTPUT_PROFILE_FINAL+'_'+prj
                     tempfile = open(self.FT_OUTPUT_PROFILE_TEMP,"r")
-                    f = open(ft_output_profile_final, "a")                    
+                    f = open(ft_output_profile_final, "a")
                     f.write('%s%s \n' %(tempfile.read().rstrip('\n'),self.maxRangeXolotl[i]))                    
                     f.close()
                     tempfile.close()
@@ -950,7 +950,6 @@ class xolotlFtridynDriver(Component):
                     sys.stdout.flush()
 
                 #if flux fraction == 0 or all weight angles == 0.0:
-                #if (self.gitr['fluxFraction'][i] > 0.0) and not (all(k==0 for k in self.weightAngle[i])):
                 else:
                     print(('Skip running FTridyn for {0}'.format(prj))) #, as fraction in plasma is {1}\n'.format(prj, self.gitr['fluxFraction'][i]))
                     if self.fluxFraction[i]==0:
@@ -1017,29 +1016,40 @@ class xolotlFtridynDriver(Component):
                 os.remove(self.FT_OUTPUT_PROFILE_TEMP)
             combinedFile = open(self.FT_OUTPUT_PROFILE_TEMP, 'a')
 
-            ##New attempt at checking which species should be written into tridyn.dat:
+            ## MOVE ALL OF THIS TO ITS OWN FILE
+            ## New attempt at checking which species should be written into tridyn.dat:
+            ##  for tridynDat_model==2,
             ##    - first check for flux fraction ;
             ##             if 0, skip writing into tridyn.dat because there's no information on impact energy and angle (no FT)
             ##                   regardless of network: lines missing for species that exist in the network does NOT cause any issues (just nothing implanted)
-            ##             if >0, check network --> 
+            ##             if >0, check network (#netParam = nHe nD nT maxVSize nInterstitials) --> 
             ##    - use the network param values when available,
             ##    - assume the standard (species included if fluxFraction>0, not included if fluxFraction<0) if the network isn't given explicitely
-            ##      I.e., now we try to merge two checks: it works in cases where more species passed by GITR, but not handled by Xolotl; or if fluxFraction=0.
-            
-            for i in range(len(self.plasmaSpecies)):
-                prj=self.plasmaSpecies[i]                
-                ft_output_profile_temp_prj=timeFolder+'/'+self.FT_OUTPUT_PROFILE_TEMP+'_'+prj
-                profile=open(ft_output_profile_temp_prj, "r")
-                tridynString=profile.read().rstrip('\n')
-                combinedTridynString=str(tridynString)+str(self.maxRangeXolotl[i])
-                print(('for {0}, fraction in plasma = {1} , and reflection = {2} '.format(prj,self.fluxFraction[i], self.rYield[i])))
-                print(('\t effective fraction (in plasma * (1-reflection)) = {} '.format(self.fluxFraction[i]*(1-self.rYield[i]))))
-                sys.stdout.flush()
+            ##      I.e., now we merge two checks: it works in cases where more species passed by GITR, but not handled by Xolotl; or if fluxFraction=0.
+            ##  for tridynDat_model==1, include all species:
+            ##   - zero if fluxFraction==0, or if netParam == 0 (when available)
 
-                if ( (self.fluxFraction[i] > 0)):
-                    #the format of tridyn.dat is different for the pulsed & UQ executables of Xolotl:
-                    if prj!='W': #then the name in the tridyn.dat line is the same as prj
-                        ##if He,  check He's position in netParam, i.e., index i=0  
+
+            if (self.driver['tridynDat_model']==2):
+                for i in range(len(self.plasmaSpecies)):
+                    prj=self.plasmaSpecies[i]
+                    ft_output_profile_temp_prj=timeFolder+'/'+self.FT_OUTPUT_PROFILE_TEMP+'_'+prj
+                    profile=open(ft_output_profile_temp_prj, "r")
+                    tridynString=profile.read().rstrip('\n')
+                    combinedTridynString=str(tridynString)+str(self.maxRangeXolotl[i])
+                    profile.close()
+                    print(('for {0}, fraction in plasma = {1} , and reflection = {2} '.format(prj,self.fluxFraction[i], self.rYield[i])))
+                    print(('\t effective fraction (in plasma * (1-reflection)) = {} '.format(self.fluxFraction[i]*(1-self.rYield[i]))))
+                    sys.stdout.flush()
+
+                    #ADD OPTION tridynDat_model HERE
+                    #tridynDat_model==2: tridyn.dat format for (e.g.) pulsed, UQ & tempGrid executables of Xolotl:
+                    #                    header: prj cluster_size (1-refl)
+                    #                    only for all prj present in plasma & networkFile                 
+                    if (self.fluxFraction[i] > 0):
+                        print('\t Write tridyn.dat line for ', prj, ', in new tridyn.dat format (model ', str(self.driver['tridynDat_model']),')')
+                        # if not W, then the name in the tridyn.dat line is the same as prj
+                        # if He,  check He's position in netParam, i.e., index i=0  
                         if prj=='He':
                             if ('netParam' in self.xp.parameters):
                                 if (self.xp.parameters['netParam'][i]==0):
@@ -1049,7 +1059,7 @@ class xolotlFtridynDriver(Component):
                                     combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.fluxFraction[i]*(1-self.rYield[i])))) 
                                     combinedFile.write("%s\n" %(combinedTridynString))
                             else:
-                                print('\t WARNING: netparam not given in Xolotl ; write line for ', prj , ' in tridyn.dat')
+                                print('\t WARNING:',prj,' exist in plasma but netparam not given in Xolotl ; write line for in tridyn.dat')
                                 print('\t \t this might give an ERROR if species isnt part of Xolotls network')
                                 combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.fluxFraction[i]*(1-self.rYield[i]))))
                                 combinedFile.write("%s\n" %(combinedTridynString))
@@ -1063,28 +1073,113 @@ class xolotlFtridynDriver(Component):
                                     combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.fluxFraction[i]*(1-self.rYield[i])))) 
                                     combinedFile.write("%s\n" %(combinedTridynString))
                             else:
-                                print('\t WARNING: netparam not given in Xolotl ; write line for ', prj , ' in tridyn.dat')
+                                print('\t WARNING:',prj,' exist in plasma but netparam not given in Xolotl ; write line for in tridyn.dat')
                                 print('\t \t this might give an ERROR if species isnt part of Xolotls network')
                                 combinedFile.write("%s %s %s\n" %(prj,str(1),str(self.fluxFraction[i]*(1-self.rYield[i]))))
                                 combinedFile.write("%s\n" %(combinedTridynString))
-                        ##W is called interstitial in tridyn.dat, i.e., "I" & always exists in the network (no need to check) 
-                    elif prj=='W':
-                        print('\t WARNING: the wrapper assumes that interstitials always exists in Xolotls network')
-                        print('\t \t it will write line for ', prj , ' in tridyn.dat')
-                        print('\t \t this might give an ERROR if interstitials arent part of Xolotls network')
-                        combinedFile.write("%s %s %s\n" %('I',str(1),str(self.fluxFraction[i]*(1-self.rYield[i]))))
-                        combinedFile.write("%s\n" %(combinedTridynString))
+                        # if W,  check W's position in netParam, i.e., index i=4 ; but name in tridyn.dat is I 
+                        elif prj=='W':
+                            if ('netParam' in self.xp.parameters):
+                                if (self.xp.parameters['netParam'][4]==0):
+                                    print('\t Xolotl netowrk exists for ' , prj, 'given in plasmaSpecies, but entry in netParam is zero ; will skip in tridyn.dat')
+                                else:                                
+                                    print('\t For ' , prj , 'netparam = ' ,self.xp.parameters['netParam'][i4] , ' is used in Xolotl ; write line for ', prj , ' in tridyn.dat')
+                                    combinedFile.write("%s %s %s\n" %('I',str(1),str(self.fluxFraction[i]*(1-self.rYield[i]))))
+                                    combinedFile.write("%s\n" %(combinedTridynString))
+                            else:
+                                print('\t WARNING:',prj,' exist in plasma but netparam not given in Xolotl ; write line for in tridyn.dat')
+                                print('\t \t this might give an ERROR if species isnt part of Xolotls network')
+                                combinedFile.write("%s %s %s\n" %('I',str(1),str(self.fluxFraction[i]*(1-self.rYield[i]))))
+                                combinedFile.write("%s\n" %(combinedTridynString))
+                                
+                        else:
+                            print('\t WARNING: species ', prj, 'cannot be handled by Xolotl yet.')
+                            print('\t \t it has been used so far (for spY, etc), but will skip writing into tridyn.dat')
+                            
+                    elif (self.fluxFraction[i] == 0):
+                        print('\t Using the new tridyn.dat format (model = ', str(self.driver['tridynDat_model']), '), flux fraction for ', prj, 'is zero')
+                        print('\t \t for now, skip writing anything, even if prj exists in network (no checks in place)')
+                        print('\t \t Xolotl will run, with no ', prj, ' implanted')
+                    sys.stdout.flush()
+                        
+            #tridynDat_model==1: tridyn.dat format for (e.g.) master executable of Xolotl:
+	    #                    header: (1-refl)
+            #                    for all prj in He W D T
+            if (self.driver['tridynDat_model']==1):
+                xolSpecies=['He','W','D','T']
+                print('\t Write tridyn.dat line for ', prj, ', in original tridyn.dat format (model ', str(self.driver['tridynDat_model']),')')
+                for i in range(len(xolSpecies)):
+                    prj=xolSpecies[i]
+                    ft_output_profile_temp_prj=timeFolder+'/'+self.FT_OUTPUT_PROFILE_TEMP+'_'+prj
+                    if os.path.exists(ft_output_profile_temp_prj):
+                        profile=open(ft_output_profile_temp_prj, "r")
+                        tridynString=profile.read().rstrip('\n')
+                        combinedTridynString=str(tridynString)+str(self.maxRangeXolotl[i])                    
+                        print(('for {0}, fraction in plasma = {1} , and reflection = {2} '.format(prj,self.fluxFraction[i], self.rYield[i])))
+                        print(('\t effective fraction (in plasma * (1-reflection)) = {} '.format(self.fluxFraction[i]*(1-self.rYield[i]))))
+                        profile.close()
                     else:
-                        print('\t WARNING: species ', prj, 'cannot be handled by Xolotl yet.')
+                        print('no ', ft_output_profile_temp_prj, ' found; set tridyn.dat values to zero')
+                        combinedTridynString='0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 '
+                        sys.stdout.flush()
+    
+                    # if He,  check He's position in netParam, i.e., index i=0 
+                    if (prj=='He'):
+                        if ('netParam' in self.xp.parameters):
+                            if (self.xp.parameters['netParam'][i]==0):
+                                print('\t For ' , prj , 'netparam = ' ,self.xp.parameters['netParam'][i] , ' --> set all entries to 0.0 in tridyn.dat')
+                                combinedFile.write("0.0\n")
+                                combinedFile.write("0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 ")
+                            else:
+                                print('\t For ' , prj , 'netparam = ' ,self.xp.parameters['netParam'][i] , ' in Xolotl ; write line in tridyn.dat')
+                                combinedFile.write("%s\n" %(str(self.fluxFraction[i]*(1-self.rYield[i]))))
+                                combinedFile.write("%s\n" %(combinedTridynString))                                
+                        else:
+                            print('\t WARNING: netparam not given in Xolotl ; write line for ', prj , ' in tridyn.dat')
+                            print('\t \t this might give an ERROR if species isnt part of Xolotls network')
+                            combinedFile.write("%s\n" %(str(self.fluxFraction[i]*(1-self.rYield[i]))))
+                            combinedFile.write("%s\n" %(combinedTridynString))
+                    # if W,  check W's position in netParam, i.e., index i=4 
+                    elif (prj=='W'):
+                        if ('netParam' in self.xp.parameters):
+                            if (self.xp.parameters['netParam'][4]==0):
+                                print('\t For ' , prj , 'netparam = ' ,self.xp.parameters['netParam'][4] , ' --> set all entries to 0.0 in tridyn.dat')
+                                combinedFile.write("0.0\n")
+                                combinedFile.write("0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 ")
+                            else:
+                                print('\t For ' , prj , 'netparam = ' ,self.xp.parameters['netParam'][4] , ' in Xolotl ; write line in tridyn.dat')
+                                combinedFile.write("%s\n" %(str(self.fluxFraction[i]*(1-self.rYield[i]))))
+                                combinedFile.write("%s\n" %(combinedTridynString))
+                        else:
+                            print('\t WARNING: netparam not given in Xolotl ; write line for ', prj , ' in tridyn.dat')
+                            print('\t \t this might give an ERROR if species isnt part of Xolotls network')
+                            combinedFile.write("%s\n" %(str(self.fluxFraction[i]*(1-self.rYield[i]))))
+                            combinedFile.write("%s\n" %(combinedTridynString))
+                    ##if D or T,  check position in netParam, i.e., index i=2,3 -> i-1 = 1 or 2 
+                    elif (prj=='D') or (prj=='T'):
+                        if ('netParam' in self.xp.parameters):
+                            if (self.xp.parameters['netParam'][i-1]==0):
+                                print('\t For ' , prj , 'netparam = ' ,self.xp.parameters['netParam'][i-1] , ' --> set all entries to 0.0 in tridyn.dat')
+                                combinedFile.write("0.0\n")
+                                combinedFile.write("0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 ")
+                            else:
+                                print('\t For ' , prj , 'netparam = ' ,self.xp.parameters['netParam'][i-1] , ' in Xolotl ; write line in tridyn.dat')
+                                combinedFile.write("%s\n" %(str(self.fluxFraction[i]*(1-self.rYield[i]))))
+                                combinedFile.write("%s\n" %(combinedTridynString))
+                        else:
+                            print('\t WARNING: netparam not given in Xolotl ; write line for ', prj , ' in tridyn.dat')
+                            print('\t \t this might give an ERROR if species isnt part of Xolotls network')
+                            combinedFile.write("%s\n" %(str(self.fluxFraction[i]*(1-self.rYield[i]))))
+                            combinedFile.write("%s\n" %(combinedTridynString))
+                    else:
+                        print('\t WARNING: species ', prj, ' cannot be handled by Xolotl yet.')
                         print('\t \t it has been used so far (for spY, etc), but will skip writing into tridyn.dat')
-
                 else:
-                    print('\t Flux fraction for ', prj, 'is zero')
-                    print('\t \t for now, skip writing anything, even if prj exists in network (no checks in place)')
-                    print('\t \t Xolotl will run, with no ', prj, ' implanted')
-                    
-            profile.close()
-            sys.stdout.flush()
+                    print('\t WARNING: tridynDat_model ', str(self.driver['tridynDat_model']), ' not recognized.')
+                    print('\t print in original (master) format, with all zeros')
+                    combinedFile.write("0.0\n")
+                    combinedFile.write("0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 ")
+                sys.stdout.flush()
             combinedFile.close()
 
             #save tridyn.dat (combined for all species) with time-stamp:
@@ -1146,18 +1241,35 @@ class xolotlFtridynDriver(Component):
             print(('\t to t = {}'.format(self.xp.parameters['petscArgs']['-ts_final_time'])))
             print(('\t and time-step = {} '.format( self.time['LOOP_TIME_STEP'])))
 
+            #note on network file:
+            # XOLOTL_NETWORK_FILE if the file ; xp.parameters['networkFile'] is the dictionary value (for params.txt)
+            # better not mix them, because one can exist without the other (e.g., if networkFile line not needed in params.txt) 
+            
             if self.driverMode == 'INIT':
-                if os.path.exists(self.INPUT_DIR+'/'+self.NETWORK_FILE):
-                    print('\t init mode: modify xolotl parameters that might change at every loop, and load networkFile file \n')                
-                    self.xp.parameters['networkFile'] = self.XOLOTL_NETWORK_FILE                    
+                if 'networkFile' in self.xp.parameters:
+                    print('\t init mode: networkFile defined in Xolotl input parameters of config file')
+                    if os.path.exists(self.INPUT_DIR+'/'+self.NETWORK_FILE):
+                        if os.path.getsize(self.INPUT_DIR+'/'+self.NETWORK_FILE) != 0:
+                            print('\t \t network file exists and is not empty')
+                            print('\t \t load networkFile file \n')                
+                        else:
+                            print('\t \t network file exists but its empty')
+                            print('\t \t skip loading networkFile file')
+                            print('\t \t remove networkFile from Xolotl parameters')
+                            del self.xp.parameters['networkFile']
+                    else:
+                        print('\t \t but network file does not exist')
+                        print('\t \t skip loading networkFile file')
+                        print('\t \t remove networkFile from Xolotl parameters')
+                        del self.xp.parameters['networkFile']
                 else:
-                    #no network file in input dir -- do not add to param dictionary, so it's not in param file and doesn't try to load
-                    print('\t init mode: modify xolotl parameters that might change at every loop \n')
-                    print('\t \t WARNING: no network file in input dir; will create (not load) the network \n')
-            elif self.driverMode == 'RESTART':
+                    #no network file in input params -- do not try to load
+                    print('\t init mode: no network defined in Xolotl input parameters of config file')
+                    print('\t \t WARNING: will create (not load) the network \n')
 
+            elif self.driverMode == 'RESTART' or self.driverMode == 'NEUTRAL':
                 #add (or replace) networkFile line to parameter file
-                print('\t restart mode: modify xolotl parameters that might change at every loop, including adding the networkFile \n')
+                print('\t restart (or neutral) mode: modify xolotl parameters that might change at every loop, including adding the networkFile \n')
                 self.xp.parameters['networkFile'] = self.XOLOTL_NETWORK_FILE
 
                 ## check if we need to keep netParam in parameter file of restart
@@ -1264,17 +1376,17 @@ class xolotlFtridynDriver(Component):
 
                         #also need to update the values of grid and voidPortion to match what's in the network file:
                         #Most likely this will only work if using 'grid', not 'gridParam' in network file!!
-                        shutil.copyfile(self.xp.parameters['networkFile'],self.xp.parameters['networkFile']+'_overgrid_'+str(n_overgrid_loops))
-                        shutil.move('xolotlStop.h5', self.xp.parameters['networkFile'])
-                        [newGridSize, newVoidPortion] = transferGrid.transferGrid(self.xp.parameters['networkFile'])
-                        if os.path.exists(self.xp.parameters['networkFile']):
+                        shutil.copyfile(self.XOLOTL_NETWORK_FILE,self.XOLOTL_NETWORK_FILE+'_overgrid_'+str(n_overgrid_loops))
+                        shutil.move('xolotlStop.h5', self.XOLOTL_NETWORK_FILE)
+                        [newGridSize, newVoidPortion] = transferGrid.transferGrid(self.XOLOTL_NETWORK_FILE)
+                        if os.path.exists(self.XOLOTL_NETWORK_FILE):
                             #make sure xolotlStop exists
-                            shutil.copyfile(self.xp.parameters['networkFile'],'xolotlStop.h5')
+                            shutil.copyfile(self.XOLOTL_NETWORK_FILE,'xolotlStop.h5')
                         else:
                             print('\t WARNING: networkFile does not exists after transferGrid')
                             print('\t keep old one')
-                            shutil.copyfile(self.xp.parameters['networkFile']+'_overgrid_'+str(n_overgrid_loops),self.xp.parameters['networkFile'])
-                        print('\t in file ', self.xp.parameters['networkFile'])    
+                            shutil.copyfile(self.XOLOTL_NETWORK_FILE+'_overgrid_'+str(n_overgrid_loops),self.XOLOTL_NETWORK_FILE)
+                        print('\t in file ', self.XOLOTL_NETWORK_FILE)    
                         print('\t \t updated the values of grid to ', newGridSize)
                         print('\t \t updated the values of voidPortion to ', newVoidPortion)
                         print('\t DONE RUNNING transferGrid!')
@@ -1354,7 +1466,7 @@ class xolotlFtridynDriver(Component):
             print('produce new network file using xolotlStop:')
             try:
                 iF=cwd+'/xolotlStop.h5'
-                oF= cwd+'/'+self.xp.parameters['networkFile']
+                oF= cwd+'/'+self.XOLOTL_NETWORK_FILE
                 os.remove(oF) #can not exist & it's copied as w/ time-stamp above
                 print('\t run keepLastTS with: ')
                 print('\t \t inFile = ', iF)
@@ -1372,19 +1484,20 @@ class xolotlFtridynDriver(Component):
             print(' ')
             
             #copy last_TRIDYN.dat and netowrk file to input dir as well:
-            print('copy last_TRIDYN.dat and ', self.xp.parameters['networkFile'], 'to ', self.INPUT_DIR )
+            print('copy last_TRIDYN.dat and ', self.XOLOTL_NETWORK_FILE, 'to ', self.INPUT_DIR )
             shutil.copyfile('last_TRIDYN.dat', self.INPUT_DIR+'/last_TRIDYN.dat')
-            shutil.copyfile(self.xp.parameters['networkFile'], self.INPUT_DIR+'/'+self.xp.parameters['networkFile'])
+            shutil.copyfile(self.XOLOTL_NETWORK_FILE, self.INPUT_DIR+'/'+self.XOLOTL_NETWORK_FILE)
             print(' ')
 
-            #update driver mode after the 1st loop, from INIT to RESTART
-            if self.driverMode == 'INIT':
-                self.driverMode = 'RESTART'
-                print(('switched driverMode to {} \n'.format(self.driverMode)))
+            ## update driver mode after the 1st loop, from INIT to RESTART
+            ## this doesn't seem to make much sense.
+            # if self.driverMode == 'INIT':
+            #    self.driverMode = 'RESTART'
+            #    print(('switched driverMode to {} \n'.format(self.driverMode)))
 
             if self.driverMode != 'NEUTRAL':
                 self.driverMode = 'NEUTRAL'
-                print(('switched startMode to {} \n'.format(self.driverMode)))
+                print(('switched driverMode to {} \n'.format(self.driverMode)))
 
             #using while instead of loop to accomodate variable drive time step 
             #--> update time explicitely before (possibly) increasing time step

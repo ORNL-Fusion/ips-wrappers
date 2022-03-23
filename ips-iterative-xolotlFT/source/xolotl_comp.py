@@ -54,7 +54,8 @@ class xolotlWorker(Component):
         shutil.copyfile('params.txt',currentXolotlParamFile) 
 
         try:
-            shutil.copyfile(xp.parameters['networkFile'],xp.parameters['networkFile']+'_t'+str(self.driverTime))
+            #shutil.copyfile(xp.parameters['networkFile'],xp.parameters['networkFile']+'_t'+str(self.driverTime))
+            shutil.copyfile(self.NETWORK_FILE,self.NETWORK_FILE+'_t'+str(self.driverTime))
         except Exception as e:
             print(e)
             print('could not save network file for t = ', str(self.driverTime))            
@@ -141,12 +142,12 @@ class xolotlWorker(Component):
                 time.sleep(5)
                 #if it failed, save last networkFile before a new try and set newest network file to use in the
                 # next try, so that it starts from the last saved time step, not from the beginning of the loop
-                shutil.copyfile(xp_parameters['networkFile'],'networkFile_%f_%d.h5' %(self.driverTime,i))
+                shutil.copyfile(self.NETWORK_FILE,'networkFile_%f_%d.h5' %(self.driverTime,i))
                 ## use keepLastTS to produce netfile with only info from the last TS
                 print('\t produce new network file using xolotlStop:')
                 try:
                     iF=cwd+'/xolotlStop.h5'
-                    oF= cwd+'/'+self.xp.parameters['networkFile']
+                    oF= cwd+'/'+self.NETWORK_FILE
                     os.remove(oF) #can not exist & it's copied as w/ time-stamp above
                     print('\t \t run keepLastTS with:')
                     print('\t \t \t inFile = ', iF)
@@ -158,7 +159,7 @@ class xolotlWorker(Component):
                     print(e)
                     print('\t \t running keepLastTS failed')
                     print('\t \t just copy xolotlStop as networkFile')
-                    shutil.copyfile('xolotlStop.h5',xp_parameters['networkFile'])
+                    shutil.copyfile('xolotlStop.h5',self.NETWORK_FILE)
                 print('\t done writing a new network file')
                 sys.stdout.flush()
 
