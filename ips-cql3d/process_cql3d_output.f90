@@ -828,11 +828,11 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
 ! Load up data
 !****************************************************************************************
 	
-	  RadMapDim = ps%nrho
+	  RadMapDim = size(ps%rho_eq)
 	  rho_pol = 0.0
 	  rho_tor = 0.0
-	  rho_pol(1:RadMapDim) = sqrt(ps%psipol / ps%psipol(ps%nrho))
-	  rho_tor(1:RadMapDim) = ps%rho
+	  rho_pol(1:RadMapDim) = sqrt(ps%psipol / ps%psipol(size(ps%rho_eq)))
+	  rho_tor(1:RadMapDim) = ps%rho_eq
 	  R_major = ps%R_axis*100.
 	  a = 100.*(ps%R_MAX_LCFS - ps%R_MIN_LCFS)/2.
 	  Btor = ps%B_axis
