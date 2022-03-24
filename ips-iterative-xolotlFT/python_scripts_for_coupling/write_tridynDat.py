@@ -16,7 +16,8 @@ def write_tridynDat(outFile='tridyn.dat', tridynDat_model=1, plasmaSpecies=['He'
     print('\t maxRangeXolotl =', maxRangeXolotl)
     print('\t fluxFraction =', fluxFraction)
     print('\t rYield =', rYield)
-    print('\t xp_parameters =', xp_parameters)
+    print('\t and xp_parameters dictionary') #, include if TEST: xp_parameters)
+    print(' ')
     sys.stdout.flush()
     
     ## New attempt at checking which species should be written into tridyn.dat:

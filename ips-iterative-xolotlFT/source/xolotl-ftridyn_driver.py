@@ -17,6 +17,7 @@ import transferGrid
 import pickle
 import keepLastTS
 import write_tridynDat
+import write_tempModel
 
 class xolotlFtridynDriver(Component):
     def __init__(self, services, config):
@@ -317,11 +318,11 @@ class xolotlFtridynDriver(Component):
         ## code agnostic (gitr, solps... all handled together)
         
         #keep track if plasma input exists (file or config file) with string: F = false, T = true
-        plasmaExists='F'
+        plasmaExists=False
         self.plasma = {}
         try:
             self.PLASMA_INPUT_PARAMETERS
-            plasmaExists='T'
+            plasmaExists=True
             print('Read PLASMA inputs defined in config file.')
 
             for k,v in self.PLASMA_INPUT_PARAMETERS.items():
@@ -353,7 +354,7 @@ class xolotlFtridynDriver(Component):
                     
         try:
             self.PLASMA_OUTPUT_FILE
-            plasmaExists='T'
+            plasmaExists=True
             print('use input from PLASMA output file defined in config file')
             print(('read PLASMA parameters (from file) : {}\n'.format(self.INPUT_DIR+'/'+self.PLASMA_OUTPUT_FILE)))
             print('these inputs will overwrite values given in config file ')
@@ -384,7 +385,7 @@ class xolotlFtridynDriver(Component):
         #print('TEST: final PLASMA dictionary is: ')
         #print(self.plasma)
             
-        if (plasmaExists == 'T'):
+        if plasmaExists:
             if 'plasmaOutputDir' in self.plasma:
                 print('\t PLASMA output will be read from {} \n'.format(self.plasma['plasmaOutputDir']+'_'+prj))
 
@@ -396,72 +397,35 @@ class xolotlFtridynDriver(Component):
             else:
                 print(('no flux specified in PLASMA, so using values in Xolotl {} \n'.format(self.xp.parameters['flux'])))
 
-            #xp.parameters['tempModel']=='twoLine':
-            if 'tempHandler' in self.xp.parameters or 'tempHandler' in self.plasma: 
-                if 'heat' in self.plasma:
-                    print('TEST: use heat defined by PLASMA')
-                    self.xp.parameters['tempHandler']='heat'
-                    if len(self.plasma['heat'])>1:
-                        self.xp.parameters['tempParam']=[self.plasma['heat'][0]*1.0e-18, self.plasma['heat'][1]] #m2 -> /nm2
-                    else:
-                        self.xp.parameters['tempParam']=[self.plasma['heat']*1.0e-18, 300.0]
-                    print('use heat given by PLASMA ', self.xp.parameters['tempParam'], '(here used in W/nm2s = 1e-18 W/m2s)')
-                elif 'heat' in self.xp.parameters:
-                    print('TEST: use heat defined by Xolotl')
-                    self.xp.parameters['tempHandler']='heat'
-                    if len(self.xp.parameters['heat'])>1:
-                        self.xp.parameters['tempParam']=[self.xp.parameters['heat'][0], self.xp.parameters['heat'][1]]
-                    else:
-                        self.xp.parameters['tempParam']=[self.xp.parameters['heat'], 300.0]
-                    print('use heat given by Xolotl ', self.xp.parameters['tempParam']) #if given by Xolotl, assume it's in Xolotl's units                    
-                elif 'tempHandler' in self.plasma:
-                    print('no heat flux provided. Use temperature model defined in PLASMAs input (assume tempParam is given too):')
-                    print('\t tempHandler=', self.plasma['tempHandler'], ' and tempParam =', self.plasma['tempParam'])
-                elif 'tempHandler' in self.xp.parameters:
-                    print('no heat flux provided. Use temperature model defined in FTX config file (assume tempParam is given too):')
-                    print('\t tempHandler=', self.xp.parameters['tempHandler'], ' and tempParam =', self.xp.parameters['tempParam'])                    
-                else:
-                    print('\t WARNING: no heat or other temperature model given in PLASMA or Xolotl. Use constant temp at 300K')
-                    self.xp.parameters['tempHandler']='constant'
-                    self.xp.parameters['tempParam']=300.0
-                if 'startTemp' in self.xp.parameters:
-                    del self.xp.parameters['startTemp']
-                    print('\t and removed startTemp from xolotls parameters')
+            ## parameters for the temperature model depend on the Xolotl executable
+            ## v1 (e.g., master) uses a single line: heat = [value], startTemp = [value], etc.
+            ## v2 (e.g., tempGrid) uses two lines:  tempHandler = heat / ...
+            ##                                      heat / tempParam = [value]
+            ## this ends up being quite long, so better in its own file:
+            ## Xolotl v1 needs one line, v2 needs 2 lines --> write_tempModel contains 2 functions
 
-
-            #xp.parameters['tempModel']=='oneLine':
-            #might need to check for more keywords if there're other one-line temp models 
-            elif ('heat' in self.plasma) or ('heat' in self.xp.parameters) or ('startTemp' in self.plasma) or ('startTemp' in self.xp.parameters):
-                if 'heat' in self.plasma:
-                    if len(self.plasma['heat'])>1:
-                        self.xp.parameters['heat']=[self.plasma['heat'][0]*1.0e-18,self.plasma['heat'][1]]
-                    else: #no bulkT given in xolotl
-                        self.xp.parameters['heat']=[self.plasma['heat'][0]*1.0e-18,300]
-                    print('use heat flux given by PLASMA ', self.xp.parameters['heat'] ,' (here in W/nm2s = 1e-18 W/m2s)')
-                    if 'startTemp' in self.xp.parameters:
-                        del self.xp.parameters['startTemp']
-                        print('\t and removed startTemp from xolotl parameters')
-                elif 'heat' in self.xp.parameters:
-                    print('no heat flux specified in PLASMA, so using values in Xolotl ', self.xp.parameters['heat'])
-                    if 'startTemp' in self.xp.parameters:
-                        del self.xp.parameters['startTemp']
-                        print('\t and removed startTemp from xolotls parameters')
-                elif 'startTemp' in self.plasma:
-                    self.xp.parameters['startTemp']=self.plasma['startTemp']
-                    print('no heat flux provided by PLASMA or Xolotl; use fixed temperature specified by PLASMA ', self.plasma['startTemp'])
-                elif 'startTemp' in self.xp.parameters:
-                    print('no heat flux provided by PLASMA or Xolotl; use fixed temperature specified by Xolotl (in config or default): ',self.xp.parameters['startTemp'])
-                else:
-                    print('no heat or temperature defined in PLASMAs output or Xolotls input. use default value T = 300K')
-                    self.xp.parameters['startTemp'] = 300.0
+            print('temperature model handled by write_tempModel: ')
+            if (self.driver['xolotl_v']==1):
+                mod,val,rm_startTemp = write_tempModel.v1(xp_parameters=self.xp.parameters,plasma=self.plasma)
+                self.xp.parameters[mod]=val
+                print('... write_tempModel succesfully returned: for Xolotl v1, temperature model: ', mod, val)
+            elif(self.driver['xolotl_v']==2):
+                mod,val,rm_startTemp = write_tempModel.v2(xp_parameters=self.xp.parameters,plasma=self.plasma)
+                self.xp.parameters['tempHandler']=mod
+                self.xp.parameters['tempParam']=val
+                print('... write_tempModel succesfully returned: for Xolotl v2, temperature model: ', mod, val)
             else:
-                print('\t WARNING: no surface temperature / heat flux model defined. will assume constant surface temeprature at 300K')
-                self.xp.parameters['startTemp']=300
-                if 'heat' in self.xp.parameters:
-                    del self.xp.parameters['heat']
-                
-            sys.stdout.flush()
-            
+                print('\t WARNING: Xolotl version not recognized: ')
+                print( '\t \t xolotl_v = ', self.driver['xolotl_v'])
+                mod='startTemp'
+                val=300
+                rm_startTemp=False
+                print('\t \t assume standard values: ', mod, ' = ', val)
+            if rm_startTemp:
+                del self.xp.parameters['startTemp']
+                print('\t \t and delete startTemp')
+            print(' ')
+                    
         else:
             print('no PLASMA input file or paramters defined in config file')
             sys.stdout.flush()
