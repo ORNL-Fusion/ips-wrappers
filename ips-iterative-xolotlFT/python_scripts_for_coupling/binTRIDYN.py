@@ -13,17 +13,20 @@ from os import path
 def binTridyn(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat'):
 
     print(' ')
-    print('from binTRIDYN, called with input')
-    print(inFile)
+    print('\t caled binTRIDYN')
+    #if TEST
+    print('\t \t with input')
+    print('\t \t \t', inFile )
+    print ("\t \t File exists:", str(path.exists(inFile)), '\n')
     sys.stdout.flush()
-
-    print ("File exists:"+str(path.exists(inFile)))
     
 ## Open the files
     f = h5py.File(inFile, 'r')    
-    print('from binTRIDYN, opened inFile to read')
+    #if TEST
+    print('\t \t from binTRIDYN, opened inFile to read')
     concDset = f['concs']
-    print('read concDset')
+    #if TEST
+    print('\t \t read concDset \n')
     sys.stdout.flush()
 
 ## Bin the concentrations
@@ -37,8 +40,8 @@ def binTridyn(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat'):
 
     nBins=int(math.floor(concDset[len(concDset)-1][0] * 2.0)+1)
 
-    print('from binTRIDYN, initialized bins')
-    print('calculated bins')
+    #if TEST
+    print('\t \t from binTRIDYN, initialized bins')
     sys.stdout.flush()
     
     for k in range (0, nBins):#200):
@@ -50,7 +53,8 @@ def binTridyn(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat'):
         iBin.append(0.0)
         TBin.append(0.0)
 
-    print('from binTRIDYN, zeros in bins')
+    #if TEST
+    print('\t \t from binTRIDYN, zeros in bins')
     sys.stdout.flush()
         
     oldIndice = -10
@@ -78,14 +82,16 @@ def binTridyn(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat'):
         iBin[indice] = iBin[indice] + concDset[k][5]
         TBin[indice] = TBin[indice] + concDset[k][6]
 
-    print('from binTRIDYN, rebinned values')
-    print('end of loop')
+    #if TEST
+    print('\t \t from binTRIDYN, rebinned values')
+    print('\t \t end of loop \n')
     sys.stdout.flush()
         
 ## Open 'outputFile.dat' where results will be printed
     outputFile = open(outFile, 'w')
-
-    print('from binTRIDYN, write output to output file')
+    
+    #if TEST
+    print('\t \t from binTRIDYN, write output to output file \n')
     sys.stdout.flush()
     
 ## Loop on all the elements
@@ -98,9 +104,8 @@ def binTridyn(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat'):
 ## Close the output file
     outputFile.close()
 
-    print(' ... ')
-    print('successfully produced output file')
-    print(outFile)
+    print('\t ... binTRIDYN successfully produced output file')
+    print('\t \t ', outFile)
     print(' ')
     sys.stdout.flush()
     

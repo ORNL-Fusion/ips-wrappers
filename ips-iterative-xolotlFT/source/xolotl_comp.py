@@ -33,20 +33,25 @@ class xolotlWorker(Component):
         if 'output_file' in keywords:
             outFile=keywords['output_file']
             if outFile  is not None:
-                print(('redirect Xolotl:init output of ', cwd , 'to:', outFile))
+                print('\t redirect Xolotl:init output')
+                print('\t \t of ', cwd )
+                print('\t \t to:', outFile)
                 outF=open(outFile , 'a')
                 sys.stdout = outF
             else:
-                print ('no log file defined in keywords or config file')
-                print ('print output of Xolotl:init to default sys.stdout')
+                print ('\t no log file defined in keywords or config file')
+                print ('\t print output of Xolotl:init to default sys.stdout')
 
         print (' ')
         print('xolotl_worker: init')
-
-        print('check that all arguments are read well by xolotl-init and write Xolotl input file (from dictionary)')
+        print(' ')
+        # if TEST:
+        print('\t check that all arguments are read well by xolotl-init and write Xolotl input file (from dictionary)')
         for (k, v) in keywords.items():
-            print(('\t {0} = {1}'.format(k, v)))
-
+            print(('\t \t {0} = {1}'.format(k, v)))
+        print('\t ... done checking that all arguments are read well by xolotl-init ')
+        print(' ')
+        
         #write and store xolotls parameter for each loop 
         xp.write('params.txt')
 
@@ -57,8 +62,8 @@ class xolotlWorker(Component):
             #shutil.copyfile(xp.parameters['networkFile'],xp.parameters['networkFile']+'_t'+str(self.driverTime))
             shutil.copyfile(self.NETWORK_FILE,self.NETWORK_FILE+'_t'+str(self.driverTime))
         except Exception as e:
-            print(e)
-            print('could not save network file for t = ', str(self.driverTime))            
+            print('\t', e)
+            print('\t could not save network file for t = ', str(self.driverTime))            
             
         sys.stdout.flush()
         self.services.update_plasma_state()
@@ -77,24 +82,27 @@ class xolotlWorker(Component):
         if 'output_file' in keywords:
             outFile=keywords['output_file']            
             if outFile  is not None:
-                print(('redirect Xolotl:step output of ', cwd , 'to:', outFile))
+                print('\t redirect Xolotl:step output')
+                print('\t \t of ', cwd )
+                print('\t \t to:', outFile)                
                 outF=open(outFile , 'a')
                 sys.stdout = outF
             else:
-                print ('no log file defined in keywords or config file')
-                print ('print output of Xolotl:step to default sys.stdout')
+                print ('\t no log file defined in keywords or config file')
+                print ('\t print output of Xolotl:step to default sys.stdout')
 
         print(' ')
         print('xolotl_worker: step ')
-        print (' ')
+        print(' ')
 
 
         #asign a local variable to arguments used multiple times      
-        print('checking that all arguments are read well by xolotl-step')
+        # if TEST mode:
+        print('\t checking that all arguments are read well by xolotl-step')
         for (k, v) in keywords.items():
-            print('\t', k, " = ", v) 
-        print('DONE checking that all arguments are read well by xolotl-step ')
-        #print '\n'
+            print('\t \t', k, " = ", v) 
+        print('\t ... done checking that all arguments are read well by xolotl-step ')
+        #print ' '
 
         #xolotlLogFile='xolotl_t%f.log' %self.driverTime
         #print '\t Xolotl log file ', xolotlLogFile

@@ -29,7 +29,13 @@ class xolotlFtridynDriver(Component):
         cwd = self.services.get_working_dir()
 
         print(' ')
-        print(('FT-X driver:init called with: ',keywords))
+        print('---------------------------')
+        print('  FT-X driver:init called  ')
+        print('---------------------------')
+        print(' ')
+        print('\t with keywords: ',keywords)
+        print(' ')
+        
         print('\t output file of the FT-X workflow:')
         if 'LOG_FILE' in keywords:
             logFile=keywords['LOG_FILE']
@@ -48,9 +54,31 @@ class xolotlFtridynDriver(Component):
             except:
                 print('\t \t No log file defined; using default sys.stdout')
                 outfile=None
+        print(' ')
+        try:
+            if self.PRINT_TEST=='on':
+                self.print_test=True
+                print('Print TEST lines (devel / debug)')
+            elif self.PRINT_TEST=='off':
+                self.print_test=False
+                print('Print only std output lines (no TEST lines)')
+            else:
+                self.print_test=False
+                print('print_TEST values not valid')
+                print('Print only std output lines (no TEST lines)')
+        except Exception as e:
+            print(e)
+            print('print_TEST values not found')
+            print('Print only std output lines (no TEST lines)')
+            self.print_test=False
+        print(' ')
 
-        print('xolotl-ftridyn_driver: init \n')
-
+        print(' ')
+        print('---------------------------')
+        print('xolotl-ftridyn_driver: init')
+        print('---------------------------')
+        print(' ')
+        
         #stage input files
         print(('staging input files {} \n'.format(self.INPUT_FILES)))
         self.services.stage_input_files(self.INPUT_FILES)
@@ -84,6 +112,7 @@ class xolotlFtridynDriver(Component):
                 print(('\t other {0} input parameter {1} = {2}'.format(type(v), k , v)))
                 self.driver[k]=v
         print('\n')
+        sys.stdout.flush()
 
         ## TIME CHARACTERISTICS: START, STEP, END
         ## migth be given in config file or in separate (input) file
@@ -114,10 +143,13 @@ class xolotlFtridynDriver(Component):
                 else:
                     print(('\t reading string input parameter {0} = {1} '.format( k, v)))
                     self.time[k]=v
-
-            #print('TEST: after reading parameters from config file time section, the time dictionary is:')
-            #print(self.time)
-
+            print('\n')
+            if self.print_test:
+                print('TEST: after reading parameters from config file time section, the time dictionary is:')
+                print('\t', self.time)
+            print(' ')
+            sys.stdout.flush()
+                
         except Exception as e:
             print(e)
             print('no [TIME_PARAMETERS] defined in config file')
@@ -139,26 +171,32 @@ class xolotlFtridynDriver(Component):
             if ('START_MODE' in self.driver):
                 self.time['START_MODE']=self.driver['START_MODE']
 
-            #print('TEST: after reading parameters from config file driver section, the time dictionary is:')
-            #print(self.time)
-
+        if self.print_test:
+            print('TEST: after reading parameters from config file driver section, the time dictionary is:')
+            print('\t', self.time)
+            print(' ')
         #Check if/what's given in input file
         #overwrite config file values
         try:
             self.TIME_FILE
             print('\t use input from time file defined in config file (overwirte config file values)')
             print(self.INPUT_DIR+'/'+self.TIME_FILE)
+            sys.stdout.flush()
             self.time_temp=param_handler.read(self.INPUT_DIR+'/'+self.TIME_FILE)            
             
-            #print('TEST: after reading parameters from time file, the time_temp dictionary is:')
-            #print(self.time_temp)
-            
+            if self.print_test:
+                print('\t TEST: after reading parameters from time file, the time_temp dictionary is:')
+                print('\t', self.time_temp)
+                print(' ')
+                
             ## for testing purposes, a more thorough print line:
             ## use these three afterwards
-            #for k,v, in self.time.items():
-            #    print(('\t {0} : {1}'.format(k, v)))
-            #print(' ')
-
+            if self.print_test:
+                for k,v, in self.time.items():
+                    print(('\t {0} : {1}'.format(k, v)))
+                    print(' ')
+            sys.stdout.flush()
+            
             for k,v in self.time_temp.items():
                 self.time[k]=v
                 if param_handler.is_int(v):
@@ -178,16 +216,18 @@ class xolotlFtridynDriver(Component):
                 else:
                     print(('\t reading string input parameter {0} = {1} '.format( k, v)))
 
-            #print('TEST: after copyting values from time_temp, the time dictionary is:')
-            #print(self.time_temp)
+            if self.print_test:
+                print('\t TEST: after copyting values from time_temp, the time dictionary is:')
+                print('\t', self.time_temp)
+            sys.stdout.flush()
             
         except Exception as e:
             print(e)
             print('no TIME_FILE defined. Use time-parameters defined in config file')
-            sys.stdout.flush()
-
-        
-        print('time characteristics are')
+        print(' ')
+        sys.stdout.flush()
+            
+        print('after reading from config file and file, time characteristics are:')
         for k,v, in self.time.items():
             print(('\t {0} : {1}'.format(k, v)))
         print(' ')
@@ -202,7 +242,7 @@ class xolotlFtridynDriver(Component):
         print(' ')
         print('reading FTRIDYN parameters from ips config file: \n')
 
-
+        sys.stdout.flush()
         self.ftridyn={}
         for k,v in self.FTRIDYN_INPUT_PARAMETERS.items():
             if param_handler.is_int(v):
@@ -215,7 +255,7 @@ class xolotlFtridynDriver(Component):
                 print(('\t other {0} input parameter {1} = {2}'.format(type(v), k, v)))
                 self.ftridyn[k]=v
         print('\n')
-
+        sys.stdout.flush()
         
         #### XOLOTL PARAMETERS ##### 
 
@@ -226,15 +266,19 @@ class xolotlFtridynDriver(Component):
         dim=int(self.XOLOTL_INPUT_PARAMETERS['dimensions'])
         #xolotl_param_template=self.XOLOTL_PARAM_TEMPLATE_PATH+'/paramXolotl_'+str(dim)+'D.txt'
         xolotl_param_template=self.INPUT_DIR+'/paramXolotl_'+str(dim)+'D.txt' 
-        print(('\t reading Xolotl default parameters from {} \n'.format(xolotl_param_template)))
+        print(('\t reading Xolotl default parameters from {}'.format(xolotl_param_template)))
 
+        sys.stdout.flush()
         self.xp = param_handler.xolotl_params()
         self.xp.read(xolotl_param_template)
-        print(('\t running Xolotl in {} D \n'.format(dim)))
-
+        print(('\t running Xolotl in {} D'.format(dim)))
+        print(' ')
+        sys.stdout.flush()
+        
         #overwrite default Xolotl parameters that are specified in ips.config
         print('modify XOLOTL paramters with parameters read from the simulations config file: \n')
 
+        sys.stdout.flush()
         for k,v in self.XOLOTL_INPUT_PARAMETERS.items():
             if param_handler.is_int(v):
                 if k in self.xp.parameters:
@@ -268,7 +312,8 @@ class xolotlFtridynDriver(Component):
             else:                
                 print(('\t reading string input parameter {0} = {1}'.format(k, v )))
                 self.xp.parameters[k]=v
-                
+        sys.stdout.flush()
+            
         print('\n')
         print('replacing PETSC arguments from ips config file:\n')
         for k,v in self.XOLOTL_INPUT_PETSCARGS.items():
@@ -287,7 +332,8 @@ class xolotlFtridynDriver(Component):
             else:
                 print(('\t other {0} argument {1} = {2} with {3}'.format(type(v), k , self.xp.parameters['petscArgs'][k] , v)))
                 self.xp.parameters['petscArgs'][k]=v
-
+        sys.stdout.flush()
+            
         #if not coupling, delete -tridyn from petsc arguments to not print TRIDYN_*.dat files
         #if self.driver['FTX_COUPLING']=='False':
         #    del self.xp.parameters['petscArgs']['-tridyn']
@@ -309,7 +355,8 @@ class xolotlFtridynDriver(Component):
             else:
                 processString+=key+' '
 
-        print(('processes included in Xolotl are: {}\n'.format(processString.strip())))
+        print('processes included in Xolotl are:')
+        print('\t {}\n'.format(processString.strip()))
         self.xp.parameters['process']=processString.strip()
 
         sys.stdout.flush()
@@ -324,7 +371,8 @@ class xolotlFtridynDriver(Component):
             self.PLASMA_INPUT_PARAMETERS
             plasmaExists=True
             print('Read PLASMA inputs defined in config file.')
-
+            sys.stdout.flush()
+            
             for k,v in self.PLASMA_INPUT_PARAMETERS.items():
                 if param_handler.is_int(v):
                     print(( '\t reading integer PLASMA input parameter {0} = {1}'.format( k, v)))
@@ -346,34 +394,37 @@ class xolotlFtridynDriver(Component):
                 else:
                     print(('\t reading string PLASMA input parameter {0} = {1} '.format( k, v))) 
                     self.plasma[k]=v
-
+            sys.stdout.flush()
+                    
         except Exception as e:
             print(e)
             print('no PLASMA_INPUT_PARAMETERS defined in config file. ')
             sys.stdout.flush()
-                    
+        print(' ')
+        
         try:
             self.PLASMA_OUTPUT_FILE
             plasmaExists=True
-            print('use input from PLASMA output file defined in config file')
-            print(('read PLASMA parameters (from file) : {}\n'.format(self.INPUT_DIR+'/'+self.PLASMA_OUTPUT_FILE)))
-            print('these inputs will overwrite values given in config file ')
+            print('use input from PLASMA output file (as defined in config file)')
+            print('\t read PLASMA parameters (from file) :')
+            print('\t \t {}'.format(self.INPUT_DIR+'/'+self.PLASMA_OUTPUT_FILE))
+            print('\t these inputs will overwrite values given in config file ')
             self.plasma_temp=param_handler.read(self.INPUT_DIR+'/'+self.PLASMA_OUTPUT_FILE)
 
             for k,v, in self.plasma_temp.items():
-                print(('\t {0} : {1}'.format(k, v)))
+                print(('\t \t {0} : {1}'.format(k, v)))
                 self.plasma[k]=v
             print(' ')
             sys.stdout.flush()
 
             #also take the opportunity to copy it here and update the plasma state:
-            print('copy ', self.PLASMA_OUTPUT_FILE, ' to cwd, so it can be updated in plasma state')
+            print('\t copy ', self.PLASMA_OUTPUT_FILE, ' to cwd, so it can be updated in plasma state')
             shutil.copyfile(self.INPUT_DIR+'/'+self.PLASMA_OUTPUT_FILE, self.PLASMA_OUTPUT_FILE)
             try:
-                print('copy ', self.PLASMA_OUTPUT_ORIG, ' to cwd, so it can be updated in plasma state')
+                print('\t copy ', self.PLASMA_OUTPUT_ORIG, ' to cwd, so it can be updated in plasma state')
                 shutil.copyfile(self.INPUT_DIR+'/'+self.PLASMA_OUTPUT_ORIG, self.PLASMA_OUTPUT_ORIG)
             except Exception as e:
-                print(e)
+                print('\t', e)
             sys.stdout.flush()
             self.services.update_plasma_state()
             
@@ -382,21 +433,30 @@ class xolotlFtridynDriver(Component):
             print('no PLASMA_OUTPUT_FILE defined in config file. ')
             sys.stdout.flush()
 
-        #print('TEST: final PLASMA dictionary is: ')
-        #print(self.plasma)
+        print(' ')
             
+        if self.print_test:
+            print('TEST: final PLASMA dictionary is: ')
+            for k,v in self.plasma.items():
+                print('\t ', k ,'=', v)
+            print(' ')
+        
         if plasmaExists:
             if 'plasmaOutputDir' in self.plasma:
                 print('\t PLASMA output will be read from {} \n'.format(self.plasma['plasmaOutputDir']+'_'+prj))
 
             ## OVERWRITE FTX PARAMETERS WITH INPUTS FROM PLASMA 
+
+            print('overwrite FTX parameters with inputs from plasma:')
+            print(' ')
             
             if 'flux' in self.plasma:
                 self.xp.parameters['flux']=self.plasma['flux']*1.0e-18
-                print(('replaced flux in Xolotl (in ion/nm2s = 1e-18 ion/m2s) by value given by PLASMA {} (in ion/m2s) \n'.format(self.plasma['flux'])))
+                print(('\t replaced flux in Xolotl (in ion/nm2s = 1e-18 ion/m2s) by value given by PLASMA {} (in ion/m2s) \n'.format(self.plasma['flux'])))
             else:
-                print(('no flux specified in PLASMA, so using values in Xolotl {} \n'.format(self.xp.parameters['flux'])))
-
+                print(('\t no flux specified in PLASMA, so using values in Xolotl {} \n'.format(self.xp.parameters['flux'])))
+            sys.stdout.flush()
+            
             ## parameters for the temperature model depend on the Xolotl executable
             ## v1 (e.g., master) uses a single line: heat = [value], startTemp = [value], etc.
             ## v2 (e.g., tempGrid) uses two lines:  tempHandler = heat / ...
@@ -404,16 +464,18 @@ class xolotlFtridynDriver(Component):
             ## this ends up being quite long, so better in its own file:
             ## Xolotl v1 needs one line, v2 needs 2 lines --> write_tempModel contains 2 functions
 
-            print('temperature model handled by write_tempModel: ')
+            print('\t temperature model handled by write_tempModel: ')
             if (self.driver['xolotl_v']==1):
-                mod,val,rm_startTemp = write_tempModel.v1(xp_parameters=self.xp.parameters,plasma=self.plasma)
+                mod,val,rm_startTemp = write_tempModel.v1(xp_parameters=self.xp.parameters,plasma=self.plasma, print_test=self.print_test) 
+                sys.stdout.flush()
                 self.xp.parameters[mod]=val
-                print('... write_tempModel succesfully returned: for Xolotl v1, temperature model: ', mod, val)
+                print('\t ... write_tempModel succesfully returned: for Xolotl v1, temperature model: ', mod, val)
             elif(self.driver['xolotl_v']==2):
-                mod,val,rm_startTemp = write_tempModel.v2(xp_parameters=self.xp.parameters,plasma=self.plasma)
+                mod,val,rm_startTemp = write_tempModel.v2(xp_parameters=self.xp.parameters,plasma=self.plasma, print_test=self.print_test)
+                sys.stdout.flush()
                 self.xp.parameters['tempHandler']=mod
                 self.xp.parameters['tempParam']=val
-                print('... write_tempModel succesfully returned: for Xolotl v2, temperature model: ', mod, val)
+                print('\t ... write_tempModel succesfully returned: for Xolotl v2, temperature model: ', mod, val)
             else:
                 print('\t WARNING: Xolotl version not recognized: ')
                 print( '\t \t xolotl_v = ', self.driver['xolotl_v'])
@@ -425,11 +487,13 @@ class xolotlFtridynDriver(Component):
                 del self.xp.parameters['startTemp']
                 print('\t \t and delete startTemp')
             print(' ')
-                    
+
         else:
             print('no PLASMA input file or paramters defined in config file')
-            sys.stdout.flush()
-            
+        sys.stdout.flush()
+
+        print(' ')
+        
         #initialize lists that will contain values for each species
         #input parameters
         self.energyIn=[]
@@ -480,10 +544,6 @@ class xolotlFtridynDriver(Component):
                 inputAngle=self.ftridyn['inputAngle']
                 self.plasmaSpecies=self.ftridyn['plasmaSpecies']
                 self.fluxFraction=self.ftridyn['fluxFraction']
-
-
-
-
         
         inputSpYield=self.ftridyn['inputSpYield'].split(' ')
         inputRYield=self.ftridyn['inputRYield'].split(' ')
@@ -506,7 +566,8 @@ class xolotlFtridynDriver(Component):
                     self.PLASMA_OUTPUT_FILE
                     print('angular distributions given by PLASMA')
                     plasma_output_dir='plasmaOutputDir'+'_'+prj
-                    print(('\t PLASMA output of angular distributions will be read from {} \n'.format(self.plasma[plasma_output_dir])))
+                    print('\t PLASMA output of angular distributions will be read from')
+                    print('\t \t {}'.format(self.plasma[plasma_output_dir]))
                     self.angleFile.append(self.plasma[plasma_output_dir].strip()+'/'+self.PLASMA_ANGLE_FILE.strip()) #self.gitr['gitrOutputDir'].strip()
                     self.aWeightFile.append(self.plasma[plasma_output_dir].strip()+'/'+self.PLASMA_AWEIGHT_FILE.strip()) #self.gitr['gitrOutputDir'].strip()
 
@@ -514,7 +575,9 @@ class xolotlFtridynDriver(Component):
                     print(e2)
                     print('no input from PLASMA')
                 
-                print(('\t reading angles and weights for {0} from {1} {2};\n'.format(prj, self.angleFile[i], self.aWeightFile[i])))
+                print('\t reading angles and weights for {0} from: '.format(prj))
+                print('\t \t {0}'.format(self.angleFile[i]))
+                print('\t \t {0}'.format(self.aWeightFile[i]))
                 a = numpy.loadtxt(self.angleFile[i], usecols = (0,) , unpack=True)
                 w = numpy.loadtxt(self.aWeightFile[i], usecols = (0,) , unpack=True)
                 self.angleIn.append(a)
@@ -526,6 +589,7 @@ class xolotlFtridynDriver(Component):
                 self.aWeightFile.append('')
                 print(('\t {} angle value as defined by user \n'.format(prj)))
             print(' ')
+
             #AND MAYBE SOMETHING SIMILAR WITH ENERGIES?
 
             if self.spYield[i]<0:
@@ -545,14 +609,15 @@ class xolotlFtridynDriver(Component):
                 self.PLASMA_OUTPUT_FILE                
                 if self.energyIn[i] < 0:
                     plasma_output_dir='plasmaOutputDir'+'_'+prj
-                    print(('\t PLASMA output of energy distributions will be read from {} \n'.format(self.plasma[plasma_output_dir])))
+                    print('\t PLASMA output of energy distributions will be read from:')
+                    print ('\t \t {}'.format(self.plasma[plasma_output_dir]))
                     self.FT_energy_file_name.append(self.ft_energy_input_file[i]) #"He_W0001.ED1"
                     #where all the energy distribution files are located
                     self.eadist_output_path.append(self.plasma[plasma_output_dir].strip())
                     try:
                         self.PLASMA_EADIST_FILE 
                         self.eadist_output_file.append(self.PLASMA_EADIST_FILE)
-                        print('\t using energy distribution file format given in PLASMA eadist file', self.PLASMA_EADIST_FILE)
+                        print('\t using energy distribution file format given in PLASMA eadist file: ', self.PLASMA_EADIST_FILE)
                     except : #default file format ['dist','.dat']
                         self.eadist_output_file.append(['dist','.dat'])
                         print("\t using default energy distribution file format, ['dist','.dat']")
@@ -563,7 +628,8 @@ class xolotlFtridynDriver(Component):
             except Exception as e2:
                 print(e2)
                 print('no input from PLASMA')
-                    
+
+            print(' ')
             #initialize maxRangeXolotl list
             self.maxRangeXolotl.append(0.0)
 
@@ -605,7 +671,15 @@ class xolotlFtridynDriver(Component):
         cwd = self.services.get_working_dir()
 
         print('\n')
-        print(('FT-X driver:step called with: ', keywords))
+        print('---------------------------')
+        print('---------------------------')
+        print('  FT-X driver:step called  ')
+        print('---------------------------')
+        print('---------------------------')
+        print(' ')
+        print('\t with keywords: ', keywords)
+        print(' ')
+        
         print('\t output file of the FT-X workflow:')
         if 'LOG_FILE' in keywords:
             logFile=keywords['LOG_FILE']
@@ -626,8 +700,12 @@ class xolotlFtridynDriver(Component):
                 outFile=None
 
         print(' ')
-        print('xolotl-ftridyn_driver: step \n')
-
+        print('---------------------------')
+        print('---------------------------')
+        print('xolotl-ftridyn_driver: step')
+        print('---------------------------')
+        print('---------------------------')
+        print(' ')
 
         ftridyn = self.services.get_port('WORKER')
         xolotl = self.services.get_port('XWORKER')
@@ -644,18 +722,17 @@ class xolotlFtridynDriver(Component):
             sys.stdout.flush()
             return
 
-
+        print('\t before starting time-loop, checked that time step given in config file is not longer than needed to reach the end of the simulation')
         if time+self.time['LOOP_TIME_STEP']>end_time:
             self.time['LOOP_TIME_STEP']=end_time-time
-            print(' ')
             print('\t WARNING: time step given in config file longer than needed for last loop ')
-            print(('\t before starting time-loop, adapt driver time step to {} to reach exactly endTime '.format( self.time['LOOP_TIME_STEP'])))
+            print(('\t \t before starting time-loop, adapt driver time step to {} to reach exactly endTime '.format( self.time['LOOP_TIME_STEP'])))
             self.xp.parameters['petscArgs']['-start_stop']=self.time['LOOP_TIME_STEP']/10.0
-            print(('\t accordingly, Xolotls data is saved every (start_stop) = {} '.format( self.xp.parameters['petscArgs']['-start_stop'])))
+            print(('\t \t accordingly, Xolotls data is saved every (start_stop) = {} '.format( self.xp.parameters['petscArgs']['-start_stop'])))
         else:
-            print('\t before starting time-loop, checked that time step given in config file is not longer than needed to reach the end of the simulation')
+            print('\t time-step is shorter than needed. Continue with it')
 
-        print('\n')
+        print(' ')
         sys.stdout.flush()
 
         
@@ -664,14 +741,14 @@ class xolotlFtridynDriver(Component):
         while time<end_time: #self.driver['END_TIME']:
 
             self.services.stage_plasma_state()
-            print(('driver time (in loop) {} \n'.format(time)))
+            print(('driver time (in loop) {}'.format(time)))
             self.services.update_plasma_state()
 
             #keep all files to be saved (not plasma state) in folder with time stamp
             timeFolder='t'+str(time)
             if not os.path.exists(timeFolder):
                 os.makedirs(timeFolder)
-            print(('output of this time-loop will be saved in {} \n'.format(timeFolder)))
+            print(('\t output of this time-loop will be saved in {} \n'.format(timeFolder)))
 
             self.time['LOOP_N']+=1
             self.collapsedLoops=0 #reset 
@@ -686,13 +763,15 @@ class xolotlFtridynDriver(Component):
             ###################################### 
 
             print('\n')
-            print('F-TRIDYN:\n')
+            print('-----------')
+            print('F-TRIDYN:  ')
+            print('-----------\n')
             # A) GET INPUT THAT MIGHT CHANGE EVERT LOOP READY
 
             #determine parameters related to init/restart
             iW=self.plasmaSpecies.index('W')
             if (self.driverMode == 'INIT'):
-                print('\t init mode yes\n')
+                print('init mode yes')
                 self.ftridyn['iQ0']=0
 
                 targetList=[]
@@ -707,7 +786,8 @@ class xolotlFtridynDriver(Component):
                     self.ftridyn['nTT']=self.ftridyn['totalDepth']
                 
             else:
-                print('\t init mode no \n') 
+                print('init mode no')
+                sys.stdout.flush()
                 self.ftridyn['iQ0']=-1
                 self.ftridyn['nDataPts'] = translate_xolotl_to_ftridyn.xolotlToLay(totalDepth=self.ftridyn['totalDepth'],logFile=outFile)
                 #prepare target strings for F-Tridyn:
@@ -724,7 +804,7 @@ class xolotlFtridynDriver(Component):
                     else:
                         targetList.append('') #leave empty
                         
-                print(('\t passing to F-Tridyn the list of targets t{} \n'.format(targetList)))
+                print(('\t passing to F-Tridyn the list of targets t{}'.format(targetList)))
 
                 #Xolotl only outputs He_W0001.LAY; but it's same substrate composition for running all projectiles
                 iHe=self.plasmaSpecies.index('He')
@@ -735,23 +815,24 @@ class xolotlFtridynDriver(Component):
                         shutil.copyfile(self.ftx_lay_file[iHe],self.ftx_lay_file[i])
                 
                 if (self.ftridyn['totalDepth']==0.0):
-                    print('\t Totaldepth from last_TRIDYN.dat \n') 
+                    print('\t Totaldepth from last_TRIDYN.dat') 
                     self.ftridyn['nTT']=10*numpy.max(numpy.loadtxt('last_TRIDYN.dat')[:,0])
                 else:
-                    print(('\t totalDepth fixed to {} \n'.format(self.ftridyn['totalDepth'])))
+                    print(('\t totalDepth fixed to {}'.format(self.ftridyn['totalDepth'])))
                     self.ftridyn['nTT']=self.ftridyn['totalDepth']
-
+            print(' ')
             sys.stdout.flush()
             self.services.update_plasma_state()
 
             # B) RUN FTRIDYN
 
+            print('call F-TRIDYN:')
             print(' ')
             for i in range(len(self.plasmaSpecies)): #self.plasmaSpecies.iteritems():
                 prj=self.plasmaSpecies[i]
                 maxDepth=[]
                 if (self.fluxFraction[i] > 0.0) and not (all(k==0 for k in self.weightAngle[i])):
-                    print(('running F-Tridyn for {0} with flux fraction = {1}\n'.format(prj, self.fluxFraction[i])))
+                    print(('\t running F-Tridyn for {0} with flux fraction = {1}'.format(prj, self.fluxFraction[i])))
                     print(('\t and not all angle weights are zero; max angleWeight is {}\n'.format(max(self.weightAngle[i]))))
                     sys.stdout.flush()
                     
@@ -759,7 +840,7 @@ class xolotlFtridynDriver(Component):
                     self.services.call(ftridyn, 'init', timeStamp, dTime=time, fPrj=prj, fTargetList=targetList, ftParameters=self.ftridyn , fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], ft_folder=self.FT_OUTPUT_FOLDER, input_file=self.ft_input_file[i], otherInFiles=[self.FT_SURFACE_FILE,self.ftx_lay_file[i]], energy_file_name=self.FT_energy_file_name[i], orig_energy_files_path=self.eadist_output_path[i], orig_energy_files_pattern=self.eadist_output_file[i], output_file=outFile)
                     sys.stdout.flush()
                     
-                    self.services.call(ftridyn, 'step', timeStamp, ftParameters=self.ftridyn, fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], output_file=outFile)
+                    self.services.call(ftridyn, 'step', timeStamp, ftParameters=self.ftridyn, fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], fPrj=prj, output_file=outFile)
                     sys.stdout.flush()
                     self.services.stage_plasma_state()
 
@@ -767,12 +848,18 @@ class xolotlFtridynDriver(Component):
                     # C) POSTPROCESSING OF prj -> W
 
                     # 1) access ft folder (read file containing path to FT output directory, as outputPath=...):
-                    t=param_handler.read(self.FT_OUTPUT_PWD_PATH)
-                    for key,value in t.items():
+                    ft_dic=param_handler.read(self.FT_OUTPUT_PWD_PATH)
+                    for key,value in ft_dic.items():
                         self.ftridyn[key] = value
 
-                    print(('from {0} , \t the path to output of FTRIDYN is {1} \n'.format(self.FT_OUTPUT_PWD_PATH, self.ftridyn['outputPath'])))
+                    print(' ')
+                    print('F-TRIDYN run COMPLETED for ', prj)
+                    print('\t from {0}:'.format(self.FT_OUTPUT_PWD_PATH))
+                    print('\t \t the path to output of FTRIDYN is {0}'.format(self.ftridyn['outputPath']))
+                    print(' ')
 
+                    print('analyze and format output for ', prj, ':\n')
+                    
                     #2) #get maximum projectile range to ensure bins are added correctly in 'translate_ftridyn_to_xolotl'
 
                     ft_output_prj_file=self.ft_output_prj_file[i]
@@ -821,24 +908,27 @@ class xolotlFtridynDriver(Component):
                         pkl_impl_file=cwd+'/ft_implProfiles.pkl'  ## define name in config file, here give abs path
                         pickle.dump(ft_implProfiles_dictionary, open(pkl_impl_file, "wb" ) )
 
+                        print('\t translate_ft2xol:')
+                        sys.stdout.flush()
                         try:
                             self.TRANSLATE_FT2XOL
                             ft_implProfile_script=self.TRANSLATE_FT2XOL
-                            print('Launch task of running python ', ft_implProfile_script)
+                            print('\t Launch user-defined python script :  ')
+                            print('\t', ft_implProfile_script)
                             
                         except: #DEFAULT PATH: 
                             ft_implProfile_script = self.BIN_PATH+'/ips-iterative-xolotlFT/python_scripts_for_coupling/translate_ftridyn_to_xolotl.py'
-                            print('Launch task of running default python script ', ft_implProfile_script)
+                            print('\t Launch default python script: ')
+                            print('\t ',ft_implProfile_script)
 
                         sys.stdout.flush()
 
                         task_id_impl = self.services.launch_task(1,self.services.get_working_dir(),
                                                             'python', ft_implProfile_script, logfile='tridynPlotting.log')
                         ret_val_impl = self.services.wait_task(task_id_impl)
-                        sys.stdout.flush()
 
                     else: #if len(maxDepth)==0
-                        print("nothing was implanted. maxRange and profile = 0 ")
+                        print("\t nothing was implanted. maxRange and profile = 0 ")
                         maxRange=0.0
                         self.maxRangeXolotl[i]=0.0
                         outputFTFile=open(self.FT_OUTPUT_PROFILE_TEMP, "w")
@@ -847,9 +937,11 @@ class xolotlFtridynDriver(Component):
                         sys.stdout.flush()
                         #print "END OF THIS SIMULATION" & return
 
-
-                    #3) get the sputtering yield (or use fixed value)                   
                     print(' ')
+                    sys.stdout.flush()
+                    
+                    #3) get the sputtering yield (or use fixed value)                   
+                    print('get sputtering and reflection yields:')
                     #pass values as dictionary
                     ft_getYields_dictionary={}
                     ft_getYields_dictionary['ftridynOneOutOutput']=ft_output_file
@@ -870,11 +962,13 @@ class xolotlFtridynDriver(Component):
                     try:
                         self.GET_YIELDS
                         ft_getYields_script=self.GET_YIELDS
-                        print('Launch task of running python ', ft_getYields_script)
+                        print('\t Launch user-defined python script : ')
+                        print('\t ', ft_getYields_script)
                         
                     except: #DEFAULT PATH:
                         ft_getYields_script = self.BIN_PATH+'/ips-iterative-xolotlFT/python_scripts_for_coupling/get_yields.py'
-                        print('Launch task of running default python script ', ft_getYields_script)
+                        print('\t Launch default python script ')
+                        print('\t ', ft_getYields_script)
 
                     sys.stdout.flush()
 
@@ -885,11 +979,15 @@ class xolotlFtridynDriver(Component):
                     if os.path.exists(pkl_gy_file):
                         with open(pkl_gy_file, "rb") as pf:
                             getYields_dic = pickle.load(pf)
+                            if self.print_test:
+                                print('\t \t TEST: get_yields function returned dictionary:')
+                                print('\t \t', getYields_dic)
+                                sys.stdout.flush()
                             yields=getYields_dic['yields']
                         pf.close()
-                        print('reading the pickle file, get_yields returned [total SpY, total RY] = ', yields)
+                        print('\t reading the pickle file, get_yields returned [total SpY, total RY] = ', yields)
                     else:
-                        print('WARNING! could not read yield from get_yields pickle file. Set to zero')
+                        print('\t WARNING! could not read yield from get_yields pickle file. Set to zero')
                         yields=[0.0, 0.0]
                     
                     #overwrite spY value if mode is 'calculate'
@@ -916,8 +1014,9 @@ class xolotlFtridynDriver(Component):
                 
                     shutil.move(self.ftridyn['outputPath']+'/'+self.FT_OUTPUT_FOLDER,timeFolder+'/'+self.FT_OUTPUT_FOLDER+'_'+prj+'W')                
                     self.services.update_plasma_state()
-                    print(('\t done with F-TRIDYN for {} '.format(prj)))
-                    print('\n')
+                    print(' ')
+                    print('... done with F-TRIDYN for {}'.format(prj))
+                    print(' ')
                     sys.stdout.flush()
 
                 #if flux fraction == 0 or all weight angles == 0.0:
@@ -942,6 +1041,11 @@ class xolotlFtridynDriver(Component):
                     
             #end of for loop:
             sys.stdout.flush()
+
+            print('... done with F-TRIDYN for all species.')
+            print(' ')
+            print('species-independent analysis and consolidate output :')
+            print(' ')
             
             ######species independent ############
 
@@ -969,9 +1073,10 @@ class xolotlFtridynDriver(Component):
             shutil.copyfile(self.FTX_SPUT_YIELDS_FILE_FINAL,timeFolder+'/'+self.FTX_SPUT_YIELDS_FILE_FINAL) #perhaps unnecessary
             
             #if len(maxDepth)==0 and max(self.spYield)==0:
-            
-            print('self.maxRangeXolotl = ', self.maxRangeXolotl ,' and max of self.maxRangeXolotl =', max(self.maxRangeXolotl))
-            print('spYield = ', self.spYield, ' and max(self.spYield) = ', max(self.spYield))
+
+            print(' ')
+            print('\t self.maxRangeXolotl = ', self.maxRangeXolotl ,' and max of self.maxRangeXolotl =', max(self.maxRangeXolotl))
+            print('\t spYield = ', self.spYield, ' and max(self.spYield) = ', max(self.spYield))
             
             if max(self.maxRangeXolotl)==0 and max(self.spYield)==0:
                 print("nothing was implanted or sputtered")
@@ -987,16 +1092,18 @@ class xolotlFtridynDriver(Component):
             if os.path.exists(self.FT_OUTPUT_PROFILE_TEMP):
                 os.remove(self.FT_OUTPUT_PROFILE_TEMP)
 
-            ## MOVE ALL OF THIS TO ITS OWN FILE
-            write_tridynDat.write_tridynDat(outFile=self.FT_OUTPUT_PROFILE_TEMP, tridynDat_model=self.driver['tridynDat_model'], plasmaSpecies=self.plasmaSpecies, timeFolder=timeFolder, maxRangeXolotl=self.maxRangeXolotl, fluxFraction=self.fluxFraction, rYield=self.rYield, xp_parameters=self.xp.parameters)
+            write_tridynDat.write_tridynDat(outFile=self.FT_OUTPUT_PROFILE_TEMP, tridynDat_model=self.driver['xolotl_v'], #self.driver['tridynDat_model'], #xolotl_v controls tridyn.dat format and more
+                                            plasmaSpecies=self.plasmaSpecies, timeFolder=timeFolder, maxRangeXolotl=self.maxRangeXolotl,
+                                            fluxFraction=self.fluxFraction, rYield=self.rYield, xp_parameters=self.xp.parameters, print_test=self.print_test)
             sys.stdout.flush()
 
             if os.path.exists(self.FT_OUTPUT_PROFILE_TEMP):
                 print('succesfully created ', self.FT_OUTPUT_PROFILE_TEMP)
             
             #save tridyn.dat (combined for all species) with time-stamp:
-            print('to keep ', self.FT_OUTPUT_PROFILE_TEMP, ' for every loop, save as ', self.FT_OUTPUT_PROFILE_TEMP+'_t'+str(time))
+            print('\t to keep ', self.FT_OUTPUT_PROFILE_TEMP, ' for every loop, save as ', self.FT_OUTPUT_PROFILE_TEMP+'_t'+str(time))
             shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP, self.FT_OUTPUT_PROFILE_TEMP+'_t'+str(time))
+            print(' ')
             
             #compress output
             if self.driver['ZIP_FTRIDYN_OUTPUT']=='True':
@@ -1010,13 +1117,11 @@ class xolotlFtridynDriver(Component):
             else:
                 print(('leaving {} uncompressed \n'.format(timeFolder)))
 
+            print(' ')
             sys.stdout.flush()
             self.services.update_plasma_state()
 
-            ######################################
-            ############## RUN XOLOTL ############ 
-            ###################################### 
-
+            
             #make sure at least one of the species was implanted:
             if all(k==0 for k in self.maxRangeXolotl):
                 print("WARNING: none of the species was implanted")
@@ -1026,30 +1131,47 @@ class xolotlFtridynDriver(Component):
 
             #if something was implanted:
             #Xolotl parameter modifications that need to be done at every loop:
+            
+            ######################################
+            ############## RUN XOLOTL ############
+            ######################################
+            print('-----------')
+            print('  XOLOTL:  ')
+            print('-----------')
+            print(' ')
+            sys.stdout.flush()
 
             #list modules right before running Xolotl:
-            #modList=os.system('module list')
-            #print('TEST: we are running Xolotl with the following modules loaded: ', modList)
-            print('load cray-hdf5-parallel')
+            if self.print_test:
+                modList=os.system('module list')
+                print('\t TEST: we are running Xolotl with the following modules loaded: ', modList)
+                print('\t load cray-hdf5-parallel')
             os.system('module load cray-hdf5-parallel')
-            #modList=os.system('module list')
-            #print('TEST: we are running Xolotl with the following modules loaded: ', modList)
+            if self.print_test:
+                modList=os.system('module list')
+                print('\t TEST: we are running Xolotl with the following modules loaded: ', modList)
+                print(' ')
             sys.stdout.flush()
             
             #calculate effective sputtering yield; i.e., weighted by relative flux of W-to-He
             totalSpYield=0
             for i in range(len(self.plasmaSpecies)): #self.plasmaSpecies.iteritems():
                 prj=self.plasmaSpecies[i]
-                print(('contribution of {0} to total sputtering yield = {1} '.format( prj, float(self.fluxFraction[i])*float(self.spYield[i]))))
                 totalSpYield+=(float(self.fluxFraction[i])*float(self.spYield[i])) #self.fluxFraction[i]
-            print(('total weighted sputtering yield = {} (passed to Xolotl)\n'.format(totalSpYield)))
+            print(('total weighted sputtering yield = {} (passed to Xolotl)'.format(totalSpYield)))
+            
+            for i in range(len(self.plasmaSpecies)):
+                prj=self.plasmaSpecies[i]
+                print(('\t contribution of {0} to total sputtering yield = {1} '.format( prj, float(self.fluxFraction[i])*float(self.spYield[i]))))
             self.xp.parameters['sputtering'] = totalSpYield            
+            print(' ')
+            sys.stdout.flush()
             
             #time and time-step related parameters
             self.xp.parameters['petscArgs']['-ts_final_time']=time+self.time['LOOP_TIME_STEP']
             print('\n')
-            print('XOLOTL: ')
-            print(('\t Run from t = {}'.format(time)))
+            print('run XOLOTL: ')
+            print(('\t from t = {}'.format(time)))
             print(('\t to t = {}'.format(self.xp.parameters['petscArgs']['-ts_final_time'])))
             print(('\t and time-step = {} '.format( self.time['LOOP_TIME_STEP'])))
 
@@ -1129,10 +1251,10 @@ class xolotlFtridynDriver(Component):
                     
             #determine if he_conc true/false ; if true, add '-he_conc' to petsc arguments 
             if self.driver['XOLOTL_HE_CONC']=='Last':
-                if time+1.5*self.time['LOOP_TIME_STEP']>end_time: #self.driver['END_TIME']:  #*1.5, to give marging of error
+                if time+1.5*self.time['LOOP_TIME_STEP']>end_time:  #*1.5, to give marging of error
                     self.petsc_heConc=True
                     print('printing He concentrations in the last loop')
-                elif time<(end_time-self.time['LOOP_TIME_STEP']): #self.driver['END_TIME']-self.driver['LOOP_TIME_STEP']):
+                elif time<(end_time-self.time['LOOP_TIME_STEP']):
                     self.petsc_heConc=False
             elif self.driver['XOLOTL_HE_CONC']=='True':
                 print('\t he_conc printed in this (and every) loop')
@@ -1170,27 +1292,30 @@ class xolotlFtridynDriver(Component):
                     statusFile=open(self.XOLOTL_EXIT_STATUS, "r")
                     self.xolotlExitStatus=statusFile.read().rstrip('\n')
 
-                    print(('\t Xolotl ended simulation with status {} \n'.format(self.xolotlExitStatus)))
+                    print(('\t Xolotl ended simulation with status : {}\n'.format(self.xolotlExitStatus)))
 
                     if self.xolotlExitStatus=='good':
-                        print(('\t Xolotl successfully executed after {} tries'.format(self.collapsedLoops)))
-                        print('continue with IPS simulation \n')
+                        print(('Xolotl successfully executed after {} tries'.format(self.collapsedLoops)))
+                        print('\t continue with IPS simulation \n')
 
                     elif self.xolotlExitStatus=='diverged':
-                        print('\t ERROR: XOLOTL SOLVER DIVERGED ')
-                        print('END IPS SIMULATION \n')
+                        print('ERROR: XOLOTL SOLVER DIVERGED ')
+                        print('\t END IPS SIMULATION \n')
                         quit()
                     elif self.xolotlExitStatus=='overgrid':
                         n_overgrid_loops+=1
-                        print('\t WARNING: XOLOTL OVERGRID ')
+                        print('WARNING: XOLOTL OVERGRID ')
                         print('\t RUNNING transgerGrid...')
                         #xolotlStop already copied as _overgrid within xolotl_comp; no need to copy here again
-
+                        sys.stdout.flush()
+                        
                         #also need to update the values of grid and voidPortion to match what's in the network file:
                         #Most likely this will only work if using 'grid', not 'gridParam' in network file!!
                         shutil.copyfile(self.XOLOTL_NETWORK_FILE,self.XOLOTL_NETWORK_FILE+'_overgrid_'+str(n_overgrid_loops))
                         shutil.move('xolotlStop.h5', self.XOLOTL_NETWORK_FILE)
                         [newGridSize, newVoidPortion] = transferGrid.transferGrid(self.XOLOTL_NETWORK_FILE)
+                        sys.stdout.flush()
+                        
                         if os.path.exists(self.XOLOTL_NETWORK_FILE):
                             #make sure xolotlStop exists
                             shutil.copyfile(self.XOLOTL_NETWORK_FILE,'xolotlStop.h5')
@@ -1213,15 +1338,18 @@ class xolotlFtridynDriver(Component):
 
                     else:
                         print('\t WARNING: Xolotl exit status UNKOWN -- IPS simulation continues \n')
-
+                    sys.stdout.flush()
+                    
                 else: #reached maximum number of tries for collapsing time steps
                     print('\t ERROR: reached maximum number of tries for collapsing time steps without a successful run')
                     print('END IPS SIMULATION \n')
                     quit()
-
+            sys.stdout.flush()
+            
             #UPDATE: Xolotl generates HDF5 file of TRIDYN, copied as 'last_TRIDYN_toBin.h5'
             #thus no need to copy it; and binTRIDYN will transform it to text file, 'last_TRIDYN.dat' 
-            print('bin Xolotls output')
+            print('bin Xolotls output:')
+            sys.stdout.flush()
             binTRIDYN.binTridyn(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat') #instead of binTRIDYN.binTridyn() 
             print('...succesfully ran binTRIDYN') 
             print(' ')
@@ -1257,11 +1385,14 @@ class xolotlFtridynDriver(Component):
                 iF=cwd+'/xolotlStop.h5'
                 oF= cwd+'/'+self.XOLOTL_NETWORK_FILE
                 os.remove(oF) #can not exist & it's copied as w/ time-stamp above
-                print('\t run keepLastTS with: ')
-                print('\t \t inFile = ', iF)
-                print( '\t \t outFile = ', oF)
+                if self.print_test:
+                    print('\t run keepLastTS with: ')
+                    print('\t \t inFile = ', iF)
+                    print( '\t \t outFile = ', oF)
+                sys.stdout.flush()
                 keepLastTS.keepLastTS(inFile=iF, outFile=oF)
-                print('\t ... keepLastTS done')
+                if self.print_test:
+                    print('\t ... keepLastTS returned succesfully')
                 sys.stdout.flush()
             #if fails, use old method of copying entire xolotlStop as networkFile
             except Exception as e:                                     
@@ -1271,13 +1402,15 @@ class xolotlFtridynDriver(Component):
                 shutil.copyfile('xolotlStop.h5',self.XOLOTL_NETWORK_FILE)
             print('done writing a new network file')
             print(' ')
+            sys.stdout.flush()
             
             # copy last_TRIDYN.dat and netowrk file to input dir as well:
-            print('copy last_TRIDYN.dat and ', self.XOLOTL_NETWORK_FILE, 'to ', self.INPUT_DIR )
+            print('copy last_TRIDYN.dat and ', self.XOLOTL_NETWORK_FILE, 'to: ')
+            print('\t',  self.INPUT_DIR )
             shutil.copyfile('last_TRIDYN.dat', self.INPUT_DIR+'/last_TRIDYN.dat')
             shutil.copyfile(self.XOLOTL_NETWORK_FILE, self.INPUT_DIR+'/'+self.XOLOTL_NETWORK_FILE)
             print(' ')
-            
+
             ## update driver mode after the 1st loop, from INIT to RESTART
             ## this doesn't seem to make much sense.
             # if self.driverMode == 'INIT':
@@ -1288,6 +1421,7 @@ class xolotlFtridynDriver(Component):
                 self.driverMode = 'NEUTRAL'
                 print(('switched driverMode to {} \n'.format(self.driverMode)))
 
+            sys.stdout.flush()
             #using while instead of loop to accomodate variable drive time step 
             #--> update time explicitely before (possibly) increasing time step
             time+=self.time['LOOP_TIME_STEP']
@@ -1314,22 +1448,21 @@ class xolotlFtridynDriver(Component):
                 print('\t time step longer than needed for last loop ')
                 print(('\t adapting driver time step to {} to reach exactly endTime '.format(self.time['LOOP_TIME_STEP'])))
                 self.xp.parameters['petscArgs']['-start_stop']=self.time['LOOP_TIME_STEP']/10.0
-                print(('\t and Xolotls data is saved every (start_stop) = {} '.format( self.xp.parameters['petscArgs']['-start_stop'])))
-
-            print('\n')
+                print(('\t and Xolotls data is saved every (start_stop) = {} \n'.format( self.xp.parameters['petscArgs']['-start_stop'])))
 
             if self.driver['XOLOTL_MAXTS_FACTOR'] != 1:
                 if (self.time['LOOP_N']%self.driver['XOLOTL_MAXTS_NLOOPS']==0):
                     print(('\t change in Xolotls maximum time step after loop {} '.format( self.time['LOOP_N'])))
                     self.xp.parameters['petscArgs']['-ts_adapt_dt_max']*=self.driver['XOLOTL_MAXTS_FACTOR']
-                    print(('\t multiply time step by {0}, for a new time step = {1} \n'.format(self.driver['XOLOTL_MAXTS_FACTOR'] , self.xp.parameters['petscArgs']['-ts_adapt_dt_max'])))
+                    print(('\t multiply time step by {0}, for a new time step = {1}'.format(self.driver['XOLOTL_MAXTS_FACTOR'] , self.xp.parameters['petscArgs']['-ts_adapt_dt_max'])))
                     if self.xp.parameters['petscArgs']['-ts_adapt_dt_max'] > self.driver['XOLOTL_MAX_TS']:
                         self.xp.parameters['petscArgs']['-ts_adapt_dt_max']=self.driver['XOLOTL_MAX_TS']
-                        print(('\t Xolotls time-step reached the maximum allowed; set to limit value, {} \n'.format(self.driver['XOLOTL_MAX_TS'])))
+                        print(('\t Xolotls time-step reached the maximum allowed; set to limit value, {}'.format(self.driver['XOLOTL_MAX_TS'])))
                 else:
-                    print(( '\t continue with xolotl dt max {} \n'.format(self.xp.parameters['petscArgs']['-ts_adapt_dt_max'])))
+                    print(( '\t continue with xolotl dt max {}'.format(self.xp.parameters['petscArgs']['-ts_adapt_dt_max'])))
+                print(' ')
             else:
-                print(('\t Xolotls max time step ({}) unchanged (factor=1) \n'.format(self.xp.parameters['petscArgs']['-ts_adapt_dt_max'])))
+                print(('\t Xolotls max time step ({}) unchanged (factor=1)'.format(self.xp.parameters['petscArgs']['-ts_adapt_dt_max'])))
 
             print(' ')
             sys.stdout.flush()

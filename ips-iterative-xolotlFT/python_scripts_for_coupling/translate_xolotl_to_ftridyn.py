@@ -6,16 +6,16 @@ import sys
 def xolotlToLay(tridynFile='last_TRIDYN.dat', totalDepth=0.0, logFile=None):
 
   if logFile  is not None:
-    print(('redirect tridynPlotting output of to:', logFile))
+    print(('\t redirect tridynPlotting output of to:', logFile))
     outF = open(logFile, "a")
     sys.stdout = outF
     
   else:
-    print ('no log file defined in tridynPlotting')
-    print ('print output to default sys.stdout')
+    print ('\t no log file defined in tridynPlotting')
+    print ('\t print output to default sys.stdout')
     
   print(' ')
-  print('xolotlToLay:')
+  print('\t xolotlToLay:')
 
   DNS_W_A3_0 = 0.06306
  
@@ -69,8 +69,10 @@ def xolotlToLay(tridynFile='last_TRIDYN.dat', totalDepth=0.0, logFile=None):
 
   nlines=np.size(C_W_A3)
   
-  #test in transition to python3:
-  print('from translate_xolotl_to_ftridyn, nlines', nlines)
+  #if test:
+  print('\t from translate_xolotl_to_ftridyn, return nlines', nlines)
+
+  print(' ')
   sys.stdout.flush()
   
   return nlines

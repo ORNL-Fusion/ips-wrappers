@@ -43,21 +43,24 @@ def sputtering_and_reflection_launch(ftridynOneOutOutput='He_WOUT.dat',
             logFile=dic['logFile']
 
     if logFile  is not None:
-        print(('redirect getYields output of to:', logFile))
+        print('\t redirect getYields output of to:')
+        print('\t ' , logFile)
         outF = open(logFile, "a")
         sys.stdout = outF
 
     else:
-        print ('no log file defined in getYields')
-        print ('print output to default sys.stdout')
+        print ('\t no log file defined in getYields')
+        print ('\t print output to default sys.stdout')
 
+    print(' ')
     sys.stdout.flush()
 
     #if pikle file exists, read from pkl file:
     if os.path.exists(pkl_file):
         #dic = pickle.load( open( pkl_file, "rb" ) ) #already above
-        print('In get_yields,  dictionary defined in pkl file: ')
-        print(pkl_file)
+        print('\t In get_yields,  dictionary defined in pkl file: ')
+        print('\t', pkl_file)
+        print(' ')
         sys.stdout.flush()
 
         #print('TEST: dictionary in pkl file contains:')
@@ -65,6 +68,7 @@ def sputtering_and_reflection_launch(ftridynOneOutOutput='He_WOUT.dat',
         
         #for each of the possible inputs to the script, check if given in pkl file
 
+        #print lines if in test mode:
         if 'ftridynOneOutOutput' in dic:
             ftridynOneOutOutput=dic['ftridynOneOutOutput']
             print('\t from pkl file, set dict value to ftridynOneOutOutput=',dic['ftridynOneOutOutput'])
@@ -108,7 +112,7 @@ def sputtering_and_reflection_launch(ftridynOneOutOutput='He_WOUT.dat',
     pf.close()
     
     print(' ')
-    print('getYields:')
+    print('\t getYields:')
 
     totalSpYield=0.0;
     totalRYield=0.0
@@ -116,16 +120,16 @@ def sputtering_and_reflection_launch(ftridynOneOutOutput='He_WOUT.dat',
 
 
     if len(angle)>1:
-        print('\t reading the impact energy distribution for ', (len(angle)), ' angles') 
+        print('\t \t reading the impact energy distribution for ', (len(angle)), ' angles') 
     else:
-        print('\t single, fixed angle used')
+        print('\t \t single, fixed angle used')
 
     totalWeight=np.sum(weightAngle)
-    print('\t the sum of weights is ', totalWeight)
+    print('\t \t the sum of weights is ', totalWeight)
     for a in np.arange(0,len(angle),1):
 
         if weightAngle[a]==0.0:
-            print('\t for angle ', angle[a], 'with weight = ', weightAngle[a], 'skipping all yields analysis')
+            print('\t \t for angle ', angle[a], 'with weight = ', weightAngle[a], 'skipping all yields analysis')
 
         elif weightAngle[a] >0.0:
             angleFolder=ftridynFolder+str(angle[a])
@@ -158,16 +162,16 @@ def sputtering_and_reflection_launch(ftridynOneOutOutput='He_WOUT.dat',
             weightedRYield=reflectYield*weightAngle[a]/totalWeight
             totalRYield += weightedRYield
 
-            print('\t for angle ',angle[a],', weight = ',weightAngle[a],': spY = ',spYield,' ; weighted spY = ',weightedSpYield,' ; rY = ',reflectYield, ' ; weighted rY = ', weightedRYield)
+            print('\t \t for angle ',angle[a],', weight = ',weightAngle[a],': spY = ',spYield,' ; weighted spY = ',weightedSpYield,' ; rY = ',reflectYield, ' ; weighted rY = ', weightedRYield)
             sys.stdout.flush()
 
     print(' ')
-    print("\t average sputtering yield is ", totalSpYield)
+    print("\t \t average sputtering yield is ", totalSpYield)
     yieldOutput.append(totalSpYield)
-    print("\t average reflection yield is ", totalRYield)
+    print("\t \t average reflection yield is ", totalRYield)
     yieldOutput.append(totalRYield)
 
-    #print('TEST: yieldOutput = ', yieldOutput)
+    print('\t \t TEST: yieldOutput = ', yieldOutput)
     
     sys.stdout.flush()
 
@@ -180,7 +184,7 @@ def sputtering_and_reflection_launch(ftridynOneOutOutput='He_WOUT.dat',
         pf.close()
         return
     else: #if pkl file / dic not present, try returning yields directly
-        return yields
+        return yieldOutput
     
 
 ################# END OF NEW PYTHON SCRIPT  ####################

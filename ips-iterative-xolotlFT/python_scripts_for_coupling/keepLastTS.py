@@ -10,21 +10,33 @@ import sys
 def keepLastTS(inFile='xolotlStop.h5', outFile='netFile'):
 
     print(' ')
-    print('keepLastTS, called with input:')
-    print(inFile)
+    print('\t called keepLastTS')
+    #if TEST
+    print('\t \t with input:')
+    print('\t \t', inFile)
     sys.stdout.flush()
     
     ## Open the file we want to copy from
     f = h5py.File(inFile, 'r')
-    print('\t succesfully opened ', inFile)
-    print('\t read concentrations of last TS')
+    #if TEST
+    print('\t \t succesfully opened ')
+    print('\t \t', inFile)
+    print(' ')
+    #if TEST
+    print('\t \t read concentrations of last TS')
     
     ## Get the last time step saved in the file
     concGroup = f['concentrationsGroup']
     timestep = concGroup.attrs['lastTimeStep']
 
-    print('\t read concs succesfully')
-    print('\t write them into outFile: ', outFile)
+    #if TEST
+    print('\t \t ... read concs succesfully')
+    print(' ')
+    
+    #if TEST    
+    print('\t \t write into outFile: ')
+    print('\t \t', outFile)
+    print(' ')
     sys.stdout.flush()
     
     ## Create the file to copy to
@@ -43,8 +55,11 @@ def keepLastTS(inFile='xolotlStop.h5', outFile='netFile'):
     ## Copy the other groups
     f.copy('headerGroup', fNew)
     f.copy('networkGroup', fNew)
-    print('\t all information succesfully written into ', outFile)
-    print('keepLastTS done!')
+    #if TEST
+    print('\t \t all information succesfully written into ')
+    print('\t \t', outFile)
+
+    print('\t ...keepLastTS done!')
     sys.stdout.flush()
 
     return

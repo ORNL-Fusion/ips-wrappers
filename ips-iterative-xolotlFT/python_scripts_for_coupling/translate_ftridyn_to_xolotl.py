@@ -42,12 +42,12 @@ def ftridyn_to_xolotl_launch(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
     if logFile  is not None:
         outF = open(logFile, "a")
         sys.stdout = outF
-        print('redirect tridynPlotting output of to:', logFile)
+        print('\t redirect tridynPlotting output of to:', logFile)
         
     else:
-        print ('no log file defined in tridynPlotting')
-        print ('print output to default sys.stdout')
-
+        print ('\t no log file defined in tridynPlotting')
+        print ('\t print output to default sys.stdout')
+    print(' ')
     #cwd = os.getcwd() #already above
     sys.stdout.flush()
 
@@ -55,10 +55,12 @@ def ftridyn_to_xolotl_launch(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
     #pkl_file=cwd+'/ft_implProfiles.pkl' #already above 
     if os.path.exists(pkl_file):
         #dic = pickle.load( open( pkl_file, "rb" ) ) #already above
-        print('In translate_ft_to_xol,  dictionary defined in pkl file: ')
-        print(pkl_file)
+        print('\t In translate_ft_to_xol, dictionary defined in pkl file: ')
+        print('\t \t', pkl_file)
         sys.stdout.flush()
-        
+
+        print(' ')
+        #print lines if in test mode:
         #for each of the possible inputs to the script, check if given in pkl file
         if 'ftridynOnePrjOutput' in dic:
             ftridynOnePrjOutput=dic['ftridynOnePrjOutput']
@@ -101,24 +103,24 @@ def ftridyn_to_xolotl_launch(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
     sys.stdout.flush()
 
     print(' ')
-    print('tridynPlotting:')
+    print('\t tridynPlotting:')
 
     totalSpYield=0.0;
     totalRYield=0.0
     yields=[]
 
     if len(angle)>1:
-        print('\t reading the impact energy distribution for ', (len(angle)), ' angles') 
+        print('\t \t reading the impact energy distribution for ', (len(angle)), ' angles') 
     else:
-        print('\t single, fixed angle used')
+        print('\t \t single, fixed angle used')
 
     totalWeight=np.sum(weightAngle)
-    print('\t the sum of weights is ', totalWeight, ' and projectile range', prjRange , ' [A]')
+    print('\t \t the sum of weights is ', totalWeight, ' and projectile range', prjRange , ' [A]')
 
     nonZeroAngle=0
     for a in np.arange(0,len(angle),1):
         if weightAngle[a]==0.0:
-            print('\t \t angle',a,' of weight ', weightAngle[a], ': skip all analysis with no contribution to implantation profile')
+            print('\t \t \t angle',a,' of weight ', weightAngle[a], ': skip all analysis with no contribution to implantation profile')
 
         elif weightAngle[a] >0.0:
             angleFolder=ftridynFolder+str(angle[a])
@@ -129,7 +131,7 @@ def ftridyn_to_xolotl_launch(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
             num_lines_prj = sum(1 for line in open(ftridynCurrentPrjOutput))
 
             if num_lines_prj==0:
-                print("\t \t WARNING: prj file is empty for angle ", angle[a])
+                print("\t \t \t WARNING: prj file is empty for angle ", angle[a])
             else:
                 #print "TEST: calculate sputtering yield for angle ", angle[a]
                 nonZeroAngle+=1 #identify the first time that an angle contributes, to initialize n[]

@@ -6,7 +6,7 @@
 import os
 import sys
 
-def write_tridynDat(outFile='tridyn.dat', tridynDat_model=1, plasmaSpecies=['He','W','D','T'], timeFolder='t0.0', maxRangeXolotl=[0.0, 0.0, 0.0, 0.0], fluxFraction=[0.0, 0.0, 0.0, 0.0], rYield=[1.0, 1.0, 1.0, 1.0], xp_parameters={}  ): #INPUTS HERE
+def write_tridynDat(outFile='tridyn.dat', tridynDat_model=1, plasmaSpecies=['He','W','D','T'], timeFolder='t0.0', maxRangeXolotl=[0.0, 0.0, 0.0, 0.0], fluxFraction=[0.0, 0.0, 0.0, 0.0], rYield=[1.0, 1.0, 1.0, 1.0], xp_parameters={},print_test=False ): #INPUTS HERE
     print(' ')
     print('from write_tridynDat, called with input')
     print('\t outFile =', outFile)
@@ -16,7 +16,10 @@ def write_tridynDat(outFile='tridyn.dat', tridynDat_model=1, plasmaSpecies=['He'
     print('\t maxRangeXolotl =', maxRangeXolotl)
     print('\t fluxFraction =', fluxFraction)
     print('\t rYield =', rYield)
-    print('\t and xp_parameters dictionary') #, include if TEST: xp_parameters)
+    if print_test:
+        print('\t xp_parameters = ',xp_parameters)
+    else:
+        print('\t and xp_parameters dictionary')
     print(' ')
     sys.stdout.flush()
     
@@ -47,24 +50,25 @@ def write_tridynDat(outFile='tridyn.dat', tridynDat_model=1, plasmaSpecies=['He'
             tridynString=profile.read().rstrip('\n')
             combinedTridynString=str(tridynString)+str(maxRangeXolotl[i])
             profile.close()
-            print(('for {0}, fraction in plasma = {1} , and reflection = {2} '.format(prj,fluxFraction[i], rYield[i])))
-            print(('\t effective fraction (in plasma * (1-reflection)) = {} '.format(fluxFraction[i]*(1-rYield[i]))))
+            #print('\t for', prj)
+            print(('\t \t fraction in plasma = {0} , and reflection = {1} '.format(fluxFraction[i], rYield[i])))
+            print(('\t \t effective fraction (in plasma * (1-reflection)) = {} '.format(fluxFraction[i]*(1-rYield[i]))))
             sys.stdout.flush()
             
             if (fluxFraction[i] > 0):
-                print('\t Write tridyn.dat line for ', prj, ', in new tridyn.dat format (model ', str(tridynDat_model),')')
+                print('\t \t Write tridyn.dat line in new tridyn.dat format (model ', str(tridynDat_model),')')
                 # if not W, then the name in the tridyn.dat line is the same as prj
                 # if He,  check He's position in netParam, i.e., index i=0
                 if prj=='He':
                     if ('netParam' in xp_parameters):
                         if (xp_parameters['netParam'][i]==0):
-                            print('\t Xolotl netowrk exists for ' , prj, 'given in plasmaSpecies, but entry in netParam is zero ; will skip in tridyn.dat')
+                            print('\t \t Xolotl netowrk exists, but entry in netParam is zero ; will skip in tridyn.dat')
                         else:
-                            print('\t For ' , prj , 'netparam = ' , xp_parameters['netParam'][i] , ' is used in Xolotl ; write line for ', prj , ' in tridyn.dat')
+                            print('\t \t netparam = ' , xp_parameters['netParam'][i] , ' is used in Xolotl ; write line for ', prj , ' in tridyn.dat')
                             combinedFile.write("%s %s %s\n" %(prj,str(1),str(fluxFraction[i]*(1-rYield[i]))))
                             combinedFile.write("%s\n" %(combinedTridynString))
                     else:
-                        print('\t WARNING:',prj,' exist in plasma but netparam not given in Xolotl ; write line for in tridyn.dat')
+                        print('\t \t WARNING: ',prj,' exist in plasma but netparam not given in Xolotl ; write line for in tridyn.dat')
                         print('\t \t this might give an ERROR if species isnt part of Xolotls network')
                         combinedFile.write("%s %s %s\n" %(prj,str(1),str(fluxFraction[i]*(1-rYield[i]))))
                         combinedFile.write("%s\n" %(combinedTridynString))
@@ -72,39 +76,40 @@ def write_tridynDat(outFile='tridyn.dat', tridynDat_model=1, plasmaSpecies=['He'
                 elif prj=='D' or prj=='T':
                     if ('netParam' in xp_parameters):
                         if (xp_parameters['netParam'][i-1]==0):
-                            print('\t Xolotl network exists for ' , prj, 'given in plasmaSpecies, but entry in netParam is zero ; will skip in tridyn.dat')
+                            print('\t \t Xolotl network exists, but entry in netParam is zero ; will skip in tridyn.dat')
                         else:
-                            print('\t For ' , prj , 'netparam = ' , xp_parameters['netParam'][i-1] , ' is used in Xolotl ; write line for ', prj , ' in tridyn.dat')
+                            print('\t \t netparam = ' , xp_parameters['netParam'][i-1] , ' is used in Xolotl ; write line for ', prj , ' in tridyn.dat')
                             combinedFile.write("%s %s %s\n" %(prj,str(1),str(fluxFraction[i]*(1-rYield[i]))))
                             combinedFile.write("%s\n" %(combinedTridynString))
                     else:
-                        print('\t WARNING:',prj,' exist in plasma but netparam not given in Xolotl ; write line for in tridyn.dat')
+                        print('\t \t WARNING: ',prj,' exist in plasma but netparam not given in Xolotl ; write line for in tridyn.dat')
                         print('\t \t this might give an ERROR if species isnt part of Xolotls network')
                         combinedFile.write("%s %s %s\n" %(prj,str(1),str(fluxFraction[i]*(1-rYield[i]))))
                         combinedFile.write("%s\n" %(combinedTridynString))
                 elif prj=='W':
                     if ('netParam' in xp_parameters):
                         if (xp_parameters['netParam'][4]==0):
-                            print('\t Xolotl netowrk exists for ' , prj, 'given in plasmaSpecies, but entry in netParam is zero ; will skip in tridyn.dat')
+                            print('\t \t Xolotl netowrk exists, but entry in netParam is zero ; will skip in tridyn.dat')
                         else:
-                            print('\t For ' , prj , 'netparam = ' , xp_parameters['netParam'][4] , ' is used in Xolotl ; write line for ', prj , ' in tridyn.dat')
+                            print('\t \t netparam = ' , xp_parameters['netParam'][4] , ' is used in Xolotl ; write line for ', prj , ' in tridyn.dat')
                             combinedFile.write("%s %s %s\n" %('I',str(1),str(fluxFraction[i]*(1-rYield[i]))))
                             combinedFile.write("%s\n" %(combinedTridynString))
                     else:
-                        print('\t WARNING:',prj,' exist in plasma but netparam not given in Xolotl ; write line for in tridyn.dat')
+                        print('\t \t WARNING: ',prj,' exist in plasma but netparam not given in Xolotl ; write line for in tridyn.dat')
                         print('\t \t this might give an ERROR if species isnt part of Xolotls network')
                         combinedFile.write("%s %s %s\n" %('I',str(1),str(fluxFraction[i]*(1-rYield[i]))))
                         combinedFile.write("%s\n" %(combinedTridynString))
                     
                 else:
-                    print('\t WARNING: species ', prj, 'cannot be handled by Xolotl yet.')
+                    print('\t \t WARNING: ', prj, 'cannot be handled by Xolotl yet.')
                     print('\t \t it has been used so far (for spY, etc), but will skip writing into tridyn.dat')
 
             elif (fluxFraction[i] == 0):
-                print('\t Using the new tridyn.dat format (model = ', str(tridynDat_model), '), flux fraction for ', prj, 'is zero')
-                print('\t \t for now, skip writing anything, even if prj exists in network (no checks in place)')
+                print('\t \t Using the new tridyn.dat format (model ', str(tridynDat_model),'), flux fraction is zero')
+                print('\t \t for now, skip writing anything, even if prj exists in network (no other checks in place)')
                 print('\t \t Xolotl will run, with no ', prj, ' implanted')
                 sys.stdout.flush()
+            print(' ')
         sys.stdout.flush()
                 
     #tridynDat_model==1: tridyn.dat format for (e.g.) master executable of Xolotl:
@@ -120,11 +125,12 @@ def write_tridynDat(outFile='tridyn.dat', tridynDat_model=1, plasmaSpecies=['He'
                 profile=open(ft_output_profile_temp_prj, "r")
                 tridynString=profile.read().rstrip('\n')
                 combinedTridynString=str(tridynString)+str(maxRangeXolotl[i])
-                print(('for {0}, fraction in plasma = {1} , and reflection = {2} '.format(prj,fluxFraction[i], rYield[i])))
-                print(('\t effective fraction (in plasma * (1-reflection)) = {} '.format(fluxFraction[i]*(1-rYield[i]))))
+                #print('\t for', prj)
+                print(('\t \t fraction in plasma = {0} , and reflection = {1} '.format(fluxFraction[i], rYield[i])))
+                print(('\t \t effective fraction (in plasma * (1-reflection)) = {} '.format(fluxFraction[i]*(1-rYield[i]))))
                 profile.close()
             else:
-                print('no ', ft_output_profile_temp_prj, ' found; set tridyn.dat values to zero')
+                print('\t \t no ', ft_output_profile_temp_prj, ' found; set tridyn.dat values to zero')
                 combinedTridynString='0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0\n'
                 sys.stdout.flush()
 
@@ -132,15 +138,15 @@ def write_tridynDat(outFile='tridyn.dat', tridynDat_model=1, plasmaSpecies=['He'
             if (prj=='He'):
                 if ('netParam' in xp_parameters):
                     if (xp_parameters['netParam'][i]==0):
-                        print('\t For ' , prj , 'netparam = ' , xp_parameters['netParam'][i] , ' --> set all entries to 0.0 in tridyn.dat')
+                        print('\t \t netparam = ' , xp_parameters['netParam'][i] , ' --> set all entries to 0.0 in tridyn.dat')
                         combinedFile.write("0.0\n")
                         combinedFile.write("0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0\n")
                     else:
-                        print('\t For ' , prj , 'netparam = ' , xp_parameters['netParam'][i] , ' in Xolotl ; write line in tridyn.dat')
+                        print('\t \t netparam = ' , xp_parameters['netParam'][i] , ' in Xolotl ; write line in tridyn.dat')
                         combinedFile.write("%s\n" %(str(fluxFraction[i]*(1-rYield[i]))))
                         combinedFile.write("%s\n" %(combinedTridynString))
                 else:
-                    print('\t WARNING: netparam not given in Xolotl ; write line for ', prj , ' in tridyn.dat')
+                    print('\t \t WARNING: netparam not given in Xolotl ; write line for ', prj , ' in tridyn.dat')
                     print('\t \t this might give an ERROR if species isnt part of Xolotls network')
                     combinedFile.write("%s\n" %(str(fluxFraction[i]*(1-rYield[i]))))
                     combinedFile.write("%s\n" %(combinedTridynString))
@@ -148,15 +154,15 @@ def write_tridynDat(outFile='tridyn.dat', tridynDat_model=1, plasmaSpecies=['He'
             elif (prj=='W'):
                 if ('netParam' in xp_parameters):
                     if (xp_parameters['netParam'][4]==0):
-                        print('\t For ' , prj , 'netparam = ' , xp_parameters['netParam'][4] , ' --> set all entries to 0.0 in tridyn.dat')
+                        print('\t \t netparam = ' , xp_parameters['netParam'][4] , ' --> set all entries to 0.0 in tridyn.dat')
                         combinedFile.write("0.0\n")
                         combinedFile.write("0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0\n")
                     else:
-                        print('\t For ' , prj , 'netparam = ' , xp_parameters['netParam'][4] , ' in Xolotl ; write line in tridyn.dat')
+                        print('\t \t netparam = ' , xp_parameters['netParam'][4] , ' in Xolotl ; write line in tridyn.dat')
                         combinedFile.write("%s\n" %(str(fluxFraction[i]*(1-rYield[i]))))
                         combinedFile.write("%s\n" %(combinedTridynString))
                 else:
-                    print('\t WARNING: netparam not given in Xolotl ; write line for ', prj , ' in tridyn.dat')
+                    print('\t \t WARNING: netparam not given in Xolotl ; write line for ', prj , ' in tridyn.dat')
                     print('\t \t this might give an ERROR if species isnt part of Xolotls network')
                     combinedFile.write("%s\n" %(str(fluxFraction[i]*(1-rYield[i]))))
                     combinedFile.write("%s\n" %(combinedTridynString))
@@ -164,21 +170,22 @@ def write_tridynDat(outFile='tridyn.dat', tridynDat_model=1, plasmaSpecies=['He'
             elif (prj=='D') or (prj=='T'):
                 if ('netParam' in xp_parameters):
                     if (xp_parameters['netParam'][i-1]==0):
-                        print('\t For ' , prj , 'netparam = ' , xp_parameters['netParam'][i-1] , ' --> set all entries to 0.0 in tridyn.dat')
+                        print('\t \t netparam = ' , xp_parameters['netParam'][i-1] , ' --> set all entries to 0.0 in tridyn.dat')
                         combinedFile.write("0.0\n")
                         combinedFile.write("0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0\n")
                     else:
-                        print('\t For ' , prj , 'netparam = ' , xp_parameters['netParam'][i-1] , ' in Xolotl ; write line in tridyn.dat')
+                        print('\t \t netparam = ' , xp_parameters['netParam'][i-1] , ' in Xolotl ; write line in tridyn.dat')
                         combinedFile.write("%s\n" %(str(fluxFraction[i]*(1-rYield[i]))))
                         combinedFile.write("%s\n" %(combinedTridynString))
                 else:
-                    print('\t WARNING: netparam not given in Xolotl ; write line for ', prj , ' in tridyn.dat')
+                    print('\t \t WARNING: netparam not given in Xolotl ; write line for ', prj , ' in tridyn.dat')
                     print('\t \t this might give an ERROR if species isnt part of Xolotls network')
                     combinedFile.write("%s\n" %(str(fluxFraction[i]*(1-rYield[i]))))
                     combinedFile.write("%s\n" %(combinedTridynString))
             else:
-                print('\t WARNING: species ', prj, ' cannot be handled by Xolotl yet.')
+                print('\t \t WARNING: ', prj, ' cannot be handled by Xolotl yet.')
                 print('\t \t it has been used so far (for spY, etc), but will skip writing into tridyn.dat')
+            print(' ')
             sys.stdout.flush()
     else:
         print('\t WARNING: tridynDat_model ', str(tridynDat_model), ' not recognized.')
@@ -186,7 +193,7 @@ def write_tridynDat(outFile='tridyn.dat', tridynDat_model=1, plasmaSpecies=['He'
         combinedFile.write("0.0\n")
         combinedFile.write("0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0\n")
     combinedFile.close()
-
-    print('... done with write_tridynDat')
-
+    
+    print('\t ... done with write_tridynDat')
+    print(' ')
     sys.stdout.flush()
