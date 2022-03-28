@@ -9,7 +9,6 @@ import sys
 
 def keepLastTS(inFile='xolotlStop.h5', outFile='netFile', print_test=False):
 
-    print(' ')
     print('\t called keepLastTS')
     #if TEST
     if print_test:

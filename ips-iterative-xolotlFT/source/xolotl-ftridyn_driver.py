@@ -1356,8 +1356,12 @@ class xolotlFtridynDriver(Component):
             #thus no need to copy it; and binTRIDYN will transform it to text file, 'last_TRIDYN.dat' 
             print('bin Xolotls output:')
             sys.stdout.flush()
-            binTRIDYN.binTridyn(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat', print_test=self.print_test) #instead of binTRIDYN.binTridyn() 
-            print('...succesfully ran binTRIDYN') 
+            if (self.driver['xolotl_v']==1):
+                binTRIDYN.v1(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat', print_test=self.print_test) #instead of binTRIDYN.binTridyn()                 
+                print('...succesfully ran binTRIDYN for xolotl v1')
+            elif(self.driver['xolotl_v']==2):
+                binTRIDYN.v2(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat', print_test=self.print_test) #formerly binTRIDYN_tempGrid
+                print('...succesfully ran binTRIDYN for xolotl v2')
             print(' ')
             
             #store xolotls profile output for each loop (not plasma state)          
