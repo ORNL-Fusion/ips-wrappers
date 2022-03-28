@@ -40,7 +40,8 @@ class xolotlFtridynDriver(Component):
         if 'LOG_FILE' in keywords:
             logFile=keywords['LOG_FILE']
             outFile=cwd+'/'+logFile
-            print('\t \t log file defined in keywords: ', outFile)
+            print('\t \t log file defined in keywords: ')
+            print('\t \t ', outFile)
             outF=open(outFile , 'a')
             sys.stdout = outF
         else:
@@ -172,7 +173,7 @@ class xolotlFtridynDriver(Component):
                 self.time['START_MODE']=self.driver['START_MODE']
 
         if self.print_test:
-            print('TEST: after reading parameters from config file driver section, the time dictionary is:')
+            print('TEST: after reading parameters from config file, the time dictionary (in driver) is:')
             print('\t', self.time)
             print(' ')
         #Check if/what's given in input file
@@ -194,7 +195,7 @@ class xolotlFtridynDriver(Component):
             if self.print_test:
                 for k,v, in self.time.items():
                     print(('\t {0} : {1}'.format(k, v)))
-                    print(' ')
+                print(' ')
             sys.stdout.flush()
             
             for k,v in self.time_temp.items():
@@ -684,7 +685,8 @@ class xolotlFtridynDriver(Component):
         if 'LOG_FILE' in keywords:
             logFile=keywords['LOG_FILE']
             outFile=cwd+'/'+logFile
-            print('\t \t log file defined in keywords: ', outFile)
+            print('\t \t log file defined in keywords: ')
+            print('\t \t ', outFile)
             outF=open(outFile , 'a')
             sys.stdout = outF
         else:
@@ -789,7 +791,7 @@ class xolotlFtridynDriver(Component):
                 print('init mode no')
                 sys.stdout.flush()
                 self.ftridyn['iQ0']=-1
-                self.ftridyn['nDataPts'] = translate_xolotl_to_ftridyn.xolotlToLay(totalDepth=self.ftridyn['totalDepth'],logFile=outFile)
+                self.ftridyn['nDataPts'] = translate_xolotl_to_ftridyn.xolotlToLay(totalDepth=self.ftridyn['totalDepth'],logFile=outFile,print_test=self.print_test)
                 #prepare target strings for F-Tridyn:
                 #we always have W in the substrate  (tg1); others are optional; mixed material composition given by LAY file
                 targetList=[]
@@ -837,10 +839,10 @@ class xolotlFtridynDriver(Component):
                     sys.stdout.flush()
                     
                     #component/method calls now include arguments (variables)
-                    self.services.call(ftridyn, 'init', timeStamp, dTime=time, fPrj=prj, fTargetList=targetList, ftParameters=self.ftridyn , fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], ft_folder=self.FT_OUTPUT_FOLDER, input_file=self.ft_input_file[i], otherInFiles=[self.FT_SURFACE_FILE,self.ftx_lay_file[i]], energy_file_name=self.FT_energy_file_name[i], orig_energy_files_path=self.eadist_output_path[i], orig_energy_files_pattern=self.eadist_output_file[i], output_file=outFile)
+                    self.services.call(ftridyn, 'init', timeStamp, dTime=time, fPrj=prj, fTargetList=targetList, ftParameters=self.ftridyn , fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], ft_folder=self.FT_OUTPUT_FOLDER, input_file=self.ft_input_file[i], otherInFiles=[self.FT_SURFACE_FILE,self.ftx_lay_file[i]], energy_file_name=self.FT_energy_file_name[i], orig_energy_files_path=self.eadist_output_path[i], orig_energy_files_pattern=self.eadist_output_file[i], output_file=outFile, print_test=self.print_test)
                     sys.stdout.flush()
                     
-                    self.services.call(ftridyn, 'step', timeStamp, ftParameters=self.ftridyn, fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], fPrj=prj, output_file=outFile)
+                    self.services.call(ftridyn, 'step', timeStamp, ftParameters=self.ftridyn, fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], fPrj=prj, output_file=outFile, print_test=self.print_test)
                     sys.stdout.flush()
                     self.services.stage_plasma_state()
 
@@ -855,7 +857,8 @@ class xolotlFtridynDriver(Component):
                     print(' ')
                     print('F-TRIDYN run COMPLETED for ', prj)
                     print('\t from {0}:'.format(self.FT_OUTPUT_PWD_PATH))
-                    print('\t \t the path to output of FTRIDYN is {0}'.format(self.ftridyn['outputPath']))
+                    print('\t \t the path to output of FTRIDYN is')
+                    print('\t \t {0}'.format(self.ftridyn['outputPath']))
                     print(' ')
 
                     print('analyze and format output for ', prj, ':\n')
@@ -893,6 +896,8 @@ class xolotlFtridynDriver(Component):
                         ft_implProfiles_dictionary['angle']=self.angleIn[i]
                         ft_implProfiles_dictionary['weightAngle']=self.weightAngle[i]
                         ft_implProfiles_dictionary['prjRange']=maxRange
+                        ft_implProfiles_dictionary['print_test']=self.print_test
+
                         #different grid keywords depending on Xolotl version:
                         if 'grid' in self.xp.parameters:
                             ft_implProfiles_dictionary['nBins']=self.xp.parameters['grid'][0]
@@ -950,6 +955,7 @@ class xolotlFtridynDriver(Component):
                     ft_getYields_dictionary['weightAngle']=self.weightAngle[i]
                     ft_getYields_dictionary['fNImpacts']=self.ftridyn['nImpacts']
                     ft_getYields_dictionary['logFile']=outFile
+                    ft_getYields_dictionary['print_test']=self.print_test
                     
                     pkl_gy_file=cwd+'/ft_getYields.pkl'  ## define name in config file, here give abs path
                     #we need to close this file later (to open it again and read yields), so use alternative to
@@ -1283,8 +1289,8 @@ class xolotlFtridynDriver(Component):
                 #set a maximum number of tries
                 if self.collapsedLoops<=int(self.driver['MAX_COLLAPSE_LOOPS']):
 
-                    self.services.call(xolotl, 'init', timeStamp, dTime=time, xParameters=self.xp.parameters, output_file=outFile) #, xFtCoupling=self.driver['FTX_COUPLING'])
-                    self.services.call(xolotl, 'step', timeStamp, dTime=time, xHe_conc=self.petsc_heConc, xParameters=self.xp.parameters, output_file=outFile, dZipOutput=self.driver['ZIP_XOLOTL_OUTPUT'], n_overgrid_loops=n_overgrid_loops)
+                    self.services.call(xolotl, 'init', timeStamp, dTime=time, xParameters=self.xp.parameters, output_file=outFile, print_test=self.print_test) #, xFtCoupling=self.driver['FTX_COUPLING'])
+                    self.services.call(xolotl, 'step', timeStamp, dTime=time, xHe_conc=self.petsc_heConc, xParameters=self.xp.parameters, output_file=outFile, dZipOutput=self.driver['ZIP_XOLOTL_OUTPUT'], n_overgrid_loops=n_overgrid_loops, print_test=self.print_test)
 
                     sys.stdout.flush()
                     self.services.stage_plasma_state()
@@ -1313,7 +1319,7 @@ class xolotlFtridynDriver(Component):
                         #Most likely this will only work if using 'grid', not 'gridParam' in network file!!
                         shutil.copyfile(self.XOLOTL_NETWORK_FILE,self.XOLOTL_NETWORK_FILE+'_overgrid_'+str(n_overgrid_loops))
                         shutil.move('xolotlStop.h5', self.XOLOTL_NETWORK_FILE)
-                        [newGridSize, newVoidPortion] = transferGrid.transferGrid(self.XOLOTL_NETWORK_FILE)
+                        [newGridSize, newVoidPortion] = transferGrid.transferGrid(self.XOLOTL_NETWORK_FILE,print_test=self.print_test)
                         sys.stdout.flush()
                         
                         if os.path.exists(self.XOLOTL_NETWORK_FILE):
@@ -1350,7 +1356,7 @@ class xolotlFtridynDriver(Component):
             #thus no need to copy it; and binTRIDYN will transform it to text file, 'last_TRIDYN.dat' 
             print('bin Xolotls output:')
             sys.stdout.flush()
-            binTRIDYN.binTridyn(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat') #instead of binTRIDYN.binTridyn() 
+            binTRIDYN.binTridyn(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat', print_test=self.print_test) #instead of binTRIDYN.binTridyn() 
             print('...succesfully ran binTRIDYN') 
             print(' ')
             
@@ -1390,7 +1396,7 @@ class xolotlFtridynDriver(Component):
                     print('\t \t inFile = ', iF)
                     print( '\t \t outFile = ', oF)
                 sys.stdout.flush()
-                keepLastTS.keepLastTS(inFile=iF, outFile=oF)
+                keepLastTS.keepLastTS(inFile=iF, outFile=oF, print_test=self.print_test)
                 if self.print_test:
                     print('\t ... keepLastTS returned succesfully')
                 sys.stdout.flush()

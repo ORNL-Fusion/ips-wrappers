@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env Python
 
 from  component import Component
 import os
@@ -50,6 +50,8 @@ class ftridynWorker(Component):
         origEnergyFilePath=keywords['orig_energy_files_path']
         origEnergyFilePattern=keywords['orig_energy_files_pattern']
 
+        print_test=keywords['print_test']
+        
         if 'output_file' in keywords:
             outFile=keywords['output_file']
             if outFile  is not None:
@@ -67,9 +69,10 @@ class ftridynWorker(Component):
         print(' ')
 
         #print lines if in test mode:
-        print('\t check that all arguments are read well by ftridyn-init \n')
-        for (k, v) in keywords.items():
-            print(('\t \t {0} = {1}'.format(k,v)))
+        if print_test:
+            print('\t TEST: check that all arguments are read well by ftridyn-init \n')
+            for (k, v) in keywords.items():
+                print(('\t \t {0} = {1}'.format(k,v)))
 
         if os.path.exists(self.ft_folder):
             shutil.rmtree(self.ft_folder)
@@ -114,6 +117,7 @@ class ftridynWorker(Component):
         ftridyn=keywords['ftParameters']
         prj=keywords['fPrj']
         #tg=keywords['fTg']
+        print_test=keywords['print_test']
         
         if 'output_file' in keywords:
             outFile=keywords['output_file']
@@ -131,10 +135,11 @@ class ftridynWorker(Component):
         print('ftridyn_worker: step : for ', str(prj))
         print(' ')
 
-        #print lines if in test mode:
-        print('\t check that all arguments are read well by ftridyn-step \n')
-        for (k, v) in keywords.items():
-            print(('\t \t {0} = {1} '.format(k,v)))
+        #if test:
+        if print_test:
+            print('\t TEST: check that all arguments are read well by ftridyn-step \n')
+            for (k, v) in keywords.items():
+                print(('\t \t {0} = {1} '.format(k,v)))
 
         #call shell script that runs FTridyn and pipes input file
         #task_id = self.services.launch_task(self.NPROC,

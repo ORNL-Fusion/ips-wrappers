@@ -22,12 +22,13 @@ import os
 #            --> run Ftridyn for each angle, with the given Ein
 
 def ftridyn_to_xolotl_launch(ftridynOnePrjOutput='He_WDUMPPRJ.dat',                  
-                      ftridynFolder="angle",       
-                      angle=[0.0],
-                      weightAngle=[1.0],
-                      nBins=200,
-                      prjRange=50.0, #in [A]
-                      logFile=None
+                             ftridynFolder="angle",       
+                             angle=[0.0],
+                             weightAngle=[1.0],
+                             nBins=200,
+                             prjRange=50.0, #in [A]
+                             logFile=None,
+                             print_test=False
                   ):
 
     #if pikle file exists, read from pkl file: 
@@ -42,7 +43,8 @@ def ftridyn_to_xolotl_launch(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
     if logFile  is not None:
         outF = open(logFile, "a")
         sys.stdout = outF
-        print('\t redirect tridynPlotting output of to:', logFile)
+        print('\t redirect tridynPlotting output of to:')
+        print('\t ', logFile)
         
     else:
         print ('\t no log file defined in tridynPlotting')
@@ -51,50 +53,71 @@ def ftridyn_to_xolotl_launch(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
     #cwd = os.getcwd() #already above
     sys.stdout.flush()
 
+    if 'print_test' in dic:
+        print_test=dic['print_test']
+
+    if print_test:
+        print('\t TEST: dictionary in pkl file contains:')
+        print('\t \t', dic)
+
     #if pikle file exists, read from pkl file:   
     #pkl_file=cwd+'/ft_implProfiles.pkl' #already above 
     if os.path.exists(pkl_file):
         #dic = pickle.load( open( pkl_file, "rb" ) ) #already above
         print('\t In translate_ft_to_xol, dictionary defined in pkl file: ')
-        print('\t \t', pkl_file)
+        print('\t', pkl_file)
         sys.stdout.flush()
 
         print(' ')
+        if print_test:
+            print('\t TEST:')
         #print lines if in test mode:
         #for each of the possible inputs to the script, check if given in pkl file
         if 'ftridynOnePrjOutput' in dic:
             ftridynOnePrjOutput=dic['ftridynOnePrjOutput']
-            print('\t from pkl file, set dict value to ftridynOnePrjOutput=',dic['ftridynOnePrjOutput'])
+            if print_test:
+                print('\t from pkl file, set dict value to ftridynOnePrjOutput=',dic['ftridynOnePrjOutput'])
         else:
             print('\t no value defined in pkl; use default for ftridynOnePrjOutput=', ftridynOnePrjOutput)
+
         if 'ftridynFolder' in dic:
             ftridynFolder=dic['ftridynFolder']
-            print('\t from pkl file, set dict value to ftridynFolder=', dic['ftridynFolder'])
+            if print_test:
+                print('\t from pkl file, set dict value to ftridynFolder=', dic['ftridynFolder'])
         else:
             print('\t no value defined in pkl; use default for ftridynFolder=', ftridynFolder)
+            
         if 'angle' in dic:
             angle=dic['angle']
-            print('\t from pkl file, set dict value to angle=', dic['angle'])
+            if print_test:
+                print('\t from pkl file, set dict value to angle=', dic['angle'])
         else:
             print('\t no value defined in pkl; use default for angle=', angle)
+            
         if 'weightAngle' in dic: 
             weightAngle=dic['weightAngle']
-            print('\t from pkl file, set dict value to weightAngle=', dic['weightAngle'])
+            if print_test:
+                print('\t from pkl file, set dict value to weightAngle=', dic['weightAngle'])
         else:
             print('\t no value defined in pkl; use default for weightAngle=', weightAngle)
+            
         if 'nBins' in dic:
             nBins=dic['nBins']
-            print('\t from pkl file, set dict value to nBins=', dic['nBins'])
+            if print_test:
+                print('\t from pkl file, set dict value to nBins=', dic['nBins'])
         else:
             print('\t no value defined in pkl; use default for nBins=', nBins)
+            
         if 'prjRange' in dic:
             prjRange=dic['prjRange']
-            print('\t from pkl file, set dict value to prjRange=', dic['prjRange'])
+            if print_test:
+                print('\t from pkl file, set dict value to prjRange=', dic['prjRange'])
         else:
             print('\t no value defined in pkl; use default for prjRange=', prjRange)
+            
         if 'logFile' in dic:
-        #    logFile=dic['logFile'] #already above 
-            print('\t from pkl file, set dict value to logFile=', dic['logFile'])
+            if print_test:
+                print('\t from pkl file, set dict value to logFile=', dic['logFile'])
         else:
             print('\t no value defined in pkl; use default for logFile=', logFile)
 
@@ -133,7 +156,8 @@ def ftridyn_to_xolotl_launch(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
             if num_lines_prj==0:
                 print("\t \t \t WARNING: prj file is empty for angle ", angle[a])
             else:
-                #print "TEST: calculate sputtering yield for angle ", angle[a]
+                if print_test:
+                    print("\t \t TEST: calculate sputtering yield for angle ", angle[a])
                 nonZeroAngle+=1 #identify the first time that an angle contributes, to initialize n[]
                 depth1, bla1 = np.loadtxt(ftridynCurrentPrjOutput, usecols = (2,3) , unpack=True)
 
@@ -152,7 +176,8 @@ def ftridyn_to_xolotl_launch(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
                 #initialize n[] the first time that an angle contributes (when nonZeroAngle=1)
                 if nonZeroAngle==1:
                     n=[]
-                    #print "TEST: initialized n[] for angle ", angle[a]
+                    if print_test:
+                        print("\t \t TEST: initialized n[] for angle ", angle[a])
                     for i in range(len(m)):
                         n.append(0)
 

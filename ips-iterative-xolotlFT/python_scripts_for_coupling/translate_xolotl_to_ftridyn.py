@@ -3,15 +3,16 @@ import numpy as np
 import sys
 #import matplotlib.pyplot as plt
  
-def xolotlToLay(tridynFile='last_TRIDYN.dat', totalDepth=0.0, logFile=None):
+def xolotlToLay(tridynFile='last_TRIDYN.dat', totalDepth=0.0, logFile=None, print_test=False):
 
   if logFile  is not None:
-    print(('\t redirect tridynPlotting output of to:', logFile))
+    print('\t redirect xolotlToLay output of to:')
+    print('\t ', logFile)
     outF = open(logFile, "a")
     sys.stdout = outF
     
   else:
-    print ('\t no log file defined in tridynPlotting')
+    print ('\t no log file defined in xolotlToLay')
     print ('\t print output to default sys.stdout')
     
   print(' ')
@@ -70,7 +71,8 @@ def xolotlToLay(tridynFile='last_TRIDYN.dat', totalDepth=0.0, logFile=None):
   nlines=np.size(C_W_A3)
   
   #if test:
-  print('\t from translate_xolotl_to_ftridyn, return nlines', nlines)
+  if print_test:
+    print('\t TEST: from xolotlToLay, return nlines', nlines)
 
   print(' ')
   sys.stdout.flush()

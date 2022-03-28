@@ -30,6 +30,8 @@ class xolotlWorker(Component):
 
         xp = param_handler.xolotl_params()
         xp.parameters=keywords['xParameters'] 
+        print_test=keywords['print_test']
+        
         if 'output_file' in keywords:
             outFile=keywords['output_file']
             if outFile  is not None:
@@ -46,11 +48,12 @@ class xolotlWorker(Component):
         print('xolotl_worker: init')
         print(' ')
         # if TEST:
-        print('\t check that all arguments are read well by xolotl-init and write Xolotl input file (from dictionary)')
-        for (k, v) in keywords.items():
-            print(('\t \t {0} = {1}'.format(k, v)))
-        print('\t ... done checking that all arguments are read well by xolotl-init ')
-        print(' ')
+        if print_test:
+            print('\t TEST: check that all arguments are read well by xolotl-init and write Xolotl input file (from dictionary)')
+            for (k, v) in keywords.items():
+                print(('\t \t {0} = {1}'.format(k, v)))
+            print('\t ... done checking that all arguments are read well by xolotl-init ')
+            print(' ')
         
         #write and store xolotls parameter for each loop 
         xp.write('params.txt')
@@ -77,7 +80,8 @@ class xolotlWorker(Component):
         xp_parameters=keywords['xParameters']
         outFile=keywords['output_file']
         n_overgrid_loops=keywords['n_overgrid_loops']
-        
+        print_test=keywords['print_test']
+
         print(' ')
         if 'output_file' in keywords:
             outFile=keywords['output_file']            
@@ -98,11 +102,12 @@ class xolotlWorker(Component):
 
         #asign a local variable to arguments used multiple times      
         # if TEST mode:
-        print('\t checking that all arguments are read well by xolotl-step')
-        for (k, v) in keywords.items():
-            print('\t \t', k, " = ", v) 
-        print('\t ... done checking that all arguments are read well by xolotl-step ')
-        #print ' '
+        if print_test:
+            print('\t TEST: checking that all arguments are read well by xolotl-step')
+            for (k, v) in keywords.items():
+                print('\t \t', k, " = ", v) 
+            print('\t ... done checking that all arguments are read well by xolotl-step ')
+            print(' ')
 
         #xolotlLogFile='xolotl_t%f.log' %self.driverTime
         #print '\t Xolotl log file ', xolotlLogFile
@@ -126,7 +131,8 @@ class xolotlWorker(Component):
             task_id = self.services.launch_task(self.NPROC,self.services.get_working_dir(),
                                                 self.XOLOTL_EXE, 'params.txt',task_ppn=self.task_ppn,logfile=xolotlLogFile)
             ret_val = self.services.wait_task(task_id)
-            #print 'THIS IS A TEST: Xolotl run done, and exited with ret_val = ', ret_val
+            if print_test:
+                print('TEST: Xolotl run done, exited with ret_val = ', ret_val)
 
             statusFile=open(self.EXIT_STATUS, "r")
             exitStatus=statusFile.read().rstrip('\n')
@@ -160,7 +166,7 @@ class xolotlWorker(Component):
                     print('\t \t run keepLastTS with:')
                     print('\t \t \t inFile = ', iF)
                     print('\t \t \t  outFile = ', oF)
-                    keepLastTS.keepLastTS(inFile=iF, outFile=oF)
+                    keepLastTS.keepLastTS(inFile=iF, outFile=oF, print_test=print_test)
                     print('\t \t ... keepLastTS done')
                 #if fails, use old method of copying entire xolotlStop as networkFile
                 except Exception as e:

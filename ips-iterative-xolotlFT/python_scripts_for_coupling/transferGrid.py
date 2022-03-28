@@ -27,13 +27,16 @@ def transferGrid(networkFile):
 	initSurf = i - 25
 	## Compute the current void portion
 	oldVoidPortion = 100.0 * float(initSurf) / float(len(gridDset0))
-	print('\t \t Old void portion:', oldVoidPortion, 'with', oldGridSize, 'grid points.')
+	if test_print:
+                print('\t \t Old void portion:', oldVoidPortion, 'with', oldGridSize, 'grid points.')
         
 	## Compute the new one
 	newGridSize = oldGridSize + nPoints
-	#print('TEST: oldGridSize=', oldGridSize, '; newGridSize=', newGridSize)
+	if print_test:
+                print('TEST: oldGridSize=', oldGridSize, '; newGridSize=', newGridSize)
 	newVoidPortion = 100.0 * float(initSurf + nPoints) / float(newGridSize) #len(gridDset0) + nPoints)
-	print('\t \t New void portion:', newVoidPortion, 'with', newGridSize, ' grid points.')
+	if print_test:
+                print('\t \t New void portion:', newVoidPortion, 'with', newGridSize, ' grid points.')
 
 	## Add points to the new grid if nPoints>0
 	newGrid = []
@@ -63,7 +66,8 @@ def transferGrid(networkFile):
 	concGroup0 = f0['concentrationsGroup']
 	timestep = concGroup0.attrs['lastTimeStep']
 	## Open the concentration group at this time step
-	#print('TEST: time step is', timestep)
+	if print_test:
+                print('TEST: time step is', timestep)
 	if (timestep == -1):
 		print('WARNING: network file was empty (timestep -1)')
 		print('\t will return old values')
@@ -117,5 +121,6 @@ def transferGrid(networkFile):
 	dataset = subConcGroup0.create_dataset('concs_startingIndices', (len(indexArray),), dtype=np.uint32)
 	dataset[...] = indexArray
 
-	#print('TEST: from transferGrid, returning newGridSize, voidPortion = ', newGridSize, newVoidPortion)
+	if print_test:
+                print('TEST: from transferGrid, returning newGridSize, voidPortion = ', newGridSize, newVoidPortion)
 	return [newGridSize, newVoidPortion]

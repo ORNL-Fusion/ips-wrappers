@@ -28,10 +28,11 @@ def sputtering_and_reflection_launch(ftridynOneOutOutput='He_WOUT.dat',
                                      angle=[0.0],
                                      weightAngle=[1.0],
                                      fNImpacts=1.0e5,
-                                     logFile=None
-                  ):
+                                     logFile=None,
+                                     print_test=False
+):
 
-    #if pikle file exists, read from pkl file:
+    #If pikle file exists, read from pkl file:
     cwd = os.getcwd()
     pkl_file=cwd+'/ft_getYields.pkl'
     if os.path.exists(pkl_file):
@@ -62,50 +63,59 @@ def sputtering_and_reflection_launch(ftridynOneOutOutput='He_WOUT.dat',
         print('\t', pkl_file)
         print(' ')
         sys.stdout.flush()
+        if 'print_test' in dic:
+            print_test=dic['print_test']
 
-        #print('TEST: dictionary in pkl file contains:')
-        #print(dic)
+        if print_test:
+            print('\t TEST: dictionary in pkl file contains:')
+            print('\t \t', dic)
         
         #for each of the possible inputs to the script, check if given in pkl file
 
         #print lines if in test mode:
         if 'ftridynOneOutOutput' in dic:
             ftridynOneOutOutput=dic['ftridynOneOutOutput']
-            print('\t from pkl file, set dict value to ftridynOneOutOutput=',dic['ftridynOneOutOutput'])
+            if print_test:
+                print('\t from pkl file, set dict value to ftridynOneOutOutput=',dic['ftridynOneOutOutput'])
         else:
             print('\t no value defined in pkl; use default for ftridynOneOutOutput=', ftridynOneOutOutput)
 
         if 'ftridynFolder' in dic:
             ftridynFolder=dic['ftridynFolder']
-            print('\t from pkl file, set dict value to ftridynFolder=', dic['ftridynFolder'])
+            if print_test:
+                print('\t from pkl file, set dict value to ftridynFolder=', dic['ftridynFolder'])
         else:
             print('\t no value defined in pkl; use default for ftridynFolder=', ftridynFolder)
 
         if 'angle' in dic:
             angle=dic['angle']
-            print('\t from pkl file, set dict value to angle=', dic['angle'])
+            if print_test:
+                print('\t from pkl file, set dict value to angle=', dic['angle'])
         else:
             print('\t no value defined in pkl; use default for angle=', angle)
 
         if 'weightAngle' in dic:
             weightAngle=dic['weightAngle']
-            print('\t from pkl file, set dict value to weightAngle=', dic['weightAngle'])
+            if print_test:
+                print('\t from pkl file, set dict value to weightAngle=', dic['weightAngle'])
         else:
             print('\t no value defined in pkl; use default for weightAngle=', weightAngle)
 
         if 'fNImpacts' in dic:
             fNImpacts=dic['fNImpacts']
-            print('\t from pkl file, set dict value to fNImpacts=', dic['fNImpacts'])
+            if print_test:
+                print('\t from pkl file, set dict value to fNImpacts=', dic['fNImpacts'])
         else:
             print('\t no value defined in pkl; use default for fNImpacts=', fNImpacts)
 
         if 'logFile' in dic:
-            print('\t from pkl file, set dict value to logFile=', dic['logFile'])
+            if print_test:
+                print('\t from pkl file, set dict value to logFile=', dic['logFile'])
         else:
             print('\t no value defined in pkl; use default for logFile=', logFile)
 
     else:
-        print('In get_yields, did not find pkl file, run with default values')
+        print('get_yields did not find pkl file, run with default values')
     sys.stdout.flush()
 
     #close file after reading values so that we can use it to print yields
@@ -171,7 +181,8 @@ def sputtering_and_reflection_launch(ftridynOneOutOutput='He_WOUT.dat',
     print("\t \t average reflection yield is ", totalRYield)
     yieldOutput.append(totalRYield)
 
-    print('\t \t TEST: yieldOutput = ', yieldOutput)
+    if print_test:
+        print('\t \t TEST: yieldOutput = ', yieldOutput)
     
     sys.stdout.flush()
 
