@@ -50,8 +50,10 @@ class massive_serial_runner_init(Component):
             self.batch_size = self.services.get_config_param('BATCH_SIZE')
 
 #  Remove old inputs.
-        for file in os.listdir('.'):
-            os.remove(file)
+        if os.path.exists(self.current_batch):
+            os.remove(self.current_batch)
+        if os.path.exists('inscan'):
+            os.remove('inscan')
 
 #  Stage input files and setup inital state.
         self.services.stage_input_files(self.INPUT_FILES)
@@ -104,7 +106,7 @@ class massive_serial_runner_init(Component):
                 raise Expection('Expected inscan or {} file not found.'.format(self.current_batch))
 
             zip_ref.write('inscan')
-            zip_ref.set_state(batch_size=32)
+            zip_ref.set_state(batch_size=self.batch_size)
 
             zip_ref.set_state(state='needs_update')
 
