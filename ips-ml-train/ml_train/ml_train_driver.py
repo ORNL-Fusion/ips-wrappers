@@ -36,7 +36,7 @@ class ml_train_driver(Component):
             self.new_data = self.services.get_config_param('NEW_DATA')
             self.training_data = self.services.get_config_param('TRAINING_DATA')
             self.data_gen_state = self.services.get_config_param('DATA_GEN_STATE')
-            self.max_iterations = self.services.get_config_param('MAX_ITERATIONS')
+            self.max_iterations = int(self.services.get_config_param('MAX_ITERATIONS'))
             self.ml_train_port = self.services.get_port('ML_TRAIN')
 
         self.services.stage_state()

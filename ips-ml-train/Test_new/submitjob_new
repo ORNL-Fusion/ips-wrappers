@@ -7,10 +7,10 @@
 #SBATCH --account=atom
 
 ##SBATCH --nodes=1
-#SBATCH --tasks-per-node=20
+#SBATCH --nodes=20
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=64
-#SBATCH -t 48:00:00
+#SBATCH -t 2:00:00
 ##SBATCH -t 00:30:00
 #SBATCH -C haswell
 
@@ -26,7 +26,7 @@
 conda activate ml_train_env
 
 #WORK_DIRECTORY=test_ml_train_debug_fbs
-WORK_DIRECTORY=test_ml_train_fbs
+WORK_DIRECTORY=test_ml_train_fbs2
 
 rm -rf $SCRATCH/$WORK_DIRECTORY
 mkdir $SCRATCH/$WORK_DIRECTORY

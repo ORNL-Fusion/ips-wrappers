@@ -56,8 +56,7 @@ class ml_train(Component):
             self.zip_ref.extract_or_check(self.nn_model_config)
 
             with open(ml_train_args, 'r') as args_ref:
-                self.args = json.load(args_ref)
-
+                self.task_args = json.load(args_ref)
 
         self.zip_ref.extract_or_check(self.training_data)
         self.zip_ref.extract_optional('{}.zip'.format(self.nn_model))
@@ -87,14 +86,14 @@ class ml_train(Component):
                                                       '--supplemental_data={}'.format(self.new_data),
                                                       '--prediction_data={}'.format(self.prediction_data),
                                                       '--batch_size={}'.format(self.batch_size),
-                                                      '--iterations={}'.format(self.args['--iterations']),
-                                                      '--epochs={}'.format(self.args['--epochs']),
+                                                      '--iterations={}'.format(self.task_args['--iterations']),
+                                                      '--epochs={}'.format(self.task_args['--epochs']),
                                                       '--param_covar_matrix={}'.format(self.nn_model_matrix),
-                                                      '--validation_split={}'.format(self.args['--validation_split']),
+                                                      '--validation_split={}'.format(self.task_args['--validation_split']),
                                                       '--module_path={}'.format(self.constraint_path),
                                                       '--module={}'.format(self.constraint_name),
-                                                      '--locations={}'.format(self.args['--locations']),
-                                                      '--adaptive_percentage={}'.format(self.args['--adaptive_percentage']),
+                                                      '--locations={}'.format(self.task_args['--locations']),
+                                                      '--adaptive_percentage={}'.format(self.task_args['--adaptive_percentage']),
                                                       logfile = 'ml_train_{}.log'.format(timeStamp))
             else:
                 task_wait = self.services.launch_task(self.NPROC,
@@ -102,26 +101,24 @@ class ml_train(Component):
                                                       self.ML_TRAIN_EXE,
                                                       '--config={}'.format(self.nn_model_config),
                                                       '--model={}'.format(self.nn_model),
-                                                      '--activation={}'.format(self.args['--activation']),
+                                                      '--activation={}'.format(self.task_args['--activation']),
                                                       '--training_data={}'.format(self.training_data),
                                                       '--supplemental_data={}'.format(self.new_data),
                                                       '--prediction_data={}'.format(self.prediction_data),
                                                       '--batch_size={}'.format(self.batch_size),
-                                                      '--iterations={}'.format(self.args['--iterations']),
-                                                      '--epochs={}'.format(self.args['--epochs']),
-                                                      '--num_layers={}'.format(self.args['--num_layers']),
-                                                      '--layer_width={}'.format(self.args['--layer_width']),
+                                                      '--iterations={}'.format(self.task_args['--iterations']),
+                                                      '--epochs={}'.format(self.task_args['--epochs']),
+                                                      '--num_layers={}'.format(self.task_args['--num_layers']),
+                                                      '--layer_width={}'.format(self.task_args['--layer_width']),
                                                       '--param_covar_matrix={}'.format(self.nn_model_matrix),
-                                                      '--l1_factor={}'.format(self.args['--l1_factor']),
-                                                      '--l2_factor={}'.format(self.args['--l2_factor']),
-                                                      '--validation_split={}'.format(self.args['--validation_split']),
+                                                      '--l1_factor={}'.format(self.task_args['--l1_factor']),
+                                                      '--l2_factor={}'.format(self.task_args['--l2_factor']),
+                                                      '--validation_split={}'.format(self.task_args['--validation_split']),
                                                       '--module_path={}'.format(self.constraint_path),
                                                       '--module={}'.format(self.constraint_name),
-                                                      '--locations={}'.format(self.args['--locations']),
-                                                      '--adaptive_percentage={}'.format(self.args['--adaptive_percentage']),
+                                                      '--locations={}'.format(self.task_args['--locations']),
+                                                      '--adaptive_percentage={}'.format(self.task_args['--adaptive_percentage']),
                                                       logfile = 'ml_train_{}.log'.format(timeStamp))
-
-
 
 #  Update flags.
             self.zip_ref.set_state(state='updated')
