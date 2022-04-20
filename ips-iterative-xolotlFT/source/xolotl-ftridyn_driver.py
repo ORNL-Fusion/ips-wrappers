@@ -352,6 +352,42 @@ class xolotlFtridynDriver(Component):
             self.xp.parameters['gridParam']=gridVal
             if rm_grid:
                 del self.xp.parameters['grid']
+
+            #if 'grid' in self.xp.parameters:
+            #    print('\t for xolotl_v = 1, grid exists: ', self.xp.parameters['grid'])
+            #else:
+            #    print('\t WARNING: for xolol_v = 1 , could not find parameter grid')
+            #    if 'gridParam' in self.xp.parameters:
+            #        print('\t \t found gridParam in xolotl parameters instead; use it as grid value: ', self.xp.parameters['gridParam'])
+            #        self.xp.parameters['grid']=self.xp.parameters['gridParam']
+            #    else:
+            #        print('\t \t could not find gridParam either. Use default value 200')
+            #        self.xp.parameters['grid']=[200, 0.5]
+            #if 'gridParam' in self.xp.parameters:
+            #    print('\t found gridParam in xolotl parameters ; delete from dictionary to avoid it in param file')
+            #    del self.xp.parameters['gridParam']
+            #if 'gridType' in self.xp.parameters:
+            #    print('\t found gridType in xolotl parameters ; delete from dictionary to avoid it in param file')
+            #    del self.xp.parameters['gridType']
+
+        # elif xololt_v==2:
+        #    if ('gridType' in self.xp.parameters) and ('gridParam' in self.xp.parameters):
+        #        print('\t for xolotl_v = 2, gridType exists: ', self.xp.parameters['gridType'],', and gridParam exists: ', self.xp.parameters['gridParam'])
+        #    if ('gridType' not in self.xp.parameters):
+	#	print('\t WARNING: for xolol_v = 2 , could not find parameter gridType. Assume nonuniform')
+        #        self.xp.parameters['gridType']='nonuniform'
+        #    if ('gridParam' not in self.xp.parameters):                
+        #        print('\t WARNING: for xolol_v = 2 , could not find parameter gridParam.')
+        #        if 'grid' in self.xp.parameters:   
+        #            print('\t \t found grid in xolotl parameters instead ; use it as gridParam value: ', self.xp.parameters['grid'])
+        #            self.xp.parameters['gridParam'] = self.xp.parameters['grid']
+	#        else:
+	#	    print('\t \t could not find grid either. Use default value 200')
+	#	    self.xp.parameters['gridParam']=[200, 0.5]
+        #    if 'grid' in self.xp.parameters:
+        #        print('\t found grid in xolotl parameters ; delete from dictionary to avoid it in param file')
+
+                    
                     
         #if not coupling, delete -tridyn from petsc arguments to not print TRIDYN_*.dat files
         #if self.driver['FTX_COUPLING']=='False':
@@ -1200,7 +1236,7 @@ class xolotlFtridynDriver(Component):
             print(('\t and time-step = {} '.format( self.time['LOOP_TIME_STEP'])))
 
             #note on network file:
-            # XOLOTL_NETWORK_FILE if the file ; xp.parameters['networkFile'] is the dictionary value (for params.txt)
+            # XOLOTL_NETWORK_FILE is the file ; xp.parameters['networkFile'] is the dictionary value (for params.txt)
             # better not mix them, because one can exist without the other (e.g., if networkFile line not needed in params.txt) 
             
             if self.driverMode == 'INIT':
@@ -1231,47 +1267,65 @@ class xolotlFtridynDriver(Component):
                 self.xp.parameters['networkFile'] = self.XOLOTL_NETWORK_FILE
 
                 ## check if we need to keep netParam in parameter file of restart
-                if 'netParam' in self.xp.parameters:
-                    try:
-                        if self.driver['netParam_restart']=='keep':
-                            print('\t \t netParam_restart says to keep netParams in restart')
-                            print('\t \t will run restart loop with Xolotls netParam = ', self.xp.parameters['netParam'])
-                        elif self.driver['netParam_restart']=='delete':
-                            print('\t \t netParam_restart says to remove netParams from Xolotls inputs in restart')
-                            del self.xp.parameters['netParam']
-                        else:
-                            print('\t \t netParam_restart not recognized: ', self.driver['netParam_restart'])
-                            print('\t \t default is to delete netParam from Xolotls inputs in restart')
-                            del self.xp.parameters['netParam']
-                    except Exception as e:
-                        print(e)
-                        print('\t \t failed to check if netParam should be deleted in restart')
-                        print('\t \t by default, remove netParams from Xolotls inputs in restart')
-                        del self.xp.parameters['netParam']
-                else:
-                    print('\t \t netParam does not exist in the xolotl parameters. No need to delete it')
+                if self.driver['xolotl_v'] == 2:
+                    print('\t xolotl v',self.driver['xolotl_v'] , ' requires netParam and grouping even in restart')
+                    print('\t will not delete them') # (regardless of value of netParam_restart and grouping_restart)')
+                elif self.driver['xolotl_v'] == 1:
+                    print('\t xolotl v',self.driver['xolotl_v'], ' does not require netParam / grouping in restart (info contained in netFile)')
+                    if 'netParam' in self.xp.parameters:
+                        print('\t \t remove netParam') # (regardless of value of netParam_restart)')
+                        del self.xp.parameters['netParam'] 
+                    else:
+                        print('\t \t netParam does not exist in the xolotl dictionary. No need to delete it')
+                    if 'grouping' in self.xp.parameters:
+                        print('\t \t remove grouping') # (regardless of value of grouping_restart)')
+                        del self.xp.parameters['grouping']
+                    else:
+                        print('\t \t grouping does not exist in the xolotl dictionary. No need to delete it')
+                print(' ')
+            sys.stdout.flush()
+            
+                #if 'netParam' in self.xp.parameters:
+                #    try:
+                #        if self.driver['netParam_restart']=='keep':
+                #            print('\t \t netParam_restart says to keep netParams in restart')
+                #            print('\t \t will run restart loop with Xolotls netParam = ', self.xp.parameters['netParam'])
+                #        elif self.driver['netParam_restart']=='delete':
+                #            print('\t \t netParam_restart says to remove netParams from Xolotls inputs in restart')
+                #            del self.xp.parameters['netParam']
+                #        else:
+                #            print('\t \t netParam_restart not recognized: ', self.driver['netParam_restart'])
+                #            print('\t \t default is to delete netParam from Xolotls inputs in restart')
+                #            del self.xp.parameters['netParam']
+                #    except Exception as e:
+                #        print(e)
+                #        print('\t \t failed to check if netParam should be deleted in restart')
+                #        print('\t \t by default, remove netParams from Xolotls inputs in restart')
+                #        del self.xp.parameters['netParam']
+                #else:
+                #    print('\t \t netParam does not exist in the xolotl parameters. No need to delete it')
 
                 ## check if we need to keep grouping in parameter file of restart 
-                if 'grouping' in self.xp.parameters:
-                    try:
-                        if self.driver['grouping_restart']=='keep':
-                            print('\t \t grouping_restart says to keep grouping in restart')
-                            print('\t \t will run restart loop with Xolotls grouping = ', self.xp.parameters['grouping'])
-                        elif self.driver['grouping_restart']=='delete':
-                            print('\t \t grouping_restart says to remove grouping from Xolotls inputs in restart')
-                            del self.xp.parameters['grouping']
-                        else:
-                            print('\t \t grouping_restart not recognized: ', self.driver['grouping_restart'])
-                            print('\t \t default is to delete grouping from Xolotls inputs in restart')
-                            del self.xp.parameters['grouping']
-                    except Exception as e:
-                        print(e)
-                        print('\t \t failed to check if grouping should be deleted in restart')
-                        print('\t \t by default, remove grouping from Xolotls inputs in restart')
-                        del self.xp.parameters['grouping']
-                else:
-                    print('\t \t grouping does not exist in the xolotl parameters. No need to delete it')
-                sys.stdout.flush()
+                #if 'grouping' in self.xp.parameters:
+                #    try:
+                #        if self.driver['grouping_restart']=='keep':
+                #            print('\t \t grouping_restart says to keep grouping in restart')
+                #            print('\t \t will run restart loop with Xolotls grouping = ', self.xp.parameters['grouping'])
+                #        elif self.driver['grouping_restart']=='delete':
+                #            print('\t \t grouping_restart says to remove grouping from Xolotls inputs in restart')
+                #            del self.xp.parameters['grouping']
+                #        else:
+                #            print('\t \t grouping_restart not recognized: ', self.driver['grouping_restart'])
+                #            print('\t \t default is to delete grouping from Xolotls inputs in restart')
+                #            del self.xp.parameters['grouping']
+                #    except Exception as e:
+                #        print(e)
+                #        print('\t \t failed to check if grouping should be deleted in restart')
+                #        print('\t \t by default, remove grouping from Xolotls inputs in restart')
+                #        del self.xp.parameters['grouping']
+                #else:
+                #    print('\t \t grouping does not exist in the xolotl parameters. No need to delete it')
+                #sys.stdout.flush()
                     
             #determine if he_conc true/false ; if true, add '-he_conc' to petsc arguments 
             if self.driver['XOLOTL_HE_CONC']=='Last':
