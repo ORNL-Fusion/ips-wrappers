@@ -17,7 +17,8 @@ import transferGrid
 import pickle
 import keepLastTS
 import write_tridynDat
-import write_tempModel
+import handle_tempModel
+import handle_gridModel
 
 class xolotlFtridynDriver(Component):
     def __init__(self, services, config):
@@ -334,7 +335,24 @@ class xolotlFtridynDriver(Component):
                 print(('\t other {0} argument {1} = {2} with {3}'.format(type(v), k , self.xp.parameters['petscArgs'][k] , v)))
                 self.xp.parameters['petscArgs'][k]=v
         sys.stdout.flush()
-            
+
+        #make sure grid is in the right format:
+        print(' ')
+        print('check grid format:')
+        if self.driver['xolotl_v']==1:
+            gridVal,rm_gridType, rm_gridParam=handle_gridModel.v1(xp_parameters=self.xp.parameters)
+            self.xp.parameters['grid']=gridVal
+            if rm_gridType:
+                del self.xp.parameters['gridType']
+            if rm_gridParam:
+                del self.xp.parameters['gridParam']
+        elif self.driver['xolotl_v']==2:
+            gridType,gridVal,rm_grid = handle_gridModel.v2(xp_parameters=self.xp.parameters)
+            self.xp.parameters['gridType']=gridType
+            self.xp.parameters['gridParam']=gridVal
+            if rm_grid:
+                del self.xp.parameters['grid']
+                    
         #if not coupling, delete -tridyn from petsc arguments to not print TRIDYN_*.dat files
         #if self.driver['FTX_COUPLING']=='False':
         #    del self.xp.parameters['petscArgs']['-tridyn']
@@ -463,20 +481,20 @@ class xolotlFtridynDriver(Component):
             ## v2 (e.g., tempGrid) uses two lines:  tempHandler = heat / ...
             ##                                      heat / tempParam = [value]
             ## this ends up being quite long, so better in its own file:
-            ## Xolotl v1 needs one line, v2 needs 2 lines --> write_tempModel contains 2 functions
+            ## Xolotl v1 needs one line, v2 needs 2 lines --> handle_tempModel contains 2 functions
 
-            print('\t temperature model handled by write_tempModel: ')
+            print('\t temperature model handled by handle_tempModel: ')
             if (self.driver['xolotl_v']==1):
-                mod,val,rm_startTemp = write_tempModel.v1(xp_parameters=self.xp.parameters,plasma=self.plasma, print_test=self.print_test) 
+                mod,val,rm_startTemp = handle_tempModel.v1(xp_parameters=self.xp.parameters,plasma=self.plasma, print_test=self.print_test) 
                 sys.stdout.flush()
                 self.xp.parameters[mod]=val
                 print('\t ... write_tempModel succesfully returned: for Xolotl v1, temperature model: ', mod, val)
             elif(self.driver['xolotl_v']==2):
-                mod,val,rm_startTemp = write_tempModel.v2(xp_parameters=self.xp.parameters,plasma=self.plasma, print_test=self.print_test)
+                mod,val,rm_startTemp = handle_tempModel.v2(xp_parameters=self.xp.parameters,plasma=self.plasma, print_test=self.print_test)
                 sys.stdout.flush()
                 self.xp.parameters['tempHandler']=mod
                 self.xp.parameters['tempParam']=val
-                print('\t ... write_tempModel succesfully returned: for Xolotl v2, temperature model: ', mod, val)
+                print('\t ... handle_tempModel succesfully returned: for Xolotl v2, temperature model: ', mod, val)
             else:
                 print('\t WARNING: Xolotl version not recognized: ')
                 print( '\t \t xolotl_v = ', self.driver['xolotl_v'])
@@ -899,13 +917,13 @@ class xolotlFtridynDriver(Component):
                         ft_implProfiles_dictionary['print_test']=self.print_test
 
                         #different grid keywords depending on Xolotl version:
-                        if 'grid' in self.xp.parameters:
+                        if (self.driver['xolotl_v']==1): #'grid' in self.xp.parameters:
                             ft_implProfiles_dictionary['nBins']=self.xp.parameters['grid'][0]
-                        elif 'gridParam' in  self.xp.parameters:
+                        elif (self.driver['xolotl_v']==2): #'gridParam' in  self.xp.parameters:
                             ft_implProfiles_dictionary['nBins']=self.xp.parameters['gridParam'][0]
                         else:
                             ft_implProfiles_dictionary['nBins']=200
-                            print('\t WARNING: no grid or gridParam provided; assume nBins=200')
+                            print('\t WARNING: xolotl_v not recognized; assume nBins=200')
                                 
                         ft_implProfiles_dictionary['logFile']=outFile
 
@@ -1334,7 +1352,10 @@ class xolotlFtridynDriver(Component):
                         print('\t \t updated the values of voidPortion to ', newVoidPortion)
                         print('\t DONE RUNNING transferGrid!')
                         sys.stdout.flush()
-                        self.xp.parameters['grid'][0] = newGridSize
+                        if self.driver['xolotl_v']==1:
+                            self.xp.parameters['grid'][0] = newGridSize
+                        elif self.driver['xolotl_v']==2:
+                            self.xp.parameters['gridParam'][0] = newGridSize
                         self.xp.parameters['voidPortion'] = newVoidPortion
                         self.services.update_plasma_state()
                         
