@@ -10,10 +10,13 @@
 
 import sys
 
-def v1(xp_parameters={}):
+def v1(xp_parameters={}, print_test=False):
 
     rm_gridParam=False
     rm_gridType=False
+
+    if print_test:
+        print('\t called handle_gridModel v1: ')
     
     if 'grid' in xp_parameters:
         print('\t for xolotl_v = 1, grid exists: ', xp_parameters['grid'])
@@ -33,11 +36,19 @@ def v1(xp_parameters={}):
         print('\t found gridType in xolotl parameters ; delete from dictionary to avoid it in param file')
         rm_gridType=True
     sys.stdout.flush()
+
+    if print_test:
+        print('\t TEST: for v1, handle_gripModel returns gridValue, rm_gridType and rm_gridValue')
         
     return [gridValue, rm_gridType, rm_gridParam]
 
-def v2(xp_parameters={}):
+def v2(xp_parameters={}, print_test=False):
 
+    rm_grid=False
+    
+    if print_test:
+        print('\t called handle_gridModel v1: ')
+    
     if ('gridType' in xp_parameters) and ('gridParam' in xp_parameters):
         print('\t for xolotl_v = 2, gridType exists: ', xp_parameters['gridType'],', and gridParam exists: ', xp_parameters['gridParam'])
         gridType=xp_parameters['gridType']
@@ -57,5 +68,9 @@ def v2(xp_parameters={}):
         print('\t found grid in xolotl parameters ; delete from dictionary to avoid it in param file')
         rm_grid=True
     sys.stdout.flush()
+
+    if print_test:
+        print('\t TEST: for v2, handle_gripModel returns gridType, gridValue and rm_grid')
+    
     return [gridType, gridValue, rm_grid]
 

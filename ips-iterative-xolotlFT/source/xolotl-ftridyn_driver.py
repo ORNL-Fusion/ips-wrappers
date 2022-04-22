@@ -340,14 +340,14 @@ class xolotlFtridynDriver(Component):
         print(' ')
         print('check grid format:')
         if self.driver['xolotl_v']==1:
-            gridVal,rm_gridType, rm_gridParam=handle_gridModel.v1(xp_parameters=self.xp.parameters)
+            gridVal,rm_gridType, rm_gridParam=handle_gridModel.v1(xp_parameters=self.xp.parameters, print_test=self.print_test)
             self.xp.parameters['grid']=gridVal
             if rm_gridType:
                 del self.xp.parameters['gridType']
             if rm_gridParam:
                 del self.xp.parameters['gridParam']
         elif self.driver['xolotl_v']==2:
-            gridType,gridVal,rm_grid = handle_gridModel.v2(xp_parameters=self.xp.parameters)
+            gridType,gridVal,rm_grid = handle_gridModel.v2(xp_parameters=self.xp.parameters, print_test=self.print_test)
             self.xp.parameters['gridType']=gridType
             self.xp.parameters['gridParam']=gridVal
             if rm_grid:
