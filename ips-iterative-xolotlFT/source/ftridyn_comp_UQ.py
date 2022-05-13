@@ -14,7 +14,7 @@ import re
 import pickle
 import math
 
-print('The generate_ftridyn_input_uq path in ftridyn_comp is:')
+print('The generate_ftridyn_input_uq path in ftridyn_comp_uq is:')
 print(os.path.abspath(generate_ftridyn_input_uq.__file__)) #TEST
 
 class ftridynWorker(Component):
@@ -50,22 +50,29 @@ class ftridynWorker(Component):
         origEnergyFilePath=keywords['orig_energy_files_path']
         origEnergyFilePattern=keywords['orig_energy_files_pattern']
 
+        print_test=keywords['print_test']
+
         if 'output_file' in keywords:
             outFile=keywords['output_file']
             if outFile  is not None:
-                print(('redirect F-TRIDYN:init output of ', cwd , 'to:', outFile))
+                print('\t redirect F-TRIDYN:init output')
+                print('\t \t of ', cwd )
+                print('\t \t to:', outFile)
                 outF=open(outFile , 'a')
                 sys.stdout = outF
             else:
-                print ('not log file defined in keywords or config file')
-                print ('print output of F-TRIDYN:init to default sys.stdout')
-
+                print ('\t not log file defined in keywords or config file')
+                print ('\t print output of F-TRIDYN:init to default sys.stdout')
+        sys.stdout.flush()
         print(' ')
-        print('fridyn_worker: init \n')
+        print('fridyn_worker: init : for ', str(prj))
+        print(' ')
 
-        print('check that all arguments are read well by ftridyn-init \n')
-        for (k, v) in keywords.items():
-            print(('\t {0} = {1}'.format(k,v)))
+        #print lines if in test mode:
+        if print_test:
+            print('\t TEST: check that all arguments are read well by ftridyn-init \n')
+            for (k, v) in keywords.items():
+                print(('\t \t {0} = {1}'.format(k,v)))
 
         if os.path.exists(self.ft_folder):
             shutil.rmtree(self.ft_folder)
@@ -106,25 +113,31 @@ class ftridynWorker(Component):
         angleIn = keywords['fAngleIn']
         weightAngle=keywords['fWeightAngle']
         ftridyn=keywords['ftParameters']
+        prj=keywords['fPrj']
         #tg=keywords['fTg']
-        #prj=keywords['fPrj']
+        print_test=keywords['print_test']
         
         if 'output_file' in keywords:
             outFile=keywords['output_file']
             if outFile  is not None:
-                print(('redirect F-TRIDYN:step output of ', cwd , 'to:', outFile))
+                print('\t redirect F-TRIDYN:step output')
+                print('\t \t of ', cwd )
+                print('\t \t to:', outFile)
                 outF=open(outFile , 'a')
                 sys.stdout = outF
             else:
-                print ('no log file defined in keywords or config file')
-                print ('print output of F-TRIDYN:step to default sys.stdout')
+                print ('\t no log file defined in keywords or config file')
+                print ('\t print output of F-TRIDYN:step to default sys.stdout')
 
         print(' ')
-        print('ftridyn_worker: step \n')
+        print('ftridyn_worker: step : for ', str(prj))
+        print(' ')
 
-        print('check that all arguments are read well by ftridyn-step \n')
-        for (k, v) in keywords.items():
-            print(('\t {0} = {1} '.format(k,v)))
+        #if test:
+        if print_test:
+            print('\t TEST: check that all arguments are read well by ftridyn-step \n')
+            for (k, v) in keywords.items():
+                print(('\t \t {0} = {1} '.format(k,v)))
 
         #call shell script that runs FTridyn and pipes input file
         #task_id = self.services.launch_task(self.NPROC,
@@ -171,7 +184,7 @@ class ftridynWorker(Component):
         print(' ')
         print(('\t ret_val = {}'.format(ret_val)))
         exit_status = self.services.get_finished_tasks('pool_ftx')
-        print(('{} \n'.format(exit_status)))
+        print(('\t exit status {} \n'.format(exit_status)))
         self.services.remove_task_pool('pool_ftx')
         
         #write the path to the current working directory, so the driver can access the data
@@ -181,9 +194,11 @@ class ftridynWorker(Component):
         outputPathFile.write('\n')
         outputPathFile.close()
 
-        print(('path of FTRIDYNs output: {} '.format(cwd)))
-        print(('\t written to file: {} '.format(self.PWD_PATH)))
-        print('\n')
+        print('\t path of FTRIDYNs output:')
+        print('\t \t {} '.format(cwd))
+        print('\t written to file: ')
+        print('\t \t{} '.format(self.PWD_PATH))
+        print(' ')
 
 
         #post-processing: COMPRESS ALL OUTPUT INTO A GENERIC, SINGLE ZIP FILE AND ADD TO PLASMA STATE 
