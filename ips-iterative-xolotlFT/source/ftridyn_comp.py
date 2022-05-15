@@ -87,7 +87,7 @@ class ftridynWorker(Component):
             elif (weightAngle[j] > 0.0):
                 opts = {}
                 for opt in ["ED_He", "EF_He", "E0_He", "ALPHA0_He", "ED_W", "EF_W", "SBV_W"]:
-                    if opt in ftridyn:
+                    if opt in ftridyn.keys():
                         opts[opt] = ftridyn[opt]
                 generate_ftridyn_input.Prj_Tg_xolotl(IQ0=ftridyn['iQ0'],number_layers=ftridyn['nDataPts'],depth=ftridyn['nTT'],number_histories=ftridyn['nImpacts'],incident_energy=energyIn,incident_angle=angleIn[j],projectile_name=str(prj),target1_name=str(tg[0]), target2_name=str(tg[1]),target3_name=str(tg[2]),target4_name=str(tg[3]), **opts)
                 sys.stdout.flush()
