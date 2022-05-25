@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH --account=m1709
+#SBATCH --account=atom
 #SBATCH --partition debug
 #SBATCH -C haswell
 #SBATCH --nodes=2

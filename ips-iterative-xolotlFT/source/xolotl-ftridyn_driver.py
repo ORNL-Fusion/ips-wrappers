@@ -19,6 +19,7 @@ import keepLastTS
 import write_tridynDat
 import handle_tempModel
 import handle_gridModel
+import inspect
 
 class xolotlFtridynDriver(Component):
     def __init__(self, services, config):
@@ -340,6 +341,9 @@ class xolotlFtridynDriver(Component):
         print(' ')
         print('check grid format:')
         if self.driver['xolotl_v']==1:
+            if self.print_test:
+                print('calling handle grid model from:')
+                print(os.path.abspath(inspect.getfile(handle_gridModel.v1)))
             gridVal,rm_gridType, rm_gridParam=handle_gridModel.v1(xp_parameters=self.xp.parameters, print_test=self.print_test)
             self.xp.parameters['grid']=gridVal
             if rm_gridType:
@@ -347,12 +351,17 @@ class xolotlFtridynDriver(Component):
             if rm_gridParam:
                 del self.xp.parameters['gridParam']
         elif self.driver['xolotl_v']==2:
-            gridType,gridVal,rm_grid = handle_gridModel.v2(xp_parameters=self.xp.parameters, print_test=self.print_test)
+            if self.print_test:
+                print('calling handle grid model from:')
+                print(os.path.abspath(inspect.getfile(handle_gridModel.v2)))
+            gridType,gridVal,rm_grid,rm_regularGrid = handle_gridModel.v2(xp_parameters=self.xp.parameters, print_test=self.print_test)
             self.xp.parameters['gridType']=gridType
             self.xp.parameters['gridParam']=gridVal
             if rm_grid:
                 del self.xp.parameters['grid']
-
+            if rm_regularGrid:
+                del self.xp.parameters['regularGrid']
+                
             #if 'grid' in self.xp.parameters:
             #    print('\t for xolotl_v = 1, grid exists: ', self.xp.parameters['grid'])
             #else:
@@ -845,6 +854,12 @@ class xolotlFtridynDriver(Component):
                 print('init mode no')
                 sys.stdout.flush()
                 self.ftridyn['iQ0']=-1
+                if self.print_test:
+                    print('\t call xolotlToLay with args:')
+                    print('\t \t totalDepth=',self.ftridyn['totalDepth'])
+                    print('\t \t logFile=',outFile)
+                    print('\t \t print_test=',self.print_test)
+                    sys.stdout.flush()
                 self.ftridyn['nDataPts'] = translate_xolotl_to_ftridyn.xolotlToLay(totalDepth=self.ftridyn['totalDepth'],logFile=outFile,print_test=self.print_test)
                 #prepare target strings for F-Tridyn:
                 #we always have W in the substrate  (tg1); others are optional; mixed material composition given by LAY file
