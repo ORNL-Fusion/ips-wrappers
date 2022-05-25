@@ -106,7 +106,8 @@ def v1(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat', print_test=Fals
     for i in range(0, len(depthBin)):
     
     ## Write in the output file
-        if (TBin[i] > 0.0):
+        #if (TBin[i] > 0.0):
+        if (heBin[i] + vBin[i] + iBin[i] + dBin[i] + tBin[i] + TBin[i] > 0.0):
             outputFile.write("%s %s %s %s %s %s %s\n" %(depthBin[i], heBin[i], dBin[i], tBin[i], vBin[i], iBin[i], TBin[i]))
 
 ## Close the output file
@@ -208,7 +209,8 @@ def v2(inFile='TRIDYN_0.h5', outFile='last_TRIDYN.dat', print_test=False):
     for i in range(0, len(depthBin)):
     
         ## Write in the output file
-        if (TBin[i] > 0.0):
+        #if (TBin[i] > 0.0):
+        if (heBin[i] + vBin[i] + iBin[i] + dBin[i] + tBin[i] + TBin[i] > 0.0):
             outputFile.write("%s %s %s %s %s %s %s\n" %(depthBin[i], heBin[i], vBin[i], iBin[i], TBin[i], dBin[i], tBin[i]))
 
     ## Close the output file
