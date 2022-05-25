@@ -45,7 +45,7 @@ def v1(xp_parameters={}, print_test=False):
 def v2(xp_parameters={}, print_test=False):
     
     rm_grid=False
-    rm_regGrid=False
+    rm_regularGrid=False
     
     if print_test:
         print('\t called handle_gridModel v2: ')
