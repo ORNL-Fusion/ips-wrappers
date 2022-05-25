@@ -83,7 +83,7 @@ class xolotlFtridynDriver(Component):
         print(' ')
         
         #stage input files
-        print(('staging input files {} \n'.format(self.INPUT_FILES)))
+        print('staging input files {} '.format(self.INPUT_FILES))
         self.services.stage_input_files(self.INPUT_FILES)
         print('\t ...input files staged succesfully')
         print(('input directory for this simulation is {} \n'.format( self.INPUT_DIR)))
@@ -396,11 +396,11 @@ class xolotlFtridynDriver(Component):
         #    if 'grid' in self.xp.parameters:
         #        print('\t found grid in xolotl parameters ; delete from dictionary to avoid it in param file')
 
-                    
-                    
+
         #if not coupling, delete -tridyn from petsc arguments to not print TRIDYN_*.dat files
         #if self.driver['FTX_COUPLING']=='False':
         #    del self.xp.parameters['petscArgs']['-tridyn']
+
 
         #CONTROL WHICH PROCESSES ARE ON:
         #delete Xolotl processes that are specified as false in ips.config
@@ -1167,7 +1167,19 @@ class xolotlFtridynDriver(Component):
             if os.path.exists(self.FT_OUTPUT_PROFILE_TEMP):
                 os.remove(self.FT_OUTPUT_PROFILE_TEMP)
 
-            write_tridynDat.write_tridynDat(outFile=self.FT_OUTPUT_PROFILE_TEMP, tridynDat_model=self.driver['xolotl_v'], #self.driver['tridynDat_model'], #xolotl_v controls tridyn.dat format and more
+            # allow user to specify the tridynDat_model used to write the tridyn.dat file independently of the xolotl_v option
+            # if the option is not specified, fall back to the xolotl_v option
+            if 'tridynDat_model' in self.driver.keys():
+                tridynDat_model = self.driver['tridynDat_model']
+                if not (tridynDat_model == 1 or tridynDat_model == 2):
+                    print('\t WARNING: tridynDat_model version not recognized: ')
+                    print(f'\t \t tridynDat_model = {tridynDat_model}')
+                    tridynDat_model = self.driver['xolotl_v']
+                    print(f'\t Trying to continue with tridynDat_model = {tridynDat_model} (same as xolotl_v)')
+            else:
+                tridynDat_model = self.driver['xolotl_v']
+                
+            write_tridynDat.write_tridynDat(outFile=self.FT_OUTPUT_PROFILE_TEMP, tridynDat_model=tridynDat_model,
                                             plasmaSpecies=self.plasmaSpecies, timeFolder=timeFolder, maxRangeXolotl=self.maxRangeXolotl,
                                             fluxFraction=self.fluxFraction, rYield=self.rYield, xp_parameters=self.xp.parameters, print_test=self.print_test)
             sys.stdout.flush()

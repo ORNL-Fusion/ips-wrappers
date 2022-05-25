@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import glob
 import param_handler #write_xolotl_paramfile
+import keepLastTS
 import sys
 import numpy as np
 
@@ -55,11 +56,19 @@ class xolotlWorker(Component):
             print('\t ... done checking that all arguments are read well by xolotl-init ')
             print(' ')
         
+        # if migration parameters are specified, copy them to a file 'migration.txt'
+        if 'migration' in xp.parameters.keys():
+            with open('migration.txt', 'w') as f:
+                for param in xp.parameters['migration']:
+                    f.write(f"{param}\n")
+            xp.parameters.pop('migration')
+
         #write and store xolotls parameter for each loop 
         xp.write('params.txt')
 
         currentXolotlParamFile='params_%f.txt' %self.driverTime
-        shutil.copyfile('params.txt',currentXolotlParamFile) 
+        shutil.copyfile('params.txt',currentXolotlParamFile)
+
 
         try:
             #shutil.copyfile(xp.parameters['networkFile'],xp.parameters['networkFile']+'_t'+str(self.driverTime))
