@@ -361,41 +361,6 @@ class xolotlFtridynDriver(Component):
                 del self.xp.parameters['grid']
             if rm_regularGrid:
                 del self.xp.parameters['regularGrid']
-                
-            #if 'grid' in self.xp.parameters:
-            #    print('\t for xolotl_v = 1, grid exists: ', self.xp.parameters['grid'])
-            #else:
-            #    print('\t WARNING: for xolol_v = 1 , could not find parameter grid')
-            #    if 'gridParam' in self.xp.parameters:
-            #        print('\t \t found gridParam in xolotl parameters instead; use it as grid value: ', self.xp.parameters['gridParam'])
-            #        self.xp.parameters['grid']=self.xp.parameters['gridParam']
-            #    else:
-            #        print('\t \t could not find gridParam either. Use default value 200')
-            #        self.xp.parameters['grid']=[200, 0.5]
-            #if 'gridParam' in self.xp.parameters:
-            #    print('\t found gridParam in xolotl parameters ; delete from dictionary to avoid it in param file')
-            #    del self.xp.parameters['gridParam']
-            #if 'gridType' in self.xp.parameters:
-            #    print('\t found gridType in xolotl parameters ; delete from dictionary to avoid it in param file')
-            #    del self.xp.parameters['gridType']
-
-        # elif xololt_v==2:
-        #    if ('gridType' in self.xp.parameters) and ('gridParam' in self.xp.parameters):
-        #        print('\t for xolotl_v = 2, gridType exists: ', self.xp.parameters['gridType'],', and gridParam exists: ', self.xp.parameters['gridParam'])
-        #    if ('gridType' not in self.xp.parameters):
-	#	print('\t WARNING: for xolol_v = 2 , could not find parameter gridType. Assume nonuniform')
-        #        self.xp.parameters['gridType']='nonuniform'
-        #    if ('gridParam' not in self.xp.parameters):                
-        #        print('\t WARNING: for xolol_v = 2 , could not find parameter gridParam.')
-        #        if 'grid' in self.xp.parameters:   
-        #            print('\t \t found grid in xolotl parameters instead ; use it as gridParam value: ', self.xp.parameters['grid'])
-        #            self.xp.parameters['gridParam'] = self.xp.parameters['grid']
-	#        else:
-	#	    print('\t \t could not find grid either. Use default value 200')
-	#	    self.xp.parameters['gridParam']=[200, 0.5]
-        #    if 'grid' in self.xp.parameters:
-        #        print('\t found grid in xolotl parameters ; delete from dictionary to avoid it in param file')
-
 
         #if not coupling, delete -tridyn from petsc arguments to not print TRIDYN_*.dat files
         #if self.driver['FTX_COUPLING']=='False':
@@ -423,6 +388,11 @@ class xolotlFtridynDriver(Component):
         print('\t {}\n'.format(processString.strip()))
         self.xp.parameters['process']=processString.strip()
 
+        #performance handler can only be "dummy" or "os" now:
+        if not (self.xp.parameters['perfHandler'] == "os" or self.xp.parameters['perfHandler'] == "dummy"):
+            print ('invalid performance handler in Xolotl.')
+            print(' \t Change from ', self.xp.parameters['perfHandler'], 'to default, "os" ')
+            self.xp.parameters['perfHandler'] = "os"
         sys.stdout.flush()
         
         ### PLASMA RELATED PARAMETERS ###
