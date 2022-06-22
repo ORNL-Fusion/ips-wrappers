@@ -1359,7 +1359,7 @@ class xolotlFtridynDriver(Component):
                 if self.collapsedLoops<=int(self.driver['MAX_COLLAPSE_LOOPS']):
 
                     self.services.call(xolotl, 'init', timeStamp, dTime=time, xParameters=self.xp.parameters, output_file=outFile, print_test=self.print_test) #, xFtCoupling=self.driver['FTX_COUPLING'])
-                    self.services.call(xolotl, 'step', timeStamp, dTime=time, xHe_conc=self.petsc_heConc, xParameters=self.xp.parameters, output_file=outFile, dZipOutput=self.driver['ZIP_XOLOTL_OUTPUT'], n_overgrid_loops=n_overgrid_loops, num_tries=self.XOLOTL_NUM_TRIES, print_test=self.print_test)
+                    self.services.call(xolotl, 'step', timeStamp, dTime=time, xHe_conc=self.petsc_heConc, xParameters=self.xp.parameters, output_file=outFile, dZipOutput=self.driver['ZIP_XOLOTL_OUTPUT'], n_overgrid_loops=n_overgrid_loops, num_tries=self.driver['XOLOTL_NUM_TRIES'], print_test=self.print_test)
 
                     sys.stdout.flush()
                     self.services.stage_plasma_state()
