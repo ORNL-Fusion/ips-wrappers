@@ -7,7 +7,7 @@ from   pylab import *
 import h5py
 import shutil
 
-def transferGrid(networkFile):
+def transferGrid(networkFile, print_test=False):
 
 	## Copy the old network file to the new network file
 	shutil.copyfile(networkFile, networkFile.split('.')[0] + '_oldGrid.h5')
@@ -27,16 +27,16 @@ def transferGrid(networkFile):
 	initSurf = i - 25
 	## Compute the current void portion
 	oldVoidPortion = 100.0 * float(initSurf) / float(len(gridDset0))
-	if test_print:
-                print('\t \t Old void portion:', oldVoidPortion, 'with', oldGridSize, 'grid points.')
+	if print_test:
+		print('\t \t Old void portion:', oldVoidPortion, 'with', oldGridSize, 'grid points.')
         
 	## Compute the new one
 	newGridSize = oldGridSize + nPoints
 	if print_test:
-                print('TEST: oldGridSize=', oldGridSize, '; newGridSize=', newGridSize)
+		print('TEST: oldGridSize=', oldGridSize, '; newGridSize=', newGridSize)
 	newVoidPortion = 100.0 * float(initSurf + nPoints) / float(newGridSize) #len(gridDset0) + nPoints)
 	if print_test:
-                print('\t \t New void portion:', newVoidPortion, 'with', newGridSize, ' grid points.')
+		print('\t \t New void portion:', newVoidPortion, 'with', newGridSize, ' grid points.')
 
 	## Add points to the new grid if nPoints>0
 	newGrid = []
@@ -67,7 +67,7 @@ def transferGrid(networkFile):
 	timestep = concGroup0.attrs['lastTimeStep']
 	## Open the concentration group at this time step
 	if print_test:
-                print('TEST: time step is', timestep)
+		print('TEST: time step is', timestep)
 	if (timestep == -1):
 		print('WARNING: network file was empty (timestep -1)')
 		print('\t will return old values')
@@ -122,5 +122,5 @@ def transferGrid(networkFile):
 	dataset[...] = indexArray
 
 	if print_test:
-                print('TEST: from transferGrid, returning newGridSize, voidPortion = ', newGridSize, newVoidPortion)
+		print('TEST: from transferGrid, returning newGridSize, voidPortion = ', newGridSize, newVoidPortion)
 	return [newGridSize, newVoidPortion]
