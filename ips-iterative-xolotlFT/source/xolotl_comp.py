@@ -32,6 +32,7 @@ class xolotlWorker(Component):
         xp = param_handler.xolotl_params()
         xp.parameters=keywords['xParameters'] 
         print_test=keywords['print_test']
+        num_tries = keywords['xolotl_num_tries']
         
         if 'output_file' in keywords:
             outFile=keywords['output_file']
@@ -73,6 +74,10 @@ class xolotlWorker(Component):
         try:
             #shutil.copyfile(xp.parameters['networkFile'],xp.parameters['networkFile']+'_t'+str(self.driverTime))
             shutil.copyfile(self.NETWORK_FILE,self.NETWORK_FILE+'_t'+str(self.driverTime))
+            if print_test:
+                print('\t TEST: copied ',self.NETWORK_FILE,' as ' , self.NETWORK_FILE+'_t'+str(self.driverTime))
+                print('\t file size of ', self.NETWORK_FILE ,' is: ', os.path.getsize(self.NETWORK_FILE)
+
         except Exception as e:
             print('\t', e)
             print('\t could not save network file for t = ', str(self.driverTime))            
@@ -133,9 +138,8 @@ class xolotlWorker(Component):
 
 
         import time
-        num_trials = 2 #SET AS DRIVER ARGUMENT
         os.environ['OMP_NUM_THREADS']=self.THREADS_PER_TASK
-        for i in range(num_trials):
+        for i in range(num_tries):
             xolotlLogFile='xolotl_t%f_%d.log' %(self.driverTime,i)
             task_id = self.services.launch_task(self.NPROC,self.services.get_working_dir(),
                                                 self.XOLOTL_EXE, 'params.txt',task_ppn=self.task_ppn,logfile=xolotlLogFile)
