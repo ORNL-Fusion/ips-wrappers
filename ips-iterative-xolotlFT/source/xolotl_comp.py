@@ -32,7 +32,6 @@ class xolotlWorker(Component):
         xp = param_handler.xolotl_params()
         xp.parameters=keywords['xParameters'] 
         print_test=keywords['print_test']
-        num_tries = keywords['xolotl_num_tries']
         
         if 'output_file' in keywords:
             outFile=keywords['output_file']
@@ -76,7 +75,7 @@ class xolotlWorker(Component):
             shutil.copyfile(self.NETWORK_FILE,self.NETWORK_FILE+'_t'+str(self.driverTime))
             if print_test:
                 print('\t TEST: copied ',self.NETWORK_FILE,' as ' , self.NETWORK_FILE+'_t'+str(self.driverTime))
-                print('\t file size of ', self.NETWORK_FILE ,' is: ', os.path.getsize(self.NETWORK_FILE)
+                print('\t file size of ', self.NETWORK_FILE ,' is: ', os.path.getsize(self.NETWORK_FILE))
 
         except Exception as e:
             print('\t', e)
@@ -95,6 +94,7 @@ class xolotlWorker(Component):
         outFile=keywords['output_file']
         n_overgrid_loops=keywords['n_overgrid_loops']
         print_test=keywords['print_test']
+        num_tries = keywords['xolotl_num_tries']
 
         print(' ')
         if 'output_file' in keywords:
