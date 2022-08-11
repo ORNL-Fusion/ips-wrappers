@@ -6,13 +6,13 @@
 #
 #-------------------------------------------------------------------------------
 
-from component import Component
+from ipsframework import Component
 import os
 import shutil
 import subprocess
 import param_handler
 import sys
-import plasmaOut2ftxIn
+import .python_scripts_for_coupling.plasmaOut2ftxIn
 
 #from contextlib import redirect_stdout
 
