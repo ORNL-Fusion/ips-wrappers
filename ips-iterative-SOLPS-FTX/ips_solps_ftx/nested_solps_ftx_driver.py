@@ -10,9 +10,9 @@ from ipsframework import Component
 import os
 import shutil
 import subprocess
-import param_handler
+#import param_handler
 import sys
-import .python_scripts_for_coupling.plasmaOut2ftxIn
+from .python_scripts_for_coupling import plasmaOut2ftxIn
 
 #from contextlib import redirect_stdout
 

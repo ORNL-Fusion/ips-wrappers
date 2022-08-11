@@ -3,4 +3,7 @@ dependencies:
     - pip
     - pip:
         - ipsframework
+        - param_handler
         - -e .
+variables:
+    

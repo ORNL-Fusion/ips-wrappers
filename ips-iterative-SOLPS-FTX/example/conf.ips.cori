@@ -1,11 +1,7 @@
 HOST = cori
 MPIRUN = srun #mpirun
-#MPIRUN = aprun
-PHYS_BIN_ROOT = /project/projectdirs/m876/phys-bin/phys-hopper/
-DATA_TREE_ROOT = /project/projectdirs/m876/data
-PORTAL_URL = http://swim.gat.com:8080/monitor		# URL for the portal
-RUNID_URL  = http://swim.gat.com:4040/runid.esp
-DATA_ROOT = /project/projectdirs/m876/data/
+
+PORTAL_URL = http://lb.ipsportal.production.svc.spin.nersc.org
 
 #######################################
 # resource detection method
