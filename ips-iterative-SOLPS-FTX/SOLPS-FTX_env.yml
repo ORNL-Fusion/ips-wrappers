@@ -1,0 +1,6 @@
+name: solps-ftx
+dependencies:
+    - pip
+    - pip:
+        - ipsframework
+        - -e .
