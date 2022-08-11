@@ -100,14 +100,12 @@ class parent_driver(Component):
         #print('\t LOG_FILE: log.component_SOLPS.warning')
 
         # TEST COMMENT: COMMENT OUT SOLPS SECTION FOR NOW
-        #(self.nested_components['component_SOLPS']['sim_name'],
-        # self.nested_components['component_SOLPS']['init'],
-        # self.nested_components['component_SOLPS']['driver']) = self.services.create_sub_workflow('component_SOLPS',
-        #                                                                                     self.services.get_config_param('COMPONENT_SOLPS_CONF'),
-        #                                                                                     {'PWD' : self.services.get_config_param('PWD'),
-        #                                                                                      'SIM_NAME' : self.services.get_config_param('INPUT_DIR'),
-        #                                                                                      'COMPONENT_SOLPS_NAMELIST_INPUT' : self.services.get_config_param('COMPONENT_SOLPS_NAMELIST_INPUT'),
-        #                                                                                      'LOG_FILE' : 'log.component_SOLPS.warning'})
+        (self.nested_components['component_SOLPS']['sim_name'],
+         self.nested_components['component_SOLPS']['init'],
+         self.nested_components['component_SOLPS']['driver']) = self.services.create_sub_workflow('component_SOLPS',
+                                                                                                  self.services.get_config_param('COMPONENT_SOLPS_CONF'),
+                                                                                                  {'SIM_NAME' : 'solps_iter', #self.services.get_config_param('INPUT_DIR'),
+                                                                                                   'LOG_FILE' : 'log.component_SOLPS.warning'})
 
         print('creating first sub-workflow DONE!')
         print('\n')
