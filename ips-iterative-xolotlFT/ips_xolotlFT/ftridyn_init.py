@@ -7,7 +7,7 @@
 #
 #-------------------------------------------------------------------------------
 
-from component import Component
+from ipsframework import Component
 import shutil
 import os
 import sys

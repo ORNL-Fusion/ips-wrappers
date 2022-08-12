@@ -1,24 +1,24 @@
 #! /usr/bin/env python
 
-from  component import Component
+from ipsframework import Component
 import sys
 import os
 import os.path
 import subprocess
 import numpy
 import shutil
-import translate_xolotl_to_ftridyn
+from .python_scripts_for_coupling import translate_xolotl_to_ftridyn
 #import translate_ftridyn_to_xolotl_launch
 #import get_yields_launch
-import binTRIDYN
-import param_handler
+from .python_scripts_for_coupling import binTRIDYN
+from .python_scripts_for_coupling import param_handler
 import traceback
-import transferGrid
+from .python_scripts_for_coupling import transferGrid
 import pickle
-import keepLastTS
-import write_tridynDat
-import handle_tempModel
-import handle_gridModel
+from .python_scripts_for_coupling import keepLastTS
+from .python_scripts_for_coupling import write_tridynDat
+from .python_scripts_for_coupling import handle_tempModel
+from .python_scripts_for_coupling import handle_gridModel
 import inspect
 
 class xolotlFtridynDriver(Component):
@@ -961,7 +961,7 @@ class xolotlFtridynDriver(Component):
                             print('\t', ft_implProfile_script)
                             
                         except: #DEFAULT PATH: 
-                            ft_implProfile_script = self.BIN_PATH+'/ips-iterative-xolotlFT/python_scripts_for_coupling/translate_ftridyn_to_xolotl.py'
+                            ft_implProfile_script = 'translate_ftridyn_to_xolotl.py'
                             print('\t Launch default python script: ')
                             print('\t ',ft_implProfile_script)
 
@@ -1011,7 +1011,7 @@ class xolotlFtridynDriver(Component):
                         print('\t ', ft_getYields_script)
                         
                     except: #DEFAULT PATH:
-                        ft_getYields_script = self.BIN_PATH+'/ips-iterative-xolotlFT/python_scripts_for_coupling/get_yields.py'
+                        ft_getYields_script = 'get_yields.py'
                         print('\t Launch default python script ')
                         print('\t ', ft_getYields_script)
 

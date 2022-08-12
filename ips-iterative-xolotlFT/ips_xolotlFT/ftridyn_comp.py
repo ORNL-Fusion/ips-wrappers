@@ -1,13 +1,13 @@
 #! /usr/bin/env Python
 
-from  component import Component
+from ipsframework import Component
 import os
 import shutil
 import glob
 import sys
 #import translate_xolotl_to_ftridyn
 #import translate_ftridyn_to_xolotl
-import generate_ftridyn_input #new script to generate FTridyn input
+from .python_scripts_for_coupling import generate_ftridyn_input #new script to generate FTridyn input
 import numpy as np
 import subprocess
 import re

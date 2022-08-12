@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 
-from  component import Component
+from ipsframework import Component
 import os
 import shutil
 import subprocess
 import glob
-import param_handler #write_xolotl_paramfile
-import keepLastTS
+from .python_scripts_for_coupling import param_handler
+from .python_scripts_for_coupling import keepLastTS
 import sys
 import numpy as np
 

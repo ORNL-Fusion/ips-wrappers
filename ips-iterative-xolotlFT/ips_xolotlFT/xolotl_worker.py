@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-from  component import Component
+from ipsframework import Component
 import os
 import shutil
 import subprocess
