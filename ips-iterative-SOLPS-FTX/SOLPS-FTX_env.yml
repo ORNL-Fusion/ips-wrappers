@@ -3,7 +3,12 @@ dependencies:
     - pip
     - pip:
         - ipsframework
-        - param_handler
+        - numpy
+        - h5py
+        - matplotlib
+        - -e ../ips-iterative-xolotlFT
         - -e .
 variables:
-    
+    FTRIDYN_PATH: /project/projectdirs/atom/atom-install-cori/fractal-tridyn    
+    GITR_PATH: /project/projectdirs/atom/atom-install-cori/GITR
+    ATOM_CORI: /project/projectdirs/atom/atom-install-cori

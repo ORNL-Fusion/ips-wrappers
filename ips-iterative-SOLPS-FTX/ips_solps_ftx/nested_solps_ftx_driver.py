@@ -10,7 +10,6 @@ from ipsframework import Component
 import os
 import shutil
 import subprocess
-#import param_handler
 import sys
 from .python_scripts_for_coupling import plasmaOut2ftxIn
 
@@ -304,7 +303,7 @@ class parent_driver(Component):
 
                 
                 #update plasma state file:
-                self.services.update_plasma_state()
+                self.services.update_state()
                 
             ## END OF solpsOut --> ftxIn and time-parameters
             

@@ -2,7 +2,7 @@
 ## Bin the output from Xolotl
 
 import os
-import param_handler
+from ips_xolotlFT.python_scripts_for_coupling import param_handler
 import sys
 
 def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt'):
