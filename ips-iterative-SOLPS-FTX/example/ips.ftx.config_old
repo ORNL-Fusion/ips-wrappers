@@ -55,6 +55,11 @@ CURRENT_INSTATE = ips-instate
 CURRENT_FASTRAN = ips-fastran.nc
 CURRENT_BC = ips-bc.bc
 
+# SOLPS_OUTPUT = solpsOut.txt
+#probably this is not needed -- commented in v9
+# FTX_INTPUT = ftxInput.txt
+# PLASMA_OUTPUT_FORMAT = 'solpsOut', 'txt'
+# FTX_INPUT_FORMAT = 'ftxInput', 'txt'
 PLASMA_OUTPUT_STD = 'solpsOut.txt' 
 FTX_INPUT_STD = 'ftxInput.txt'
 
@@ -89,6 +94,10 @@ XFT_TRANSFER_FILE = $TRIDYN_DAT_FILE $SP_YIELDS_FILE $ALL_SPYIELDS_FILE $XOL_EXI
 # List of files that constitute the plasma state 
 PLASMA_STATE_FILES = $FT_PWD_PATH $XFT_TRANSFER_FILE $XOLOTL_INPUT_FILES $XOLOTL_CURRENT_FILES $XOLOTL_FINAL_FILES $RESTART_FILES $FTX_INPUT_STD $PLASMA_OUTPUT_STD
 # $FTRIDYN_OUTPUT_FILES $FTRIDYN_INPUT_FILES 
+
+#$OTHER_FILES $PARAMETER_CONFIG_FILE $XOLOTL_PARAMETER_CONFIG_FILE $FTRIDYN_PARAMETER_CONFIG_FILE $ER_FILES CURRENT_STATE $PRIOR_STATE $NEXT_STATE $CURRENT_EQDSK $CURRENT_JSDSK $CURRENT_DQL $CURRENT_BC
+#PARAMETER_CONFIG_FILE = driverParameterConfig.py #XOLOTL_PARAMETER_CONFIG_FILE = xolotlParameterConfig.py #FTRIDYN_PARAMETER_CONFIG_FILE = ftridynParameterConfig.py
+
 
 # ======================================================================
 # PORTS SECTION
@@ -148,26 +157,7 @@ PLASMA_STATE_FILES = $FT_PWD_PATH $XFT_TRANSFER_FILE $XOLOTL_INPUT_FILES $XOLOTL
     SURFACE_FILE=$XOL_SURFACE_FILE
     NETWORK_FILE=$XOL_NETWORK_FILE
     STATE_FILES =
-
-[ftridyn_comp]
-    CLASS = workers
-    SUB_CLASS =
-    NAME = ftridynWorker
-    NPROC = 1
-    BIN_PATH = $FTRIDYN_PATH/src
-    FTRIDYN_EXE = $BIN_PATH/shell_Ftridyn.sh
-    INPUT_DIR = #/Users/tqd/Code/hi_input
-    INPUT_FILES = #$INPUT_DIR/example.txt
-    OUTPUT_FILES = output.txt
-    PWD_PATH= $FT_PWD_PATH
-    MODULE = ips_xolotlFT.ftridyn_comp
-    SCRIPT =
-    FTMPI_EXEC = $GITR_PATH/python/runFTexec_vEdison.py
-    FTMPI_NODES = 2 #TEST VALUE: for testing request just 1 ; for full runs change to 4
-    FTMPI_PPN = 32
-    THREADS_PER_TASK=1 #OMP_NUM_THREADS
-    STATE_FILES =
-
+    
 [xolotl-ftridyn_driver]
     CLASS = driver
     SUB_CLASS =
@@ -183,8 +173,11 @@ PLASMA_STATE_FILES = $FT_PWD_PATH $XFT_TRANSFER_FILE $XOLOTL_INPUT_FILES $XOLOTL
     SUBMIT_DIR=$SLURM_SUBMIT_DIR
     FT_OUTPUT_PWD_PATH = $FT_PWD_PATH
     LOG_FILE=$CASE_PATH/log.ftx
-    PRINT_TEST='on'  #on = print test lines (for devel / debug) ; off = print the std running output
+    PRINT_TEST='off'  #on = print test lines (for devel / debug) ; off = print the std running output
     STATE_FILES =
+
+    #BINTRIDYN_SCRIPT=binTRIDYN_tempGrid #$CASE_PATH/binTRIDYN_tempGrid.py #this is optional ; default will use binTRIDYN in python_scripts_for_coupling folder
+    #BINTRIDYN_FUNCTION=binTridyn_tempGrid #this one will define inFile-outFile explicitly ; default will use binTridyn()
 
     ##### FILES ####
     ## IEADs: 
@@ -231,10 +224,14 @@ PLASMA_STATE_FILES = $FT_PWD_PATH $XFT_TRANSFER_FILE $XOLOTL_INPUT_FILES $XOLOTL
 	XOLOTL_MAX_TS=0.001			#limit on how much to increase Xolotl's max time step
     	XOLOTL_HE_CONC=False                	#Print He concentration files: True, False or Last (last loop)
 
+	#OBSOLETE
+	#	netParam_restart='keep'                 #'keep' or 'delete' netParam from Xolotls param file in restart loops (depends on the version)
+	#	grouping_restart='keep'			#'keep' or 'delete' netParam from Xolotls param file in restart loops (depends on the version)
+						#default (or if not given), it'll delete netParam & grouping
+
 	xolotl_v=2                              # choose xolotl version: 
 						#       1: original ; e.g., master
 						#       2: new      ; e.g., tempGrid
-	XOLOTL_NUM_TRIES = 1
 
         # as of April 2022, xolotl version affects the following parameters:
         # see Xolotl's wiki for the latest changes:
@@ -242,7 +239,6 @@ PLASMA_STATE_FILES = $FT_PWD_PATH $XFT_TRANSFER_FILE $XOLOTL_INPUT_FILES $XOLOTL
 	
         # tridyn.dat
         # choose format of tridyn.dat needed for your Xolotl executable (replace by xolotl_v)
-	#tridynDat_model=2  ## optional ; use if its different from xolotl_v
         # 1=original,         header: (1-reflection)                           for all species (He W D T)
         # 2=new (2021),       header: species cluster_size (1-reflection)      only for species present in plasma
         # header is followed by 15-param fit + max_depth
@@ -355,6 +351,40 @@ PLASMA_STATE_FILES = $FT_PWD_PATH $XFT_TRANSFER_FILE $XOLOTL_INPUT_FILES $XOLOTL
 	#E or A < 0 -> use distribution(s) ; E or A > 0 -> use given values
 	inputEnergy=0.0 0.0 0.0 0.0 0.0         #impact energy (energy in generateInput, [eV])
 	inputAngle=0.0 0.0 0.0 0.0 0.0          #angle wrt surface normal
+	testParameter=1
 
 
+[ftridyn_comp]
+    CLASS = workers
+    SUB_CLASS =
+    NAME = ftridynWorker
+    NPROC = 1
+    BIN_PATH = $FTRIDYN_PATH/src
+    FTRIDYN_EXE = $BIN_PATH/shell_Ftridyn.sh
+    INPUT_DIR = #/Users/tqd/Code/hi_input 
+    INPUT_FILES = #$INPUT_DIR/example.txt
+    OUTPUT_FILES = output.txt
+    PWD_PATH= $FT_PWD_PATH
+    MODULE = ips_xolotlFT.ftridyn_comp
+    SCRIPT =
+    FTMPI_EXEC = $GITR_PATH/python/runFTexec_vEdison.py
+    FTMPI_NODES = 2 #TEST VALUE: for testing request just 1 ; for full runs change to 4
+    FTMPI_PPN = 32
+    THREADS_PER_TASK=1 #OMP_NUM_THREADS 
+    STATE_FILES =
+
+[ftridyn_init] #obsolete                                                                                                                                                                                 
+    CLASS = workers
+    SUB_CLASS =
+    NAME = ftridynInit
+    NPROC = 1
+    BIN_PATH = $IPS_WRAPPER_PATH
+    INPUT_DIR = #/Users/tqd/Code/fractal-tridyn/utils
+    INPUT_FILES = #He_W0001.IN 1p000.surf       
+    OUTPUT_FILES =
+    MODULE = ips_xolotlFT.ftridyn_init
+    SCRIPT =
+    INPUT_SCRIPT =  #$FTRIDYN_PATH/utils/generateInput.py
+    COPY_FILES = He_W0001.IN #1p000.surf        
+    STATE_FILES =
 
