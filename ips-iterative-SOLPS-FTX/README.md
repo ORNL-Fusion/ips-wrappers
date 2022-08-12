@@ -10,5 +10,5 @@ where VERSION is a replaced with a specific version available [from conda](https
 To install the conda environment, run the command
 
 ```
-conda env create -f SOLPS-FTX_env.yml --force
+./install_conda_env.sh
 ```
