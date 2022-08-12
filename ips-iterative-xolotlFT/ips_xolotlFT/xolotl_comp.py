@@ -18,7 +18,7 @@ class xolotlWorker(Component):
 
     def init(self, timeStamp=0.0, **keywords):
 
-        self.services.stage_plasma_state()
+        self.services.stage_state()
         cwd = self.services.get_working_dir()
 
         print('\n')
@@ -82,11 +82,11 @@ class xolotlWorker(Component):
             print('\t could not save network file for t = ', str(self.driverTime))            
             
         sys.stdout.flush()
-        self.services.update_plasma_state()
+        self.services.update_state()
 
     def step(self, timeStamp=0.0,**keywords):
 
-        self.services.stage_plasma_state()
+        self.services.stage_state()
         cwd = self.services.get_working_dir()
         zipOutput=keywords['dZipOutput']
         petscHeConc=keywords['xHe_conc']
@@ -152,13 +152,13 @@ class xolotlWorker(Component):
             statusFile.close()
             print("statusFile: ", exitStatus)
             sys.stdout.flush()
-            self.services.update_plasma_state()
+            self.services.update_state()
 
             #if out of grid space, do not keep on trying
             if exitStatus=='overgrid':
                 #print("aborting run, out of void space in grid: fix network file in next restart")
                 print("aborting run, out of void space in grid: add grid points and try again")
-                self.services.update_plasma_state()
+                self.services.update_state()
                 break
 
             if (ret_val == 0):
@@ -281,7 +281,7 @@ class xolotlWorker(Component):
             
             #self.services.error('xolotl_worker: out of grid space, modify network file to continue')
             #raise Exception("Aborting simulation: run out of grid space in Xolotls grid")
-            self.services.update_plasma_state()
+            self.services.update_state()
         else:
             print('\t simulation exited loop with status good (not collapsed or overgrid)')
 
@@ -310,7 +310,7 @@ class xolotlWorker(Component):
 
         #updates plasma state Xolotl output files
         sys.stdout.flush()
-        self.services.update_plasma_state()
+        self.services.update_state()
 
     def finalize(self, timeStamp=0.0):
         return

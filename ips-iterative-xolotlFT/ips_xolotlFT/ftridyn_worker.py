@@ -17,17 +17,17 @@ class ftridynWorker(Component):
 
     def init(self, timeStamp=0.0):
         #stage plasma state files for use on execution of FTridyn
-        self.services.stage_plasma_state()
+        self.services.stage_state()
         sys.path.append(os.getcwd())
         import parameterConfig
         reload(parameterConfig)
 
         if (parameterConfig.mode == 'RESTART'):
             nDataPts = translate_xolotl_to_lay.xolotlToLay()
-            self.services.update_plasma_state()
+            self.services.update_state()
     def step(self, timeStamp=0.0):
         print('ftridyn_worker: step')
-        self.services.stage_plasma_state()
+        self.services.stage_state()
         #call shell script that runs FTridyn and pipes input file
         task_id = self.services.launch_task(self.NPROC,
                                             self.services.get_working_dir(),
@@ -46,7 +46,7 @@ class ftridynWorker(Component):
         tempfile.close()
 
         #updates plasma state FTridyn output files
-        self.services.update_plasma_state()
+        self.services.update_state()
   
     def finalize(self, timeStamp=0.0):
         return

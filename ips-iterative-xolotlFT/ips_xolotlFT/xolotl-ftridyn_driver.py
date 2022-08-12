@@ -96,8 +96,8 @@ class xolotlFtridynDriver(Component):
             #for file in plasma_state_list:
             #    open(file, 'a').close()
             
-        self.services.update_plasma_state()
-        self.services.stage_plasma_state()
+        self.services.update_state()
+        self.services.stage_state()
 
         #### DRIVER PARAMETERS #####
         
@@ -460,7 +460,7 @@ class xolotlFtridynDriver(Component):
             except Exception as e:
                 print('\t', e)
             sys.stdout.flush()
-            self.services.update_plasma_state()
+            self.services.update_state()
             
         except Exception as e:
             print(e)
@@ -697,7 +697,7 @@ class xolotlFtridynDriver(Component):
             print('\t \t ...restart files staged succesfully')
 
         sys.stdout.flush()
-        self.services.update_plasma_state()
+        self.services.update_state()
 
 
     def step(self, timeStamp=0.0,**keywords):
@@ -745,7 +745,7 @@ class xolotlFtridynDriver(Component):
         ftridyn = self.services.get_port('WORKER')
         xolotl = self.services.get_port('XWORKER')
         
-        self.services.stage_plasma_state() 
+        self.services.stage_state() 
 
         #check that loop doesnt go over the end time
         time=self.time['INIT_TIME']
@@ -775,9 +775,9 @@ class xolotlFtridynDriver(Component):
         #for time in numpy.arange(self.initTime,self.endTime,self.timeStep):
         while time<end_time: #self.driver['END_TIME']:
 
-            self.services.stage_plasma_state()
+            self.services.stage_state()
             print(('driver time (in loop) {}'.format(time)))
-            self.services.update_plasma_state()
+            self.services.update_state()
 
             #keep all files to be saved (not plasma state) in folder with time stamp
             timeFolder='t'+str(time)
@@ -863,7 +863,7 @@ class xolotlFtridynDriver(Component):
                     self.ftridyn['nTT']=self.ftridyn['totalDepth']
             print(' ')
             sys.stdout.flush()
-            self.services.update_plasma_state()
+            self.services.update_state()
 
             # B) RUN FTRIDYN
 
@@ -883,7 +883,7 @@ class xolotlFtridynDriver(Component):
                     
                     self.services.call(ftridyn, 'step', timeStamp, ftParameters=self.ftridyn, fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], fPrj=prj, output_file=outFile, print_test=self.print_test)
                     sys.stdout.flush()
-                    self.services.stage_plasma_state()
+                    self.services.stage_state()
 
 
                     # C) POSTPROCESSING OF prj -> W
@@ -1058,7 +1058,7 @@ class xolotlFtridynDriver(Component):
                     #5) MOVE FOLDERS TO DIRECTORY WITH TIME-STAMP & RENAME FOR (Tg,Prj) SPECIES  
                 
                     shutil.move(self.ftridyn['outputPath']+'/'+self.FT_OUTPUT_FOLDER,timeFolder+'/'+self.FT_OUTPUT_FOLDER+'_'+prj+'W')                
-                    self.services.update_plasma_state()
+                    self.services.update_state()
                     print(' ')
                     print('... done with F-TRIDYN for {}'.format(prj))
                     print(' ')
@@ -1176,7 +1176,7 @@ class xolotlFtridynDriver(Component):
 
             print(' ')
             sys.stdout.flush()
-            self.services.update_plasma_state()
+            self.services.update_state()
 
             
             #make sure at least one of the species was implanted:
@@ -1362,7 +1362,7 @@ class xolotlFtridynDriver(Component):
                     self.services.call(xolotl, 'step', timeStamp, dTime=time, xHe_conc=self.petsc_heConc, xParameters=self.xp.parameters, output_file=outFile, dZipOutput=self.driver['ZIP_XOLOTL_OUTPUT'], n_overgrid_loops=n_overgrid_loops, xolotl_num_tries=self.driver['XOLOTL_NUM_TRIES'], print_test=self.print_test)
 
                     sys.stdout.flush()
-                    self.services.stage_plasma_state()
+                    self.services.stage_state()
 
                     statusFile=open(self.XOLOTL_EXIT_STATUS, "r")
                     self.xolotlExitStatus=statusFile.read().rstrip('\n')
@@ -1408,7 +1408,7 @@ class xolotlFtridynDriver(Component):
                         elif self.driver['xolotl_v']==2:
                             self.xp.parameters['gridParam'][0] = newGridSize
                         self.xp.parameters['voidPortion'] = newVoidPortion
-                        self.services.update_plasma_state()
+                        self.services.update_state()
                         
                     elif self.xolotlExitStatus=='collapsed':
                         print('\t WARNING: simulation exited loop with status collapse')
@@ -1548,7 +1548,7 @@ class xolotlFtridynDriver(Component):
 
             print(' ')
             sys.stdout.flush()
-            self.services.update_plasma_state()
+            self.services.update_state()
 
     def finalize(self, timeStamp=0.0):
         print('xolotl-ftridyn_driver: finalize')

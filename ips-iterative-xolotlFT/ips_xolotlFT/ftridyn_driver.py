@@ -24,13 +24,13 @@ class ftridynDriver(Component):
 
     def step(self, timeStamp=0.0):
         print('ftridyn_driver: step')
-        self.services.stage_plasma_state() 
+        self.services.stage_state() 
         #get config file and write initial state
         parameter_config_file = self.services.get_config_param('PARAMETER_CONFIG_FILE')
         fid = open(parameter_config_file, 'w')
         fid.write("mode='INIT'")
         fid.close()       
-        self.services.update_plasma_state()
+        self.services.update_state()
         
         self.services.call(self.xolotl_comp, 'init', timeStamp)
         ##call step method of CODE_INIT ('ftridyn_init.py')
@@ -43,11 +43,11 @@ class ftridynDriver(Component):
 
         self.services.call(self.xolotl_comp, 'step', timeStamp)    
         
-        self.services.stage_plasma_state() 
+        self.services.stage_state() 
         fid = open(parameter_config_file, 'w')
         fid.write("mode='RESTART'")
         fid.close()      
-        self.services.update_plasma_state()
+        self.services.update_state()
         self.services.call(self.ftridyn_comp, 'init', timeStamp)
         self.services.call(self.ftridyn_init, 'step', timeStamp) 
         self.services.call(self.ftridyn_comp, 'step', timeStamp)

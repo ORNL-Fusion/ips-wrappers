@@ -19,7 +19,7 @@ class xolotlWorker(Component):
         #self.ftridyn_exe = self.FTRIDYN_EXE
 
     def init(self, timeStamp=0.0):
-        self.services.stage_plasma_state()
+        self.services.stage_state()
 
         sys.path.append(os.getcwd())
         import parameterConfig
@@ -39,12 +39,12 @@ class xolotlWorker(Component):
         else:
             write_xolotl_paramfile.writeXolotlParameterFile_fromTemplate(start_stop=0.2,ts_final_time=0.2,networkFile="xolotlStop.h5",sputtering=0.1)
             shutil.copyfile('params.txt','paramsRestart.txt') #store file to look into network issue; line to be removed
-        #self.services.stage_plasma_state()
-        self.services.update_plasma_state()
+        #self.services.stage_state()
+        self.services.update_state()
 
     def step(self, timeStamp=0.0):
         print('xolotl_worker: step')
-        self.services.stage_plasma_state()
+        self.services.stage_state()
         #call shell script that runs FTridyn and pipes input file
         task_id = self.services.launch_task(self.NPROC,
                                             self.services.get_working_dir(),
@@ -71,7 +71,7 @@ class xolotlWorker(Component):
         #translate_xolotl_to_lay.xolotlToLay()
 
         #updates plasma state FTridyn output files
-        self.services.update_plasma_state()
+        self.services.update_state()
   
     def finalize(self, timeStamp=0.0):
         return

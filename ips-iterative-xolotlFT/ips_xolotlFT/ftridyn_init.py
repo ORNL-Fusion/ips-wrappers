@@ -73,7 +73,7 @@ class ftridynInit(Component):
         for index in range(len(other_list)):
             open(other_list[index], 'a').close()
         #update plasma state from relevant files in ftridynInit work area
-        self.services.update_plasma_state()
+        self.services.update_state()
         #self.services.stage_input_files(self.INPUT_FILES)
         sys.path.append(os.getcwd())
         import parameterConfig
@@ -84,7 +84,7 @@ class ftridynInit(Component):
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
         print('ftridyn_init: step')
-        self.services.stage_plasma_state()
+        self.services.stage_state()
 
         import parameterConfig
         reload(parameterConfig)
@@ -111,7 +111,7 @@ class ftridynInit(Component):
             print('copying ', from_file_list[index], ' to ', file_list[index])
             shutil.copyfile(from_file_list[index], file_list[index])
         #update plasma state files with relevant files from ftridynInit work directory
-        self.services.update_plasma_state()
+        self.services.update_state()
 #-------------------------------------------------------------------------------
 #
 #  FTridyn init Component finalize method. This cleans up afterwards. Not used.

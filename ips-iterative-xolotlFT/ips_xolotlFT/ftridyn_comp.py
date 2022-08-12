@@ -30,7 +30,7 @@ class ftridynWorker(Component):
         cwd = self.services.get_working_dir()
 
         #stage plasma state files for use on execution of FTridyn
-        self.services.stage_plasma_state()
+        self.services.stage_state()
 
         #asign a local variable to arguments used multiple times
         driverTime=keywords['dTime']
@@ -107,13 +107,13 @@ class ftridynWorker(Component):
         print('\t DONE with GenerateInput \n')
 
         sys.stdout.flush()
-        self.services.update_plasma_state()
+        self.services.update_state()
 
         
     def step(self, timeStamp=0.0,**keywords):
 
         cwd = self.services.get_working_dir()
-        self.services.stage_plasma_state()
+        self.services.stage_state()
 
         energyIn=keywords['fEnergyIn']
         angleIn = keywords['fAngleIn']
@@ -220,7 +220,7 @@ class ftridynWorker(Component):
 
         #updates plasma state FTridyn output files
         sys.stdout.flush()
-        self.services.update_plasma_state()
+        self.services.update_state()
 
     def finalize(self, timeStamp=0.0):
         return
