@@ -6,8 +6,8 @@ dependencies:
         - numpy
         - h5py
         - matplotlib
-        - -e ../ips-iterative-xolotlFT
-        - -e .
+        - ../ips-iterative-xolotlFT
+        - .
 variables:
     FTRIDYN_PATH: /project/projectdirs/atom/atom-install-cori/fractal-tridyn    
     GITR_PATH: /project/projectdirs/atom/atom-install-cori/GITR
