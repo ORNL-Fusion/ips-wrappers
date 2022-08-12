@@ -7,5 +7,6 @@ setup(
     install_requires=["ipsframework","numpy","h5py","matplotlib"],
     scripts=["ips_xolotlFT/python_scripts_for_coupling/translate_ftridyn_to_xolotl.py",
              "ips_xolotlFT/python_scripts_for_coupling/get_yields.py"],
+    package_data={"ips_xolotlFT.python_scripts_for_coupling": ["table1.txt"]},
     find_packages=find_packages()
 )
