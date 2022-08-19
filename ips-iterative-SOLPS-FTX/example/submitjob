@@ -28,6 +28,7 @@ conda activate solps-ftx
 #export PYTHONPATH=$SLURM_SUBMIT_DIR:$PYTHONPATH
 
 module load PrgEnv-intel/6.0.5 intel/19.0.3.199
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/gcc/11.2.0/snos/lib64
 
 #export OMP_NUM_THREADS=32
 export OMP_PLACES=threads
