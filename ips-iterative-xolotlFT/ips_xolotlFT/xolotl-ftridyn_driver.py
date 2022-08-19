@@ -1018,7 +1018,7 @@ class xolotlFtridynDriver(Component):
                     sys.stdout.flush()
 
                     task_id_gy = self.services.launch_task(1,self.services.get_working_dir(),
-                                                        'python', ft_getYields_script, logfile='get_yields.log')
+                                                           ft_getYields_script, logfile='get_yields.log')
                     ret_val_gy = self.services.wait_task(task_id_gy)
 
                     if os.path.exists(pkl_gy_file):
