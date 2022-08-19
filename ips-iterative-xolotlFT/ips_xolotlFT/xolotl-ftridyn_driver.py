@@ -968,7 +968,7 @@ class xolotlFtridynDriver(Component):
                         sys.stdout.flush()
 
                         task_id_impl = self.services.launch_task(1,self.services.get_working_dir(),
-                                                            'python', ft_implProfile_script, logfile='tridynPlotting.log')
+                                                                 ft_implProfile_script, logfile='tridynPlotting.log')
                         ret_val_impl = self.services.wait_task(task_id_impl)
 
                     else: #if len(maxDepth)==0
