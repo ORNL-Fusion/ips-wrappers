@@ -43,7 +43,6 @@ class cariddi_driver(Component):
 #  If this is the first call, set up the V3FIT sub workflow.
         if timeStamp == 0.0:
             self.current_v3fit_state = self.services.get_config_param('CURRENT_V3FIT_STATE')
-            self.current_siesta_state = self.services.get_config_param('CURRENT_SIESTA_STATE')
             self.current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
             self.current_vmec_profile = self.services.get_config_param('CURRENT_VMEC_PROFILE')
             current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
@@ -72,6 +71,7 @@ class cariddi_driver(Component):
                    }
 
             v3fit_config = self.services.get_config_param('V3FIT_CONFIG')
+            self.zip_ref.extract(v3fit_config)
 
             (self.eq_worker['sim_name'],
              self.eq_worker['init'],
@@ -227,12 +227,7 @@ class cariddi_driver(Component):
 #-------------------------------------------------------------------------------
     def get_magnetic_axis(self):
         with ZipState.ZipState(self.current_v3fit_state, 'r') as v3fit_ref:
-            if self.current_siesta_state in v3fit_ref:
-                v3fit_ref.extract(self.current_siesta_state)
-                with ZipState.ZipState(self.current_siesta_state, 'r') as siesta_ref:
-                    siesta_ref.extract(self.current_vmec_state)
-            else:
-                v3fit_ref.extract(self.current_vmec_state)
+            v3fit_ref.extract(self.current_vmec_state)
 
         with ZipState.ZipState(self.current_vmec_state, 'r') as vmec_ref:
             vmec_ref.extract(self.current_wout_file)
