@@ -1,0 +1,7 @@
+name: cariddi_workflow
+dependencies:
+    - pip
+    - pip:
+        - ipsframework
+        - omfit_classes
+        - .
