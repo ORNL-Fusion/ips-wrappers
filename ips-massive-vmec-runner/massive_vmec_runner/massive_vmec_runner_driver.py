@@ -65,6 +65,6 @@ class massive_serial_runner_driver(Component):
 #  Massive Serial Runner Driver Compoenet finalize method. This cleans up after.
 #
 #-------------------------------------------------------------------------------
-    def finalize(self, timeStamp=0.0)
+    def finalize(self, timeStamp=0.0):
         ScreenWriter.screen_output(self, 'verbose', 'massive_serial_runner_driver: finalize')
         self.services.call(self.massive_vmec_runner_port, 'finalize', timeStamp)

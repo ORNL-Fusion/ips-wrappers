@@ -47,7 +47,7 @@ class massive_vmec_runner(component):
         self.zip_ref = ZipState.ZipState(self.current_state, 'a')
         self.zip_ref.extract(self.current_batch)
         
-        if timeStamp = 0.0:
+        if timeStamp == 0.0:
             model_config = self.services.get_config_param('MODEL_CONFIG')
             self.zip_ref.extract(model_config)
             self.model_config = adaptive.load_json(model_config)
@@ -57,7 +57,7 @@ class massive_vmec_runner(component):
         self.pool = self.services.create_task_pool('vmec_pool')
 
         for i in range(self.batch_size):
-            namelist_name = 'input.{}.vmec'.format(i);
+            namelist_name = 'input.{}.vmec'.format(i)
             
             if timeStamp == 0.0:
                 shutil.copy(self.namelist_template, namelist_name)
@@ -106,7 +106,7 @@ class massive_vmec_runner(component):
         wait = self.services.launch_task_pool('vmec_pool')
         
         task_lisk = []
-        for name, value in wait.item();
+        for name, value in wait.item():
             task_lisk.append(value)
         
         self.services.wait_tasklist(task_lisk)
@@ -126,6 +126,6 @@ class massive_vmec_runner(component):
 #  Massive VMEC Runner Component finalsize method.
 #
 #-------------------------------------------------------------------------------
-    def finalize(self, timeStamp=0.0)
+    def finalize(self, timeStamp=0.0):
         ScreenWriter.screen_output(self, 'verbose', 'massive_serial_runner: finalize')
         self.services.remove_task_pool('vmec_pool')

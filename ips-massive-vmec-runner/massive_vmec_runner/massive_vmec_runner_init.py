@@ -78,7 +78,7 @@ class massive_serial_runner_init(Component):
 #  Massive VMEC Runner init Component step method. Not used.
 #
 #-------------------------------------------------------------------------------
-    def step(self, timeStamp=0.0)
+    def step(self, timeStamp=0.0):
         ScreenWriter.screen_output(self, 'verbose', 'massive_serial_runner_init: step')
 
 #-------------------------------------------------------------------------------
@@ -87,6 +87,6 @@ class massive_serial_runner_init(Component):
 #  afterwards. Not used.
 #
 #-------------------------------------------------------------------------------
-    def finalize(self, timeStamp=0.0)
+    def finalize(self, timeStamp=0.0):
         ScreenWriter.screen_output(self, 'verbose', 'massive_serial_runner_init: finalize')
 
