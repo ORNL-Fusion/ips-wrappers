@@ -1,0 +1,9 @@
+name: massive_vmec
+dependencies:
+    - pip
+    - pip:
+        - ipsframework
+        - netCDF4
+        - omfit_classes
+        - ../utilities
+        - .

@@ -7,9 +7,9 @@
 #-------------------------------------------------------------------------------
 
 from ipsframework import Component
-from ips_components_utilities import ZipState
-from ips_components_utilities import ScreenWriter
-from ips_components_utilities import NamelistItem
+from ips_component_utilities import ZipState
+from ips_component_utilities import ScreenWriter
+from ips_component_utilities import NamelistItem
 import adaptive
 import shutil
 import netCDF4

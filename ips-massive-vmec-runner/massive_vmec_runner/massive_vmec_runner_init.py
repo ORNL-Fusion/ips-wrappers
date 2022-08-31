@@ -7,8 +7,8 @@
 #-------------------------------------------------------------------------------
 
 from ipsframework import Component
-from ips_components_utilities import ZipState
-from ips_components_utilities import ScreenWriter
+from ips_component_utilities import ZipState
+from ips_component_utilities import ScreenWriter
 import os
 import adaptive
 
