@@ -10,7 +10,7 @@ from ipsframework import Component
 from ips_component_utilities import ZipState
 from ips_component_utilities import ScreenWriter
 import os
-import adaptive
+from ml import adaptive
 
 #-------------------------------------------------------------------------------
 #
