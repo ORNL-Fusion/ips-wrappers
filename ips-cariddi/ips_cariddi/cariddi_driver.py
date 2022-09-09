@@ -113,10 +113,11 @@ class cariddi_driver(Component):
 #  the mgrid file path to point to the zeroed out file.
         eq_keywords = self.get_eq_profiles()
         eq_keywords['vmec__mgrid_file'] = self.services.get_config_param('MGRID_FILE')
+        eq_keywords['force_update'] = True
 
 #  Run the inital equilibrium with the first set of profiles.
         self.services.call(self.eq_worker['driver'], 'init', float(time_stamp), **eq_keywords)
-        self.services.call(self.eq_worker['driver'], 'step', float(time_stamp), force_update=True)
+        self.services.call(self.eq_worker['driver'], 'step', float(time_stamp), **eq_keywords)
         self.get_updated_substate(time_stamp)
 
 #  Get the surface currents and generate then eddy.nc file.
@@ -147,7 +148,8 @@ class cariddi_driver(Component):
                                           'save_fields'])
             self.get_updated_state()
             eq_keywords = self.get_eq_profiles()
-            
+            eq_keywords['force_update'] = True
+                    
             delta_magnetic_axis = 100
 
             while inner_loop_time_stamp < self.time_sub_steps:
@@ -155,7 +157,7 @@ class cariddi_driver(Component):
                 if inner_loop_time_stamp == 0:
                     self.services.call(self.eq_worker['driver'], 'init', float(time_stamp), **eq_keywords)
                 else:
-                    self.services.call(self.eq_worker['driver'], 'init', float(time_stamp))
+                    self.services.call(self.eq_worker['driver'], 'init', float(time_stamp), force_update=True)
                 self.services.call(self.eq_worker['driver'], 'step', float(time_stamp), force_update=True)
                 self.get_updated_substate(time_stamp)
 
@@ -171,7 +173,7 @@ class cariddi_driver(Component):
                 if delta_magnetic_axis < 1.0E-7:
                     break
 
-                self.services.call(self.eq_worker['driver'], 'init', float(time_stamp))
+                self.services.call(self.eq_worker['driver'], 'init', float(time_stamp), force_update=True)
                 self.services.call(self.eq_worker['driver'], 'step', float(time_stamp), force_update=True)
                 self.get_updated_substate(time_stamp)
 

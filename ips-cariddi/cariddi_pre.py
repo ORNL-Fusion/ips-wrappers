@@ -296,10 +296,13 @@ def set_namelist_parameters(path, time_index, vmec_input):
 #  Read profile data.
     data = numpy.loadtxt(file_prof, skiprows = 1)
 
-    s_pol = data[:,0]
-    p = data[:,1]
-    phi_tot = data[:,4]
-    I_tor = data[:,5]
+    edge_index = -1
+    tuncation = 1.0
+
+    s_pol = data[:edge_index,0]
+    p = data[:edge_index,1]
+    phi_tot = data[:edge_index,4]
+    I_tor = data[:edge_index,5]
 
     s = phi_tot/numpy.amax(phi_tot)
     ss = numpy.arange(11)/10.
@@ -319,9 +322,9 @@ def set_namelist_parameters(path, time_index, vmec_input):
     for i, p in enumerate(pp):
         profile_changes['vmec__am_aux_f({})'.format(i + 1)] = p
 
-    profile_changes['vmec__phiedge'] = phi_tot[-1]
+    profile_changes['vmec__phiedge'] = tuncation*phi_tot[-1]
 #  FIXME: Test convergence by decreasing the total toroidal current.
-    profile_changes['vmec__curtor'] = I_tor[-1]
+    profile_changes['vmec__curtor'] = tuncation*I_tor[-1]
 
     with open(vmec_input, 'w') as json_ref:
         json.dump(profile_changes, json_ref, indent=4)
