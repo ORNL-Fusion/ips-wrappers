@@ -1,4 +1,4 @@
-name: solps-ftx
+name: ftx
 dependencies:
     - pip
     - pip:
@@ -6,12 +6,6 @@ dependencies:
         - numpy
         - h5py
         - matplotlib
-        - netcdf4
-        - mpi4py
-        - /global/cfs/cdirs/atom/users/jcanik/DivPed/ips-solps-iter/src
-        - /global/cfs/cdirs/atom/users/jcanik/DivPed/ips-solps-iter/lib
-        - scipy
-        - ../ips-iterative-xolotlFT
         - .
 variables:
     FTRIDYN_PATH: /project/projectdirs/atom/atom-install-cori/fractal-tridyn    

@@ -30,11 +30,7 @@ class xolotlFtridynDriver(Component):
 
         cwd = self.services.get_working_dir()
 
-        print(' ')
-        print('---------------------------')
-        print('  FT-X driver:init called  ')
-        print('---------------------------')
-        print(' ')
+        print('  FT-X driver:init called ')
         print('\t with keywords: ',keywords)
         print(' ')
         
@@ -57,7 +53,15 @@ class xolotlFtridynDriver(Component):
             except:
                 print('\t \t No log file defined; using default sys.stdout')
                 outfile=None
+
         print(' ')
+        print('---------------------------')
+        print('---------------------------')
+        print('  FT-X driver:init  ')
+        print('---------------------------')
+        print('---------------------------')
+        print(' ')
+        
         try:
             if self.PRINT_TEST=='on':
                 self.print_test=True
@@ -74,12 +78,6 @@ class xolotlFtridynDriver(Component):
             print('print_TEST values not found')
             print('Print only std output lines (no TEST lines)')
             self.print_test=False
-        print(' ')
-
-        print(' ')
-        print('---------------------------')
-        print('xolotl-ftridyn_driver: init')
-        print('---------------------------')
         print(' ')
         
         #stage input files
@@ -704,15 +702,8 @@ class xolotlFtridynDriver(Component):
 
         cwd = self.services.get_working_dir()
 
-        print('\n')
-        print('---------------------------')
-        print('---------------------------')
-        print('  FT-X driver:step called  ')
-        print('---------------------------')
-        print('---------------------------')
-        print(' ')
-        print('\t with keywords: ', keywords)
-        print(' ')
+        print('  FT-X driver:step called')
+        print('\t with keywords: ',keywords)
         
         print('\t output file of the FT-X workflow:')
         if 'LOG_FILE' in keywords:
@@ -734,13 +725,14 @@ class xolotlFtridynDriver(Component):
                 print('\t \t No log file defined; using default sys.stdout')
                 outFile=None
 
+        print('\n')
+        print('---------------------------')
+        print('---------------------------')
+        print('  FT-X driver:step  ')
+        print('---------------------------')
+        print('---------------------------')
         print(' ')
-        print('---------------------------')
-        print('---------------------------')
-        print('xolotl-ftridyn_driver: step')
-        print('---------------------------')
-        print('---------------------------')
-        print(' ')
+
 
         ftridyn = self.services.get_port('WORKER')
         xolotl = self.services.get_port('XWORKER')
