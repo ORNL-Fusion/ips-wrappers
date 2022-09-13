@@ -1191,16 +1191,16 @@ class xolotlFtridynDriver(Component):
             sys.stdout.flush()
 
             #list modules right before running Xolotl:
-            if self.print_test:
-                modList=os.system('module list')
-                print('\t TEST: we are running Xolotl with the following modules loaded: ', modList)
-                print('\t load cray-hdf5-parallel')
-            os.system('module load cray-hdf5-parallel')
-            if self.print_test:
-                modList=os.system('module list')
-                print('\t TEST: we are running Xolotl with the following modules loaded: ', modList)
-                print(' ')
-            sys.stdout.flush()
+            #if self.print_test:
+            #    modList=os.system('module list')
+            #    print('\t TEST: we are running Xolotl with the following modules loaded: ', modList)
+            #    print('\t load cray-hdf5-parallel')
+            #os.system('module load cray-hdf5-parallel')
+            #if self.print_test:
+            #    modList=os.system('module list')
+            #    print('\t TEST: we are running Xolotl with the following modules loaded: ', modList)
+            #    print(' ')
+            #sys.stdout.flush()
             
             #calculate effective sputtering yield; i.e., weighted by relative flux of W-to-He
             totalSpYield=0
@@ -1500,20 +1500,20 @@ class xolotlFtridynDriver(Component):
             sys.stdout.flush()
             self.services.update_state()
 
-    def finalize(self, timeStamp=0.0):
+    def finalize(self, timeStamp=0.0,**keywords):
 
         print('  FT-X driver:finalize called')
         print('\t with keywords: ',keywords)
-
+        
         print('\t output file of the FT-X workflow:')
-	if 'LOG_FILE' in keywords:
+        if 'LOG_FILE' in keywords:
             logFile=keywords['LOG_FILE']
             outFile=cwd+'/'+logFile
             print('\t \t log file defined in keywords: ')
-	    print('\t \t ', outFile)
+            print('\t \t ', outFile)
             outF=open(outFile , 'a')
             sys.stdout = outF
-	else:
+        else:
             try:
                 self.LOG_FILE
                 logFile = self.LOG_FILE
@@ -1523,7 +1523,7 @@ class xolotlFtridynDriver(Component):
                 sys.stdout = outF
             except:
                 print('\t \t No log file defined; using default sys.stdout')
-		outFile=None
+                outFile=None
         sys.stdout.flush()
         
         #can we add compressing output here? e.g., last_TRIDYN, xolotlStop...
