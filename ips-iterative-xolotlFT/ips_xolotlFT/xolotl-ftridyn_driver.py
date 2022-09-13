@@ -1273,48 +1273,6 @@ class xolotlFtridynDriver(Component):
                         print('\t \t grouping does not exist in the xolotl dictionary. No need to delete it')
                 print(' ')
             sys.stdout.flush()
-            
-                #if 'netParam' in self.xp.parameters:
-                #    try:
-                #        if self.driver['netParam_restart']=='keep':
-                #            print('\t \t netParam_restart says to keep netParams in restart')
-                #            print('\t \t will run restart loop with Xolotls netParam = ', self.xp.parameters['netParam'])
-                #        elif self.driver['netParam_restart']=='delete':
-                #            print('\t \t netParam_restart says to remove netParams from Xolotls inputs in restart')
-                #            del self.xp.parameters['netParam']
-                #        else:
-                #            print('\t \t netParam_restart not recognized: ', self.driver['netParam_restart'])
-                #            print('\t \t default is to delete netParam from Xolotls inputs in restart')
-                #            del self.xp.parameters['netParam']
-                #    except Exception as e:
-                #        print(e)
-                #        print('\t \t failed to check if netParam should be deleted in restart')
-                #        print('\t \t by default, remove netParams from Xolotls inputs in restart')
-                #        del self.xp.parameters['netParam']
-                #else:
-                #    print('\t \t netParam does not exist in the xolotl parameters. No need to delete it')
-
-                ## check if we need to keep grouping in parameter file of restart 
-                #if 'grouping' in self.xp.parameters:
-                #    try:
-                #        if self.driver['grouping_restart']=='keep':
-                #            print('\t \t grouping_restart says to keep grouping in restart')
-                #            print('\t \t will run restart loop with Xolotls grouping = ', self.xp.parameters['grouping'])
-                #        elif self.driver['grouping_restart']=='delete':
-                #            print('\t \t grouping_restart says to remove grouping from Xolotls inputs in restart')
-                #            del self.xp.parameters['grouping']
-                #        else:
-                #            print('\t \t grouping_restart not recognized: ', self.driver['grouping_restart'])
-                #            print('\t \t default is to delete grouping from Xolotls inputs in restart')
-                #            del self.xp.parameters['grouping']
-                #    except Exception as e:
-                #        print(e)
-                #        print('\t \t failed to check if grouping should be deleted in restart')
-                #        print('\t \t by default, remove grouping from Xolotls inputs in restart')
-                #        del self.xp.parameters['grouping']
-                #else:
-                #    print('\t \t grouping does not exist in the xolotl parameters. No need to delete it')
-                #sys.stdout.flush()
                     
             #determine if he_conc true/false ; if true, add '-he_conc' to petsc arguments 
             if self.driver['XOLOTL_HE_CONC']=='Last':
@@ -1543,7 +1501,31 @@ class xolotlFtridynDriver(Component):
             self.services.update_state()
 
     def finalize(self, timeStamp=0.0):
-        print('xolotl-ftridyn_driver: finalize')
+
+        print('  FT-X driver:finalize called')
+        print('\t with keywords: ',keywords)
+
+        print('\t output file of the FT-X workflow:')
+	if 'LOG_FILE' in keywords:
+            logFile=keywords['LOG_FILE']
+            outFile=cwd+'/'+logFile
+            print('\t \t log file defined in keywords: ')
+	    print('\t \t ', outFile)
+            outF=open(outFile , 'a')
+            sys.stdout = outF
+	else:
+            try:
+                self.LOG_FILE
+                logFile = self.LOG_FILE
+                outFile=logFile
+                print('\t \t log file defined in config file', outFile)
+                outF=open(outFile , 'a')
+                sys.stdout = outF
+            except:
+                print('\t \t No log file defined; using default sys.stdout')
+		outFile=None
+        sys.stdout.flush()
+        
         #can we add compressing output here? e.g., last_TRIDYN, xolotlStop...
         #and remove large output files? e.g., FTRIDYN.zip
 
