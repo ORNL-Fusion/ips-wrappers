@@ -9,9 +9,9 @@ import sys
 
 def keepLastTS(inFile='xolotlStop.h5', outFile='netFile', print_test=False):
 
-    print('\t called keepLastTS')
     #if TEST
     if print_test:
+        print('\t called keepLastTS')
         print('\t \t TEST: with input:')
         print('\t \t', inFile)
     sys.stdout.flush()
@@ -62,7 +62,7 @@ def keepLastTS(inFile='xolotlStop.h5', outFile='netFile', print_test=False):
         print('\t \t TEST: all information succesfully written into ')
         print('\t \t', outFile)
 
-    print('\t ...keepLastTS done!')
-    sys.stdout.flush()
+        print('\t ...keepLastTS done!')
+        sys.stdout.flush()
 
     return

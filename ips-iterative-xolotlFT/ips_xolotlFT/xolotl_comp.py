@@ -191,8 +191,8 @@ class xolotlWorker(Component):
                 sys.stdout.flush()
 
         else:
-            self.services.error('xolotl_worker: Aborting after %d num_trials trials' %num_trials)
-            raise Exception("Aborting simulation after %d failed xolotl runs" % num_trials)
+            self.services.error('xolotl_worker: Aborting after %d trials' %num_tries)
+            raise Exception('Aborting simulation after %d failed xolotl runs' %num_tries)
 
         #UPDATE: ALREADY IN DRIVER save network file with a different name to use in the next time step
         
