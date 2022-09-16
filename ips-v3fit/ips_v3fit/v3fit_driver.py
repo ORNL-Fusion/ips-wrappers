@@ -37,8 +37,10 @@ class v3fit_driver(Component):
         for key, value in keywords.items():
             if 'vmec__' in key or 'siesta__' in key:
                 eq_keywords[key] = value
-            if 'v3fit__' in key:
+            elif 'v3fit__' in key:
                 v3fit_keywords[key.replace('v3fit__','',1)] = value
+            else:
+                eq_keywords[key] = value
 
 #  Get config filenames.
         current_model_state = self.services.get_config_param('MODEL_STATE')
@@ -79,7 +81,7 @@ class v3fit_driver(Component):
 #  Initialize and run the equilibrium. Replace values in the V3FIT state.
         self.services.call(self.eq_worker['init'], 'init', timeStamp)
         self.services.call(self.eq_worker['driver'], 'init', timeStamp, **eq_keywords)
-        self.services.call(self.eq_worker['driver'], 'step', timeStamp)
+        self.services.call(self.eq_worker['driver'], 'step', timeStamp, **eq_keywords)
             
 #  After the equilibrium has run update the state.
         self.services.stage_subflow_output_files()
