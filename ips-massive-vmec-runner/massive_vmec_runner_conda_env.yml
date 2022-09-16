@@ -6,7 +6,7 @@ dependencies:
         - netCDF4
         - scipy
         - pexpect
-        - omfit_classes==3.2022.31.2
+        - omfit_classes
         - ../../systemcode
         - ../utilities
         - .

@@ -27,7 +27,7 @@ def extract_if_needed(zip_ref, file):
 #  Massive VMEC Runner init Component Constructor
 #
 #-------------------------------------------------------------------------------
-class massive_serial_runner_init(Component):
+class massive_vmec_runner_init(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
 
@@ -38,13 +38,13 @@ class massive_serial_runner_init(Component):
 #
 #-------------------------------------------------------------------------------
     def init(self, timeStamp=0.0, **keywords):
-        ScreenWriter.screen_output(self, 'verbose', 'massive_serial_runner_init: init')
+        ScreenWriter.screen_output(self, 'verbose', 'massive_vmec_runner_init: init')
 
 #  Get config filenames.
         if timeStamp == 0.0:
             self.current_state = self.services.get_config_param('CURRENT_MVR_STATE')
             self.current_batch = self.services.get_config_param('CURRENT_BATCH')
-            self.batch_size = self.services.get_config_param('BATCH_SIZE')
+            self.batch_size = int(self.services.get_config_param('BATCH_SIZE'))
             self.constraint_path = self.services.get_config_param('MODULE_PATH')
             self.constraint_name = self.services.get_config_param('MODULE_NAME')
             self.model_config = self.services.get_config_param('MODEL_CONFIG')
@@ -52,7 +52,7 @@ class massive_serial_runner_init(Component):
 #  Remove old inputs.
         if os.path.exists(self.current_batch):
             os.remove(self.current_batch)
-        
+
 #  Stage input files and setup intial state.
         self.services.stage_input_files(self.INPUT_FILES)
 
@@ -63,9 +63,9 @@ class massive_serial_runner_init(Component):
             if self.current_batch not in zip_ref:
                 zip_ref.extract(self.model_config)
 
-                model = adaptive.no_model(adaptive.load_json(self.model_config),
-                                          self.constraint_path,
-                                          self.constraint_name)
+                model = adaptive.adaptive_train.no_model(adaptive.load_json(self.model_config),
+                                                         self.constraint_path,
+                                                         self.constraint_name)
                 model.create_prediction_data(self.batch_size)
                 model.save_random_sample(self.current_batch)
 
@@ -79,7 +79,7 @@ class massive_serial_runner_init(Component):
 #
 #-------------------------------------------------------------------------------
     def step(self, timeStamp=0.0):
-        ScreenWriter.screen_output(self, 'verbose', 'massive_serial_runner_init: step')
+        ScreenWriter.screen_output(self, 'verbose', 'massive_vmec_runner_init: step')
 
 #-------------------------------------------------------------------------------
 #
@@ -88,5 +88,4 @@ class massive_serial_runner_init(Component):
 #
 #-------------------------------------------------------------------------------
     def finalize(self, timeStamp=0.0):
-        ScreenWriter.screen_output(self, 'verbose', 'massive_serial_runner_init: finalize')
-
+        ScreenWriter.screen_output(self, 'verbose', 'massive_vmec_runner_init: finalize')

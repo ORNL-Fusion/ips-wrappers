@@ -23,6 +23,8 @@
 
 conda activate massive_vmec
 
+export LD_LIBRARY_PATH=/global/homes/m/markcian/perl_libs/lib:$LD_LIBRARY_PATH
+
 ips.py --simulation=ips.massive_vmec_runner.config --platform=platform.conf
 
 wait
