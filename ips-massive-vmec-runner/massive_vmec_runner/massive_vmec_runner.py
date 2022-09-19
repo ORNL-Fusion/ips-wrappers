@@ -107,7 +107,7 @@ class massive_vmec_runner(Component):
     def step(self, timeStamp=0.0, **keywords):
         ScreenWriter.screen_output(self, 'verbose', 'massive_serial_runner: step')
 
-        self.services.submit_tasks('vmec_pool')
+        self.services.submit_tasks('vmec_pool', use_dask=True, dask_nodes=1)
 
         self.batch_data['outputs'] = {}
         
@@ -115,12 +115,10 @@ class massive_vmec_runner(Component):
  
         for i in range(self.batch_size):
             wout_name = 'wout_{}.vmec.nc'.format(i)
-            print(wout_name)
 
             with netCDF4.Dataset(wout_name, 'r') as wout_ref:
                 for entry in self.model_config['outputs']:
                     if entry['name'] not in self.batch_data['outputs']:
-                        print(entry['name'] not in self.batch_data['outputs'])
                         self.batch_data['outputs'] = {entry['name'] : []}
                     name, index = parse_name(entry['name'])
                     self.batch_data['outputs'][entry['name']].append(wout_ref.variables[name][:][index])

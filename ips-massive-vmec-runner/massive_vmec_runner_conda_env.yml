@@ -2,6 +2,7 @@ name: massive_vmec
 dependencies:
     - pip
     - pip:
+        - dask[complete]
         - ipsframework
         - netCDF4
         - scipy
