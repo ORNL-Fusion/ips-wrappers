@@ -42,6 +42,7 @@ class massive_serial_runner_init(Component):
 
 #  Get config filenames.
         if timeStamp == 0.0:
+            self.save_logs = int(self.services.get_config_param('SAVE_LOGS'))
             self.current_state = self.services.get_config_param('CURRENT_MSR_STATE')
             self.msr_global_config = self.services.get_config_param('MSR_GLOBAL_CONFIG')
             self.current_batch = self.services.get_config_param('CURRENT_BATCH')
@@ -76,6 +77,11 @@ class massive_serial_runner_init(Component):
 
 #  Check if a new batch of data exists. If it does create the new inscan file.
             if os.path.exists(self.current_batch):
+                if self.save_logs:
+                    log_file = 'sample_{}.log'.format(timeStamp)
+                else:
+                    log_file = 'sample.log'
+
                 task_wait = self.services.launch_task(self.NPROC,
                                                       self.services.get_working_dir(),
                                                       self.SAMPLE_EXE,
@@ -83,7 +89,7 @@ class massive_serial_runner_init(Component):
                                                       '--output=inscan',
                                                       '--nscan={}'.format(self.batch_size),
                                                       '--new={}'.format(self.current_batch),
-                                                      logfile='sample_{}.log'.format(timeStamp))
+                                                      logfile=log_file)
 
                 if self.services.wait_task(task_wait):
                     self.services.error('massive_serial_runner_init: failed to generate inscan sample')
@@ -97,7 +103,7 @@ class massive_serial_runner_init(Component):
                                                       '--input={}'.format(self.inscan_config_file),
                                                       '--output=inscan',
                                                       '--nscan={}'.format(self.batch_size),
-                                                      logfile='sample_{}.log'.format(timeStamp))
+                                                      logfile=log_file)
 
                 if self.services.wait_task(task_wait):
                     self.services.error('massive_serial_runner_init: failed to generate inscan sample')
