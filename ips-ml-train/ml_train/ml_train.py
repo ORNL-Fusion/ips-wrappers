@@ -101,7 +101,7 @@ class ml_train(Component):
                                                       '--module={}'.format(self.constraint_name),
                                                       '--locations={}'.format(self.task_args['--locations']),
                                                       '--adaptive_percentage={}'.format(self.task_args['--adaptive_percentage']),
-                                                      logfile = log_file)
+                                                      logfile=log_file)
             else:
                 task_wait = self.services.launch_task(self.NPROC,
                                                       self.services.get_working_dir(),
@@ -125,7 +125,7 @@ class ml_train(Component):
                                                       '--module={}'.format(self.constraint_name),
                                                       '--locations={}'.format(self.task_args['--locations']),
                                                       '--adaptive_percentage={}'.format(self.task_args['--adaptive_percentage']),
-                                                      logfile = log_file)
+                                                      logfile=log_file)
 
 #  Update flags.
             self.zip_ref.set_state(state='updated')
