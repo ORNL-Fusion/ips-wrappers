@@ -30,6 +30,8 @@ class ml_train(Component):
         ScreenWriter.screen_output(self, 'verbose', 'ml_train: init')
 
         if timeStamp == 0.0:
+            self.save_logs = int(self.services.get_config_param('SAVE_LOGS'))
+
             self.current_ml_train_state = self.services.get_config_param('CURRENT_ML_TRAIN_STATE')
             self.training_data = self.services.get_config_param('TRAINING_DATA')
             self.new_data = self.services.get_config_param('NEW_DATA')
@@ -76,6 +78,11 @@ class ml_train(Component):
         flags = self.zip_ref.get_state()
 
         if 'state' in flags and flags['state'] == 'needs_update':
+            if self.save_logs:
+                log_file = 'ml_train_{}.log'.format(timeStamp)
+            else:
+                log_file = 'ml_train.log'
+
             if os.path.exists(self.nn_model):
                 task_wait = self.services.launch_task(self.NPROC,
                                                       self.services.get_working_dir(),
@@ -94,7 +101,7 @@ class ml_train(Component):
                                                       '--module={}'.format(self.constraint_name),
                                                       '--locations={}'.format(self.task_args['--locations']),
                                                       '--adaptive_percentage={}'.format(self.task_args['--adaptive_percentage']),
-                                                      logfile = 'ml_train_{}.log'.format(timeStamp))
+                                                      logfile = log_file)
             else:
                 task_wait = self.services.launch_task(self.NPROC,
                                                       self.services.get_working_dir(),
@@ -118,7 +125,7 @@ class ml_train(Component):
                                                       '--module={}'.format(self.constraint_name),
                                                       '--locations={}'.format(self.task_args['--locations']),
                                                       '--adaptive_percentage={}'.format(self.task_args['--adaptive_percentage']),
-                                                      logfile = 'ml_train_{}.log'.format(timeStamp))
+                                                      logfile = log_file)
 
 #  Update flags.
             self.zip_ref.set_state(state='updated')
