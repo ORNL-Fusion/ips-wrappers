@@ -101,10 +101,13 @@ class xolotlFtridynDriver(Component):
         print('\t ...input files staged succesfully')
         print(('input directory for this simulation is {} \n'.format( self.INPUT_DIR)))
 
-        plasma_state_file = self.services.get_config_param('PLASMA_STATE_FILES')
+        plasma_state_file = self.STATE_FILES #to only stage/update what the driver needs ; self.services.get_config_param('PLASMA_STATE_FILES')
         plasma_state_list = plasma_state_file.split()
         for index in range(len(plasma_state_list)):
-            open(plasma_state_list[index], 'a').close()                
+            open(plasma_state_list[index], 'a').close()
+            if self.print_test:
+                print('\t created: ', plasma_state_list[index])
+        print(' ')
         #A MORE ELEGANT WAY --  FOR THE FUTURE
             #for file in plasma_state_list:
             #    open(file, 'a').close()
