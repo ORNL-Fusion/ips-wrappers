@@ -76,11 +76,12 @@ class massive_serial_runner_init(Component):
             extract_if_needed(zip_ref, self.current_batch)
 
 #  Check if a new batch of data exists. If it does create the new inscan file.
+            if self.save_logs:
+                log_file = 'sample_{}.log'.format(timeStamp)
+            else:
+                log_file = 'sample.log'
+
             if os.path.exists(self.current_batch):
-                if self.save_logs:
-                    log_file = 'sample_{}.log'.format(timeStamp)
-                else:
-                    log_file = 'sample.log'
 
                 task_wait = self.services.launch_task(self.NPROC,
                                                       self.services.get_working_dir(),
