@@ -897,6 +897,7 @@ class xolotlFtridynDriver(Component):
                     #2) #get maximum projectile range to ensure bins are added correctly in 'translate_ftridyn_to_xolotl'
 
                     ft_output_prj_file=self.ft_output_prj_file[i]
+                    ft_output_file=self.ft_output_file[i]
                     angleFolder=self.ftridyn['outputPath']+'/'+self.FT_OUTPUT_FOLDER+'/ANGLE'
 
                     for j in range(len(self.angleIn[i])):
@@ -918,7 +919,7 @@ class xolotlFtridynDriver(Component):
                         self.maxRangeXolotl[i]=maxRange/10.0 #range in nm for Xolotl 
                         print(('\t maximum projectile range for {} is {} [A]'.format(prj, maxRange)))
                         print(' ')
-                        ft_output_file=self.ft_output_file[i]
+                        #ft_output_file=self.ft_output_file[i]
                         #get implantation profile
                         #pass values as dictionary
                         ft_implProfiles_dictionary={}
