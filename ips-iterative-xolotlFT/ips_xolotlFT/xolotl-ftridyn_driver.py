@@ -7,18 +7,18 @@ import os.path
 import subprocess
 import numpy
 import shutil
-from .python_scripts_for_coupling import translate_xolotl_to_ftridyn
+from ips_xolotlFT.python_scripts_for_coupling import translate_xolotl_to_ftridyn
 #import translate_ftridyn_to_xolotl_launch
 #import get_yields_launch
-from .python_scripts_for_coupling import binTRIDYN
-from .python_scripts_for_coupling import param_handler
+from ips_xolotlFT.python_scripts_for_coupling import binTRIDYN
+from ips_xolotlFT.python_scripts_for_coupling import param_handler
 import traceback
-from .python_scripts_for_coupling import transferGrid
+from ips_xolotlFT.python_scripts_for_coupling import transferGrid
 import pickle
-from .python_scripts_for_coupling import keepLastTS
-from .python_scripts_for_coupling import write_tridynDat
-from .python_scripts_for_coupling import handle_tempModel
-from .python_scripts_for_coupling import handle_gridModel
+from ips_xolotlFT.python_scripts_for_coupling import keepLastTS
+from ips_xolotlFT.python_scripts_for_coupling import write_tridynDat
+from ips_xolotlFT.python_scripts_for_coupling import handle_tempModel
+from ips_xolotlFT.python_scripts_for_coupling import handle_gridModel
 import inspect
 
 class xolotlFtridynDriver(Component):
@@ -79,6 +79,21 @@ class xolotlFtridynDriver(Component):
             print('Print only std output lines (no TEST lines)')
             self.print_test=False
         print(' ')
+
+        #test giving explicit wrapper path in modernized FTX workflow
+        if self.print_test:
+            try:
+                self.SCRIPT
+                if self.SCRIPT == "":
+                    print('no explicit script path provided. use module loaded in environment')
+                else:
+                    print('using explicit path to wrapper')
+                    print(self.SCRIPT)
+            except Exception as e:
+                print(e)
+                print('no script variable defined. use module loaded in environment')
+            print(' ')
+
         
         #stage input files
         print('staging input files {} '.format(self.INPUT_FILES))
@@ -86,10 +101,13 @@ class xolotlFtridynDriver(Component):
         print('\t ...input files staged succesfully')
         print(('input directory for this simulation is {} \n'.format( self.INPUT_DIR)))
 
-        plasma_state_file = self.services.get_config_param('PLASMA_STATE_FILES')
+        plasma_state_file = self.STATE_FILES #to only stage/update what the driver needs ; self.services.get_config_param('PLASMA_STATE_FILES')
         plasma_state_list = plasma_state_file.split()
         for index in range(len(plasma_state_list)):
-            open(plasma_state_list[index], 'a').close()                
+            open(plasma_state_list[index], 'a').close()
+            if self.print_test:
+                print('\t created: ', plasma_state_list[index])
+        print(' ')
         #A MORE ELEGANT WAY --  FOR THE FUTURE
             #for file in plasma_state_list:
             #    open(file, 'a').close()
