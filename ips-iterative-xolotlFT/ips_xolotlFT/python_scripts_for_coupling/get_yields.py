@@ -147,6 +147,8 @@ def sputtering_and_reflection_launch(ftridynOneOutOutput='He_WOUT.dat',
             #calculate the sputtering yield for each run and take the average
             #if this does not work, use method of He_WSPYIELD.OUT (in xolotl's component)
             ftridynCurrentOutOutput=angleFolder+"/"+ftridynOneOutOutput
+            if not os.path.isfile(ftridynCurrentOutOutput):
+                continue
             ftridynCurrentOutFile=open(ftridynCurrentOutOutput,"r")
             ftridynCurrentOutData=ftridynCurrentOutFile.read().split('\n')
             searchStringSputter='SPUTTERED PARTICLES(2)'

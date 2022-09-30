@@ -672,7 +672,7 @@ class xolotlFtridynDriver(Component):
                         self.eadist_output_file.append(['dist','.dat'])
                         print("\t using default energy distribution file format, ['dist','.dat']")
                 else:       
-                    self.FT_energy_file_name.append('')		    
+                    self.FT_energy_file_name.append('')         
                     self.eadist_output_path.append('')
                     self.eadist_output_file.append([' ',' '])
             except Exception as e2:
@@ -915,6 +915,7 @@ class xolotlFtridynDriver(Component):
                     #2) #get maximum projectile range to ensure bins are added correctly in 'translate_ftridyn_to_xolotl'
 
                     ft_output_prj_file=self.ft_output_prj_file[i]
+                    ft_output_file=self.ft_output_file[i]
                     angleFolder=self.ftridyn['outputPath']+'/'+self.FT_OUTPUT_FOLDER+'/ANGLE'
 
                     for j in range(len(self.angleIn[i])):
@@ -936,7 +937,7 @@ class xolotlFtridynDriver(Component):
                         self.maxRangeXolotl[i]=maxRange/10.0 #range in nm for Xolotl 
                         print(('\t maximum projectile range for {} is {} [A]'.format(prj, maxRange)))
                         print(' ')
-                        ft_output_file=self.ft_output_file[i]
+                        #ft_output_file=self.ft_output_file[i]
                         #get implantation profile
                         #pass values as dictionary
                         ft_implProfiles_dictionary={}
@@ -1458,7 +1459,11 @@ class xolotlFtridynDriver(Component):
             print('copy last_TRIDYN.dat and ', self.XOLOTL_NETWORK_FILE, 'to: ')
             print('\t',  self.INPUT_DIR )
             shutil.copyfile('last_TRIDYN.dat', self.INPUT_DIR+'/last_TRIDYN.dat')
-            shutil.copyfile(self.XOLOTL_NETWORK_FILE, self.INPUT_DIR+'/'+self.XOLOTL_NETWORK_FILE)
+            source_ = self.XOLOTL_NETWORK_FILE
+            dest_ = self.INPUT_DIR+'/'+self.XOLOTL_NETWORK_FILE
+            with open(source_, "r") as f1:
+                with open(dest_, "w") as f2:
+                    shutil.copyfile(source_, dest_)
             print(' ')
 
             ## update driver mode after the 1st loop, from INIT to RESTART
