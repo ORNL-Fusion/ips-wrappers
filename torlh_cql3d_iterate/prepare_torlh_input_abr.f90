@@ -669,8 +669,8 @@
           end if
 !SF Overwrite psimap and phimap if in qldce mode
       IF (trim(toricmode) == 'qldce') THEN
-         phimap = ps%rho
-         psimap = sqrt(ps%psipol/ps%psipol(ps%nrho))        
+         phimap = ps%rho_eq
+         psimap = sqrt(ps%psipol/ps%psipol(size(ps%rho_eq)))        
       END IF   
 
           
