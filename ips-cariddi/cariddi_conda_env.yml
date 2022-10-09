@@ -1,0 +1,14 @@
+name: cariddi_workflow
+dependencies:
+    - pip
+    - pip:
+        - ipsframework
+        - netCDF4
+        - pexpect
+        - scipy
+        - omfit_classes
+        - ../utilities
+        - ../ips-vmec
+        - ../ips-siesta
+        - ../ips-v3fit
+        - .

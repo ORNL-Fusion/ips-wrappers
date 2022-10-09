@@ -8,8 +8,8 @@ OBJS = $(F90_SRC:%.f90=%.o)
 
 F90_MOD_INCLUDE =  $(F90_MOD_INCLUDE_PREFIX). $(F90_MOD_INCLUDE_PREFIX)$(IPS_ROOT)/include
 
-EXECUTABLES = model_NB model_NB_2 model_NB_2_mcmd py_model_NB_2_mcmd 
-SCRIPTS = model_NB.py model_NB_2.py model_NB_2_mcmd.py py_model_NB_2_mcmd.py 
+EXECUTABLES = model_NB
+SCRIPTS = model_NB.py
 
 TARGETS =  $(EXECUTABLES)
 
@@ -23,12 +23,6 @@ all: .depend
         fi;\
 	done;
 model_NB: model_NB.o
-	$(F90) -o $@  $@.o $(LIBS)
-model_NB_2: model_NB_2.o
-	$(F90) -o $@  $@.o $(LIBS)
-model_NB_2_mcmd: model_NB_2_mcmd.o
-	$(F90) -o $@  $@.o $(LIBS)
-py_model_NB_2_mcmd: py_model_NB_2_mcmd.o
 	$(F90) -o $@  $@.o $(LIBS)
 
 install:

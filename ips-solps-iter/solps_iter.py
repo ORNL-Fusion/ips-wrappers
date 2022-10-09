@@ -9,7 +9,7 @@
 
 from component import Component
 import os
-from omfit.classes.omfit_namelist import OMFITnamelist
+from omfit_classes.omfit_namelist import OMFITnamelist
 from utilities import ZipState
 from utilities import ScreenWriter
 
@@ -179,7 +179,7 @@ class solps_iter(Component):
             boundary_parameters = {}
             transport_inputfile = {}
 
-            for key, value in keywords.iteritems():
+            for key, value in keywords.items():
                 if 'tr__' in key:
                     transport_parameters[key.replace('tr__','',1)] = value
                 if 'nu__' in key:
@@ -195,7 +195,7 @@ class solps_iter(Component):
                 if os.path.exists(file) and len(keywords) > 0:
                     nl_file  = OMFITnamelist(file)
 
-                    for key, value in keywords.iteritems():
+                    for key, value in keywords.items():
                         nl_file[name][key] = value
 
                     nl_file.save()

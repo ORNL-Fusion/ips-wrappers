@@ -1,5 +1,13 @@
       program process_cql3d_output
 
+! (DBB 3/4/2020)
+! Copied coding from LH section to EC section which interpolates CQL3D grid onto Plasma 
+! State grid for ps%peech and ps%curech.
+
+! (DBB 3/2/2020)
+! Removed code that hardwired "cql3d.nc" as the cql3d output file name.  Inserted coding
+! to get cql3d_output_file from a command line argument.
+
 ! (DBB 4/4/2019)
 ! Added check to see if ImChizz.inp_template exists (i.e. input file for subroutine 
 ! write_inchizz_inp).  Needed so this code can be used TORLH which needs ImChizz.inp
@@ -30,7 +38,7 @@
 ! In general, the necessary PS storage will have already been set up by
 ! prepare_genray_input.f90/other rf prep, or by prepare_cql3d_input.f90.
 ! 
-!     prepare_cql3d_input takes 1 optional command line argument:
+!     process_cql3d_output takes 2 command line arguments:
 !                  1st: cql3d_output, gives types of output power 
 !                       depostion and currents
 !                       (One of 'LH', 'EC' 'IC' 'NBI' 'RW' 
@@ -40,6 +48,9 @@
 !                       'RW', 'LH+RW'.  
 !                       (Future: dimension cql3d_output
 !                       and add number of elements to treat simultaneously.)
+!                  2nd: cql3d_output_file is file name of cql3d netcdf output file. 
+!                       It was previously hard wired to "cql3d.nc".  It is set in
+!                       the cql3d input file, namelist "setup" 
 ! 
 
 ! define state object and interface...
@@ -105,6 +116,7 @@
       real*8, allocatable, dimension(:,:) :: curr, sptzrp, rovsc ! added by ptb
       real*8, allocatable, dimension(:)   :: tmp_prof, rho_cql   ! added by ptb
       real*8 :: powerlh, currlh, powerlh_int, currlh_int ! added by ptb:
+      real*8 :: powerec, currec, powerec_int, currec_int ! added by DBB:
       logical :: nonorm
 
       !dimensions tdim,nmodsdim,rdim
@@ -136,9 +148,10 @@
       
 ! ptb:      cur_state_file='/cur_state.cdf'
       cur_state_file='./cur_state.cdf'
+      
 ! ptb:      cql3d_output_file="./mnemonic.nc"  !Set up by cql3d/fp_cql3d.py
-      cql3d_output_file="./cql3d.nc"  !Set up by cql3d/fp_cql3d.py
-      cql3d_output='LH'
+!      cql3d_output_file="./cql3d.nc"  !Set up by cql3d/fp_cql3d.py
+!      cql3d_output='LH'
 cBH131016:  Note: evidently, must have mnemonic='cql3d' in the cqlinput
 cBH131016:  file used by cql3d.  
 cBH131016:  Note also:  Why is cql3d_output specified here, when
@@ -169,14 +182,16 @@ c-----------------------------------------------------------------------
 c F2003 syntax      iargs=command_argument_count()
 c Here, use portlib routines (also used by PS module)
       call get_arg_count(iarg)
-      if(iarg .ne.1) then 
-         print*, 'only one command line argument:'
-         print*, 'usage: process_cql3d_output: cql3d_output'
+      if(iarg .ne.2) then 
+         print*, 'usage: process_cql3d_output: '
+         print*, 'Two command line arguments required: ql3d_output, cql3d_output_file'
      	 stop 1
       end if
 c F2003-syntax call get_command_argument(1,cql3d_output)
       call get_arg(1, cql3d_output)
       write(*,*)  'cql3d_output = ', trim(cql3d_output)
+      call get_arg(2, cql3d_output_file)
+      write(*,*)  'cql3d_output_file = ', trim(cql3d_output_file)
 
 
 ! this call retrieves the plasma state at the present ps%, and
@@ -346,7 +361,7 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
       istatus = nf_inq_varid(ncid, 'radcoord', vid)
       istatus = nf_get_var_text(ncid, vid, radcoord)
       if (radcoord.ne.'sqtorflx') then
-         write(*,*)'STOP: problem with cql3d radial coord type'
+         write(*,*)'STOP: problem with cql3d radial coord type, not sqtorflx'
          stop
       endif
       ! the grid
@@ -456,38 +471,78 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
       !total current densities thus giving ec+ synergy.
       !(Similarly, for other rf-electron cases.)
 
-      !Check consistently set PS (e.g., by prep cql3d input)
-      if(ps%nrho_ecrf.ne.(lrz+1)) then
-         write(*,*)'STOP: problem with PS EC setup'
-         write(*,*)'ps%nrho_ecrf,(lrz+1)= ',ps%nrho_ecrf,(lrz+1)
-         stop
-      endif
+!DBB Interpolation of ECH power and driven current from CQL3D grid to Plasma State grid.
+!    There are comments below in the Lower Hybrid section which also apply here since this
+!    is lifted from that coding.
+
+         do l=1,lrz-1
+            rho_cql(l+1) = 0.5*(rya(l)+rya(l+1))
+         enddo
+         rho_cql(1) = 0.0
+         rho_cql(lrz+1) = 1.0
+         !tmp_prof(1:lrz) = powrft(:,nt) * dvol(:)
+         tmp_prof(1:lrz) = powers(:,5,1,nt) * dvol(:)
+
+         write(*,*) 'ps%rho_ecrf = ', ps%rho_ecrf
+         write(*,*) 'rho_cql = ', rho_cql
+         write(*,*) 'tmp_prof = ', tmp_prof
+         write(*,*) 'ps%peech = ', ps%peech
+         
+         call ps_user_rezone1(rho_cql, ps%rho_ecrf, tmp_prof, 
+     &        ps%peech, ierr, nonorm = .TRUE., zonesmoo = .TRUE.)
+
+         if(ierr .ne. 0) stop 'error interpolating CQL3D powers onto PS Grid ps%nrho_ecrf and ps%peech'
+         ps%peech_src(:,1) = ps%peech(:)
+         write(*,*) 'elecfld(l,nt) = ', elecfld(1:lrz+1,nt)
+  
+         do l=1,lrz
+          tmp_prof(l) = curr(l,nt)
+!          tmp_prof(l) = (curr(l,nt) - elecfld(l+1,nt)/
+!      &       (rovsc(l,nt)*sptzrp(l,nt)*9.0E+11)) * darea(l)
+         enddo
+         
+         write(*,*) 'curr(l,nt) = ', curr(:,nt)
+         write(*,*) 'tmp_prof = ', tmp_prof(:)
+
+         call ps_user_rezone1(rho_cql, ps%rho_ecrf, tmp_prof, 
+     &        ps%curech, ierr, nonorm = .TRUE., zonesmoo = .TRUE.)
+
+         write(*,*) 'rezoned ps%curech = ', ps%curech
+
+         if(ierr .ne. 0) stop 'error interpolating CQL3D powrft onto PS Grid ps%nrho_ecrf and ps%curech'
+
+         ps%curech_src(:,1) = ps%curech(:)
+
+! Interpolation of current
+         powerec = 0.0
+         currec = 0.0
       do l=1,lrz
-         ps%peech(l)=powrft(l,nt)*dvol(l)
-         ps%curech(l)=curr(l,nt)*darea(l) !Might use ccurtor, as above
+         powerec = powerec + powrft(l,nt)*dvol(l)
+         currec = curr(l,nt)
+!          currec = (curr(l,nt) - elecfld(l+1,nt)/
+!      &       (rovsc(l,nt)*sptzrp(l,nt)*9.0E+11)) * darea(l) + currec
       enddo
+! ptb checking interpolated quantities
+         powerec_int = 0.0
+         currec_int = 0.0
+      do l=1,ps%nrho_ecrf-1
+         powerec_int = powerec_int + ps%peech(l)
+         currec_int = currec_int + ps%curech(l)
+      enddo
+      write(*,*) 'power_ec = ', powerec, 'currec = ', currec
+      write(*,*) 'power_ec_int = ', powerec_int, 'currec_int = ', currec_int
          
       endif  !On cql3d_output.eq.'EC'
 
 
        if (cql3d_output.eq.'LH') then
-! ptb Don't check this stuff anymore because we are keeping rho_lhrf set to
-! what it was for genray, which is not in general equal to lrz+1
-!      if(ps%nrho_lhrf.ne.(lrz+1)) then
-!         write(*,*)'STOP: problem with PS LH setup'
-!         write(*,*)'ps%nrho_lhrf,(lrz+1)= ',ps%nrho_lhrf,(lrz+1)
-!         stop
-!      endif
+
 ! ptb Need to map powrft and curr from the cql3d radial grid (rya) to the 
 ! pelh, pelh_srfc, curlh, and curlh_src radial grid (rho_lhrf) which was set 
 ! in genray. Assume only one source for this operation (for now).
-         write(*,*) 'Advanced into interpolation of cql3d profiles onto PS grid'
 !N.B.    size(f_target) = size(rho_target) - 1; this is checked.
-!ptb&SS         rho_cql(1) = 0.0
-!ptb&SS         rho_cql(2:lrz+1) = rya(1:lrz)
-!ptb&SS         rho_cql(lrz+2) = 1.0
-!ptb&SS         tmp_prof(2:lrz+1) = powrft(:,nt) * dvol(:)
-!ptb&SS         tmp_prof(1) = tmp_prof(2)
+
+         write(*,*) 'Advanced into interpolation of cql3d profiles onto PS grid'
          do l=1,lrz-1
             rho_cql(l+1) = 0.5*(rya(l)+rya(l+1))
          enddo
@@ -501,11 +556,8 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
          write(*,*) 'tmp_prof = ', tmp_prof
          write(*,*) 'ps%pelh = ', ps%pelh
          
-!ptb         call ps_user_1dintrp_vec(ps%rho_lhrf, rya(1:lrz), tmp_prof,
-!ptb     &        ps%pelh, ierr, interp = 1)
          call ps_user_rezone1(rho_cql, ps%rho_lhrf, tmp_prof, 
      &        ps%pelh, ierr, nonorm = .TRUE., zonesmoo = .TRUE.)
-!ptb&SS     &                        ps%pelh, ierr, nonorm = .TRUE.)
          if(ierr .ne. 0) stop 'error interpolating CQL3D powers onto PS Grid ps%rho_lhrf and ps%pelh'
          ps%pelh_src(:,1) = ps%pelh(:)
          write(*,*) 'elecfld(l,nt) = ', elecfld(1:lrz+1,nt)
@@ -530,17 +582,12 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
 !N.B.    elecfld(2:lrz+1).
   
          do l=1,lrz
-!ptb         tmp_prof(l+1) = (curr(l,nt) - elecfld(l+1,nt)/
          tmp_prof(l) = (curr(l,nt) - elecfld(l+1,nt)/
      &       (rovsc(l,nt)*sptzrp(l,nt)*9.0E+11)) * darea(l)
          enddo
-!ptb         tmp_prof(1) = tmp_prof(2)
-         
-!ptb         call ps_user_1dintrp_vec(ps%rho_lhrf, rya(1:lrz), tmp_prof,
-!ptb     &        ps%curlh, ierr, interp = 1)
+
          call ps_user_rezone1(rho_cql, ps%rho_lhrf, tmp_prof, 
      &        ps%curlh, ierr, nonorm = .TRUE., zonesmoo = .TRUE.)
-!ptb&SS     &                        ps%curlh, ierr, nonorm = .TRUE.)
 
          if(ierr .ne. 0) stop 'error interpolating CQL3D powrft onto PS Grid ps%rho_lhrf and ps%curlh'
 
@@ -781,11 +828,11 @@ cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
 ! Load up data
 !****************************************************************************************
 	
-	  RadMapDim = ps%nrho
+	  RadMapDim = size(ps%rho_eq)
 	  rho_pol = 0.0
 	  rho_tor = 0.0
-	  rho_pol(1:RadMapDim) = sqrt(ps%psipol / ps%psipol(ps%nrho))
-	  rho_tor(1:RadMapDim) = ps%rho
+	  rho_pol(1:RadMapDim) = sqrt(ps%psipol / ps%psipol(size(ps%rho_eq)))
+	  rho_tor(1:RadMapDim) = ps%rho_eq
 	  R_major = ps%R_axis*100.
 	  a = 100.*(ps%R_MAX_LCFS - ps%R_MIN_LCFS)/2.
 	  Btor = ps%B_axis

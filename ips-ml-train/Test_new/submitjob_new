@@ -1,0 +1,39 @@
+#!/bin/bash -l
+
+##SBATCH -p debug
+#SBATCH -p regular
+##SBATCH --qos=premium
+
+#SBATCH --account=atom
+
+##SBATCH --nodes=1
+#SBATCH --nodes=20
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=64
+#SBATCH -t 2:00:00
+##SBATCH -t 00:30:00
+#SBATCH -C haswell
+
+#SBATCH -J ips_fastran
+#SBATCH -e ips.err
+#SBATCH -o ips.out
+
+#SBATCH -C haswell
+
+#SBATCH --image=docker:registry.services.nersc.gov/rwp53/ips-massive-serial:latest
+#SBATCH --volume="/global/cscratch1/sd/rwp/tmpfiles:/tmp:perNodeCache=size=1G"
+
+conda activate ml_train_env
+
+#WORK_DIRECTORY=test_ml_train_debug_fbs
+WORK_DIRECTORY=test_ml_train_fbs2
+
+rm -rf $SCRATCH/$WORK_DIRECTORY
+mkdir $SCRATCH/$WORK_DIRECTORY
+cp -rd * $SCRATCH/$WORK_DIRECTORY
+cd $SCRATCH/$WORK_DIRECTORY
+
+ips.py --platform=platform.conf --simulation=ips.ml_train.config
+
+wait
+conda deactivate

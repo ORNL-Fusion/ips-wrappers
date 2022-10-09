@@ -164,6 +164,9 @@ change log:
 1/4/2018    Commented out reference to PORTAL run_id due to demise of SWIM PORTAL
 
 1/30/2018   Replacing defunct PORTAL run_id with datetime() to distinguish between runs
+
+4/30/2020   Converted to Python 3.  Involved 2to3, decode('UTF-8'), and write "wb" for pickle
+
 """
 
 # Note (4/2/12)
@@ -623,14 +626,14 @@ if debug:
             'dummy':['S', 'arb', ['stuff']], 'q':['P', 'arb',['ns'],['rho'] ]
     } )
 
-print 'monitor_comp_version = ', monitor_comp_version
-print 'metaData = ',monitorDefinition['monitor_comp_metaData']
+print('monitor_comp_version = ', monitor_comp_version)
+print('metaData = ',monitorDefinition['monitor_comp_metaData'])
 
 
 class monitor(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
 
 
 #----------------------------------------------------------------------------------------------
@@ -646,12 +649,20 @@ class monitor(Component):
         label = string = a name that may appear in the list
         Returns the index of label in the list if it's there.  Raises exception otherwise.
         '''
+
         ps_list = varDepsDict[list_name][:]
-        str_list = map(lambda x: ''.join(x).strip(), ps_list)
+        if debug:
+            print('ps_list = ', ps_list)
+        str_list = []
+        [str_list.append(x[0].decode('UTF-8').strip()) for x in ps_list]
+
+        if debug:
+            print('list variable = ', var, '  str_list = ', str_list)
+
         try:
             i = str_list.index(label)
-        except Exception, e:
-            print 'did not find item', label, ' in list ', list_name
+        except Exception as e:
+            print('did not find item', label, ' in list ', list_name)
             raise Exception
         return i
 
@@ -670,13 +681,13 @@ class monitor(Component):
         ''' 
         # Check validity of inputs
         if g2[0] != 0.0 or g1[0] != 0.0 or g2[-1] != 1.0 or  g1[-1] != 1.0 :
-            print 'Improper range for grids'
-            print 'grid1[0] = ', g1[0], '  grid1[-1] = ', g1[-1]
-            print 'grid2[0] = ', g2[0], '  grid2[-1] = ', g2[-1]
+            print('Improper range for grids')
+            print('grid1[0] = ', g1[0], '  grid1[-1] = ', g1[-1])
+            print('grid2[0] = ', g2[0], '  grid2[-1] = ', g2[-1])
             return 1
         if len(y) != len(g1):
-            print 'linear_grid_interp Error: length of y = ', len(y), \
-            ' does not match length of g1 = ', len(g1)
+            print('linear_grid_interp Error: length of y = ', len(y), \
+            ' does not match length of g1 = ', len(g1))
             return 1
     
         yi = []
@@ -726,13 +737,13 @@ class monitor(Component):
             g2[-1] = 1.0
         
         if g2[0] != 0.0 or g1[0] != 0.0 or g2[-1] != 1.0 or  g1[-1] != 1.0 :
-            print 'Improper range for grids'
-            print 'grid1[0] = ', g1[0], '  grid1[-1] = ', g1[-1]
-            print 'grid2[0] = ', g2[0], '  grid2[-1] = ', g2[-1]
+            print('Improper range for grids')
+            print('grid1[0] = ', g1[0], '  grid1[-1] = ', g1[-1])
+            print('grid2[0] = ', g2[0], '  grid2[-1] = ', g2[-1])
             return 1
         if len(y) != len(g1):
-            print 'linear_grid_interp Error: length of y = ', len(y), \
-            ' does not match length of g1 = ', len(g1)
+            print('linear_grid_interp Error: length of y = ', len(y), \
+            ' does not match length of g1 = ', len(g1))
             return 1
     
         yi = []
@@ -814,7 +825,7 @@ class monitor(Component):
         line_ave = line_ave/(R_Max_rho[-1] - R_Min_rho[-1])
         
         if debug:
-            print 'line_ave = ', line_ave
+            print('line_ave = ', line_ave)
         return line_ave
 
 #--------------------------------------------------------------------------------------------
@@ -905,7 +916,7 @@ class monitor(Component):
         li_3 = 8.0*li_3/(R_axis * mu0*mu0 * curt[-1]*curt[-1])
 
         if debug:
-            print 'li_3 = ', li_3
+            print('li_3 = ', li_3)
         return li_3
 
 #--------------------------------------------------------------------------------------------
@@ -921,7 +932,7 @@ class monitor(Component):
         N_GW = math.pi*a**2*line_ave/Ip
         
         if debug:
-            print 'N_GW = ', N_GW
+            print('N_GW = ', N_GW)
         return N_GW
     
 
@@ -940,15 +951,15 @@ class monitor(Component):
         """Function init generates the initial netcdf file for monitor data
         """
 
-        print 'monitor_comp.init() called'
+        print('monitor_comp.init() called')
 
         services = self.services
 
         time.sleep(5)
         self.run_id = get_global_param(self, services,'PORTAL_RUNID')
-        print 'run_id = ', self.run_id
-        print 'monitor file = ', monitor_fileName
-        print 'monitor pdf file = ', pdf_fileName
+        print('run_id = ', self.run_id)
+        print('monitor file = ', monitor_fileName)
+        print('monitor pdf file = ', pdf_fileName)
 
         self.cdfFile = self.run_id+'_' + monitor_fileName
         self.pdfFile = self.run_id+'_' + pdf_fileName
@@ -980,21 +991,23 @@ class monitor(Component):
         try:
             shutil.copyfile(monitor_fileName,
                             os.path.join(self.W3_DIR, self.cdfFile))
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s: %s' % \
-                (monitor_file, self.cdfFile, strerror)
+        except IOError as xxx_todo_changeme3:
+            (errno, strerror) = xxx_todo_changeme3.args
+            print('Error copying file %s to %s: %s' % \
+                (monitor_file, self.cdfFile, strerror))
 
     # Copy config file to w3 directory
         conf_file = services.get_config_param('SIMULATION_CONFIG_FILE')
-        print 'conf_file = ', conf_file
+        print('conf_file = ', conf_file)
         conf_file_name = os.path.split(conf_file)[1]
         new_file_name = self.run_id + '_' + conf_file_name
         new_full_path = os.path.join(self.W3_DIR, new_file_name)
         try:
             shutil.copyfile(conf_file, new_full_path)
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s: %s' % \
-                (conf_file, new_full_path, strerror)
+        except IOError as xxx_todo_changeme4:
+            (errno, strerror) = xxx_todo_changeme4.args
+            print('Error copying file %s to %s: %s' % \
+                (conf_file, new_full_path, strerror))
 
         return
 
@@ -1012,7 +1025,7 @@ class monitor(Component):
         Function restart loads the internal monitor state data needed for
         restart_MonitorComponent
         """
-        print 'monitor_comp.restart() called'
+        print('monitor_comp.restart() called')
 
         services = self.services
         global monitorVars, ps_VarsList, monitorDefinition
@@ -1028,17 +1041,18 @@ class monitor(Component):
             restart_root = services.get_config_param('RESTART_ROOT')
             restart_time = services.get_config_param('RESTART_TIME')
             services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
-        except Exception, e:
-            print 'Error in call to get_restart_files()' , e
+        except Exception as e:
+            print('Error in call to get_restart_files()' , e)
             raise
 
     # copy monitor file to w3 directory
         try:
             shutil.copyfile(monitor_fileName,
                             os.path.join(self.W3_DIR, self.cdfFile))
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s: %s' % \
-                (monitor_fileName, self.cdfFile, strerror)
+        except IOError as xxx_todo_changeme5:
+            (errno, strerror) = xxx_todo_changeme5.args
+            print('Error copying file %s to %s: %s' % \
+                (monitor_fileName, self.cdfFile, strerror))
 
         BIN_PATH = get_component_param(self, services, 'BIN_PATH')
         self.PCMF_bin = os.path.join(self.BIN_PATH, 'PCMF.py')
@@ -1052,7 +1066,7 @@ class monitor(Component):
         if self.GENERATE_PDF == True:
        # Generate pdf file with PCMF.py
             cmd = [self.PCMF_bin, monitor_fileName]
-            print 'Executing = ', cmd
+            print('Executing = ', cmd)
             services.send_portal_event(event_type = 'COMPONENT_EVENT',\
               event_comment =  cmd)
             retcode = subprocess.call(cmd)
@@ -1065,23 +1079,24 @@ class monitor(Component):
             try:
                 shutil.copyfile(pdf_fileName,
                                 os.path.join(self.W3_DIR, self.pdfFile))
-            except IOError, (errno, strerror):
-                print 'Error copying file %s to %s: %s' % \
-                    (pdf_fileName, self.pdfFile, strerror)
+            except IOError as xxx_todo_changeme:
+                (errno, strerror) = xxx_todo_changeme.args
+                print('Error copying file %s to %s: %s' % \
+                    (pdf_fileName, self.pdfFile, strerror))
     
     # Load monitorVars, monitorDefinition and ps_VarsList from pickle file "monitor_restart".
 
         pickleDict = {'monitorVars' : monitorVars, 'ps_VarsList': ps_VarsList,\
                      'monitorDefinition':monitorDefinition}
-        pickFile = open('monitor_restart', 'r')
+        pickFile = open('monitor_restart', 'rb')
         pickleDict = pickle.load(pickFile)
         pickFile.close()
         monitorVars = pickleDict['monitorVars']
         ps_VarsList = pickleDict['ps_VarsList']
         monitorDefinition = pickleDict['monitorDefinition']
-        print 'monitorDefinition = ', monitorDefinition
+        print('monitorDefinition = ', monitorDefinition)
         
-        print 'monitor restart finished'
+        print('monitor restart finished')
         return 0
 
 # ------------------------------------------------------------------------------
@@ -1094,12 +1109,12 @@ class monitor(Component):
 # ------------------------------------------------------------------------------
 
     def step(self, timeStamp):
-        print '\nmonitor_comp.step() called'
+        print('\nmonitor_comp.step() called')
 
         services = self.services
 
         if (self.services == None) :
-            print 'Error in monitor_comp: step() : no framework services'
+            print('Error in monitor_comp: step() : no framework services')
             return 1
 
     # Copy current and prior state over to working directory
@@ -1111,7 +1126,7 @@ class monitor(Component):
     # Call Load new data into monitor file
         retcode = self.update_monitor_file(cur_state_file, timeStamp)
         if (retcode != 0):
-            print 'Error executing command: ', monitor
+            print('Error executing command: ', monitor)
             return 1
 
     # "Archive" output files in history directory
@@ -1121,14 +1136,15 @@ class monitor(Component):
         try:
             shutil.copyfile(monitor_fileName,
                             os.path.join(self.W3_DIR, self.cdfFile))
-        except IOError, (errno, strerror):
-            print 'Error copying file %s to %s: %s' % \
-                (monitor_fileName, self.cdfFile, strerror)
+        except IOError as xxx_todo_changeme6:
+            (errno, strerror) = xxx_todo_changeme6.args
+            print('Error copying file %s to %s: %s' % \
+                (monitor_fileName, self.cdfFile, strerror))
 
         if self.GENERATE_PDF == True:
        # Generate pdf file with PCMF.py
             cmd = [self.PCMF_bin, monitor_fileName]
-            print 'Executing = ', cmd
+            print('Executing = ', cmd)
             services.send_portal_event(event_type = 'COMPONENT_EVENT',\
               event_comment =  cmd)
             retcode = subprocess.call(cmd)
@@ -1141,9 +1157,10 @@ class monitor(Component):
             try:
                 shutil.copyfile(pdf_fileName,
                                 os.path.join(self.W3_DIR, self.pdfFile))
-            except IOError, (errno, strerror):
-                print 'Error copying file %s to %s: %s' % \
-                    (pdf_fileName, self.pdfFile, strerror)
+            except IOError as xxx_todo_changeme1:
+                (errno, strerror) = xxx_todo_changeme1.args
+                print('Error copying file %s to %s: %s' % \
+                    (pdf_fileName, self.pdfFile, strerror))
 
 # ------------------------------------------------------------------------------
 #
@@ -1154,7 +1171,7 @@ class monitor(Component):
 # ------------------------------------------------------------------------------
 
     def checkpoint(self, timestamp=0.0):
-        print 'monitor.checkpoint() called'
+        print('monitor.checkpoint() called')
         services = self.services
         services.save_restart_files(timestamp, self.RESTART_FILES)
         
@@ -1175,25 +1192,26 @@ class monitor(Component):
 
         if self.GENERATE_PDF == False:
        # Generate pdf file with PCMF.py
-			cmd = [self.PCMF_bin, monitor_fileName]
-			print 'Executing = ', cmd
-			services.send_portal_event(event_type = 'COMPONENT_EVENT',\
-			  event_comment =  cmd)
-			retcode = subprocess.call(cmd)
-			if (retcode != 0):
-				logMsg = 'Error executing '.join(map(str, cmd))
-				self.services.error(logMsg)
-				raise Exception(logMsg)
+            cmd = [self.PCMF_bin, monitor_fileName]
+            print('Executing = ', cmd)
+            services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+              event_comment =  cmd)
+            retcode = subprocess.call(cmd)
+            if (retcode != 0):
+                logMsg = 'Error executing '.join(map(str, cmd))
+                self.services.error(logMsg)
+                raise Exception(logMsg)
 
-	   # copy pdf file to w3 directory
-			try:
-				shutil.copyfile(pdf_fileName,
-								os.path.join(self.W3_DIR, self.pdfFile))
-			except IOError, (errno, strerror):
-				print 'Error copying file %s to %s: %s' % \
-					(pdf_fileName, self.pdfFile, strerror)
+       # copy pdf file to w3 directory
+            try:
+                shutil.copyfile(pdf_fileName,
+                                os.path.join(self.W3_DIR, self.pdfFile))
+            except IOError as xxx_todo_changeme2:
+                (errno, strerror) = xxx_todo_changeme2.args
+                print('Error copying file %s to %s: %s' % \
+                    (pdf_fileName, self.pdfFile, strerror))
 
-        print 'monitor finalize finished'
+        print('monitor finalize finished')
         return 0
 
 
@@ -1218,8 +1236,8 @@ class monitor(Component):
         include_cumulative_profiles,\
         monitorDefinition
 
-        print ' '
-        print 'monitor_component: init_monitor_file'
+        print(' ')
+        print('monitor_component: init_monitor_file')
         
         # Check if include_density_based_profiles, include_zone_based_profiles, and
         # include_cumulative_profiles are set with config variables.  Otherwise use
@@ -1239,50 +1257,50 @@ class monitor(Component):
             pass
 
         if include_density_based_profiles:
-            print 'include_density_based_profiles'
+            print('include_density_based_profiles')
             requestedVars = requestedVars + density_based_profiles
         if include_zone_based_profiles:
-            print 'include_zone_based_profiles'
+            print('include_zone_based_profiles')
             requestedVars = requestedVars + zone_based_profiles
         if include_cumulative_profiles:
-            print 'include_cumulative_profiles'
+            print('include_cumulative_profiles')
             requestedVars = requestedVars + cumulative_profiles
 
         if debug:
             requestedVars = requestedVars + ['dummy', 'crazy']
 
-        print 'cur_state_file =', cur_state_file
-        print 'timeStamp =', timeStamp
-        print 'requestedVars = ', requestedVars
+        print('cur_state_file =', cur_state_file)
+        print('timeStamp =', timeStamp)
+        print('requestedVars = ', requestedVars)
 
         #Open Plasma State file
         plasma_state = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
     
-        all_ps_DimNames = plasma_state.dimensions.keys()
+        all_ps_DimNames = list(plasma_state.dimensions.keys())
     
         all_ps_Dims = plasma_state.dimensions
     
-        all_ps_VarNames = plasma_state.variables.keys()
+        all_ps_VarNames = list(plasma_state.variables.keys())
     
         Global_label = str(chartostring(plasma_state.variables['Global_label'][:]))
-        print 'Global_label = ', Global_label
+        print('Global_label = ', Global_label)
     
         RunID = str(chartostring(plasma_state.variables['RunID'][:]))
-        print 'RunID = ', RunID
+        print('RunID = ', RunID)
     
         tokamak_id = str(chartostring(plasma_state.variables['tokamak_id'][:]))
-        print 'tokamak_id = ', tokamak_id
+        print('tokamak_id = ', tokamak_id)
     
         shot_number = plasma_state.variables['shot_number'].getValue()
 
         if debug:
-            print ' '
+            print(' ')
             all_ps_DimNames.sort()
-            print 'all_ps_Dims = ', all_ps_DimNames
-            print ' '
+            print('all_ps_Dims = ', all_ps_DimNames)
+            print(' ')
             all_ps_VarNames.sort()
-            print 'all_ps_VarNames = ', all_ps_VarNames
-            print ' '
+            print('all_ps_VarNames = ', all_ps_VarNames)
+            print(' ')
 
         # Some monitor variables, e.g Q_nuc_FUS, may make sense with or without some of the
         # plasma state variables present.  For example Q_nuc_FUS is well defined even if some
@@ -1307,18 +1325,18 @@ class monitor(Component):
             var_deps_ok = True
 
             # Check if var is in monitorDefinition .i.e we know how to calculate it
-            if var not in monitorDefinition.keys():
-                print ' '
-                print 'Requested variable ', var, \
-                      ' not in monitorDefinition.keyes.'
+            if var not in list(monitorDefinition.keys()):
+                print(' ')
+                print('Requested variable ', var, \
+                      ' not in monitorDefinition.keyes.')
                 var_deps_ok = False
                 continue
 
             if debug:
-                print ' '
-                print 'requestedVar = ', var
-                print ' '
-                print var, 'monitorDefinition = ', monitorDefinition[var]
+                print(' ')
+                print('requestedVar = ', var)
+                print(' ')
+                print(var, 'monitorDefinition = ', monitorDefinition[var])
 
             varKind = monitorDefinition[var][0]
             varDepsList = monitorDefinition[var][2]
@@ -1334,21 +1352,25 @@ class monitor(Component):
                         newVars.append(dep)
                     # Even if the dependency is in the Plasma State it might a labeled list.  
                     # Check if var depends on a labeled list and if this dep is that labeled list.
-                    if var in labeled_ps_quantities.keys():
+                    if var in list(labeled_ps_quantities.keys()):
                         if dep == labeled_ps_quantities[var][0]:
                             # If this is a labeled list that var depends on check if all the items
                             # that var depends on are in the labeled list.
                             ps_list = plasma_state.variables[dep][:]
-                            str_list = map(lambda x: ''.join(x).strip(), ps_list)
                             if debug:
-                                print 'list variable = ', var, '  str_list = ', str_list
+                                print('ps_list = ', ps_list)
+                            str_list = []
+                            [str_list.append(x[0].decode('UTF-8').strip()) for x in ps_list]
+
+                            if debug:
+                                print('list variable = ', var, '  str_list = ', str_list)
                             for label in labeled_ps_quantities[var][1:]:
                                 if label not in str_list :
-                                    print 'did not find label ', label, ' in Plasma State list ', dep
+                                    print('did not find label ', label, ' in Plasma State list ', dep)
                                     var_deps_ok = False
                 else:
-                    print ' '
-                    print var, 'dependency ', dep, 'not found in Plasma State'
+                    print(' ')
+                    print(var, 'dependency ', dep, 'not found in Plasma State')
                     var_deps_ok = False
                     break
 
@@ -1356,7 +1378,7 @@ class monitor(Component):
             if varKind in ['P','2D']:
 
                 if debug:
-                    print var, ' kind = ', varKind
+                    print(var, ' kind = ', varKind)
 
                 varGridsList = monitorDefinition[var][3]
 
@@ -1364,19 +1386,19 @@ class monitor(Component):
 
                 if varKind == 'P' and len(varGridsList) != 1:
                     var_deps_ok = False
-                    print ' '
-                    print len(varGridsList), ' grids specified for ', var, ' should = 1'
+                    print(' ')
+                    print(len(varGridsList), ' grids specified for ', var, ' should = 1')
                     break
 
                 if varKind == '2D' and len(varGridsList) != 2:  # check for right number of grids
                     var_deps_ok = False
-                    print ' '
-                    print len(varGridsList), ' grids specified for ', var, ' should = 2'
+                    print(' ')
+                    print(len(varGridsList), ' grids specified for ', var, ' should = 2')
                     break
 
                 if debug:
-                    print ' '
-                    print 'varGridsList = ', varGridsList
+                    print(' ')
+                    print('varGridsList = ', varGridsList)
 
                 # Check if grid dependencies are present
                 for grid in varGridsList:
@@ -1391,9 +1413,9 @@ class monitor(Component):
                         if grid not in monitorGrids:
                             newGrids.append(grid)
                     else:
-                        print ' '
-                        print var, 'grid ', ps_grid_name, \
-                              'not found in Plasma State'
+                        print(' ')
+                        print(var, 'grid ', ps_grid_name, \
+                              'not found in Plasma State')
                         var_deps_ok = False
                         break
 
@@ -1401,7 +1423,7 @@ class monitor(Component):
             if varKind in ['SL']:
 
                 if debug:
-                    print var, ' kind = ', varKind
+                    print(var, ' kind = ', varKind)
 
                 varDimList = monitorDefinition[var][3]
 
@@ -1409,13 +1431,13 @@ class monitor(Component):
 
                 if len(varDimList) != 1:
                     var_deps_ok = False
-                    print ' '
-                    print len(varDimList), ' dimensons specified for ', var, ' should = 1'
+                    print(' ')
+                    print(len(varDimList), ' dimensons specified for ', var, ' should = 1')
                     break
 
                 if debug:
-                    print ' '
-                    print 'varDimList = ', varDimList
+                    print(' ')
+                    print('varDimList = ', varDimList)
 
                 # Check if dim dependencies are present
                 for dim_name in varDimList:
@@ -1425,9 +1447,9 @@ class monitor(Component):
                         if dim_name not in monitorDims:
                             newDims.append(dim_name)
                     else:
-                        print ' '
-                        print var, 'dim ', dim_name, \
-                              'not found in Plasma State'
+                        print(' ')
+                        print(var, 'dim ', dim_name, \
+                              'not found in Plasma State')
                         var_deps_ok = False
                         break
 
@@ -1439,11 +1461,11 @@ class monitor(Component):
                 monitorGrids = monitorGrids + newGrids
                 monitorDims = monitorDims + newDims
 
-        print ' '
-        print '\nmonVars = ', monitorVars
-        print '\nps_VarsList = ', ps_VarsList
-        print '\nmonitorGrids = ', monitorGrids
-        print '\nmonitorDims = ', monitorDims
+        print(' ')
+        print('\nmonVars = ', monitorVars)
+        print('\nps_VarsList = ', ps_VarsList)
+        print('\nmonitorGrids = ', monitorGrids)
+        print('\nmonitorDims = ', monitorDims)
 
 
 
@@ -1499,16 +1521,16 @@ class monitor(Component):
             grid_shape = grid_obj.shape
 
             if debug:
-                print ' '
-                print ps_grid_name, 'dim_name = ', grid_dim_name
-                print ps_grid_name, 'dim_value = ', grid_dim_value
-                print ps_grid_name, 'value = ', grid_val
-                print ps_grid_name, 'units = ', grid_units
-                print ps_grid_name, 'shape = ', grid_shape
+                print(' ')
+                print(ps_grid_name, 'dim_name = ', grid_dim_name)
+                print(ps_grid_name, 'dim_value = ', grid_dim_value)
+                print(ps_grid_name, 'value = ', grid_val)
+                print(ps_grid_name, 'units = ', grid_units)
+                print(ps_grid_name, 'shape = ', grid_shape)
 
             if len(grid_shape) != 1:
-                print 'whoa!  grid ', ps_grid_name, \
-                      ' shape not 1D.  I don''t know what to do'
+                print('whoa!  grid ', ps_grid_name, \
+                      ' shape not 1D.  I don''t know what to do')
                 return 1
 
             # case of zone boundary grid (copy straight from plasma state)
@@ -1545,7 +1567,7 @@ class monitor(Component):
         for var in monitorVars:
 
             if debug:
-                print 'creating variable ', var
+                print('creating variable ', var)
 
             # Generate the dimension tuple
             dims = ('timeDim',)
@@ -1576,7 +1598,7 @@ class monitor(Component):
                     dims = dims + grid_map[grid][1]
 
                 if debug:
-                    print var, ' dimensions = ', dims
+                    print(var, ' dimensions = ', dims)
                 mon_obj = monitor_file.createVariable(var, float, dims )
 
             varUnits = monitorDefinition[var][1]
@@ -1592,13 +1614,14 @@ class monitor(Component):
         # insert intitial data
         self.step(timeStamp)
 
-        print 'monitor file initialization finished'
+        print('monitor file initialization finished')
         
     # Save monitorVars and ps_VarsList and monitorDefinition, are pickled to file "monitor_restart".
     
         pickleDict = {'monitorVars' : monitorVars, 'ps_VarsList': ps_VarsList,\
                      'monitorDefinition':monitorDefinition}
-        pickFile = open('monitor_restart', 'w')
+
+        pickFile = open('monitor_restart', 'wb')
         pickle.dump(pickleDict, pickFile)
         pickFile.close() 
 
@@ -1616,8 +1639,8 @@ class monitor(Component):
 
     def update_monitor_file(self, cur_state_file, timeStamp = 0):
 
-        print ' '
-        print 'monitor_component: update_monitor_file'
+        print(' ')
+        print('monitor_component: update_monitor_file')
 
         #Open Plasma State file
         plasma_state = Dataset(cur_state_file, 'r', format = 'NETCDF3_CLASSIC')
@@ -1628,24 +1651,24 @@ class monitor(Component):
             ps_variables[var] = plasma_state.variables[var]
 
         if debug:
-            print ' '
-            print 'ps_variables.keys() = ', ps_variables.keys()
+            print(' ')
+            print('ps_variables.keys() = ', list(ps_variables.keys()))
 
         # Open the monitor file for output
         monitor_file = Dataset(monitor_fileName, 'r+', format = 'NETCDF3_CLASSIC')
 
         if debug:
             all_mon_Dims = monitor_file.dimensions
-            all_mon_VarNames = monitor_file.variables.keys()
-            print ' '
-            print 'all_mon_Dims = ', all_mon_Dims
-            print ' '
-            print 'all_mon_VarNames = ', all_mon_VarNames
+            all_mon_VarNames = list(monitor_file.variables.keys())
+            print(' ')
+            print('all_mon_Dims = ', all_mon_Dims)
+            print(' ')
+            print('all_mon_VarNames = ', all_mon_VarNames)
 
         # Get time variable object
         time = monitor_file.variables['time']
         n_step =time.shape[0]    # Time step number (initially 0)
-        print 'time step number = ', n_step
+        print('time step number = ', n_step)
         time[n_step] = float(timeStamp)
 
         # Insert data into monitor variables
@@ -1660,10 +1683,10 @@ class monitor(Component):
                 varDepsDict[dep] = ps_variables[dep]
 
             if debug:
-                print ' '
-                print 'var =', var
-                print 'varDepsDict.keys = ', varDepsDict.keys()
-                print 'varDepsDict = ', varDepsDict
+                print(' ')
+                print('var =', var)
+                print('varDepsDict.keys = ', list(varDepsDict.keys()))
+                print('varDepsDict = ', varDepsDict)
             # calculate the monitor variable
             value = self.calculate_MonitorVariable(var, varDepsDict)
 
@@ -1686,7 +1709,7 @@ class monitor(Component):
         # Close plasma_state
         plasma_state.close()
 
-        print 'update_monitor_file finished'
+        print('update_monitor_file finished')
         return 0
 
 
@@ -1702,10 +1725,10 @@ class monitor(Component):
     def calculate_MonitorVariable(self, var, varDepsDict):
 
         if debug:
-            print 'calculate_MonitorVariable, var = ', var
-            for dep_name in varDepsDict.keys():
-                print dep_name, '= ', varDepsDict[dep_name][:]
-                print dep_name, ' shape = ', varDepsDict[dep_name].shape
+            print('calculate_MonitorVariable, var = ', var)
+            for dep_name in list(varDepsDict.keys()):
+                print(dep_name, '= ', varDepsDict[dep_name][:])
+                print(dep_name, ' shape = ', varDepsDict[dep_name].shape)
     
         # ------------- Thermal plasma species ________________
         if var == 'Te(0)':
@@ -1748,7 +1771,7 @@ class monitor(Component):
             value = varDepsDict['ns'][:][0]
     
         if var == 'n_H(0)':
-            index = find_label_index_in_list(varDepsDict, 'S_name', 'H')
+            index = self.find_label_index_in_list(varDepsDict, 'S_name', 'H')
             value = varDepsDict['ns'][:][index][0]
     
         if var == 'n_H_ave':
@@ -2210,13 +2233,13 @@ class monitor(Component):
             P_nuc_FUS = self.calculate_MonitorVariable('P_nuc_FUS', varDepsDict)
             heating = self.calculate_MonitorVariable('Pe_OH_total', varDepsDict)
             
-            if 'power_ec' in varDepsDict.keys():
+            if 'power_ec' in list(varDepsDict.keys()):
                 heating = heating + self.calculate_MonitorVariable('power_EC', varDepsDict)
-            if 'power_lh' in varDepsDict.keys():
+            if 'power_lh' in list(varDepsDict.keys()):
                 heating = heating + self.calculate_MonitorVariable('power_LH', varDepsDict)
-            if 'power_ic' in varDepsDict.keys():
+            if 'power_ic' in list(varDepsDict.keys()):
                 heating = heating + self.calculate_MonitorVariable('power_IC', varDepsDict)
-            if 'power_nbi' in varDepsDict.keys():
+            if 'power_nbi' in list(varDepsDict.keys()):
                 heating = heating + self.calculate_MonitorVariable('power_NB', varDepsDict)
             value = P_nuc_FUS/heating
     
@@ -2423,7 +2446,7 @@ class monitor(Component):
                     value[i] = value[i] + epll[j][i]
     
         if debug:
-            print ' '
-            print var, ' = ', value
+            print(' ')
+            print(var, ' = ', value)
     
         return value

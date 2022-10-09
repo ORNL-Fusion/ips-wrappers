@@ -36,11 +36,11 @@ from monitor_comp import *   # Make sure to import the right version of monitor_
 if __name__ == '__main__':
 
 
-    if debug: print ' sys.argv = ', sys.argv
+    if debug: print(' sys.argv = ', sys.argv)
 
     if len(sys.argv) != 2:
-        print ' sys.argv = ', sys.argv
-        print 'Usage: this script takes one command line argument -> a Plasma State file name'
+        print(' sys.argv = ', sys.argv)
+        print('Usage: this script takes one command line argument -> a Plasma State file name')
         sys.exit(1)
 
     stateFile_arg = sys.argv[1]
@@ -54,10 +54,10 @@ if __name__ == '__main__':
     mf = monitor(services, config)
     mf.INCLUDE_ZONE_BASED_PROFILES = True
 
-    print 'monitor_file init'
-    print mf.init_monitor_file(stateFile_arg,  0.0)
+    print('monitor_file init')
+    print(mf.init_monitor_file(stateFile_arg,  0.0))
 
-    print 'monitor_file step'
-    print mf.update_monitor_file(stateFile_arg,  1.0)
+    print('monitor_file step')
+    print(mf.update_monitor_file(stateFile_arg,  1.0))
 
     shutil.move('monitor_file.nc', monitor_fileName)

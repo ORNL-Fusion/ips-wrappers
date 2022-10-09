@@ -1,0 +1,22 @@
+/project/projectdirs/atom/users/sfrnk/PST_test_iteration
+
+/project/projectdirs/atom/users/u2115/ips-wrappers/torlh_cql3d_iterate/prepare_torlh_input_abr 'ips-state.nc' 'toric' 'Maxwell' '1' '2500.0'
+
+
+/project/projectdirs/atom/atom-install-edison/binaries/geqxpl/default/geqxpl '@equigs_gen' '/g_filename=ips-eqdsk.geq' '/equigs_filename=equigs.data'
+
+/global/homes/s/sfrnk/IPS/ips-wrappers/ips-model-epa/model_EPA_mdescr.py
+
+/global/common/software/atom/cori/ips-wrappers/ips-model-epa/model_EPA_mdescr.py
+
+srun -N 6 -n 60 /global/project/projectdirs/atom/users/u2115/ips-examples/TORLH_CQL3D_PST_iteration/_exec/CQL3D/xcql3d_mpi.intel.edison
+
+salloc --qos=interactive -C haswell --time=20:00 --nodes=12
+
+srun -N 12 -n 60 /global/project/projectdirs/atom/users/u2115/ips-examples/TORLH_CQL3D_PST_iteration/_exec/CQL3D/xcql3d_mpi.intel.edison
+
+srun -N 12 -n 60 /global/common/software/atom/cori/binaries/cql3d/m77_CompX/xcql3d_mpi_intel.cori
+
+srun -N 12 -n 120 /global/common/software/atom/cori/binaries/cql3d/m77_CompX/xcql3d_mpi_intel.cori
+
+/project/projectdirs/atom/users/u2115/ips-examples/TORLH_CQL3D_PST_iteration_old_wrap

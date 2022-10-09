@@ -60,10 +60,10 @@ class simple_config_section:
 
 class simple_config:
     def __init__(self, path):
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
         self.config_file = path
         if debug:
-            print "init: config_file = ", self.config_file
+            print("init: config_file = ", self.config_file)
         
         self.sections = []
         self.variables = []
@@ -74,9 +74,9 @@ class simple_config:
         file.close()
         
         if debug :
-            print "   lines ="
+            print("   lines =")
             for line in self.lines:
-                print line
+                print(line)
 
 # Parse the lines
         section_name = 'self'
@@ -94,7 +94,7 @@ class simple_config:
                 ln = old_line + ' ' + ln
                 
                 if debug:
-                    print 'continued line = \n', ln
+                    print('continued line = \n', ln)
                     
             # Check if this line is to be continued. If so save line up to '\' and get the next one. 
             # Do the parsing after all continuations have been added
@@ -116,33 +116,33 @@ class simple_config:
                 section = vars(self)[section_name] = simple_config_section()
                                 
                 if debug:
-                    print 'new section -> ', section_name
+                    print('new section -> ', section_name)
             
             # This has got to be a variable definition
             else:
                 var_line = ln.partition('=')
                 
                 if var_line[1] != '=':  # Doesn't have form of variable def
-                    print 'simple_config: line not in form of a variable def'
-                    print 'var_line = ', var_line
-                    raise Exception, 'simple_config: line not in form of a variable def'
+                    print('simple_config: line not in form of a variable def')
+                    print('var_line = ', var_line)
+                    raise Exception('simple_config: line not in form of a variable def')
                     
                 var_name = var_line[0].strip()
                 var_value = var_line[2].strip()
                 
                 if debug:
-                	print 'len(var_value) = ', len(var_value), '  var_value = ', var_value
+                    print('len(var_value) = ', len(var_value), '  var_value = ', var_value)
                 
                # Check if the value is a list.  In which case convert to a Python list.
                # It can't be a list unless its length >= 2
-                if len(var_value) >= 2:                	
-					
-					if var_value[0] == '[' and var_value[-1] == ']':
-						inner_string = var_value[1:-1]
-						
-						var_value = inner_string.split(',')	
-						# For good measure strip white space from list elements
-						var_value = [x.strip() for x in var_value]
+                if len(var_value) >= 2:                 
+                    
+                    if var_value[0] == '[' and var_value[-1] == ']':
+                        inner_string = var_value[1:-1]
+                        
+                        var_value = inner_string.split(',') 
+                        # For good measure strip white space from list elements
+                        var_value = [x.strip() for x in var_value]
                 
                 if section_name == 'self':  # This is a top level Global variable
                     vars(self)[var_name] = var_value
@@ -150,7 +150,7 @@ class simple_config:
                 else:
                     section.variables.append(var_name)
                     vars(section)[var_name] = var_value
-                    print 'section varibles: ', var_name, ' = ', var_value
+                    print('section varibles: ', var_name, ' = ', var_value)
                     
 
 #---------------------------------------------------------------------------------------
@@ -161,35 +161,35 @@ class simple_config:
 
 if __name__ == '__main__':
 
-    print "Open a config file"
+    print("Open a config file")
     file_name = 'dbb.config'
     config = simple_config(file_name)
     
-    print '\n dir(config) = ', dir(config)
+    print('\n dir(config) = ', dir(config))
     
-    print '\n config.variables = ', config.variables
+    print('\n config.variables = ', config.variables)
     
-    print '\n config.sections = ', config.sections
+    print('\n config.sections = ', config.sections)
     
-    print '\n config.x = ', config.x
+    print('\n config.x = ', config.x)
     
-    print '\n config.y = ', config.y
+    print('\n config.y = ', config.y)
     
-    print '\n dir(config.section_1) = ', dir(config.section_1)
+    print('\n dir(config.section_1) = ', dir(config.section_1))
         
-    print '\n config.section_1.variables = ', config.section_1.variables
+    print('\n config.section_1.variables = ', config.section_1.variables)
         
-    print '\n config.section_1.x = ', config.section_1.x
+    print('\n config.section_1.x = ', config.section_1.x)
     
-    print '\n config.section_1.z = ', config.section_1.z
+    print('\n config.section_1.z = ', config.section_1.z)
 
-    print '\n config.section_2.p = ', config.section_2.p
+    print('\n config.section_2.p = ', config.section_2.p)
     for x in config.section_2.p:
-    	print x
+        print(x)
 
-    print '\n config.section_2.q = ', config.section_2.q
+    print('\n config.section_2.q = ', config.section_2.q)
     for x in config.section_2.q:
-    	print x
+        print(x)
     
     
     

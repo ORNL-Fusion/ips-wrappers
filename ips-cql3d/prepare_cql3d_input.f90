@@ -204,7 +204,8 @@ c-----------------------------------
       character(len = 128) :: deltat_str, nsteps_str, enorm_str = ' '
       character(len = 128) :: nlrestrt_str
       REAL(KIND=rspec) :: deltat
-      LOGICAL :: enorm_str_present
+      LOGICAL :: enorm_str_present,nsteps_str_present,
+     +           deltat_str_present
 
       integer nj,njp1,nrho
       integer nsteps
@@ -265,6 +266,8 @@ c     Defaults:
       nsteps_str='10'
       deltat_str='0.1e-3'  !secs
       ps_add_nml='disabled'
+      nsteps_str_present = .FALSE.
+      deltat_str_present = .FALSE.
       enorm_str_present = .FALSE.
 
 c     F2003-syntax: command_argument_count()/get_command_argument(,)
@@ -274,9 +277,9 @@ c     F2003-syntax: command_argument_count()/get_command_argument(,)
          write(*,*)'prepare_cql3d_input usage: '
          write(*,*)'Up to nine command line arguments, '
          write(*,*)
-     +   'ips_mode cql3d_mode cql3d_output cql3d_nml restart nsteps_str '
-     +   //'deltat_str ps_add_nml (refer to code)'
-     +   //'enorm (optional)'
+     +   'ips_mode cql3d_mode cql3d_output cql3d_nml restart  '
+     +   //' ps_add_nml (refer to code)'
+     +   //'nsteps_str deltat_str enorm (optional)'
       endif
 
       if (iargs.ge.1)   call get_command_argument(1,ips_mode)
@@ -284,9 +287,20 @@ c     F2003-syntax: command_argument_count()/get_command_argument(,)
       if (iargs.ge.3)   call get_command_argument(3,cql3d_output)
       if (iargs.ge.4)   call get_command_argument(4,cql3d_nml)
       if (iargs.ge.5)   call get_command_argument(5,restart)
-      if (iargs.ge.6)   call get_command_argument(6,nsteps_str)
-      if (iargs.ge.7)   call get_command_argument(7,deltat_str)
-      if (iargs.ge.8)   call get_command_argument(8,ps_add_nml)
+      if (iargs.ge.6)   call get_command_argument(6,ps_add_nml)
+
+      if (iargs.ge.7)then
+         call get_command_argument(7,nsteps_str)
+         nsteps_str_present = .TRUE.
+         nsteps_str=trim(nsteps_str)
+      endif
+      
+      if (iargs.ge.8)then
+         call get_command_argument(8,deltat_str)
+         deltat_str_present = .TRUE.
+         deltat_str=trim(deltat_str)
+      endif
+      
       if (iargs.ge.9) then
         call get_command_argument(9,enorm_str)
         enorm_str_present = .TRUE.
@@ -297,15 +311,15 @@ c     F2003-syntax: command_argument_count()/get_command_argument(,)
       cql3d_mode=trim(cql3d_mode)
       cql3d_output=trim(cql3d_output)
       cql3d_nml=trim(cql3d_nml)
-      restart=trim(restart)
-      nsteps_str=trim(nsteps_str)
-      deltat_str=trim(deltat_str)
+      restart=trim(restart)      
       ps_add_nml=trim(ps_add_nml)
 
       write(*,*)'prepare_cql3d_input command line arguments: ',
      +  ips_mode,'  ',cql3d_mode,'  ',cql3d_output,'  ',cql3d_nml,
-     +  '  ',restart,'  ',nsteps_str,'  ',deltat_str,'  ',ps_add_nml
-      if (enorm_str_present == .TRUE.) write(*,*) 'enorm_str'
+     +  '  ',restart,'  ',ps_add_nml
+      if (nsteps_str_present == .TRUE.) write(*,*) nsteps_str
+      if (deltat_str_present == .TRUE.) write(*,*) deltat_str
+      if (enorm_str_present == .TRUE.) write(*,*) enorm_str
 
 
 c-----------------------------------------------------------------------
@@ -721,21 +735,30 @@ c           Initialize arrays,
       write(*,*) 'nsteps_str = ', nsteps_str
       write(*,*) 'deltat_str = ', deltat_str
 
-      read(nsteps_str, '(i10)') nsteps
+      
 ! ptb:      read(nsteps_string, '(i10)') nsteps
-      nstop=nsteps     !Reset these variables in namelist
-      nplot=nsteps
-      nplt3d=nsteps
-      read(deltat_str, '(e14.7)') deltat
-! ptb:      read(deltat_string, '(e15.7)') deltat
-      dtr=deltat
-      write(*,*) 'deltat from deltat_string = ', deltat  ! ptb:
-      write(*,*) 'nsteps from nsteps_string = ', nsteps  ! ptb:
+      if (nsteps_str_present .and. trim(nsteps_str) .ne. 'None')then
+         read(nsteps_str, '(i10)') nsteps
+         nstop=nsteps     !Reset these variables in namelist
+         nplot=nsteps
+         nplt3d=nsteps
+         write(*,*) 'nsteps from nsteps_string = ', nsteps  ! ptb:
+      endif   
 
-	 if (enorm_str_present .and. trim(enorm_str) /= 'None') then
+      
+      
+! ptb:      read(deltat_string, '(e15.7)') deltat
+      if (deltat_str_present .and. trim(deltat_str) .ne. 'None')then
+         read(deltat_str, '(e14.7)') deltat
+         dtr=deltat
+         write(*,*) 'deltat from deltat_string = ', deltat  ! ptb:
+
+      endif
+
+      if (enorm_str_present .and. trim(enorm_str) /= 'None') then
         write(*,*) 'enorm_str = ', enorm_str
-		read(enorm_str,*) enorm
-	 end if
+        read(enorm_str,*) enorm
+      end if
 
 !.......................................................................
 c     If only need electron profiles plus zeff (ngen=1 and 
@@ -787,15 +810,17 @@ c---------------------------------------------------------------
       if (njene.ne.101) then
          write(*,*)'Resetting njene for uniform, 101-pt plasma profs'
          njene=101
-         nj=njene    !local variable
-         njp1=nj+1   !local variable
+         !nj=njene    !local variable
+         !njp1=nj+1   !local variable
          if (njene.gt.njenea) then
             write(*,*)'Stop:  Need njenea bigger in param.h'
             stop
          endif
       endif
 
-
+      nj=101    !local variable
+      njp1=nj+1   !local variable
+      
 c     Make sure cql3d namelist density and temp scaling turned off,
 c     except introduce any required unit changes here.
       enescal=1.d-6
@@ -1156,7 +1181,7 @@ c     Equispaced, bin-boundary grid for profiles to cql3d
       do l=1,nj
          ryain(l)=(l-1)*dryain
       enddo
-
+      WRITE(*,*) 'nj njp1 ',nj,njp1 
       allocate(rho_bdy_rezon(njp1))
       rho_bdy_rezon(1)=ryain(1)
       rho_bdy_rezon(njp1)=ryain(nj)

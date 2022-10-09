@@ -30,7 +30,7 @@ class solps_iter_driver(Component):
 
 #  Separate out the solps_iter keywords.
         solps_keywords = {}
-        for key, value in keywords.iteritems():
+        for key, value in keywords.items():
             if 'solps_iter__' in key:
                 solps_keywords[key.replace('solps_iter__','',1)] = value
 

@@ -32,6 +32,8 @@ change log:
  rcParam "max_open_warning".  However I found that just closing each figure after it is
  saved in plot_XY_Curves_Fig also does it.  So that's what I did.
  
+ 11/21/2021 (DBB)
+ Modified XY_Curves_Fig to accept matplotlib xlim and ylim as keyword args
  
 """
 
@@ -40,15 +42,13 @@ from matplotlib import use
 #use('MacOSX')
 use('pdf')
 
-#import matplotlib as mp
-#mp.rc('figure', max_open_warning = 1000)
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as font_mgr
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.ticker import FuncFormatter
 import numpy as np
 import math
-import string
+#import string
 
 __all__ = ['XY_Curves_Fig', 'XY_curve', 'plot_XY_Curves_Fig', 'open_file_XY_Curves_Fig',\
            'close_file_XY_Curves_Fig', 'plot_summary', 'plot_index' ]
@@ -66,15 +66,15 @@ def scale_curve_list(curve_list):
 # axis labels
 
     if debug:
-        print 'curve_list = ', curve_list
+        print('curve_list = ', curve_list)
     fig_xmax = 0.
     fig_ymax = 0.
     for curve in curve_list:
-        max_abs_x = max(map(abs,curve.x))
+        max_abs_x = max(list(map(abs,curve.x)))
         if max_abs_x >= fig_xmax:
             fig_xmax = max_abs_x
             
-        max_abs_y = max(map(abs,curve.y))
+        max_abs_y = max(list(map(abs,curve.y)))
         if max_abs_y >= fig_ymax:
             fig_ymax = max_abs_y
             
@@ -83,7 +83,7 @@ def scale_curve_list(curve_list):
     if fig_xmax >= sci_threshold:
         xscale = int(math.log10(fig_xmax))
     if fig_xmax <= 1.0/sci_threshold and fig_xmax > 0.:
-        print 'fig_xmax = ', fig_xmax
+        print('fig_xmax = ', fig_xmax)
         xscale = int(math.log10(fig_xmax))
     if xscale != 1:
         scale = pow(10.0, xscale)
@@ -118,7 +118,7 @@ def plot_summary(summary, **kwargs):
     figsize = (9.0, 6.0)         
     if 'figsize' in kwargs:
         figsize = kwargs['figsize']
-        print 'figsize = ', figsize
+        print('figsize = ', figsize)
     
     fig = plt.figure(figsize=figsize)
     ax = plt.axes([0,0,1,1])
@@ -148,7 +148,7 @@ def plot_index(index, entries_per_line = 2, **kwargs):
     figsize = (9.0, 6.0)         
     if 'figsize' in kwargs:
         figsize = kwargs['figsize']
-        print 'figsize = ', figsize
+        print('figsize = ', figsize)
     
     fig = plt.figure(figsize=figsize)
     ax = plt.axes([0,0,1,1])
@@ -160,7 +160,7 @@ def plot_index(index, entries_per_line = 2, **kwargs):
     column_count = 0
     page_line_count = 0
     for i in range(len(index)):
-        lines = lines + string.ljust(str(index[i][0]), 3, ' ') + ' ' +\
+        lines = lines + str.ljust(str(index[i][0]), 3, ' ') + ' ' +\
                 index[i][1] + '\n'
         line_count = line_count + 1
         page_line_count = page_line_count + 1
@@ -196,22 +196,22 @@ class XY_Curves_Fig:
     def __init__(self, curve_list, title = '', xlabel = '', ylabel = '', **kwargs):
 
         if debug:
-            print 'XYCurves_Fig: curve_list = ', curve_list
+            print('XYCurves_Fig: curve_list = ', curve_list)
 # Check the arguments
         if isinstance(curve_list, XY_curve): # It's legal to pass in a single XY_curve instance
             self.curve_list = [curve_list]
         elif type(curve_list) == list:
             for curve in curve_list: # check that everything is an instance of XY_curve
                 if not  isinstance(curve, XY_curve):
-                    print 'curve type not = instance'
-                    print 'plt_XY_Curves: arg curve_list must be a list of instances of XY_curve'
-                    raise Exception, 'plt_XY_Curves: arg curve_list must be a list of instances of\
-                    XY_curve'
+                    print('curve type not = instance')
+                    print('plt_XY_Curves: arg curve_list must be a list of instances of XY_curve')
+                    raise Exception('plt_XY_Curves: arg curve_list must be a list of instances of\
+                    XY_curve')
                 self.curve_list = curve_list
         else:
-            print 'curve_list type = ', type(curve_list)
-            print 'plt_XY_Curves: arg curve_list must be a list of instances of XY_curve'
-            raise Exception, 'plt_XY_Curves: arg curve_list must be a list of instances of XY_curve'
+            print('curve_list type = ', type(curve_list))
+            print('plt_XY_Curves: arg curve_list must be a list of instances of XY_curve')
+            raise Exception('plt_XY_Curves: arg curve_list must be a list of instances of XY_curve')
         
         self.title = str(title)
         self.xlabel = str(xlabel)
@@ -227,11 +227,21 @@ class XY_Curves_Fig:
         self.figsize = (9.0, 6.0)         
         if 'figsize' in kwargs:
             self.figsize = kwargs['figsize']
-            print 'figsize = ', self.figsize
+            print('figsize = ', self.figsize)
         
-        plt.figure(figsize=self.figsize) # the first figure
+        fig = plt.figure(figsize=self.figsize) # the first figure
         plt.axes([0.15, 0.1, 0.6, 0.75])
-        
+
+        if 'xlim' in kwargs:
+            self.xlim = kwargs['xlim']
+            print('xlim = ', self.xlim)
+            plt.xlim(self.xlim)
+
+        if 'ylim' in kwargs:
+            self.ylim = kwargs['ylim']
+            print('ylim = ', self.ylim)
+            plt.ylim(self.ylim)
+
         # Note to DBB: Annotating figure number below is confusing because it doesn't coincide with
         # page number.  Change this to add page number instead.
         #str_fig_number = str(figure_count)
@@ -250,11 +260,12 @@ class XY_Curves_Fig:
             self.ylabel = ylabel + power_string
             
         if debug:
-            print 'scaleX = ', scaleX
-            print 'scaleX = ', scaleX
-            print 'self.xlabel = ', self.xlabel
-            print 'self.ylabel = ', self.ylabel
-
+            print('scaleX = ', scaleX)
+            print('scaleX = ', scaleX)
+            print('self.xlabel = ', self.xlabel)
+            print('self.ylabel = ', self.ylabel)
+            
+        return
 #_________________________________________________________________________________________________
 
 class XY_curve:
@@ -269,13 +280,13 @@ class XY_curve:
             self.y = y
             self.kwargs = kwargs
         else:
-            print 'type(x) = ', type(x)
-            print 'type(y) = ', type(y)
-            print 'XY_curve: required args x and y must be lists or numpy.ndarrays'
-            raise Exception, 'XY_curve: required args x and y must be lists or numpy.ndarrays'
+            print('type(x) = ', type(x))
+            print('type(y) = ', type(y))
+            print('XY_curve: required args x and y must be lists or numpy.ndarrays')
+            raise Exception('XY_curve: required args x and y must be lists or numpy.ndarrays')
         if len(x) != len(y):
-            print 'XY_curve: required args x and y must be the same length'
-            raise Exception, 'XY_curve: required args x and y must be the same length'
+            print('XY_curve: required args x and y must be the same length')
+            raise Exception('XY_curve: required args x and y must be the same length')
             
         if 'label' in kwargs:
             self.label = kwargs['label']
@@ -293,7 +304,7 @@ class XY_curve:
         if attrname in ['label', 'color','linestyle'] :
             return None
         else:
-            raise AttributeError, attrname      
+            raise AttributeError(attrname)      
 
     def setLabel(self, label):
         self.label = label
@@ -312,13 +323,13 @@ class XY_curve:
 def plot_XY_Curves_Fig(fig):        
 
     if not isinstance(fig, XY_Curves_Fig):
-        print 'plot_XY_Curves_FIG: arg fig must be an instances of XY_Curves_Fig'
-        raise Exception, 'plot_XY_Curves_FIG: arg fig must be an instances of XY_Curves_Fig'
+        print('plot_XY_Curves_FIG: arg fig must be an instances of XY_Curves_Fig')
+        raise Exception('plot_XY_Curves_FIG: arg fig must be an instances of XY_Curves_Fig')
 
     fig_has_legend = False
     for curve in fig.curve_list:
         if debug:
-            print 'plot_XY_Curves_Fig: curve = ', curve
+            print('plot_XY_Curves_Fig: curve = ', curve)
 
         plt.plot(curve.x, curve.y, **curve.kwargs)
         if 'label' in curve.kwargs:
@@ -349,8 +360,8 @@ def open_file_XY_Curves_Fig(filename):
     global plot_file
     
     if (type(filename) != str):
-        print 'open_file_XY_Curves_Fig: filename must be of type str'
-        raise Exception, 'open_file_XY_Curves_Fig: filename must be of type str'
+        print('open_file_XY_Curves_Fig: filename must be of type str')
+        raise Exception('open_file_XY_Curves_Fig: filename must be of type str')
         
     plot_file = PdfPages(filename)
     
@@ -366,6 +377,8 @@ def close_file_XY_Curves_Fig():
 
             
 if __name__ == '__main__':
+
+    import math
 
     open_file_XY_Curves_Fig('plot_output.pdf')
     
@@ -391,10 +404,35 @@ if __name__ == '__main__':
     plot2 = XY_Curves_Fig(curve_list, title, xlabel, ylabel)
     plot_XY_Curves_Fig(plot2)
 
+    x = []
+    y = []
+    vx = []
+    vy = []
+    vscale = []
+    for i in range(16):
+        t = 0.1*3.1415926*i 
+        x.append(math.cos(t))
+        y.append(math.sin(t))
+        vx.append(math.cos(t))
+        vy.append(math.sin(t))
+        vscale.append(0.1*t)
+
+    title = 'Parametric Plot'
+    xlabel = 'x(cm)'
+    ylabel = 'y(cm)'
+    curve_list = [XY_curve(x, y)]
+    plot3 = XY_Curves_Fig(curve_list, title, xlabel, ylabel,figsize = (8., 8.))
+
+    for i in range(16):
+        plt.arrow(x[i], y[i], vscale[i]*vx[i], vscale[i]*vy[i], shape='full', head_width = 0.02)
+ #       plot3.arrow(x[i], y[i], vscale[i]*vx[i], vscale[i]*vy[i], shape='full', head_width = 0.02)
+
+    plot_XY_Curves_Fig(plot3)
+
     global_attributes = [['Global_label = ', 'Global_label'], ['RunID = ', 'RunID'],\
                       ['tokamak_id = ', 'tokamak_id'], ['shot_number = ', str(2)] ]    
     
-    print 'adding index'
+    print('adding index')
     index = [ [1,'fig 1'], [2,'fig 2'], [3,'fig 3'], [4,'fig 4'] ]
     summary ={'global_attributes': global_attributes, 'index': index, 'file_name': 'no file'}
     
