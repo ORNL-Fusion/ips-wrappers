@@ -136,6 +136,10 @@ class xolotlWorker(Component):
         #if (self.services.wait_task(task_id)):
         #    self.services.error('xolotl_worker: step failed.')
 
+        print(f" => self.THREADS_PER_TASK = {self.THREADS_PER_TASK}")
+        print(f" => self.NPROC = {self.NPROC}")
+        print(f" => self.task_ppn = {self.task_ppn}")
+
 
         import time
         os.environ['OMP_NUM_THREADS']=self.THREADS_PER_TASK
