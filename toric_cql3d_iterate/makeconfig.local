@@ -12,14 +12,14 @@
 #F77FLAGS =  -cpp  -extend_source -D__PATHSCALE -fno-second-underscore
 
 F90 = ftn 
-F90FLAGS = -g -fpp -extend-source
+F90FLAGS = -g -traceback -fpp -extend-source
 F90_FREEFORM_FLAG = -free
 F90_FIXEDFORM_FLAG = -fixed
 F90_MOD_INCLUDE_PREFIX = -I
 F90_INCLUDE_PREFIX = -I
 
 F77 = ftn 
-F77FLAGS = -g -fpp -extend-source
+F77FLAGS = -g -traceback -fpp -extend-source
 F77_FREEFORM_FLAG = -free
 F77_FIXEDFORM_FLAG = -fixed
 F77_INCLUDE_PREFIX = -I

@@ -82,7 +82,7 @@ parameterList = ['Te_0', 'Te_edge', 'alpha_Te_1', 'alpha_Te_2', 'ne_0', 'ne_edge
     'T_min_0', 'T_min_ratio', 'alpha_Tmin',\
     'fracmin', 'power_ic', 'power_lh']
 
-class model_EPA_mdescr(Component):
+class EPA_mdescr(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
         print('Created %s' % (self.__class__))

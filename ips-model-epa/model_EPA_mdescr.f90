@@ -333,10 +333,8 @@ PROGRAM model_EPA_mdescr
 			! Toric radial grid.  But the rho_icrf grid must be allocated and initialized here.  
 			IF (ALLOCATED(ps%m_RFMIN)) THEN   
 				ps%kdens_rfmin = "fraction"
-				ps%fracmin(:) = fracmin
-				ps%isThermal(:) = 1
-				WRITE (*,*) 'model_EPA_mdescr: minority specification loaded'
-				WRITE (*,*)
+				ps%fracmin = fracmin
+				ps%isThermal = 1
 			END IF                    
 	END IF  ! End INIT function
 
@@ -367,36 +365,36 @@ WRITE(*,*)
 
 		IF (TRIM(Te_profile_model_name) == 'Power_Parabolic') THEN
 			CALL Power_Parabolic(Te_0, Te_edge, alpha_Te_1, alpha_Te_2, zone_center, ps%Ts(:, 0))
-                        WRITE (*,*) 'model_EPA_mdescr:  initial Te profile = ', ps%Ts(:, 0)
+                        !WRITE (*,*) 'model_EPA_mdescr:  initial Te profile = ', ps%Ts(:, 0)
 		END IF
 
 		IF (TRIM(ne_profile_model_name) == 'Power_Parabolic') THEN
 			CALL Power_Parabolic(ne_0, ne_edge, alpha_ne_1, alpha_ne_2, zone_center, ps%ns(:, 0))
-			WRITE (*,*) 'model_EPA_mdescr:  initial ne profile = ', ps%ns(:, 0)
-			WRITE (*,*)
+			!WRITE (*,*) 'model_EPA_mdescr:  initial ne profile = ', ps%ns(:, 0)
+			!WRITE (*,*)
 		END IF
 
 		! Thermal ion profiles  N.B.  All thermal ion species at same temperature
 		IF (TRIM(Ti_profile_model_name) == 'Power_Parabolic') THEN
 			DO i = 1, ps%nspec_th
 				CALL Power_Parabolic(Ti_0, Ti_edge, alpha_Ti_1, alpha_Ti_2, zone_center, ps%Ts(:, i))
-				WRITE (*,*) 'model_EPA_mdescr:  initial Ti profile = ', ps%Ts(:, i)
-				WRITE (*,*)
+				!WRITE (*,*) 'model_EPA_mdescr:  initial Ti profile = ', ps%Ts(:, i)
+				!WRITE (*,*)
 			END DO
 		END IF
 
 		! Zeff profile
 		IF (TRIM(Zeff_profile_model_name) == 'Power_Parabolic') THEN
 			CALL Power_Parabolic(Zeff_0, Zeff_edge, alpha_Zeff_1, alpha_Zeff_2, zone_center, ps%Zeff(:))
-			WRITE (*,*) 'model_EPA_mdescr:  Zeff profile = ', ps%Zeff(:)
-			WRITE (*,*)
+			!WRITE (*,*) 'model_EPA_mdescr:  Zeff profile = ', ps%Zeff(:)
+			!WRITE (*,*)
 		END IF
 
 		! V_loop profile
 		IF (TRIM(V_loop_profile_model_name) == 'Power_Parabolic') THEN
 			CALL Power_Parabolic(V_loop_0, V_loop_edge, alpha_V_loop_1, alpha_V_loop_2, zone_center, ps%V_loop(:))
-			WRITE (*,*) 'model_EPA_mdescr:  V_loop profile = ', ps%V_loop(:)
-			WRITE (*,*)
+			!WRITE (*,*) 'model_EPA_mdescr:  V_loop profile = ', ps%V_loop(:)
+			!WRITE (*,*)
 		END IF
 
 		! Fraction of electron models
@@ -404,42 +402,22 @@ WRITE(*,*)
 		IF (TRIM(Ti_profile_model_name) == 'fraction_of_electron') THEN
 			DO i = 1, ps%nspec_th
 				ps%Ts(:,i) = frac_Ti(i)*ps%Ts(:, 0)
-				WRITE (*,*) 'model_EPA_mdescr:  initial Ti profile = ', ps%Ts(:, i)
-				WRITE (*,*)
+				!WRITE (*,*) 'model_EPA_mdescr:  initial Ti profile = ', ps%Ts(:, i)
+				!WRITE (*,*)
 			END DO
 		END IF
 
 		IF (TRIM(ni_profile_model_name) == 'fraction_of_electron') THEN
-
-			! NB: if minority ion density model is fraction of electron density  and if the 
-			! thermal ion model is also fraction of electrons then adjust fraction of
-			! thermal species 1 to give quasineutrality
-			! Define fraction of species #1 = 1.0 then subtract off minorities and other
-			! thermals.  (Also must subtract beams and fusion when they get put in)
-			IF (ps%kdens_rfmin == "fraction") THEN
-				frac_ni(1) = 1.0 
-				DO i = 1, ps%nspec_rfmin
-					frac_ni(1) = frac_ni(1) - ps%q_RFMIN(i)*ps%fracmin(i)
-				END DO
-				IF (ps%nspec_th .GE. 2) THEN
-					DO i = 2, ps%nspec_rfmin
-						frac_ni(1) = frac_ni(1) - ps%q_S(i)*frac_ni(i)
-					END DO
-				ENDIF
-				IF (frac_ni(1) < 0.0) THEN 
-					WRITE (*,*) 'model_EPA_mdescr INIT: frac_ni(1) < 0'
-					CALL EXIT(1)
-				ENDIF
-		
-			END IF ! kdens_rfmin "fraction"
-	
-			! NB: If minorities are not fraction_of_electron, the ion fractions are just those
-			! in the evolving_model_data namelist.  Some other mechanism must enforce charge
-			! neutrality.
+                        ! SF 12/06/2022
+                        ! Thermal species AKA: not RF minority species, must be set respecting
+                        ! quasineutrality and accounting for minority in the namelist. This
+                        ! is probably not the best way to do things because it doesn't account
+                        ! for user error. However, other methods are also not robust to user
+                        ! error and confusion and are more complicated.
 			DO i = 1, ps%nspec_th
 				ps%ns(:,i) = frac_ni(i)*ps%ns(:, 0)
-				WRITE (*,*) 'model_EPA_mdescr:  initial density profile for thermal ion #',i ,' = ', ps%ns(:, i)
-				WRITE (*,*)
+				!WRITE (*,*) 'model_EPA_mdescr:  initial density profile for thermal ion #',i ,' = ', ps%ns(:, i)
+				!WRITE (*,*)
 			END DO
 		
 		END IF  ! fraction_of_electron
