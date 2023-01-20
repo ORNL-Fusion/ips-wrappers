@@ -8,6 +8,9 @@ dependencies:
         - matplotlib
         - .
 variables:
-    FTRIDYN_PATH: /project/projectdirs/atom/atom-install-cori/fractal-tridyn    
-    GITR_PATH: /project/projectdirs/atom/atom-install-cori/GITR
     ATOM_CORI: /project/projectdirs/atom/atom-install-cori
+    #FTRIDYN_PATH_CORI: $ATOM_CORI/fractal-tridyn    
+    #GITR_PATH_CORI: $ATOM_CORI/GITR
+    ATOM_PERLMUTTER: /global/cfs/cdirs/atom/atom-install-perlmutter
+    #FTRIDYN_PATH_PERLMUTTER: $ATOM_PERLMUTTER/fractal-tridyn
+    #GITR_PATH_PERLMUTTER: $ATOM_PERLMUTTER/GITR
