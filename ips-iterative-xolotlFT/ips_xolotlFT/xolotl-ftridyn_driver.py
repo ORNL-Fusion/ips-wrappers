@@ -1039,7 +1039,10 @@ class xolotlFtridynDriver(Component):
                                 print('\t \t TEST: get_yields function returned dictionary:')
                                 print('\t \t', getYields_dic)
                                 sys.stdout.flush()
-                            yields=getYields_dic['yields']
+                            if 'yields' in getYields_dic.keys():
+                                yields=getYields_dic['yields']
+                            else:
+                                yields=[0.0, 0.0]
                         pf.close()
                         print('\t reading the pickle file, get_yields returned [total SpY, total RY] = ', yields)
                     else:
