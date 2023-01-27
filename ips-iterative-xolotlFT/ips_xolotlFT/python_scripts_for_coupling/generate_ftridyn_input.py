@@ -280,7 +280,7 @@ class fractal_surface:
 		else:
 			self.iterations = iterations
 		self.fgen()
-		self.name = str(1)+'p'+str(np.int((FD-0.99999)*1000.0))
+		self.name = str(1)+'p'+str(int((FD-0.99999)*1000.0))
 	#end def __init__
 
 	def fgen(self,shape=[0,1,0,-1,0,-1,0,1,0]):
