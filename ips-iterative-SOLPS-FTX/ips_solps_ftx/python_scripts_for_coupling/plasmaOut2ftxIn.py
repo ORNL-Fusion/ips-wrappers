@@ -4,26 +4,48 @@
 import os
 from ips_xolotlFT.python_scripts_for_coupling import param_handler
 import sys
+import pickle
 
 def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt',print_test=True,logFile=None):
 
+    cwd = os.getcwd()
     print(' ')
     print('called plasmaOut2ftxIn')
-    if print_test:
-        print('\t with inputs:')
-        print('\t plasmaOutFile = ', plasmaOutFile)
-        print('\t ftxInFile = ', ftxInFile)
-        print('\t print_test = ', print_test)
-        print('\t logFile = ', logFile)
+    print('from directory: ', cwd)
+    sys.stdout.flush()
     
+    #if pikle file exists, read from pkl file:
+    pkl_file=cwd+'/plasmaOut2ftxIn.pkl'
+    if os.path.exists(pkl_file):
+        dic = pickle.load( open( pkl_file, "rb" ) )
+        #first check the log file, to print everything there
+        if 'logFile' in dic:
+            logFile=dic['logFile']
+    else:
+        print('no pkl file found, continue with function-call-inputs or defaults')    
+            
     if logFile  is not None:
         print('\t redirect plasmaOut2ftxIn output of to:')
         print('\t ' , logFile)
         outF = open(logFile, "a")
         sys.stdout = outF
 
+    sys.stdout.flush()
+     
+    plasmaOutFile=dic['plasmaOutFile']
+    ftxInFile=dic['ftxInFile']
+    print_test=dic['print_test']
+    
+    if print_test:
+        print('\t launched script with inputs:')
+        print('\t plasmaOutFile = ', plasmaOutFile)
+        print('\t ftxInFile = ', ftxInFile)
+        print('\t print_test = ', print_test)
+        print('\t logFile = ', logFile)
+
+        
     print(' ')
-    print('plasmaOut2ftxIn:')
+    print('RUN plasmaOut2ftxIn:')
     print(' ')
     
     solpsParams=param_handler.read(plasmaOutFile) #(INPUT_DIR+'/'+solps_outFile)
@@ -104,6 +126,8 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt',print_t
             print('\t Bin =', Bin)
         print('\n')
 
+
+    sys.stdout.flush()
     ## 2 - do ops to calculate/format inputs for FTX:
     print ('\t REFORMAT SOLPS output --> FTX input')
     ftxInputs={}
@@ -165,7 +189,7 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt',print_t
         #    else:
         #        speciesExists[n]=0.0
         
-
+    sys.stdout.flush()
     ### reformat to have a vaolue for all species, even if 0.0
     ### might not be the most efficient method, but it should work for all scenarios
     ### example of what I'm trying to do in loop below
@@ -334,7 +358,7 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt',print_t
                 print('\t \t WARNING: no inputAngle or bfieldAngle given; continue with default values in config file (likely normal incidence)')
             print('\n')
             sys.stdout.flush()
-            
+        
     ## 2.b : write down all other parameters 'as is':
                         
     print('\t write down all other parameters "as is":')
@@ -379,3 +403,12 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt',print_t
     print(' ')
 
     
+    sys.stdout.flush()
+    return
+
+if __name__ == '__main__':
+
+    import shutil
+    plasmaOut2ftxIn()
+   
+

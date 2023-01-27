@@ -11,7 +11,7 @@ import os
 import shutil
 import subprocess
 import sys
-from .python_scripts_for_coupling import plasmaOut2ftxIn
+from ips_solps_ftx.python_scripts_for_coupling import plasmaOut2ftxIn
 
 #from contextlib import redirect_stdout
 
@@ -55,6 +55,22 @@ class parent_driver(Component):
         cwd = self.services.get_working_dir()
         self.print_test = self.services.get_config_param('PRINT_TEST')
 
+
+        #test giving explicit wrapper path in modernized FTX workflow
+        if self.print_test:
+            try:
+                self.SCRIPT
+                if self.SCRIPT == "":
+                    print('no explicit script path provided. use module loaded in environment')
+                else:
+                    print('using explicit path to wrapper')
+                    print(self.SCRIPT)
+            except Exception as e:
+                print(e)
+		print('no script variable defined. use module loaded in environment')
+            print(' ')
+
+        
         if (self.print_test):
             print('running python ', sys.version_info)
    
