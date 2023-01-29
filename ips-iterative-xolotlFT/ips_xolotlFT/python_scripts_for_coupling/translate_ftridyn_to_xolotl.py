@@ -162,8 +162,8 @@ def ftridyn_to_xolotl_launch(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
                 depth1, bla1 = np.loadtxt(ftridynCurrentPrjOutput, usecols = (2,3) , unpack=True)
 
                 ## Put first data into the plot; '/10.0' is to convert A -> nm                       
-                #print 'in translate script: using range', prjRange , ' [A]'                         
-                m, bins = np.histogram(depth1/10.0, nBins,(0.0,prjRange/10.0),normed=True)
+                #print 'in translate script: using range', prjRange , ' [A]'
+                m, bins = np.histogram(depth1/10.0, bins=nBins, range=(0.0,prjRange/10.0), density=True)
 
                 ## "bins" is actually the edges on the histogram bins so it needs to be formated to give the center of each bin in "b"
                 b = np.delete(bins, len(bins) - 1)
