@@ -1344,6 +1344,7 @@ class xolotlFtridynDriver(Component):
 
             # flag to keep track of the success of keepLastTS (because sometimes the network file is corrupted)
             keep_last_ts_success = False
+            keep_last_ts_loop_number = 0
 
             # make sure we save a copy of the network file in case we need to restart because keepLastTS failed
             temp_network_file = os.path.join(os.path.dirname(self.XOLOTL_NETWORK_FILE), "tempNetworkFile.h5")
@@ -1352,8 +1353,10 @@ class xolotlFtridynDriver(Component):
 
             # loop until keepLastTS is successful
             while not keep_last_ts_success:
+                keep_last_ts_loop_number += 1
 
-                print(f"\u2B95 keep_last_ts_success is False, starting new loop...")
+                if keep_last_ts_loop_number > 1:
+                    print(f"\u2B95 keep_last_ts_success is False, starting new loop (loop number is {keep_last_ts_loop_number})")
 
                 # start from a fresh network file
                 shutil.copyfile(temp_network_file, self.XOLOTL_NETWORK_FILE)
@@ -1519,7 +1522,7 @@ class xolotlFtridynDriver(Component):
                     sys.stdout.flush()
                     keep_last_ts_success = True
                 #if fails, use old method of copying entire xolotlStop as networkFile
-                except Exception as e:                                     
+                except Exception as e:       
                     print(e)
                     print('\t running keepLastTS failed')
                     # print('\t just copy xolotlStop as networkFile')
