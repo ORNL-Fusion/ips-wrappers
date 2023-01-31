@@ -15,7 +15,7 @@ F77_FREEFORM_FLAG = -free
 F77_FIXEDFORM_FLAG = -fixed
 F77_INCLUDE_PREFIX = -I
 
-#NTCCHOME=/global/cfs/cdirs/atom/atom-install-perlmutter/ntcc
+NTCCHOME=/global/cfs/cdirs/atom/atom-install-perlmutter/ntcc
 F90FLAGS += -I${NTCCHOME}/mod
 
 
