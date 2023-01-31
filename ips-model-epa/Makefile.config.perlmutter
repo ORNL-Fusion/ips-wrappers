@@ -1,0 +1,32 @@
+# IPS_ROOT must be defined before this file is included
+
+MAKEDEPF90=/global/common/software/atom/perlmutter/binaries/makedepf90
+
+F90 = ftn 
+F90FLAGS = -g -fpp -extend-source
+F90_FREEFORM_FLAG = -free
+F90_FIXEDFORM_FLAG = -fixed
+F90_MOD_INCLUDE_PREFIX = -I
+F90_INCLUDE_PREFIX = -I
+
+F77 = ftn 
+F77FLAGS = -g -fpp -extend-source
+F77_FREEFORM_FLAG = -free
+F77_FIXEDFORM_FLAG = -fixed
+F77_INCLUDE_PREFIX = -I
+
+#NTCCHOME=/global/cfs/cdirs/atom/atom-install-perlmutter/ntcc
+F90FLAGS += -I${NTCCHOME}/mod
+
+
+#MKLHOME=$(CRAY_LD_LIBRARY_PATH)
+#NETCDFHOME=$(NETCDF_DIR)
+
+NETCDFLIB= -L$(NETCDFHOME)/lib -lnetcdf
+NTCCLIB = -L$(NTCCHOME)/lib -lxplasma2 -lxplasma_debug -lgeqdsk_mds -lvaxonly -lnscrunch -lfluxav -lr8bloat -lpspline -lezcdf -llsode -llsode_linpack -lcomput -lportlib -lureadsub -lsmlib -lxplasma2
+PLASMA_STATE_LIB = -L$(NTCCHOME)/lib -lplasma_state -lps_xplasma2 -lplasma_state_kernel
+
+MDSPLUS_ROOT = $(NTCCHOME)
+MDSPLUSLIB = -L$(NTCCHOME)/lib -lmdstransp
+#LIBS = $(PLASMA_STATE_LIB) $(NTCCLIB) $(MDSPLUSLIB) $(NETCDFLIB) $(LAPACKLIB) #-L$(IPS_ROOT)/lib -lswim-utils
+LIBS = $(PLASMA_STATE_LIB) $(NTCCLIB)
