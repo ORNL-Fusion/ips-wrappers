@@ -21,7 +21,7 @@ F90FLAGS += -I${NTCCHOME}/mod
 
 
 #MKLHOME=$(CRAY_LD_LIBRARY_PATH)
-#NETCDFHOME=$(NETCDF_DIR)
+NETCDFHOME=$(NETCDF_DIR)
 
 NETCDFLIB= -L$(NETCDFHOME)/lib -lnetcdf
 NTCCLIB = -L$(NTCCHOME)/lib -lxplasma2 -lxplasma_debug -lgeqdsk_mds -lvaxonly -lnscrunch -lfluxav -lr8bloat -lpspline -lezcdf -llsode -llsode_linpack -lcomput -lportlib -lureadsub -lsmlib -lxplasma2
