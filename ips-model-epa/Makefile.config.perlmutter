@@ -2,14 +2,15 @@
 
 MAKEDEPF90=/global/common/software/atom/perlmutter/binaries/makedepf90/default/makedepf90
 
-F90 = ftn 
-F90FLAGS = -g -fpp -extend-source
+F90 = ftn
+#F90FLAGS = -g -fpp -extend-source
+F90FLAGS = -g
 F90_FREEFORM_FLAG = -free
 F90_FIXEDFORM_FLAG = -fixed
 F90_MOD_INCLUDE_PREFIX = -I
 F90_INCLUDE_PREFIX = -I
 
-F77 = ftn 
+F77 = ftn
 F77FLAGS = -g -fpp -extend-source
 F77_FREEFORM_FLAG = -free
 F77_FIXEDFORM_FLAG = -fixed
