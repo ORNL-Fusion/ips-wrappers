@@ -436,8 +436,6 @@ class torlh (Component):
                     raise              
                 imchzz_bin = self.ImChizz_BIN
                 cmd_imchizz=self.ImChizz_BIN
-
-                cwd = services.get_working_dir()
                 imchzz_log = os.path.join(workdir, 'log.imchzz')
                 task_id = services.launch_task(60,cwd,imchzz_bin, logfile=imchzz_log)
                 retcode = services.wait_task(task_id, timeout = 1800.0, delay = 60.)
@@ -458,23 +456,15 @@ class torlh (Component):
             # Try to launch TORLH multiple times if TORLH_TRIES > 1 in config file
             for i in range(int(self.NUM_TORLH_TRIES)):
                 print(' TORLH try number ', i + 1)
-                task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
+                cwd = services.get_working_dir()
+                task_id = services.launch_task(run_nproc, cwd, torlh_bin, task_ppn=32,whole_nodes=True,logfile=torlh_log)
                 retcode = services.wait_task(task_id, timeout = time_limit, delay = 60.)
                 if (retcode == 0):
                     break
-            else:
-                services.error("TORLH failed after %d trials" % int(self.NUM_TORLH_TRIES))
-                raise Exception("TORLH failed after %d trials" % int(self.NUM_TORLH_TRIES))
-
-
-#             print 'arg_toric_Mode = ', arg_toric_Mode, '   torlh processors = ', run_nproc
-#             task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
-#             time_limit = float(self.TORLH_TIME_LIMIT)
-#             retcode = services.wait_task(task_id, timeout = time_limit, delay = 60.)
-#             if (retcode != 0):
-#                 logMsg = 'Error executing command: ' + torlh_bin
-#                 self.services.error(logMsg)
-#                 raise Exception(logMsg)
+                else:
+                    services.error("TORLH failed after %d trials" % int(self.NUM_TORLH_TRIES))
+                    raise Exception("TORLH failed after %d trials" % int(self.NUM_TORLH_TRIES))
+            print 'arg_toric_Mode = ', arg_toric_Mode, '   torlh processors = ', run_nproc
                 
             # Preserve torica.out from run to distinguish toric mode = 'toric' from 'qldce'
             new_file_name = 'torica_' + arg_toric_Mode + '.out'

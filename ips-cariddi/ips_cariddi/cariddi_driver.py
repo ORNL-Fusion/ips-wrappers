@@ -43,7 +43,6 @@ class cariddi_driver(Component):
 #  If this is the first call, set up the V3FIT sub workflow.
         if timeStamp == 0.0:
             self.current_v3fit_state = self.services.get_config_param('CURRENT_V3FIT_STATE')
-            self.current_siesta_state = self.services.get_config_param('CURRENT_SIESTA_STATE')
             self.current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
             self.current_vmec_profile = self.services.get_config_param('CURRENT_VMEC_PROFILE')
             current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
@@ -72,6 +71,7 @@ class cariddi_driver(Component):
                    }
 
             v3fit_config = self.services.get_config_param('V3FIT_CONFIG')
+            self.zip_ref.extract(v3fit_config)
 
             (self.eq_worker['sim_name'],
              self.eq_worker['init'],
@@ -113,10 +113,11 @@ class cariddi_driver(Component):
 #  the mgrid file path to point to the zeroed out file.
         eq_keywords = self.get_eq_profiles()
         eq_keywords['vmec__mgrid_file'] = self.services.get_config_param('MGRID_FILE')
+        eq_keywords['force_update'] = True
 
 #  Run the inital equilibrium with the first set of profiles.
         self.services.call(self.eq_worker['driver'], 'init', float(time_stamp), **eq_keywords)
-        self.services.call(self.eq_worker['driver'], 'step', float(time_stamp), force_update=True)
+        self.services.call(self.eq_worker['driver'], 'step', float(time_stamp), **eq_keywords)
         self.get_updated_substate(time_stamp)
 
 #  Get the surface currents and generate then eddy.nc file.
@@ -147,7 +148,8 @@ class cariddi_driver(Component):
                                           'save_fields'])
             self.get_updated_state()
             eq_keywords = self.get_eq_profiles()
-            
+            eq_keywords['force_update'] = True
+                    
             delta_magnetic_axis = 100
 
             while inner_loop_time_stamp < self.time_sub_steps:
@@ -155,7 +157,7 @@ class cariddi_driver(Component):
                 if inner_loop_time_stamp == 0:
                     self.services.call(self.eq_worker['driver'], 'init', float(time_stamp), **eq_keywords)
                 else:
-                    self.services.call(self.eq_worker['driver'], 'init', float(time_stamp))
+                    self.services.call(self.eq_worker['driver'], 'init', float(time_stamp), force_update=True)
                 self.services.call(self.eq_worker['driver'], 'step', float(time_stamp), force_update=True)
                 self.get_updated_substate(time_stamp)
 
@@ -171,7 +173,7 @@ class cariddi_driver(Component):
                 if delta_magnetic_axis < 1.0E-7:
                     break
 
-                self.services.call(self.eq_worker['driver'], 'init', float(time_stamp))
+                self.services.call(self.eq_worker['driver'], 'init', float(time_stamp), force_update=True)
                 self.services.call(self.eq_worker['driver'], 'step', float(time_stamp), force_update=True)
                 self.get_updated_substate(time_stamp)
 
@@ -227,12 +229,7 @@ class cariddi_driver(Component):
 #-------------------------------------------------------------------------------
     def get_magnetic_axis(self):
         with ZipState.ZipState(self.current_v3fit_state, 'r') as v3fit_ref:
-            if self.current_siesta_state in v3fit_ref:
-                v3fit_ref.extract(self.current_siesta_state)
-                with ZipState.ZipState(self.current_siesta_state, 'r') as siesta_ref:
-                    siesta_ref.extract(self.current_vmec_state)
-            else:
-                v3fit_ref.extract(self.current_vmec_state)
+            v3fit_ref.extract(self.current_vmec_state)
 
         with ZipState.ZipState(self.current_vmec_state, 'r') as vmec_ref:
             vmec_ref.extract(self.current_wout_file)

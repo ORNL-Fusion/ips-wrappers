@@ -136,7 +136,7 @@ class mgrid(carriddi_file):
 
         shape = (self.nphi, self.nz, self.nr)
         if self.nz*self.nr == numpy.shape(eddyfile.k1xx)[0]:
-            shape = (1, self.nr, self.nz)
+            shape = (1, self.nz, self.nr)
 
 #  Use Fortran ordering in reshaping. May need to account for the change in
 #  coordinate from
@@ -183,7 +183,7 @@ class mgrid(carriddi_file):
         length = (self.nphi*self.nz*self.nr,)
         nphi = self.nphi
         if self.nz*self.nr == numpy.shape(eddyfile.k1xx)[0]:
-            shape = (1, self.nr, self.nz)
+            shape = (1, self.nz, self.nr)
             length = (self.nz*self.nr,)
             nphi = 1
 
@@ -211,6 +211,7 @@ class mgrid(carriddi_file):
         temp = temp_x + temp_y + temp_z
 
         alpha = numpy.dot(temp, delta_bx + delta_by + delta_bz)/numpy.dot(temp, temp)
+        print('alpha value = {}'.format(alpha))
 
         br = eddyfile.bx + alpha*delta_bx
         bp = eddyfile.by + alpha*delta_by

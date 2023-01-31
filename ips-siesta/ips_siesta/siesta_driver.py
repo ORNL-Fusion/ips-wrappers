@@ -41,6 +41,7 @@ class siesta_driver(Component):
 
 #  Get config filenames.
         current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
+        current_vmec_config = self.services.get_config_param('VMEC_CONFIG')
         self.current_siesta_state = self.services.get_config_param('CURRENT_SIESTA_STATE')
 
 #  We need to pass the inputs to the VMEC child workflow.
@@ -48,6 +49,7 @@ class siesta_driver(Component):
         
         zip_ref = ZipState.ZipState(self.current_siesta_state, 'a')
         zip_ref.extract(current_vmec_state)
+        zip_ref.extract(current_vmec_config)
 
 #  If this is the first call, set up the VMEC sub workflow.
         if timeStamp == 0.0:
@@ -65,13 +67,11 @@ class siesta_driver(Component):
             if os.path.exists('vmec_input_dir'):
                 shutil.rmtree('vmec_input_dir')
             os.mkdir('vmec_input_dir')
-            
-            vmec_config = self.services.get_config_param('VMEC_CONFIG')
-            
+
             self.vmec_worker = {'sim_name': None, 'init': None, 'driver': None}
             (self.vmec_worker['sim_name'],
              self.vmec_worker['init'],
-             self.vmec_worker['driver']) = self.services.create_sub_workflow('vmec', vmec_config,
+             self.vmec_worker['driver']) = self.services.create_sub_workflow('vmec', current_vmec_config,
                                                                              keys, 'vmec_input_dir')
 
         shutil.copy2(current_vmec_state, 'vmec_input_dir')

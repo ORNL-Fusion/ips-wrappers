@@ -37,18 +37,21 @@ class v3fit_driver(Component):
         for key, value in keywords.items():
             if 'vmec__' in key or 'siesta__' in key:
                 eq_keywords[key] = value
-            if 'v3fit__' in key:
+            elif 'v3fit__' in key:
                 v3fit_keywords[key.replace('v3fit__','',1)] = value
+            else:
+                eq_keywords[key] = value
 
 #  Get config filenames.
-        current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
-        current_siesta_state = self.services.get_config_param('CURRENT_SIESTA_STATE')
+        current_model_state = self.services.get_config_param('MODEL_STATE')
+        current_model_config = self.services.get_config_param('MODEL_CONFIG')
         self.current_v3fit_state = self.services.get_config_param('CURRENT_V3FIT_STATE')
 
 #  We need to pass the inputs to the SIESTA or VMEC child workflow.
         self.services.stage_state()
             
         zip_ref = ZipState.ZipState(self.current_v3fit_state, 'a')
+        zip_ref.extract(current_model_config)
 
 #  If this is the first call, set up the VMEC or SIESTA sub workflow.
         if timeStamp == 0.0:
@@ -58,78 +61,31 @@ class v3fit_driver(Component):
 
             self.v3fit_port = self.services.get_port('V3FIT')
             
-            if current_siesta_state in zip_ref:
-#  Get keys for the SIESTA sub workflow.
-                keys = {'PWD'              : self.services.get_config_param('PWD'),
-                        'USER_INPUT_FILES' : current_siesta_state,
-                        'SIM_NAME'         : '{}_siesta'.format(self.services.get_config_param('SIM_NAME')),
-                        'LOG_FILE'         : 'log.{}_siesta.warning'.format(self.services.get_config_param('SIM_NAME')),
-                        'OUTPUT_LEVEL'     : self.services.get_config_param('OUTPUT_LEVEL')
-                       }
+            keys = {'PWD'                   : self.services.get_config_param('PWD'),
+                    'USER_INPUT_FILES'      : current_model_state,
+                    'SIM_NAME'              : '{}_model'.format(self.services.get_config_param('SIM_NAME')),
+                    'OUTPUT_LEVEL'          : self.services.get_config_param('OUTPUT_LEVEL'),
+                    'VMEC_NAMELIST_INPUT'   : self.services.get_config_param('VMEC_NAMELIST_INPUT'),
+                    'SIESTA_NAMELIST_INPUT' : self.services.get_config_param('SIESTA_NAMELIST_INPUT')
+            }
 
-                try:
-                    self.services.get_config_param('VMEC_NAMELIST_INPUT')
-                except:
-                    pass
-                else:
-                    keys['VMEC_NAMELIST_INPUT'] = self.services.get_config_param('VMEC_NAMELIST_INPUT')
-
-                try:
-                    self.services.get_config_param('SIESTA_NAMELIST_INPUT')
-                except:
-                    pass
-                else:
-                    keys['SIESTA_NAMELIST_INPUT'] = self.services.get_config_param('SIESTA_NAMELIST_INPUT')
-
-                siesta_config = self.services.get_config_param('SIESTA_CONFIG')
-                    
-                (self.eq_worker['sim_name'],
-                 self.eq_worker['init'],
-                 self.eq_worker['driver']) = self.services.create_sub_workflow('siesta', siesta_config,
-                                                                               keys, 'eq_input_dir')
-                
-            else:
-#  Get keys for the VMEC sub workflow.
-                keys = {'PWD'              : self.services.get_config_param('PWD'),
-                        'USER_INPUT_FILES' : current_vmec_state,
-                        'SIM_NAME'         : '{}_vmec'.format(self.services.get_config_param('SIM_NAME')),
-                        'LOG_FILE'         : 'log.{}_vmec.warning'.format(self.services.get_config_param('SIM_NAME')),
-                        'OUTPUT_LEVEL'     : self.services.get_config_param('OUTPUT_LEVEL')
-                       }
-
-                try:
-                    self.services.get_config_param('VMEC_NAMELIST_INPUT')
-                except:
-                    pass
-                else:
-                    keys['VMEC_NAMELIST_INPUT'] = self.services.get_config_param('VMEC_NAMELIST_INPUT')
-
-                vmec_config = self.services.get_config_param('VMEC_CONFIG')
-                
-                (self.eq_worker['sim_name'],
-                 self.eq_worker['init'],
-                 self.eq_worker['driver']) = self.services.create_sub_workflow('vmec', vmec_config,
-                                                                               keys, 'eq_input_dir')
+            (self.eq_worker['sim_name'],
+             self.eq_worker['init'],
+             self.eq_worker['driver']) = self.services.create_sub_workflow('model', current_model_config,
+                                                                           keys, 'eq_input_dir')
 
 #  Copy new subworkflow inputs to the input directory.
-        if current_siesta_state in zip_ref:
-            zip_ref.extract(current_siesta_state)
-            shutil.copy2(current_siesta_state, 'eq_input_dir')
-        else:
-            zip_ref.extract(current_vmec_state)
-            shutil.copy2(current_vmec_state, 'eq_input_dir')
+        zip_ref.extract(current_model_state)
+        shutil.copy2(current_model_state, 'eq_input_dir')
 
 #  Initialize and run the equilibrium. Replace values in the V3FIT state.
         self.services.call(self.eq_worker['init'], 'init', timeStamp)
         self.services.call(self.eq_worker['driver'], 'init', timeStamp, **eq_keywords)
-        self.services.call(self.eq_worker['driver'], 'step', timeStamp)
+        self.services.call(self.eq_worker['driver'], 'step', timeStamp, **eq_keywords)
             
 #  After the equilibrium has run update the state.
         self.services.stage_subflow_output_files()
-        if current_siesta_state in zip_ref:
-            zip_ref.write(current_siesta_state)
-        else:
-            zip_ref.write(current_vmec_state)
+        zip_ref.write(current_model_state)
         zip_ref.close()
         self.services.update_state()
 

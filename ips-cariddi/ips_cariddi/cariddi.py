@@ -41,8 +41,6 @@ class cariddi(Component):
 
             self.current_v3fit_state = self.services.get_config_param('CURRENT_V3FIT_STATE')
 
-            self.current_siesta_state = self.services.get_config_param('CURRENT_SIESTA_STATE')
-
             self.current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
             current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
             self.current_wout_file = 'wout_{}.nc'.format(current_vmec_namelist.replace('input.','',1))
@@ -63,11 +61,7 @@ class cariddi(Component):
             self.zip_ref.extract(self.current_v3fit_state)
 
             with ZipState.ZipState(self.current_v3fit_state, 'r') as v3fit_zip_ref:
-                if self.current_siesta_state in v3fit_zip_ref:
-                    with ZipState.ZipState(self.current_siesta_state, 'r') as siesta_zip_ref:
-                        siesta_zip_ref.extract(self.current_vmec_state)
-                else:
-                    v3fit_zip_ref.extract(self.current_vmec_state)
+                v3fit_zip_ref.extract(self.current_vmec_state)
 
             with ZipState.ZipState(self.current_vmec_state, 'r') as vmec_zip_ref:
                 if self.current_wout_file in vmec_zip_ref:

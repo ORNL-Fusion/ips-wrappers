@@ -33,8 +33,10 @@ class siesta_init(Component):
 #  Get config filenames.
         current_vmec_namelist = self.services.get_config_param('VMEC_NAMELIST_INPUT')
         current_vmec_state = self.services.get_config_param('CURRENT_VMEC_STATE')
+        current_vmec_config = self.services.get_config_param('VMEC_CONFIG')
         current_siesta_namelist = self.services.get_config_param('SIESTA_NAMELIST_INPUT')
         current_siesta_state = self.services.get_config_param('CURRENT_SIESTA_STATE')
+
 
 #  Remove old inputs. Stage input files.
         for file in os.listdir('.'):
@@ -56,6 +58,7 @@ class siesta_init(Component):
         with ZipState.ZipState(current_siesta_state, 'a') as zip_ref:
             if os.path.exists(current_siesta_namelist):
                 zip_ref.write(current_siesta_namelist)
+                zip_ref.write(current_vmec_config)
                 zip_ref.set_state(state='needs_update')
 
 #  The vmec state will be merged with any existing vmec state in the siesta

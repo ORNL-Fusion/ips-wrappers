@@ -65,7 +65,8 @@ class ml_train_driver(Component):
                     'MODULE_PATH'      : self.services.get_config_param('MODULE_PATH'),
                     'MODULE_NAME'      : self.services.get_config_param('MODULE_NAME'),
                     'BATCH_SIZE'       : self.services.get_config_param('BATCH_SIZE'),
-                    'MSR_NNODES'       : self.services.get_config_param('MSR_NNODES')
+                    'MSR_NNODES'       : self.services.get_config_param('MSR_NNODES'),
+                    'SAVE_LOGS'        : self.services.get_config_param('SAVE_LOGS')
                 }
 
                 if os.path.exists('data_gen_input_dir'):

@@ -88,12 +88,12 @@ class vmec(Component):
 
         flags = self.zip_ref.get_state()
 
-        if 'state' in flags and flags['state'] == 'needs_update' or 'force_update' in keywords:
+        if 'state' in flags and (flags['state'] == 'needs_update' or 'force_update' in keywords):
             task_wait = self.services.launch_task(self.NPROC,
                                                   self.services.get_working_dir(),
                                                   self.VMEC_EXE,
                                                   self.current_vmec_namelist,
-                                                  logfile = 'vmec.log')
+                                                  logfile = 'vmec{}.log'.format(timeStamp))
 
 #  Update flags.
             self.zip_ref.set_state(state='updated')
