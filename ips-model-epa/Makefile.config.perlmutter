@@ -1,6 +1,6 @@
 # IPS_ROOT must be defined before this file is included
 
-MAKEDEPF90=/global/common/software/atom/perlmutter/binaries/makedepf90
+MAKEDEPF90=/global/common/software/atom/perlmutter/binaries/makedepf90/default/makedepf90
 
 F90 = ftn 
 F90FLAGS = -g -fpp -extend-source
