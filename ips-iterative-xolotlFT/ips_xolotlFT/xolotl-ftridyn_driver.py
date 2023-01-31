@@ -1342,171 +1342,192 @@ class xolotlFtridynDriver(Component):
             #exit status is printed to solverStatus.txt  'good' (successful run); 'collapsed' (ts below threshold) ; 'diverged' otherwise        
             #Xolotl is launched again (same paramter and network files) until run successfully, or up to maxCollapseLoop tries,
 
-            n_overgrid_loops=0
-            
-            while self.xolotlExitStatus=='collapsed' or self.xolotlExitStatus=='overgrid':
+            # flag to keep track of the success of keepLastTS (because sometimes the network file is corrupted)
+            keep_last_ts_success = False
 
-                if self.xolotlExitStatus=='collapsed':
-                    self.collapsedLoops+=1
-                    print(' ')
+            # make sure we save a copy of the network file in case we need to restart because keepLastTS failed
+            temp_network_file = os.path.join(os.path.dirname(self.XOLOTL_NETWORK_FILE), "tempNetworkFile.h5")
+            shutil.copyfile(self.XOLOTL_NETWORK_FILE, temp_network_file)
+            print(f"\u2B95 Successfully copied network file {self.XOLOTL_NETWORK_FILE} to temporary network file {temp_network_file}")
 
-                #set a maximum number of tries
-                if self.collapsedLoops<=int(self.driver['MAX_COLLAPSE_LOOPS']):
+            # loop until keepLastTS is successful
+            while not keep_last_ts_success:
 
-                    self.services.call(xolotl, 'init', timeStamp, dTime=time, xParameters=self.xp.parameters, output_file=outFile, print_test=self.print_test) #, xFtCoupling=self.driver['FTX_COUPLING'])
-                    self.services.call(xolotl, 'step', timeStamp, dTime=time, xHe_conc=self.petsc_heConc, xParameters=self.xp.parameters, output_file=outFile, dZipOutput=self.driver['ZIP_XOLOTL_OUTPUT'], n_overgrid_loops=n_overgrid_loops, xolotl_num_tries=self.driver['XOLOTL_NUM_TRIES'], print_test=self.print_test)
+                print(f"\u2B95 keep_last_ts_success is False, starting new loop...")
 
-                    sys.stdout.flush()
-                    self.services.stage_state()
+                # start from a fresh network file
+                shutil.copyfile(temp_network_file, self.XOLOTL_NETWORK_FILE)
+                print(f"\u2B95 Successfully copied network file {temp_network_file} to temporary network file {self.XOLOTL_NETWORK_FILE}")
 
-                    statusFile=open(self.XOLOTL_EXIT_STATUS, "r")
-                    self.xolotlExitStatus=statusFile.read().rstrip('\n')
+                n_overgrid_loops=0
+                
+                while self.xolotlExitStatus=='collapsed' or self.xolotlExitStatus=='overgrid':
 
-                    print(('\t Xolotl ended simulation with status : {}\n'.format(self.xolotlExitStatus)))
+                    if self.xolotlExitStatus=='collapsed':
+                        self.collapsedLoops+=1
+                        print(' ')
 
-                    if self.xolotlExitStatus=='good':
-                        print(('Xolotl successfully executed after {} tries'.format(self.collapsedLoops)))
-                        print('\t continue with IPS simulation \n')
+                    #set a maximum number of tries
+                    if self.collapsedLoops<=int(self.driver['MAX_COLLAPSE_LOOPS']):
 
-                    elif self.xolotlExitStatus=='diverged':
-                        print('ERROR: XOLOTL SOLVER DIVERGED ')
-                        print('\t END IPS SIMULATION \n')
-                        quit()
-                    elif self.xolotlExitStatus=='overgrid':
-                        n_overgrid_loops+=1
-                        print('WARNING: XOLOTL OVERGRID ')
-                        print('\t RUNNING transgerGrid...')
-                        #xolotlStop already copied as _overgrid within xolotl_comp; no need to copy here again
+                        self.services.call(xolotl, 'init', timeStamp, dTime=time, xParameters=self.xp.parameters, output_file=outFile, print_test=self.print_test) #, xFtCoupling=self.driver['FTX_COUPLING'])
+                        self.services.call(xolotl, 'step', timeStamp, dTime=time, xHe_conc=self.petsc_heConc, xParameters=self.xp.parameters, output_file=outFile, dZipOutput=self.driver['ZIP_XOLOTL_OUTPUT'], n_overgrid_loops=n_overgrid_loops, xolotl_num_tries=self.driver['XOLOTL_NUM_TRIES'], print_test=self.print_test)
+
                         sys.stdout.flush()
-                        
-                        #also need to update the values of grid and voidPortion to match what's in the network file:
-                        #Most likely this will only work if using 'grid', not 'gridParam' in network file!!
-                        shutil.copyfile(self.XOLOTL_NETWORK_FILE,self.XOLOTL_NETWORK_FILE+'_overgrid_'+str(n_overgrid_loops))
-                        shutil.move('xolotlStop.h5', self.XOLOTL_NETWORK_FILE)
-                        [newGridSize, newVoidPortion] = transferGrid.transferGrid(self.XOLOTL_NETWORK_FILE,print_test=self.print_test)
-                        sys.stdout.flush()
-                        
-                        if os.path.exists(self.XOLOTL_NETWORK_FILE):
-                            #make sure xolotlStop exists
-                            shutil.copyfile(self.XOLOTL_NETWORK_FILE,'xolotlStop.h5')
+                        self.services.stage_state()
+
+                        statusFile=open(self.XOLOTL_EXIT_STATUS, "r")
+                        self.xolotlExitStatus=statusFile.read().rstrip('\n')
+
+                        print(('\t Xolotl ended simulation with status : {}\n'.format(self.xolotlExitStatus)))
+
+                        if self.xolotlExitStatus=='good':
+                            print(('Xolotl successfully executed after {} tries'.format(self.collapsedLoops)))
+                            print('\t continue with IPS simulation \n')
+
+                        elif self.xolotlExitStatus=='diverged':
+                            print('ERROR: XOLOTL SOLVER DIVERGED ')
+                            print('\t END IPS SIMULATION \n')
+                            quit()
+                        elif self.xolotlExitStatus=='overgrid':
+                            n_overgrid_loops+=1
+                            print('WARNING: XOLOTL OVERGRID ')
+                            print('\t RUNNING transgerGrid...')
+                            #xolotlStop already copied as _overgrid within xolotl_comp; no need to copy here again
+                            sys.stdout.flush()
+                            
+                            #also need to update the values of grid and voidPortion to match what's in the network file:
+                            #Most likely this will only work if using 'grid', not 'gridParam' in network file!!
+                            shutil.copyfile(self.XOLOTL_NETWORK_FILE,self.XOLOTL_NETWORK_FILE+'_overgrid_'+str(n_overgrid_loops))
+                            shutil.move('xolotlStop.h5', self.XOLOTL_NETWORK_FILE)
+                            [newGridSize, newVoidPortion] = transferGrid.transferGrid(self.XOLOTL_NETWORK_FILE,print_test=self.print_test)
+                            sys.stdout.flush()
+                            
+                            if os.path.exists(self.XOLOTL_NETWORK_FILE):
+                                #make sure xolotlStop exists
+                                shutil.copyfile(self.XOLOTL_NETWORK_FILE,'xolotlStop.h5')
+                            else:
+                                print('\t WARNING: networkFile does not exists after transferGrid')
+                                print('\t keep old one')
+                                shutil.copyfile(self.XOLOTL_NETWORK_FILE+'_overgrid_'+str(n_overgrid_loops),self.XOLOTL_NETWORK_FILE)
+                            print('\t in file ', self.XOLOTL_NETWORK_FILE)    
+                            print('\t \t updated the values of grid to ', newGridSize)
+                            print('\t \t updated the values of voidPortion to ', newVoidPortion)
+                            print('\t DONE RUNNING transferGrid!')
+                            sys.stdout.flush()
+                            if self.driver['xolotl_v']==1:
+                                self.xp.parameters['grid'][0] = newGridSize
+                            elif self.driver['xolotl_v']==2:
+                                self.xp.parameters['gridParam'][0] = newGridSize
+                            self.xp.parameters['voidPortion'] = newVoidPortion
+                            self.services.update_state()
+                            
+                        elif self.xolotlExitStatus=='collapsed':
+                            print('\t WARNING: simulation exited loop with status collapse')
+                            print(('\t try number {0} out of {1}\n'.format(self.collapsedLoops,self.maxCollapseLoops)))                    
+
                         else:
-                            print('\t WARNING: networkFile does not exists after transferGrid')
-                            print('\t keep old one')
-                            shutil.copyfile(self.XOLOTL_NETWORK_FILE+'_overgrid_'+str(n_overgrid_loops),self.XOLOTL_NETWORK_FILE)
-                        print('\t in file ', self.XOLOTL_NETWORK_FILE)    
-                        print('\t \t updated the values of grid to ', newGridSize)
-                        print('\t \t updated the values of voidPortion to ', newVoidPortion)
-                        print('\t DONE RUNNING transferGrid!')
+                            print('\t WARNING: Xolotl exit status UNKOWN -- IPS simulation continues \n')
                         sys.stdout.flush()
-                        if self.driver['xolotl_v']==1:
-                            self.xp.parameters['grid'][0] = newGridSize
-                        elif self.driver['xolotl_v']==2:
-                            self.xp.parameters['gridParam'][0] = newGridSize
-                        self.xp.parameters['voidPortion'] = newVoidPortion
-                        self.services.update_state()
                         
-                    elif self.xolotlExitStatus=='collapsed':
-                        print('\t WARNING: simulation exited loop with status collapse')
-                        print(('\t try number {0} out of {1}\n'.format(self.collapsedLoops,self.maxCollapseLoops)))                    
+                    else: #reached maximum number of tries for collapsing time steps
+                        print('\t ERROR: reached maximum number of tries for collapsing time steps without a successful run')
+                        print('END IPS SIMULATION \n')
+                        quit()
+                sys.stdout.flush()
+                
+                #UPDATE: Xolotl generates HDF5 file of TRIDYN, copied as 'last_TRIDYN_toBin.h5'
+                #thus no need to copy it; and binTRIDYN will transform it to text file, 'last_TRIDYN.dat' 
+                print('bin Xolotls output:')
+                sys.stdout.flush()
+                if (self.driver['xolotl_v']==1):
+                    binTRIDYN.v1(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat', print_test=self.print_test) #instead of binTRIDYN.binTridyn()                 
+                    print('...succesfully ran binTRIDYN for xolotl v1')
+                elif(self.driver['xolotl_v']==2):
+                    binTRIDYN.v2(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat', print_test=self.print_test) #formerly binTRIDYN_tempGrid
+                    print('...succesfully ran binTRIDYN for xolotl v2')
+                print(' ')
+                
+                #store xolotls profile output for each loop (not plasma state)          
+                #UPDATE: 'toBin' is .h5 format instead of .dat
+                currentXolotlOutputFileToBin='last_TRIDYN_toBin_%f.h5' %time
+                shutil.copyfile('last_TRIDYN_toBin.h5', currentXolotlOutputFileToBin)
+                currentXolotlOutputFile='last_TRIDYN_%f.dat' %time
+                shutil.copyfile('last_TRIDYN.dat', currentXolotlOutputFile)
+                
+                #append output:
+                #retention
+                print(f">>> PR: the current directory is {os.getcwd()}")
+                exists_str = "exists" if os.path.isfile(self.XOLOTL_RETENTION_TEMP) else "does not exist !!!"
+                print(f">>> PR: XOLOTL_RETENTION_TEMP = '{self.XOLOTL_RETENTION_TEMP}', this file {exists_str}")
+                tempfileRet = open(self.XOLOTL_RETENTION_TEMP,"r")
+                fRet = open(self.XOLOTL_RETENTION_FINAL, "a")
+                fRet.write(tempfileRet.read())
+                fRet.close()
+                tempfileRet.close()
+                exists_str = "exists" if os.path.isfile(self.XOLOTL_RETENTION_FINAL) else "does not exist !!!"
+                print(f">>> PR: XOLOTL_RETENTION_FINAL = '{self.XOLOTL_RETENTION_FINAL}', this file {exists_str}")
+                
+                #surface
+                exists_str = "exists" if os.path.isfile(self.XOLOTL_SURFACE_TEMP) else "does not exist !!!"
+                print(f">>> PR: XOLOTL_SURFACE_TEMP = '{self.XOLOTL_SURFACE_TEMP}', this file {exists_str}")
+                tempfileSurf = open(self.XOLOTL_SURFACE_TEMP,"r")
+                fSurf = open(self.XOLOTL_SURFACE_FINAL, "a")
+                fSurf.write(tempfileSurf.read())
+                fSurf.close()
+                tempfileSurf.close()
+                exists_str = "exists" if os.path.isfile(self.XOLOTL_SURFACE_FINAL) else "does not exist !!!"
+                print(f">>> PR: XOLOTL_SURFACE_FINAL = '{self.XOLOTL_SURFACE_FINAL}', this file {exists_str}")
 
-                    else:
-                        print('\t WARNING: Xolotl exit status UNKOWN -- IPS simulation continues \n')
+                print(f">>> PR: applying fix here:")
+                for (tmp_file, final_file) in [(self.XOLOTL_RETENTION_TEMP, self.XOLOTL_RETENTION_FINAL), (self.XOLOTL_SURFACE_TEMP, self.XOLOTL_SURFACE_FINAL)]:
+                    print(f">>> PR: got tmp_file '{tmp_file}' and final_file '{final_file}' ")
+                    with open(final_file, "a") as out_file:
+                        print(f">>> PR: successfully opened final_file '{final_file}'")
+                        with open(tmp_file, "r") as in_file:
+                            print(f">>> PR: successfully opened tmp_file '{tmp_file}'")
+                            out_file.write("\n")
+                            out_file.write(in_file.read())
+                            print(f">>> PR: successfully written final_file '{final_file}'")
+                if os.path.isfile(self.XOLOTL_RETENTION_FINAL) and os.path.isfile(self.XOLOTL_SURFACE_FINAL):
+                    print(f">>> PR: both XOLOTL_RETENTION_FINAL '{self.XOLOTL_RETENTION_FINAL}' and XOLOTL_SURFACE_FINAL '{self.XOLOTL_SURFACE_FINAL}' exist")
+                else:
+                    print(f">>> PR: either XOLOTL_RETENTION_FINAL '{self.XOLOTL_RETENTION_FINAL}' or XOLOTL_SURFACE_FINAL '{self.XOLOTL_SURFACE_FINAL}' does not exist !!!")
+                print(f">>> PR: done applying fix")
+
+                print(f">>> PR: cwd is '{cwd}'")
+
+                #save network file with a different name to use in the next time step
+                currentXolotlNetworkFile='xolotlStop_%f.h5' %time
+                shutil.copyfile('xolotlStop.h5',currentXolotlNetworkFile)
+                ## try using keepLastTS to produce netfile with only info from the last TS
+                print('produce new network file using xolotlStop:')
+                try:
+                    iF=cwd+'/xolotlStop.h5'
+                    oF= cwd+'/'+self.XOLOTL_NETWORK_FILE
+                    os.remove(oF) #can not exist & it's copied as w/ time-stamp above
+                    if self.print_test:
+                        print('\t run keepLastTS with: ')
+                        print('\t \t inFile = ', iF)
+                        print( '\t \t outFile = ', oF)
                     sys.stdout.flush()
-                    
-                else: #reached maximum number of tries for collapsing time steps
-                    print('\t ERROR: reached maximum number of tries for collapsing time steps without a successful run')
-                    print('END IPS SIMULATION \n')
-                    quit()
-            sys.stdout.flush()
-            
-            #UPDATE: Xolotl generates HDF5 file of TRIDYN, copied as 'last_TRIDYN_toBin.h5'
-            #thus no need to copy it; and binTRIDYN will transform it to text file, 'last_TRIDYN.dat' 
-            print('bin Xolotls output:')
-            sys.stdout.flush()
-            if (self.driver['xolotl_v']==1):
-                binTRIDYN.v1(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat', print_test=self.print_test) #instead of binTRIDYN.binTridyn()                 
-                print('...succesfully ran binTRIDYN for xolotl v1')
-            elif(self.driver['xolotl_v']==2):
-                binTRIDYN.v2(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat', print_test=self.print_test) #formerly binTRIDYN_tempGrid
-                print('...succesfully ran binTRIDYN for xolotl v2')
-            print(' ')
-            
-            #store xolotls profile output for each loop (not plasma state)          
-            #UPDATE: 'toBin' is .h5 format instead of .dat
-            currentXolotlOutputFileToBin='last_TRIDYN_toBin_%f.h5' %time
-            shutil.copyfile('last_TRIDYN_toBin.h5', currentXolotlOutputFileToBin)
-            currentXolotlOutputFile='last_TRIDYN_%f.dat' %time
-            shutil.copyfile('last_TRIDYN.dat', currentXolotlOutputFile)
-            
-            #append output:
-            #retention
-            print(f">>> PR: the current directory is {os.getcwd()}")
-            exists_str = "exists" if os.path.isfile(self.XOLOTL_RETENTION_TEMP) else "does not exist !!!"
-            print(f">>> PR: XOLOTL_RETENTION_TEMP = '{self.XOLOTL_RETENTION_TEMP}', this file {exists_str}")
-            tempfileRet = open(self.XOLOTL_RETENTION_TEMP,"r")
-            fRet = open(self.XOLOTL_RETENTION_FINAL, "a")
-            fRet.write(tempfileRet.read())
-            fRet.close()
-            tempfileRet.close()
-            exists_str = "exists" if os.path.isfile(self.XOLOTL_RETENTION_FINAL) else "does not exist !!!"
-            print(f">>> PR: XOLOTL_RETENTION_FINAL = '{self.XOLOTL_RETENTION_FINAL}', this file {exists_str}")
-            
-            #surface
-            exists_str = "exists" if os.path.isfile(self.XOLOTL_SURFACE_TEMP) else "does not exist !!!"
-            print(f">>> PR: XOLOTL_SURFACE_TEMP = '{self.XOLOTL_SURFACE_TEMP}', this file {exists_str}")
-            tempfileSurf = open(self.XOLOTL_SURFACE_TEMP,"r")
-            fSurf = open(self.XOLOTL_SURFACE_FINAL, "a")
-            fSurf.write(tempfileSurf.read())
-            fSurf.close()
-            tempfileSurf.close()
-            exists_str = "exists" if os.path.isfile(self.XOLOTL_SURFACE_FINAL) else "does not exist !!!"
-            print(f">>> PR: XOLOTL_SURFACE_FINAL = '{self.XOLOTL_SURFACE_FINAL}', this file {exists_str}")
-
-            print(f">>> PR: applying fix here:")
-            for (tmp_file, final_file) in [(self.XOLOTL_RETENTION_TEMP, self.XOLOTL_RETENTION_FINAL), (self.XOLOTL_SURFACE_TEMP, self.XOLOTL_SURFACE_FINAL)]:
-                print(f">>> PR: got tmp_file '{tmp_file}' and final_file '{final_file}' ")
-                with open(final_file, "a") as out_file:
-                    print(f">>> PR: successfully opened final_file '{final_file}'")
-                    with open(tmp_file, "r") as in_file:
-                        print(f">>> PR: successfully opened tmp_file '{tmp_file}'")
-                        out_file.write("\n")
-                        out_file.write(in_file.read())
-                        print(f">>> PR: successfully written final_file '{final_file}'")
-            if os.path.isfile(self.XOLOTL_RETENTION_FINAL) and os.path.isfile(self.XOLOTL_SURFACE_FINAL):
-                print(f">>> PR: both XOLOTL_RETENTION_FINAL '{self.XOLOTL_RETENTION_FINAL}' and XOLOTL_SURFACE_FINAL '{self.XOLOTL_SURFACE_FINAL}' exist")
-            else:
-                print(f">>> PR: either XOLOTL_RETENTION_FINAL '{self.XOLOTL_RETENTION_FINAL}' or XOLOTL_SURFACE_FINAL '{self.XOLOTL_SURFACE_FINAL}' does not exist !!!")
-            print(f">>> PR: done applying fix")
-
-            print(f">>> PR: cwd is '{cwd}'")
-
-            #save network file with a different name to use in the next time step
-            currentXolotlNetworkFile='xolotlStop_%f.h5' %time
-            shutil.copyfile('xolotlStop.h5',currentXolotlNetworkFile)
-            ## try using keepLastTS to produce netfile with only info from the last TS
-            print('produce new network file using xolotlStop:')
-            try:
-                iF=cwd+'/xolotlStop.h5'
-                oF= cwd+'/'+self.XOLOTL_NETWORK_FILE
-                os.remove(oF) #can not exist & it's copied as w/ time-stamp above
-                if self.print_test:
-                    print('\t run keepLastTS with: ')
-                    print('\t \t inFile = ', iF)
-                    print( '\t \t outFile = ', oF)
-                sys.stdout.flush()
-                keepLastTS.keepLastTS(inFile=iF, outFile=oF, print_test=self.print_test)
-                if self.print_test:
-                    print('\t ... keepLastTS returned succesfully')
-                sys.stdout.flush()
-            #if fails, use old method of copying entire xolotlStop as networkFile
-            except Exception as e:                                     
-                print(e)
-                print('\t running keepLastTS failed')
-                print('\t just copy xolotlStop as networkFile')
-                shutil.copyfile('xolotlStop.h5',self.XOLOTL_NETWORK_FILE)
-            print('done writing a new network file')
-            print(' ')
-            sys.stdout.flush()
+                    keepLastTS.keepLastTS(inFile=iF, outFile=oF, print_test=self.print_test)
+                    if self.print_test:
+                        print('\t ... keepLastTS returned succesfully')
+                    print('done writing a new network file')
+                    print(' ')
+                    sys.stdout.flush()
+                    keep_last_ts_success = True
+                #if fails, use old method of copying entire xolotlStop as networkFile
+                except Exception as e:                                     
+                    print(e)
+                    print('\t running keepLastTS failed')
+                    # print('\t just copy xolotlStop as networkFile')
+                    # shutil.copyfile('xolotlStop.h5',self.XOLOTL_NETWORK_FILE)
+                    print("\u2B95 keepLastTS failed, trying this loop again")
+                # print('done writing a new network file')
+                # print(' ')
+                # sys.stdout.flush()
             
             # copy last_TRIDYN.dat and netowrk file to input dir as well:
             print('copy last_TRIDYN.dat and ', self.XOLOTL_NETWORK_FILE, 'to: ')
