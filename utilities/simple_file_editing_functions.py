@@ -4,7 +4,8 @@
 simple_assignment_file_edit.py 3/13/2018 (Batchelor)
 Utilities to read, modify, and write text files with lines in the form of assignment
 statements, i.e. of the form <name> = <value>
-For now it only deals with single line assignments.
+For now it only deals with single line assignments.  The line can have multiple values
+(i.e. a vector) but the line has to be parsed to separate the multiple values.
 """
 
 # Working notes:
@@ -95,6 +96,16 @@ def modify_variables_in_file(change_dict, filename):
     put_lines(filename, lines)
 
 #---------------------------------------------------------------------------------------
+# Convert a dictionary variable containing whitespace delimited multiple variables to
+# a list of floats.  Useful when lines_to_variable_dict() hits a vector on a single line.
+#---------------------------------------------------------------------------------------
+
+def dict_variable_to_list_of_floats(variable_dict, variable):
+    chr_list =  variable_dict[variable].split()
+    num_list = [float(x) for x in chr_list]
+    return num_list
+
+#---------------------------------------------------------------------------------------
 # Edit fortran namelist file
 #---------------------------------------------------------------------------------------
 
@@ -143,8 +154,8 @@ def edit_nml_file(lines, var, values, separator = ','):
     var_lines = 1
     test = False
     while test == False:
-        next_iine_no = var_line_number + var_lines
-        next_line = lines[next_iine_no]
+        next_line_no = var_line_number + var_lines
+        next_line = lines[next_line_no]
         if '=' in next_line:   # Could get fooled by = in a quoted string
             test = True
             eq_index = next_line.find('=') # so check if quote before =
@@ -154,7 +165,7 @@ def edit_nml_file(lines, var, values, separator = ','):
             double_quote_index = next_line.find('"')
             if double_quote_index > -1 and double_quote_index < eq_index:
                 test = False
-        elif next_line[-1] == '/':  # At end of line means end of group
+        elif next_line[-2] == '/':  # At end of line means end of group. [-1] is newline
             test = True
         else:
             var_lines += 1
