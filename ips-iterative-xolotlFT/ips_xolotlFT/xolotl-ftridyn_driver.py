@@ -790,16 +790,16 @@ class xolotlFtridynDriver(Component):
         print('\t before starting time-loop, checked that time step given in config file is not longer than needed to reach the end of the simulation')
         if time+self.time['LOOP_TIME_STEP']>end_time:
             self.time['LOOP_TIME_STEP']=end_time-time
-            self.xp.parameters['petscArgs']['-start_stop']=end_time/10.0
+            self.xp.parameters['petscArgs']['-start_stop']=round(end_time/10.0, 12)
             if self.print_test:
                 print(f"Updated -start_stop to {self.xp.parameters['petscArgs']['-start_stop']:.4f}")
             print('\t WARNING: time step given in config file longer than needed for last loop ')
             print(('\t \t before starting time-loop, adapt driver time step to {} to reach exactly endTime '.format( self.time['LOOP_TIME_STEP'])))
-            self.xp.parameters['petscArgs']['-start_stop']=self.time['LOOP_TIME_STEP']/10.0
+            self.xp.parameters['petscArgs']['-start_stop']=round(self.time['LOOP_TIME_STEP']/10.0, 12)
             print(('\t \t accordingly, Xolotls data is saved every (start_stop) = {} '.format( self.xp.parameters['petscArgs']['-start_stop'])))
         else:
             print('\t time-step is shorter than needed. Continue with it')
-            self.xp.parameters['petscArgs']['-start_stop']=(time+self.time['LOOP_TIME_STEP'])/10.0
+            self.xp.parameters['petscArgs']['-start_stop']=round((time+self.time['LOOP_TIME_STEP'])/10.0, 12)
             if self.print_test:
                 print(f"Updated -start_stop to {self.xp.parameters['petscArgs']['-start_stop']:.4f}")
 
@@ -1592,16 +1592,16 @@ class xolotlFtridynDriver(Component):
 
             if time+self.time['LOOP_TIME_STEP']>end_time: 
                 self.time['LOOP_TIME_STEP']=end_time-time
-                self.xp.parameters['petscArgs']['-start_stop']=end_time/10.0
+                self.xp.parameters['petscArgs']['-start_stop']=round(end_time/10.0, 12)
                 if self.print_test:
                     print(f"Updated -start_stop to {self.xp.parameters['petscArgs']['-start_stop']:.4f}")
                 print(' ')
                 print('\t time step longer than needed for last loop ')
                 print(('\t adapting driver time step to {} to reach exactly endTime '.format(self.time['LOOP_TIME_STEP'])))
-                self.xp.parameters['petscArgs']['-start_stop']=self.time['LOOP_TIME_STEP']/10.0
+                self.xp.parameters['petscArgs']['-start_stop']=round(self.time['LOOP_TIME_STEP']/10.0, 12)
                 print(('\t and Xolotls data is saved every (start_stop) = {} \n'.format( self.xp.parameters['petscArgs']['-start_stop'])))
             else:
-                self.xp.parameters['petscArgs']['-start_stop']=(time+self.time['LOOP_TIME_STEP'])/10.0
+                self.xp.parameters['petscArgs']['-start_stop']=round((time+self.time['LOOP_TIME_STEP'])/10.0, 12)
                 if self.print_test:
                     print(f"Updated -start_stop to {self.xp.parameters['petscArgs']['-start_stop']:.4f}")
 
