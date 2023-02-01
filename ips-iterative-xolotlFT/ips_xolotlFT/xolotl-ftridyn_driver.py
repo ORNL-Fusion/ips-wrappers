@@ -903,227 +903,234 @@ class xolotlFtridynDriver(Component):
             self.services.update_state()
 
             # B) RUN FTRIDYN
-
-            print('call F-TRIDYN:')
-            print(' ')
-            for i in range(len(self.plasmaSpecies)): #self.plasmaSpecies.iteritems():
-                prj=self.plasmaSpecies[i]
-                maxDepth=[]
-                if (self.fluxFraction[i] > 0.0) and not (all(k==0 for k in self.weightAngle[i])):
-                    print(('\t running F-Tridyn for {0} with flux fraction = {1}'.format(prj, self.fluxFraction[i])))
-                    print(('\t and not all angle weights are zero; max angleWeight is {}\n'.format(max(self.weightAngle[i]))))
-                    sys.stdout.flush()
-                    
-                    #component/method calls now include arguments (variables)
-                    self.services.call(ftridyn, 'init', timeStamp, dTime=time, fPrj=prj, fTargetList=targetList, ftParameters=self.ftridyn , fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], ft_folder=self.FT_OUTPUT_FOLDER, input_file=self.ft_input_file[i], otherInFiles=[self.FT_SURFACE_FILE,self.ftx_lay_file[i]], energy_file_name=self.FT_energy_file_name[i], orig_energy_files_path=self.eadist_output_path[i], orig_energy_files_pattern=self.eadist_output_file[i], output_file=outFile, print_test=self.print_test)
-                    sys.stdout.flush()
-                    
-                    self.services.call(ftridyn, 'step', timeStamp, ftParameters=self.ftridyn, fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], fPrj=prj, output_file=outFile, print_test=self.print_test)
-                    sys.stdout.flush()
-                    self.services.stage_state()
-
-
-                    # C) POSTPROCESSING OF prj -> W
-
-                    # 1) access ft folder (read file containing path to FT output directory, as outputPath=...):
-                    ft_dic=param_handler.read(self.FT_OUTPUT_PWD_PATH)
-                    for key,value in ft_dic.items():
-                        self.ftridyn[key] = value
-
+            ftridyn_success = False
+            while not ftridyn_success:
+                try:
+                    print('call F-TRIDYN:')
                     print(' ')
-                    print('F-TRIDYN run COMPLETED for ', prj)
-                    print('\t from {0}:'.format(self.FT_OUTPUT_PWD_PATH))
-                    print('\t \t the path to output of FTRIDYN is')
-                    print('\t \t {0}'.format(self.ftridyn['outputPath']))
-                    print(' ')
-
-                    print('analyze and format output for ', prj, ':\n')
-                    
-                    #2) #get maximum projectile range to ensure bins are added correctly in 'translate_ftridyn_to_xolotl'
-
-                    ft_output_prj_file=self.ft_output_prj_file[i]
-                    ft_output_file=self.ft_output_file[i]
-                    angleFolder=self.ftridyn['outputPath']+'/'+self.FT_OUTPUT_FOLDER+'/ANGLE'
-
-                    for j in range(len(self.angleIn[i])):
-                        if (self.weightAngle[i][j] > 0.0):
-                            filePrj=angleFolder+str(self.angleIn[i][j])+'/'+ft_output_prj_file
-                            num_lines_prj = sum(1 for line in open(filePrj))
-                            if num_lines_prj == 0:
-                                print('\t WARNING: no ions were implanted at this angle (prj file empty)')
-                            elif num_lines_prj == 1:
-                                depth, bla=numpy.loadtxt(filePrj, usecols = (2,3) , unpack=True)
-                                maxDepth.append(depth)
-                            elif num_lines_prj > 1:
-                                depth, bla=numpy.loadtxt(filePrj, usecols = (2,3) , unpack=True)
-                                maxDepth.append(max(depth))
-                    
-                    if len(maxDepth)>0:
-                        print("something was implanted:")
-                        maxRange=max(maxDepth)
-                        self.maxRangeXolotl[i]=maxRange/10.0 #range in nm for Xolotl 
-                        print(('\t maximum projectile range for {} is {} [A]'.format(prj, maxRange)))
-                        print(' ')
-                        #ft_output_file=self.ft_output_file[i]
-                        #get implantation profile
-                        #pass values as dictionary
-                        ft_implProfiles_dictionary={}
-                        ft_implProfiles_dictionary['ftridynOnePrjOutput']=ft_output_prj_file
-                        ft_implProfiles_dictionary['ftridynFolder']=angleFolder
-                        ft_implProfiles_dictionary['angle']=self.angleIn[i]
-                        ft_implProfiles_dictionary['weightAngle']=self.weightAngle[i]
-                        ft_implProfiles_dictionary['prjRange']=maxRange
-                        ft_implProfiles_dictionary['print_test']=self.print_test
-
-                        #different grid keywords depending on Xolotl version:
-                        if (self.driver['xolotl_v']==1): #'grid' in self.xp.parameters:
-                            ft_implProfiles_dictionary['nBins']=self.xp.parameters['grid'][0]
-                        elif (self.driver['xolotl_v']==2): #'gridParam' in  self.xp.parameters:
-                            ft_implProfiles_dictionary['nBins']=self.xp.parameters['gridParam'][0]
-                        else:
-                            ft_implProfiles_dictionary['nBins']=200
-                            print('\t WARNING: xolotl_v not recognized; assume nBins=200')
-                                
-                        ft_implProfiles_dictionary['logFile']=outFile
-
-
-                        pkl_impl_file=cwd+'/ft_implProfiles.pkl'  ## define name in config file, here give abs path
-                        pickle.dump(ft_implProfiles_dictionary, open(pkl_impl_file, "wb" ) )
-
-                        print('\t translate_ft2xol:')
-                        sys.stdout.flush()
-                        try:
-                            self.TRANSLATE_FT2XOL
-                            ft_implProfile_script=self.TRANSLATE_FT2XOL
-                            print('\t Launch user-defined python script :  ')
-                            print('\t', ft_implProfile_script)
+                    for i in range(len(self.plasmaSpecies)): #self.plasmaSpecies.iteritems():
+                        prj=self.plasmaSpecies[i]
+                        maxDepth=[]
+                        if (self.fluxFraction[i] > 0.0) and not (all(k==0 for k in self.weightAngle[i])):
+                            print(('\t running F-Tridyn for {0} with flux fraction = {1}'.format(prj, self.fluxFraction[i])))
+                            print(('\t and not all angle weights are zero; max angleWeight is {}\n'.format(max(self.weightAngle[i]))))
+                            sys.stdout.flush()
                             
-                        except: #DEFAULT PATH: 
-                            ft_implProfile_script = 'translate_ftridyn_to_xolotl.py'
-                            print('\t Launch default python script: ')
-                            print('\t ',ft_implProfile_script)
+                            #component/method calls now include arguments (variables)
+                            self.services.call(ftridyn, 'init', timeStamp, dTime=time, fPrj=prj, fTargetList=targetList, ftParameters=self.ftridyn , fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], ft_folder=self.FT_OUTPUT_FOLDER, input_file=self.ft_input_file[i], otherInFiles=[self.FT_SURFACE_FILE,self.ftx_lay_file[i]], energy_file_name=self.FT_energy_file_name[i], orig_energy_files_path=self.eadist_output_path[i], orig_energy_files_pattern=self.eadist_output_file[i], output_file=outFile, print_test=self.print_test)
+                            sys.stdout.flush()
+                            
+                            self.services.call(ftridyn, 'step', timeStamp, ftParameters=self.ftridyn, fEnergyIn=self.energyIn[i], fAngleIn=self.angleIn[i], fWeightAngle=self.weightAngle[i], fPrj=prj, output_file=outFile, print_test=self.print_test)
+                            sys.stdout.flush()
+                            self.services.stage_state()
 
-                        sys.stdout.flush()
 
-                        task_id_impl = self.services.launch_task(1,self.services.get_working_dir(),
-                                                                 ft_implProfile_script, logfile='tridynPlotting.log')
-                        ret_val_impl = self.services.wait_task(task_id_impl)
+                            # C) POSTPROCESSING OF prj -> W
 
-                    else: #if len(maxDepth)==0
-                        print("\t nothing was implanted. maxRange and profile = 0 ")
-                        maxRange=0.0
-                        self.maxRangeXolotl[i]=0.0
-                        outputFTFile=open(self.FT_OUTPUT_PROFILE_TEMP, "w")
-                        outputFTFile.write("0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 ")
-                        outputFTFile.close()
-                        sys.stdout.flush()
-                        #print "END OF THIS SIMULATION" & return
+                            # 1) access ft folder (read file containing path to FT output directory, as outputPath=...):
+                            ft_dic=param_handler.read(self.FT_OUTPUT_PWD_PATH)
+                            for key,value in ft_dic.items():
+                                self.ftridyn[key] = value
 
-                    print(' ')
-                    sys.stdout.flush()
-                    
-                    #3) get the sputtering yield (or use fixed value)                   
-                    print('get sputtering and reflection yields:')
-                    #pass values as dictionary
-                    ft_getYields_dictionary={}
-                    ft_getYields_dictionary['ftridynOneOutOutput']=ft_output_file
-                    ft_getYields_dictionary['ftridynFolder']=angleFolder
-                    ft_getYields_dictionary['angle']=self.angleIn[i]
-                    ft_getYields_dictionary['weightAngle']=self.weightAngle[i]
-                    ft_getYields_dictionary['fNImpacts']=self.ftridyn['nImpacts']
-                    ft_getYields_dictionary['logFile']=outFile
-                    ft_getYields_dictionary['print_test']=self.print_test
-                    
-                    pkl_gy_file=cwd+'/ft_getYields.pkl'  ## define name in config file, here give abs path
-                    #we need to close this file later (to open it again and read yields), so use alternative to
-                    #pickle.dump(ft_getYields_dictionary, open(pkl_gy_file, "wb" ) )
-                    with open(pkl_gy_file, "wb") as pf:
-                        pickle.dump(ft_getYields_dictionary, pf)
-                    pf.close()
-                    sys.stdout.flush()
-                    
-                    try:
-                        self.GET_YIELDS
-                        ft_getYields_script=self.GET_YIELDS
-                        print('\t Launch user-defined python script : ')
-                        print('\t ', ft_getYields_script)
-                        
-                    except: #DEFAULT PATH:
-                        ft_getYields_script = 'get_yields.py'
-                        print('\t Launch default python script ')
-                        print('\t ', ft_getYields_script)
+                            print(' ')
+                            print('F-TRIDYN run COMPLETED for ', prj)
+                            print('\t from {0}:'.format(self.FT_OUTPUT_PWD_PATH))
+                            print('\t \t the path to output of FTRIDYN is')
+                            print('\t \t {0}'.format(self.ftridyn['outputPath']))
+                            print(' ')
 
-                    sys.stdout.flush()
+                            print('analyze and format output for ', prj, ':\n')
+                            
+                            #2) #get maximum projectile range to ensure bins are added correctly in 'translate_ftridyn_to_xolotl'
 
-                    task_id_gy = self.services.launch_task(1,self.services.get_working_dir(),
-                                                           ft_getYields_script, logfile='get_yields.log')
-                    ret_val_gy = self.services.wait_task(task_id_gy)
+                            ft_output_prj_file=self.ft_output_prj_file[i]
+                            ft_output_file=self.ft_output_file[i]
+                            angleFolder=self.ftridyn['outputPath']+'/'+self.FT_OUTPUT_FOLDER+'/ANGLE'
 
-                    if os.path.exists(pkl_gy_file):
-                        with open(pkl_gy_file, "rb") as pf:
-                            getYields_dic = pickle.load(pf)
-                            if self.print_test:
-                                print('\t \t TEST: get_yields function returned dictionary:')
-                                print('\t \t', getYields_dic)
+                            for j in range(len(self.angleIn[i])):
+                                if (self.weightAngle[i][j] > 0.0):
+                                    filePrj=angleFolder+str(self.angleIn[i][j])+'/'+ft_output_prj_file
+                                    num_lines_prj = sum(1 for line in open(filePrj))
+                                    if num_lines_prj == 0:
+                                        print('\t WARNING: no ions were implanted at this angle (prj file empty)')
+                                    elif num_lines_prj == 1:
+                                        depth, bla=numpy.loadtxt(filePrj, usecols = (2,3) , unpack=True)
+                                        maxDepth.append(depth)
+                                    elif num_lines_prj > 1:
+                                        depth, bla=numpy.loadtxt(filePrj, usecols = (2,3) , unpack=True)
+                                        maxDepth.append(max(depth))
+                            
+                            if len(maxDepth)>0:
+                                print("something was implanted:")
+                                maxRange=max(maxDepth)
+                                self.maxRangeXolotl[i]=maxRange/10.0 #range in nm for Xolotl 
+                                print(('\t maximum projectile range for {} is {} [A]'.format(prj, maxRange)))
+                                print(' ')
+                                #ft_output_file=self.ft_output_file[i]
+                                #get implantation profile
+                                #pass values as dictionary
+                                ft_implProfiles_dictionary={}
+                                ft_implProfiles_dictionary['ftridynOnePrjOutput']=ft_output_prj_file
+                                ft_implProfiles_dictionary['ftridynFolder']=angleFolder
+                                ft_implProfiles_dictionary['angle']=self.angleIn[i]
+                                ft_implProfiles_dictionary['weightAngle']=self.weightAngle[i]
+                                ft_implProfiles_dictionary['prjRange']=maxRange
+                                ft_implProfiles_dictionary['print_test']=self.print_test
+
+                                #different grid keywords depending on Xolotl version:
+                                if (self.driver['xolotl_v']==1): #'grid' in self.xp.parameters:
+                                    ft_implProfiles_dictionary['nBins']=self.xp.parameters['grid'][0]
+                                elif (self.driver['xolotl_v']==2): #'gridParam' in  self.xp.parameters:
+                                    ft_implProfiles_dictionary['nBins']=self.xp.parameters['gridParam'][0]
+                                else:
+                                    ft_implProfiles_dictionary['nBins']=200
+                                    print('\t WARNING: xolotl_v not recognized; assume nBins=200')
+                                        
+                                ft_implProfiles_dictionary['logFile']=outFile
+
+
+                                pkl_impl_file=cwd+'/ft_implProfiles.pkl'  ## define name in config file, here give abs path
+                                pickle.dump(ft_implProfiles_dictionary, open(pkl_impl_file, "wb" ) )
+
+                                print('\t translate_ft2xol:')
                                 sys.stdout.flush()
-                            if 'yields' in getYields_dic.keys():
-                                yields=getYields_dic['yields']
+                                try:
+                                    self.TRANSLATE_FT2XOL
+                                    ft_implProfile_script=self.TRANSLATE_FT2XOL
+                                    print('\t Launch user-defined python script :  ')
+                                    print('\t', ft_implProfile_script)
+                                    
+                                except: #DEFAULT PATH: 
+                                    ft_implProfile_script = 'translate_ftridyn_to_xolotl.py'
+                                    print('\t Launch default python script: ')
+                                    print('\t ',ft_implProfile_script)
+
+                                sys.stdout.flush()
+
+                                task_id_impl = self.services.launch_task(1,self.services.get_working_dir(),
+                                                                        ft_implProfile_script, logfile='tridynPlotting.log')
+                                ret_val_impl = self.services.wait_task(task_id_impl)
+
+                            else: #if len(maxDepth)==0
+                                print("\t nothing was implanted. maxRange and profile = 0 ")
+                                maxRange=0.0
+                                self.maxRangeXolotl[i]=0.0
+                                outputFTFile=open(self.FT_OUTPUT_PROFILE_TEMP, "w")
+                                outputFTFile.write("0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 ")
+                                outputFTFile.close()
+                                sys.stdout.flush()
+                                #print "END OF THIS SIMULATION" & return
+
+                            print(' ')
+                            sys.stdout.flush()
+                            
+                            #3) get the sputtering yield (or use fixed value)                   
+                            print('get sputtering and reflection yields:')
+                            #pass values as dictionary
+                            ft_getYields_dictionary={}
+                            ft_getYields_dictionary['ftridynOneOutOutput']=ft_output_file
+                            ft_getYields_dictionary['ftridynFolder']=angleFolder
+                            ft_getYields_dictionary['angle']=self.angleIn[i]
+                            ft_getYields_dictionary['weightAngle']=self.weightAngle[i]
+                            ft_getYields_dictionary['fNImpacts']=self.ftridyn['nImpacts']
+                            ft_getYields_dictionary['logFile']=outFile
+                            ft_getYields_dictionary['print_test']=self.print_test
+                            
+                            pkl_gy_file=cwd+'/ft_getYields.pkl'  ## define name in config file, here give abs path
+                            #we need to close this file later (to open it again and read yields), so use alternative to
+                            #pickle.dump(ft_getYields_dictionary, open(pkl_gy_file, "wb" ) )
+                            with open(pkl_gy_file, "wb") as pf:
+                                pickle.dump(ft_getYields_dictionary, pf)
+                            pf.close()
+                            sys.stdout.flush()
+                            
+                            try:
+                                self.GET_YIELDS
+                                ft_getYields_script=self.GET_YIELDS
+                                print('\t Launch user-defined python script : ')
+                                print('\t ', ft_getYields_script)
+                                
+                            except: #DEFAULT PATH:
+                                ft_getYields_script = 'get_yields.py'
+                                print('\t Launch default python script ')
+                                print('\t ', ft_getYields_script)
+
+                            sys.stdout.flush()
+
+                            task_id_gy = self.services.launch_task(1,self.services.get_working_dir(),
+                                                                ft_getYields_script, logfile='get_yields.log')
+                            ret_val_gy = self.services.wait_task(task_id_gy)
+
+                            if os.path.exists(pkl_gy_file):
+                                with open(pkl_gy_file, "rb") as pf:
+                                    getYields_dic = pickle.load(pf)
+                                    if self.print_test:
+                                        print('\t \t TEST: get_yields function returned dictionary:')
+                                        print('\t \t', getYields_dic)
+                                        sys.stdout.flush()
+                                    if 'yields' in getYields_dic.keys():
+                                        yields=getYields_dic['yields']
+                                    else:
+                                        yields=[0.0, 0.0]
+                                pf.close()
+                                print('\t reading the pickle file, get_yields returned [total SpY, total RY] = ', yields)
                             else:
+                                print('\t WARNING! could not read yield from get_yields pickle file. Set to zero')
                                 yields=[0.0, 0.0]
-                        pf.close()
-                        print('\t reading the pickle file, get_yields returned [total SpY, total RY] = ', yields)
-                    else:
-                        print('\t WARNING! could not read yield from get_yields pickle file. Set to zero')
-                        yields=[0.0, 0.0]
-                    
-                    #overwrite spY value if mode is 'calculate'
-                    if self.spYieldMode[i]=='calculate':
-                        self.spYield[i]=float(yields[0])
-                    if self.rYieldMode[i]=='calculate':
-                        self.rYield[i]=float(yields[1])
+                            
+                            #overwrite spY value if mode is 'calculate'
+                            if self.spYieldMode[i]=='calculate':
+                                self.spYield[i]=float(yields[0])
+                            if self.rYieldMode[i]=='calculate':
+                                self.rYield[i]=float(yields[1])
 
-                    #4) save tridyn.dat
-                    #append output to allTridyn.dat for each species
-                    ft_output_profile_final=self.FT_OUTPUT_PROFILE_FINAL+'_'+prj
-                    tempfile = open(self.FT_OUTPUT_PROFILE_TEMP,"r")
-                    f = open(ft_output_profile_final, "a")
-                    f.write('%s%s \n' %(tempfile.read().rstrip('\n'),self.maxRangeXolotl[i]))                    
-                    f.close()
-                    tempfile.close()
+                            #4) save tridyn.dat
+                            #append output to allTridyn.dat for each species
+                            ft_output_profile_final=self.FT_OUTPUT_PROFILE_FINAL+'_'+prj
+                            tempfile = open(self.FT_OUTPUT_PROFILE_TEMP,"r")
+                            f = open(ft_output_profile_final, "a")
+                            f.write('%s%s \n' %(tempfile.read().rstrip('\n'),self.maxRangeXolotl[i]))                    
+                            f.close()
+                            tempfile.close()
 
-                    ## keep copies of tridyn.dat in timeFolder
-                    ft_output_profile_temp_prj=self.FT_OUTPUT_PROFILE_TEMP+'_'+prj #for each species
-                    shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP, timeFolder+'/'+ft_output_profile_temp_prj)
-                    #shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP,ft_output_profile_temp_prj)
-                
-                    #5) MOVE FOLDERS TO DIRECTORY WITH TIME-STAMP & RENAME FOR (Tg,Prj) SPECIES  
-                
-                    shutil.move(self.ftridyn['outputPath']+'/'+self.FT_OUTPUT_FOLDER,timeFolder+'/'+self.FT_OUTPUT_FOLDER+'_'+prj+'W')                
-                    self.services.update_state()
-                    print(' ')
-                    print('... done with F-TRIDYN for {}'.format(prj))
-                    print(' ')
-                    sys.stdout.flush()
+                            ## keep copies of tridyn.dat in timeFolder
+                            ft_output_profile_temp_prj=self.FT_OUTPUT_PROFILE_TEMP+'_'+prj #for each species
+                            shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP, timeFolder+'/'+ft_output_profile_temp_prj)
+                            #shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP,ft_output_profile_temp_prj)
+                        
+                            #5) MOVE FOLDERS TO DIRECTORY WITH TIME-STAMP & RENAME FOR (Tg,Prj) SPECIES  
+                        
+                            shutil.move(self.ftridyn['outputPath']+'/'+self.FT_OUTPUT_FOLDER,timeFolder+'/'+self.FT_OUTPUT_FOLDER+'_'+prj+'W')                
+                            self.services.update_state()
+                            print(' ')
+                            print('... done with F-TRIDYN for {}'.format(prj))
+                            print(' ')
+                            sys.stdout.flush()
 
-                #if flux fraction == 0 or all weight angles == 0.0:
-                else:
-                    print(('Skip running FTridyn for {0}'.format(prj))) #, as fraction in plasma is {1}\n'.format(prj, self.gitr['fluxFraction'][i]))
-                    if self.fluxFraction[i]==0:
-                        print('\t as fraction in plasma is {}\n'.format(self.fluxFraction[i]))
-                    if all(k==0 for k in self.weightAngle[i]):
-                        print('\t as all angle weights are zero\n')
-                    self.spYield[i]=0.0
-                    self.rYield[i]=1.0
-                    self.maxRangeXolotl[i]=0.0
-                    outputFTFile=open(self.FT_OUTPUT_PROFILE_TEMP, "w")
-                    outputFTFile.write("0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 ")
-                    outputFTFile.close()
+                        #if flux fraction == 0 or all weight angles == 0.0:
+                        else:
+                            print(('Skip running FTridyn for {0}'.format(prj))) #, as fraction in plasma is {1}\n'.format(prj, self.gitr['fluxFraction'][i]))
+                            if self.fluxFraction[i]==0:
+                                print('\t as fraction in plasma is {}\n'.format(self.fluxFraction[i]))
+                            if all(k==0 for k in self.weightAngle[i]):
+                                print('\t as all angle weights are zero\n')
+                            self.spYield[i]=0.0
+                            self.rYield[i]=1.0
+                            self.maxRangeXolotl[i]=0.0
+                            outputFTFile=open(self.FT_OUTPUT_PROFILE_TEMP, "w")
+                            outputFTFile.write("0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 ")
+                            outputFTFile.close()
 
-                    #keep copies of tridyn.dat in timeFolder    
-                    ft_output_profile_temp_prj=self.FT_OUTPUT_PROFILE_TEMP+'_'+prj #for each species
-                    shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP, timeFolder+'/'+ft_output_profile_temp_prj)
-                    #shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP,ft_output_profile_temp_prj)                    
-                    sys.stdout.flush()
+                            #keep copies of tridyn.dat in timeFolder    
+                            ft_output_profile_temp_prj=self.FT_OUTPUT_PROFILE_TEMP+'_'+prj #for each species
+                            shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP, timeFolder+'/'+ft_output_profile_temp_prj)
+                            #shutil.copyfile(self.FT_OUTPUT_PROFILE_TEMP,ft_output_profile_temp_prj)                    
+                            sys.stdout.flush()
+                    ftridyn_success = True
+
+                except Exception:
+                    print("Call to F-TRIDYN unsuccessful, trying again!")
+                    pass
                     
             #end of for loop:
             sys.stdout.flush()
