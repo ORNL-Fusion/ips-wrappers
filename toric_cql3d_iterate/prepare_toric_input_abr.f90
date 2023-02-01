@@ -78,7 +78,7 @@
 
 !  Mode of TORIC utilization "equil" to preprocess equilibrium, "toric" to run solver
 !  What about qldce?
-      character(10):: toricmode='toric'
+      character(16):: toricmode='toric'
 
 ! Dimensions of the problem
       integer :: nvrb=3       ! Generally three vector components
@@ -122,24 +122,20 @@
                               ! (changes equil near axis a bit)
       integer ::   bscale=12  ! blocksize scaling factor for parallel runs only
       integer ::   pcblock=4  ! number of processors used for the sub-blocks
-      logical ::   use_incore=.false.
-                              ! default is to use out-of-core memory
-                              ! Core-memory is not enough for LH waves resolution
+      logical ::   use_incore=.true.
+                              ! SF switched to incore
 
-!  qldce namelist variables
+!  qldci namelist variables
 !  ~~~~~~~~~~~~~~~~~
       integer, parameter :: max_runs = 50    !max number of nphi
       character(80), dimension(:) :: files_toric(max_runs)
-      character(80) :: path, file_felice, smooth, consv
-      character(80) :: sumtrunc
-      integer :: num_runs, nfel_nphi, iread_felice, npsi_qld
-      integer :: wndwtrunc
+      character(80) :: path 
+      integer :: num_runs, npsi_qld,wdelta,iH_Dql,ispec_Dql
+      integer :: subsmth
       real(rspec) :: d_u, enorm=0._rspec, uasp=1.0, pwtot=1.0
       real(rspec) :: deltapsi,ntres
-      real(rspec) :: psi_min, psi_max
-      real(rspec) :: u_extr = 10._rspec
-      real(rspec), dimension(:) :: pw_nphi(max_runs),psimap(51), &
-                                   phimap(51)
+      real(rspec) :: rho_min, rho_max
+      real(rspec), dimension(:) :: pw_nphi(max_runs)
       
 ! Namelist inputs for control of the output, most are off to avoid too much data dumped
       integer ::   iout=0, ipltht=0, idlout=1
@@ -149,16 +145,12 @@
 
 ! Wave and antenna parameters (default values for now, later
 !   use ps%ant_model file for machine state)
-!      integer     :: nphi=10  ! anzedg is used for TORLH
-      real     :: anzedg = -1.6 ! toroidal refractive index at the edge
+      integer     :: nphi=10  ! anzedg is used for TORLH
       real(rspec) :: freqcy=4.6e9_rspec
-      integer  :: ibcant = -1     !boundary condition for antenna. When ibcant<0, the grill antenna is used
 
 !units are in cm for lengths
       real(rspec) :: antlen=6.0_rspec, antlc=1.0_rspec
-      real(rspec), dimension(:) :: theant(8)=                          &
-     &  (/0.0_rspec,0.0_rspec,0.0_rspec,0.0_rspec,0.0_rspec,0.0_rspec, &
-     &  0.0_rspec,0.0_rspec/)
+      real(rspec) :: theant= 0 !SF no longer array as in TORLH
       integer  :: nant = 1   !sets number of antennas used in boundary condition model
 
 
@@ -220,15 +212,12 @@
 
 !   inumin vectors for arg_inumin_Mode == Maxwell or nonMaxwell modes
       integer, dimension(:) :: INUMIN_Maxwell(0:nspmx) = 0
-      integer, dimension(:) :: INUMIN_nonMaxwell(0:nspmx) = (/2, (0,I=1,nspmx) /)
+      !integer, dimension(:) :: INUMIN_nonMaxwell(0:nspmx) = (/2, (0,I=1,nspmx) /) SF not used
 
-! Namelist controls for the RF minority population
-
-      real(rspec) :: q_rfmin = 1.0_rspec, qatom_rfmin = 1.0_rspec, &
-     &               m_rfmin = 1.0_rspec, fracmin = 0.04_rspec
-      integer :: isThermal = 1
-      character(24) :: rfmin_name = 'H_min', kdens_rfmin = 'fraction'
-
+! SF RF minority is now controlled through state initiation and feedback
+!    from CQL3D/ABJ. This namelist served only to add complexity and increase
+!    the probability of errors.
+      
       integer :: i2mex_remap = 1, i2mex_mx = 2, i2mex_npsi = 0, &
      &  i2mex_kb = 0, i2mex_direct = 1, inputFormat = 3, &
      &  ic1, inc, imom1, i2mex_last_norm_surface_is, ntheta
@@ -248,32 +237,22 @@
 !originally in t0_torica.F
 !specifies general wave parameters, some numerical parameters
       namelist /toricainp/ &
-!      &   nvrb,   nmod,   ntt,    nelm,   nptvac, mxmvac, &
-!      &   freqcy, anzedg, ibcant,  antlen, antlc,  theant, &
-!      &   iflr,   ibpol,  iqtor,  icoll,  enhcol, &
-!      &   imdedg, iezvac, ibweld, icosig, iregax, &
-!      &   isol,   mastch,         iout,   idlout, io_ncdf, &
-!      &   iwdisk, ipltht, zeff,   iclres, dnures, tnures, &
-!      &   timing_on, scratchpath, bscale, use_incore, pcblock
-     &  nmod,   ntt,    nelm,   nptvac, mxmvac, &
-     &   freqcy, anzedg, ibcant,  antlen, antlc,  nant, &
-     &   theant, iflr,   ibpol,  icoll,  enhcol, &
-     &   iregax, &
-     &   isol,   mastch,         iout,   idlout, &
-     &   iwdisk, zeff, &
-     &   timing_on, inumin, scratchpath, use_incore, pcblock, inputpath, &
-     &   IJRF, IPWDIM, ICLPLO
+      &   nvrb,   nmod,   ntt,    nelm,   nptvac, mxmvac, &
+      &   freqcy, nphi,   antlen, antlc,  theant, &
+      &   iflr,   ibpol,  iqtor,  icoll,  enhcol, &
+      &   imdedg, iezvac, ibweld, icosig, iregax, &
+      &   isol,   mastch,         iout,   idlout, io_ncdf, &
+      &   iwdisk, ipltht, zeff,   iclres, dnures, tnures, &
+      &   timing_on, inumin, scratchpath, bscale, use_incore, pcblock
+! SF removed ibcant from namelist and added inumin
 
-! originally in t0_mod_qldce.F
-      namelist /qldceinp/ &
-     &     num_runs, path, iread_felice, files_toric,  &
-     &     file_felice, d_u, psi_min, psi_max, npsi_qld, enorm, &
-     &     ntres, deltapsi, uasp, pw_nphi, pwtot, psimap, phimap, &
-     &     smooth, consv, sumtrunc, wndwtrunc
-!uasp yet to be validated, do not use this option in production JCW 22 JUNE 2011
-!enorm if non zero puts qldce on a momentum space mesh as used by CQL3D
-!otherwise qldce is on a v/vte mesh.
-
+! SF added qldci namelist
+      namelist /qldciinp/ &
+     &     num_runs, path, files_toric,  &
+     &     npsi_qld, d_u, rho_min, rho_max, &      
+     &     enorm, wdelta, deltapsi, ispec_Dql, iH_Dql, &
+     &     pw_nphi, pwtot,subsmth
+      
 !originally in t0_mod_toi2mex.F
 !specifies numerical equilibrium (EFIT usually) settings
       namelist /gfreadinp/ &
@@ -292,15 +271,7 @@
      &   dist_plafars,   dist_plaant,    dist_plawall,  &
      &   equil_file,     profnt_file
 
-! This namelist group was added to specify parameters controlling nonthermal
-! ion populations such as the ICRF minority in the machine.inp file.
-! This namelist group is NOT written to the torica.inp file. It only
-! serves to transfer information between the machine.inp file and the
-! Fortran wrappers do_toric_init and prepare_toric_input.
-
-      namelist /nonthermals/ &
-     &   fracmin, q_rfmin, qatom_rfmin, m_rfmin, rfmin_name, &
-     &   kdens_rfmin, isThermal
+! SF Removed minority controlled by plasma state and CQL3D/ABJ
 
 ! Namelist in torica.inp for transfering data to process output
       namelist /ips/ toric_to_alla
@@ -537,14 +508,14 @@
          call get_arg(5,arg_enorm)
          
          toricmode = trim(arg_toric_Mode)
-         if (toricmode == 'qldce') then
-            toricmode = 'qldce'
+         if (toricmode == 'qldci') then
+            toricmode = 'qldci_CQL3D'
          endif
          
 		 if (trim(arg_inumin_Mode) == 'Maxwell') then
 			inumin = INUMIN_Maxwell
 		 else if (trim(arg_inumin_Mode) == 'nonMaxwell') then
-			inumin = INUMIN_nonMaxwell
+			inumin = inumin_maxwell
 		 else
 			write (*,*) 'prepare_torlh_input_abr: unknown arg_inumin_Mode = ', arg_inumin_Mode
 			stop
@@ -568,14 +539,14 @@
          call get_arg(6,arg_npar)
          
          toricmode = trim(arg_toric_Mode)
-         if (toricmode == 'qldce') then
-            toricmode = 'qldce'
+         if (toricmode == 'qldci') then
+            toricmode = 'qldci_CQL3D'
          endif
          
 		 if (trim(arg_inumin_Mode) == 'Maxwell') then
 			inumin = INUMIN_Maxwell
 		 else if (trim(arg_inumin_Mode) == 'nonMaxwell') then
-			inumin = INUMIN_nonMaxwell
+			inumin = INUMIN_Maxwell
 		 else
 			write (*,*) 'prepare_torlh_input_abr: unknown arg_inumin_Mode = ', arg_inumin_Mode
 			stop
@@ -641,15 +612,15 @@
 ! Do not set NSPEC in the machine.inp file if you want to use nspec = ps%nspec_alla + 1 because
 ! this will override the setting of NSPEC above !!!
 
-      write(*,*) 'Prepare torlh input reading machine.inp'
+      write(*,*) 'Prepare toric input reading machine.inp'
       open(unit=inp_unit, file='machine.inp', status='old', &
               form='formatted')
       INQUIRE(inp_unit, exist=lex)
       IF (lex) THEN
-         IF (trim(toricmode) == 'qldce') THEN
+         IF (trim(toricmode) == 'qldci_CQL3D') THEN
              write (*,*) 'reading namelist qldceinp'
-       			 read(inp_unit, nml = qldceinp)
-       			 !WRITE (*, nml = qldceinp)
+       			 read(inp_unit, nml = qldciinp)
+       			 WRITE (*, nml = qldciinp)
        			 WRITE (*,*)
          END IF
 
@@ -661,28 +632,18 @@
       END IF
       close(inp_unit)
       IF (nspec > nspmx ) THEN
-         write(*,*) "Error, nspec > nspmx in torlh, reducing to nspmx"
+         write(*,*) "Error, nspec > nspmx in toric, reducing to nspmx"
          nspec=nspmx
       END IF
 
 ! Overwrite freqcy, pwtot, and enorm found in machine.inp
 
-      freqcy = ps%freq_lh(isrc) !Hz
-      pwtot =  ps%power_lh(isrc) !watts
+      freqcy = ps%freq_ic(isrc) !Hz
+      pwtot =  ps%power_ic(isrc) !watts
       
 	  if (trim(arg_enorm) /= 'None') then
 		read(arg_enorm,*) enorm
 	  end if
-
-          if (trim(arg_npar) /= 'None') then
-                read(arg_npar,*) anzedg
-          end if
-!SF Overwrite psimap and phimap if in qldce mode
-      IF (trim(toricmode) == 'qldce') THEN
-         phimap = ps%rho
-         psimap = sqrt(ps%psipol/ps%psipol(ps%nrho))        
-      END IF   
-
           
 !radial profiles generation, these are output to equilequ_file
       s_nrho_n = ps%nrho
@@ -722,6 +683,9 @@
          toric_to_alla(isp)=ps%rfmin_to_alla(1)
          atm(isp) = NINT(ps%m_ALLA(ps%rfmin_to_alla(1))/ps_mp)
          azi(isp) = NINT(ps%q_ALLA(ps%rfmin_to_alla(1))/ps_xe)
+         if(trim(arg_inumin_mode) .eq. 'nonMaxwell')then
+            inumin(isp-1) = 1 !SF turn on abj mode for minority species
+         end if
       endif
 
       if (allocated(ps%nfusi)) then
@@ -753,10 +717,10 @@
       WRITE (*,*) 'isol = ', isol
       WRITE (*,*) 'pwtot = ', pwtot
       WRITE (*,*) 'enorm = ', enorm
-      WRITE (*,*) 'npar = ', anzedg
+      WRITE (*,*) 'nphi = ', nphi
 
       write(out_unit, nml = toric_mode)
-      write(out_unit, nml = qldceinp)
+      write(out_unit, nml = qldciinp) !SF switched to qldciinp
       write(out_unit, nml = toricainp)
       write(out_unit, nml = equidata)
       write(out_unit, nml = ips)
@@ -811,9 +775,9 @@
 	  psi_poloidal_eq = ps%psipol
       call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, psi_poloidal_eq, x_torlh, ierr )
       x_torlh = sqrt(x_torlh/x_torlh(nprodt))
-	  write (*,*) " "
-	  write (*,*) "x_torlh = "
-	  write (*,*) x_torlh
+	  !write (*,*) " "
+	  !write (*,*) "x_torlh = "
+	  !write (*,*) x_torlh
 ! DBB ends
 
 !     write(out_unit,'(A10)')  'rho'
@@ -826,7 +790,7 @@
 ! PTB ends
 
       write(out_unit,'(A10)')  'n_e'
-      write(*,*) 'ps%ns(1,0)', ps%ns(1,0)
+      !write(*,*) 'ps%ns(1,0)', ps%ns(1,0)
 !
 ! Interpolate the electron density profile from the Plasma State grid to the Toric grid
 ! N.B. Toric grid maps directly to rho grid ps%rho, same radii.
@@ -836,9 +800,9 @@
 !
          call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, ps%vol(:), vol_int(:),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS volume onto Toric grid'
-	  write (*,*) " "
-	  write (*,*) "interpolated vol_int = "
-	  write (*,*) vol_int
+	  !write (*,*) " "
+	  !write (*,*) "interpolated vol_int = "
+	  !write (*,*) vol_int
 
 !
 ! PTB Compare the volume average of the orginal density profile from the Plasma State
@@ -858,17 +822,17 @@
          end do
          Q_ps = Q_ps / ps%vol(nprodt)
          Q_int = Q_int / ps%vol(nprodt)
-      write(*,*) '<n_e(m-3)-PS> =',  Q_ps
-      write(*,*) '<n_e(m-3)-Interpolated> =', Q_int
+      !write(*,*) '<n_e(m-3)-PS> =',  Q_ps
+      !write(*,*) '<n_e(m-3)-Interpolated> =', Q_int
       write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
 
       write(out_unit,'(A10)')  't_e'
          call ps_user_1dintrp_vec(ps%rho, x_orig, ps%Ts(:,0), tmp_prof(:),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS electron temperature profile onto Torlh grid'
       write(out_unit,'(5E16.9)')  tmp_prof   !keV
-	  write (*,*) " "
-	  write (*,*) "tmp_prof = "
-	  write (*,*) tmp_prof
+	  !write (*,*) " "
+	  !write (*,*) "tmp_prof = "
+	  !write (*,*) tmp_prof
 ! PTB - begins
         call ps_tha_fetch (ierr, ps, tol_zero, &
              ns_tha, ts_tha, v_pars, iwarn)
@@ -878,19 +842,19 @@
          call ps_user_1dintrp_vec(ps%rho, x_orig, ns_tha(:,isp), tmp_prof(:),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS ion density profile onto Torlh grid'
          write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
-	     write (*,*) " "
-	     write (*,*) "density_prof = "
-	     write (*,*) tmp_prof
+	   !  write (*,*) " "
+	   !  write (*,*) "density_prof = "
+	   !  write (*,*) tmp_prof
 
          write(out_unit,'(A4,I2.2)')  't_i_',isp
-         write(*,*) "Thermal ion name, A, Z, dens, temp = "
-         write(*,*) trim(ps%alla_name(isp)), atm(isp),azi(isp),ns_tha(1,isp),ts_tha(1,isp)
+         !write(*,*) "Thermal ion name, A, Z, dens, temp = "
+         !write(*,*) trim(ps%alla_name(isp)), atm(isp),azi(isp),ns_tha(1,isp),ts_tha(1,isp)
          call ps_user_1dintrp_vec(ps%rho, x_orig, Ts_tha(:,isp), tmp_prof(:),ierr )  !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS ion temperature profile onto Torlh grid'
          write(out_unit,'(5E16.9)')  tmp_prof !keV
-	     write (*,*) " "
-	     write (*,*) "temperature_prof = "
-	     write (*,*) tmp_prof
+	    ! write (*,*) " "
+	    ! write (*,*) "temperature_prof = "
+	    ! write (*,*) tmp_prof
       end do
 ! PTB - ends
 
@@ -937,6 +901,8 @@
 !
 ! (2) Write the rf minority tail data to the Torlh equidt.data file:
 !
+
+      
       if(allocated(ps%nmini)) then
        isp = ps%rfmin_to_alla(1)
          write(*,*) "Fast ion name, A, Z = ", trim(ps%alla_name(isp)), &
@@ -948,35 +914,35 @@
 ! If (kdens_rfmin .EQ. 'fraction') then assume PS data is not available for nmini and instead
 ! compute nmini = fracmin * ne
 !
-        if (trim(kdens_rfmin) .EQ. 'fraction') then
+        if (trim(ps%kdens_rfmin) .EQ. 'fraction') then
          call ps_user_1dintrp_vec(x_torlh, ps%rho, ps%ns(:,0), &
-               tmp_prof(:),ierr ) !DBB 6-27_2017
+     &          tmp_prof(:),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS electron density profile onto Torlh grid'
-         tmp_prof(:) = fracmin * tmp_prof(:)
+         tmp_prof(:) = ps%fracmin(1)*tmp_prof(:)
          write(out_unit,'(A4,I2.2)')  'n_rfmin_',isp
          write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
- 	      write (*,*) " "
-	      write (*,*) "rf minority density = "
-	      write (*,*) tmp_prof
+ 	      !write (*,*) " "
+	      !write (*,*) "rf minority density = "
+	      !write (*,*) tmp_prof
 
 !
 ! Next update ps%nmini in the Plasma State with th new minority ion density profile, by mapping
 ! fracmin * ps%ns(:,0) from the PS grid to the ICRF rho grid:
 !
-         call ps_user_1dintrp_vec(ps%rho_lhrf,ps%rho, fracmin*ps%ns(:,0), &
+       call ps_user_1dintrp_vec(ps%rho_icrf,ps%rho, ps%fracmin(1)*ps%ns(:,0), &
                ps%nmini(:,1),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating new minority desnity profile onto PS grid'
         endif
- 	      write (*,*) " "
-	      write (*,*) "rf minority density put back into plasma state = "
-	      write (*,*) ps%nmini(:,1)
+ 	      !write (*,*) " "
+	      !write (*,*) "rf minority density put back into plasma state = "
+	      !write (*,*) ps%nmini(:,1)
 
 !
 ! If (kdens_rfmin .EQ. 'data') then assume nmini is available in the PS, read it, and interpolate
 ! it from the rho-icrf grid onto the Toric radial grid
 !
-        if (trim(kdens_rfmin) .EQ. 'data') then
-         call ps_user_1dintrp_vec(ps%rho, ps%rho_lhrf, ps%nmini(:,1), &
+        if (trim(ps%kdens_rfmin) .EQ. 'data') then
+         call ps_user_1dintrp_vec(ps%rho, ps%rho_icrf, ps%nmini(:,1), &
                tmp_prof(:),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS minority density profile onto Toric grid'
          write(out_unit,'(A4,I2.2)')  'n_rfmin_',isp
@@ -997,9 +963,9 @@
 				   tmp_prof(:),ierr ) !DBB 6-27_2017
 			 if(ierr .ne. 0) stop 'error interpolating PS RF minority temperature profile onto Torlh grid'
 			 write(out_unit,'(5E16.9)')  tmp_prof !keV
-			  write (*,*) " "
-			  write (*,*) "rf minority tail temperature interpolated from Ts_tha(:,1) = "
-			  write (*,*) tmp_prof
+			  !write (*,*) " "
+			  !write (*,*) "rf minority tail temperature interpolated from Ts_tha(:,1) = "
+			  !write (*,*) tmp_prof
          endif
 !
 ! If isThermal=2 then assume the RF minority tail temperature data is available in the PS. In this
@@ -1008,10 +974,10 @@
 ! the RF minority profile. Finally write this array to the equidt.data file.
 !
          if (ps%isThermal(1) .eq. 2) then
-          call ps_user_1dintrp_vec(ps%rho, ps%rho_lhrf, ps%eperp_mini(:,1), &
+          call ps_user_1dintrp_vec(ps%rho, ps%rho_icrf, ps%eperp_mini(:,1), &
                aa_prof(:),ierr )  !DBB 6-27_2017
           if(ierr .ne. 0) stop 'error interpolating PS RF minority perp. energy profile onto Torlh grid'
-          call ps_user_1dintrp_vec(ps%rho, ps%rho_lhrf, ps%epll_mini(:,1),  &
+          call ps_user_1dintrp_vec(ps%rho, ps%rho_icrf, ps%epll_mini(:,1),  &
                bb_prof(:),ierr )  !DBB 6-27_2017
           if(ierr .ne. 0) stop 'error interpolating PS RF minority parallel energy profile onto Torlh grid'
           tmp_prof = 0.667 * (aa_prof + bb_prof)

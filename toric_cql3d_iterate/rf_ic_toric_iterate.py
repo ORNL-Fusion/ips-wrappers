@@ -1,10 +1,13 @@
 #! /usr/bin/env python
 
 """
-TORLH component.  Adapted from rf_lh_torlh.py. (7-24-2015)
+TORIC component.  Adapted from rf_lh_torlh.py. (7-24-2015)
 
 """
-from __future__ import print_function
+# Working notes: DBB 9-29-2021
+# Converting from rf_lh_torlh.py to rf_lh_toric.py.  Essentially this is just global search
+# and replace.  This reverses change mentioned in Working notes: DBB 5-14-2016 below.
+
 # Working notes:  DBB 10-5-2017 
 # Because of random crashes on EDISON, we had previously introduced config parameter 
 # TORLH_TIME_LIMIT so that if TORLH does crash it won't just sit there and burn up the 
@@ -105,10 +108,9 @@ import getopt
 import shutil
 import string
 from netCDF4 import *
-#from Scientific.IO.NetCDF import *
 from  component import Component
 
-class torlh (Component):
+class toric (Component):
 
     def __init__(self, services, config):
         Component.__init__(self, services, config)
@@ -122,7 +124,7 @@ class torlh (Component):
 
 
     def init(self, timeStamp=0):
-        print('\ntorlh.init() called')
+        print('\ntoric.init() called')
 
         services = self.services
         workdir = services.get_working_dir()
@@ -131,7 +133,6 @@ class torlh (Component):
         cur_state_file = self.try_get_config_param(services,'CURRENT_STATE')
         cur_eqdsk_file = self.try_get_config_param(services,'CURRENT_EQDSK')
         cur_cql_file = self.try_get_config_param(services,'CURRENT_CQL')
-        cur_dql_file = self.try_get_config_param(services,'CURRENT_DQL')
 
     # Get component-specific configuration parameters. Note: Not all of these are
     # used in 'init' but if any are missing we get an exception now instead of
@@ -139,20 +140,20 @@ class torlh (Component):
         BIN_PATH = self.try_get_component_param(services,'BIN_PATH')
         RESTART_FILES = self.try_get_component_param(services,'RESTART_FILES')
         NPROC = self.try_get_component_param(services,'NPROC')
-        NPROC_QLDCE = self.try_get_component_param(services,'NPROC_QLDCE', \
+        NPROC_QLDCI = self.try_get_component_param(services,'NPROC_QLDCI', \
                                 optional = True)
 
-        self.TORLH_TIME_LIMIT = self.try_get_component_param(services,'TORLH_TIME_LIMIT', \
+        self.TORIC_TIME_LIMIT = self.try_get_component_param(services,'TORIC_TIME_LIMIT', \
                                 optional = True)
-        if self.TORLH_TIME_LIMIT == None: 
-            self.TORLH_TIME_LIMIT = -1
+        if self.TORIC_TIME_LIMIT == None: 
+            self.TORIC_TIME_LIMIT = -1
             
-        self.NUM_TORLH_TRIES = self.try_get_component_param(services,'NUM_TORLH_TRIES', \
+        self.NUM_TORIC_TRIES = self.try_get_component_param(services,'NUM_TORIC_TRIES', \
                                 optional = True)
-        if self.NUM_TORLH_TRIES == None: 
-            self.NUM_TORLH_TRIES = 1
+        if self.NUM_TORIC_TRIES == None: 
+            self.NUM_TORIC_TRIES = 1
         
-        torlh_log = os.path.join(workdir, 'log.torlh')
+        toric_log = os.path.join(workdir, 'log.toric')
 
       # Copy plasma state files over to working directory
         try:
@@ -197,10 +198,10 @@ class torlh (Component):
                 services.exception(logMsg)
                 raise
 
-        do_init = os.path.join(self.BIN_PATH, 'do_torlh_init_abr')
+        do_init = os.path.join(self.BIN_PATH, 'do_toric_init_abr')
         retcode = subprocess.call([do_init, cur_state_file])
         if (retcode != 0):
-            logMsg = 'Error in call to torlh_init'
+            logMsg = 'Error in call to toric_init'
             self.services.error(logMsg)
             raise Exception(logMsg)
             
@@ -213,7 +214,7 @@ class torlh (Component):
             raise 
 
       # Archive output files
-      # N.B.  do_torlh_init does not produce a complete set of torlh output
+      # N.B.  do_toric_init does not produce a complete set of toric output
       #       files.  This causes an error in stage_output_files().  To
       #       solve this we generate a dummy set of output files here with
       #       system call 'touch'
@@ -239,7 +240,7 @@ class torlh (Component):
 # ------------------------------------------------------------------------------
 
     def restart(self, timeStamp):
-        print('\ntorlh.restart() called')
+        print('\ntoric.restart() called')
 
         services = self.services
         workdir = services.get_working_dir()
@@ -258,9 +259,9 @@ class torlh (Component):
         try:
             self.plasma_state_file = services.get_config_param('CURRENT_STATE')
             self.eqdsk_file = services.get_config_param('CURRENT_EQDSK')
-            self.torlh_log = os.path.join(workdir, 'log.torlh')
+            self.toric_log = os.path.join(workdir, 'log.toric')
         except:
-            logMsg = 'torlh restart: error in getting config parameters'
+            logMsg = 'toric restart: error in getting config parameters'
             self.services.exception(logMsg)
             raise 
             
@@ -268,16 +269,16 @@ class torlh (Component):
 
 # ------------------------------------------------------------------------------
 #
-# Run TORLH with toricmode, inumin, and isol as defined in argument list
+# Run TORIC with toricmode, inumin, and isol as defined in argument list
 #
 # ------------------------------------------------------------------------------
 
     def step(self, timeStamp, **kwargs):
-        """Take a step for the torlh component.  Really a complete run."""
-        print('\ntorlh.step() called')
+        """Take a step for the toric component.  Really a complete run."""
+        print('\ntoric.step() called')
 
         if (self.services == None):
-            logMsg = 'Error in torlh: step (): No self.services'
+            logMsg = 'Error in toric: step (): No self.services'
             self.services.error(logMsg)
             raise Exception(logMsg)
         services = self.services
@@ -327,78 +328,77 @@ class torlh (Component):
                 services.exception(logMsg)
                 raise 
 
-        prepare_input = os.path.join(self.BIN_PATH, 'prepare_torlh_input_abr')
-        process_output  = os.path.join(self.BIN_PATH, 'process_torlh_output_mcmd')
+        prepare_input = os.path.join(self.BIN_PATH, 'prepare_toric_input_abr')
+        process_output  = os.path.join(self.BIN_PATH, 'process_toric_output_mcmd')
 
-        zero_RF_LH_power = self.ZERO_LH_POWER_BIN
-        torlh_bin = self.TORLH_BIN
+        zero_RF_IC_power = self.ZERO_IC_POWER_BIN
+        toric_bin = self.TORIC_BIN
         prepare_eqdsk  = self.GEQXPL_BIN
 
     # Get global configuration parameters
         cur_state_file = self.try_get_config_param(services,'CURRENT_STATE')
         cur_eqdsk_file = self.try_get_config_param(services,'CURRENT_EQDSK')
         cur_cql_file = self.try_get_config_param(services,'CURRENT_CQL')
-        cur_dql_file = self.try_get_config_param(services,'CURRENT_DQL')
         # enorm which is used here and in cql3d
         arg_enorm = 'None'
         arg_enorm = self.try_get_config_param(services,'ENORM', optional = True)
 
-        torlh_log = os.path.join(workdir, 'log.torlh')
+        toric_log = os.path.join(workdir, 'log.toric')
         cwd = os.getcwd()
 
-# Check if LH power is zero (or effectively zero).  If true don't run torlh just
-# run zero_RF_LH_power fortran code
+# Check if IC power is zero (or effectively zero).  If true don't run toric just
+# run zero_RF_IC_power fortran code
         print('cur_state_file = ', cur_state_file)
 #         ps = NetCDFFile(cur_state_file, 'r')
-#         power_lh = ps.variables['power_lh'].getValue()[0]
+#         power_ic = ps.variables['power_ic'].getValue()[0]
 #         ps.close()
         ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
-        power_lh = ps.variables['power_lh'][0]
+        power_ic = ps.variables['power_ic'][0]
         ps.close()
         
-        print('power = ', power_lh)
-        if(-0.0001 < power_lh < 0.0001):
-            print(zero_RF_LH_power)
+        print('power = ', power_ic)
+        if(-0.0001 < power_ic < 0.0001):
+            print(zero_RF_IC_power)
             services.send_portal_event(event_type = 'COMPONENT_EVENT',\
-              event_comment =  'running ' + zero_RF_LH_power)
-            retcode = subprocess.call([zero_RF_LH_power, cur_state_file])
+              event_comment =  'running ' + zero_RF_IC_power)
+            retcode = subprocess.call([zero_RF_IC_power, cur_state_file])
             if (retcode != 0):
                 logMsg = 'Error executing ' + prepare_input
                 self.services.error(logMsg)
                 raise Exception(logMsg)
 
-            # N.B. zero_RF_LH_power does not produce a complete set of torlh output
+            # N.B. zero_RF_IC_power does not produce a complete set of toric output
             #      files.  This causes an error in stage_output_files().  To
             #      solve this we generate a dummy set of output files here with
             #      system call 'touch'
             for file in self.OUTPUT_FILES.split():
                 subprocess.call(['touch', file])
 
-# Check if LH power is negative.  If true don't run torlh just
+# Check if IC power is negative.  If true don't run toric just
 # retain power from previous time step i.e. leave sources untouched in the state.
-# However power_lh needs to be reset back to positive
+# However power_ic needs to be reset back to positive
 
-        elif( power_lh < -0.02):
+        elif( power_ic < -0.02):
             print('continuing power from previous time step')
-            ps.variables['power_lh'].assignValue(-power_lh)
+            ps.variables['power_ic'].assignValue(-power_ic)
             ps.close()
 # ------------------------------------------------------------------------------                
 
-    # Or actually run torlh
+    # Or actually run toric
 
         else:
             if not os.path.isfile(prepare_input):
-                logMsg = 'Cannot find torlh prepare_input binary: ' + prepare_input
+                logMsg = 'Cannot find toric prepare_input binary: ' + prepare_input
                 self.services.error(logMsg)
                 raise Exception(logMsg)
 
-            # Call torlh prepare_input to generate torlh.inp
+            # Call toric prepare_input to generate toric.inp
 
             arg_toric_Mode = kwargs.get('toric_Mode', 'toric')
             arg_isol_Mode = kwargs.get('isol_Mode', '1')           
             arg_inumin_Mode = kwargs.get('inumin_Mode', 'Maxwell')
-            if arg_toric_Mode == 'qldce':
-                torlh_log = os.path.join(workdir, 'log.torlh_qldce')
+            if arg_toric_Mode == 'qldci':
+                toric_log = os.path.join(workdir, 'log.toric_qldci')
             
             cmd_prepare_input = [prepare_input, cur_state_file, arg_toric_Mode,\
                       arg_inumin_Mode,arg_isol_Mode, arg_enorm]
@@ -424,90 +424,113 @@ class torlh (Component):
                 self.services.error(logMsg)
                 raise Exception(logMsg)
 
-            # For toric mode and nonMaxwellian run ImChizz
+            cwd = services.get_working_dir()
+
+            # For toric mode and nonMaxwellian run ABJ
+            # SF I originally wanted the dielectric representation to be its own 
             if arg_toric_Mode == 'toric' and arg_inumin_Mode == 'nonMaxwell':
-                print('\nRunning ImChizz')
+                print('\nRunning ABJ')
+
+                #Copy the cql3d output file to the expected file name for abj script
                 try:
                     subprocess.call(['cp', cur_cql_file, 'cql3d.cdf' ])
                 except Exception:
-                    message = 'generic_ps_init: Error copying CURRENT_CQL_FILE to cql3d.cdf'
+                    message = 'rf_ic_toric_iterate: Error copying CURRENT_CQL_FILE to cql3d.cdf'
                     print(message)
                     services.exception(message)
                     raise              
-                imchzz_bin = self.ImChizz_BIN
-                cmd_imchizz=self.ImChizz_BIN
 
-                cwd = services.get_working_dir()
-                imchzz_log = os.path.join(workdir, 'log.imchzz')
-                task_id = services.launch_task(60,cwd,imchzz_bin, logfile=imchzz_log)
+                #Run preparation script for ABJ input
+                #log_file = open('log_prepare_abj_input', 'w')
+                #prepare_input_bin = os.path.join(self.BIN_PATH, 'prepare_abj_input')
+
+                #command = prepare_input_bin + ' ' + cur_state_file + ' ' + arg_enorm
+                #services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+                #                           event_comment = command)
+                #subprocess.call(command.split(), stdout = log_file,\
+                #                  stderr = subprocess.STDOUT)
+                #if (retcode != 0):
+                #    print('Error executing abj prep ', prepare_input_bin)
+                #    services.error('Error executing abj prep')
+                #    raise Exception('Error executing abj prep')
+
+                #shutil.copyfile('ABJ.inp_new','ABJ.inp')
+                #shutil.copyfile('ABJ_driver.inp_new','ABJ_driver.inp')
+        
+                # Run ABJ
+                abj_bin = self.ABJ_BIN
+                cmd_abj=self.ABJ_BIN
+                nproc_abj = self.NPROC_ABJ
+                abj_log = os.path.join(workdir, 'log.abj')
+                task_id = services.launch_task(nproc_abj,cwd,abj_bin, logfile=abj_log)
                 retcode = services.wait_task(task_id, timeout = 1800.0, delay = 60.)
                 if (retcode != 0):
-                    services.error("ImChizz Failed")
-                    raise Exception("ImChizz Failed")
-                print('Finished ImChizz')
+                    services.error("ABJ Failed")
+                    raise Exception("ABJ Failed")
+                print('Finished ABJ')
 
-            # Launch torlh executable
-            cwd = services.get_working_dir()
+            # Launch toric executable
             # Set number of processors depending on toric_mode
             run_nproc = self.NPROC
-            if arg_toric_Mode == 'qldce':
-                run_nproc = self.NPROC_QLDCE
+            if arg_toric_Mode == 'qldci':
+                run_nproc = self.NPROC_QLDCI
 
-            print('arg_toric_Mode = ', arg_toric_Mode, '   torlh processors = ', run_nproc)
-            time_limit = float(self.TORLH_TIME_LIMIT)
-            # Try to launch TORLH multiple times if TORLH_TRIES > 1 in config file
-            for i in range(int(self.NUM_TORLH_TRIES)):
-                print(' TORLH try number ', i + 1)
-                task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
+            print('arg_toric_Mode = ', arg_toric_Mode, '   toric processors = ', run_nproc)
+            time_limit = float(self.TORIC_TIME_LIMIT)
+            # Try to launch TORIC multiple times if TORIC_TRIES > 1 in config file
+            for i in range(int(self.NUM_TORIC_TRIES)):
+                print(' TORIC try number ', i + 1)
+                task_id = services.launch_task(run_nproc, cwd, toric_bin, logfile=toric_log)
                 retcode = services.wait_task(task_id, timeout = time_limit, delay = 60.)
                 if (retcode == 0):
                     break
             else:
-                services.error("TORLH failed after %d trials" % int(self.NUM_TORLH_TRIES))
-                raise Exception("TORLH failed after %d trials" % int(self.NUM_TORLH_TRIES))
+                services.error("TORIC failed after %d trials" % int(self.NUM_TORIC_TRIES))
+                raise Exception("TORIC failed after %d trials" % int(self.NUM_TORIC_TRIES))
 
 
-#             print 'arg_toric_Mode = ', arg_toric_Mode, '   torlh processors = ', run_nproc
-#             task_id = services.launch_task(run_nproc, cwd, torlh_bin, logfile=torlh_log)
-#             time_limit = float(self.TORLH_TIME_LIMIT)
+#             print 'arg_toric_Mode = ', arg_toric_Mode, '   toric processors = ', run_nproc
+#             task_id = services.launch_task(run_nproc, cwd, toric_bin, logfile=toric_log)
+#             time_limit = float(self.TORIC_TIME_LIMIT)
 #             retcode = services.wait_task(task_id, timeout = time_limit, delay = 60.)
 #             if (retcode != 0):
-#                 logMsg = 'Error executing command: ' + torlh_bin
+#                 logMsg = 'Error executing command: ' + toric_bin
 #                 self.services.error(logMsg)
 #                 raise Exception(logMsg)
-                
+
+            # SF removed for now this data is kept in log.toric right now
             # Preserve torica.out from run to distinguish toric mode = 'toric' from 'qldce'
-            new_file_name = 'torica_' + arg_toric_Mode + '.out'
-            try:
-                shutil.copyfile('torica.out', new_file_name)
-            except IOError as xxx_todo_changeme2:
-                (errno, strerror) = xxx_todo_changeme2.args
-                logMsg =  'Error copying file %s to %s' % ('torica.out', new_file_name\
-                        , strerror)
-                print(logMsg)
-                services.exception(logMsg)
-                raise
+            #new_file_name = 'torica_' + arg_toric_Mode + '.out'
+            #try:
+            #    shutil.copyfile('torica.out', new_file_name)
+            #except IOError as xxx_todo_changeme2:
+            #    (errno, strerror) = xxx_todo_changeme2.args
+            #    logMsg =  'Error copying file %s to %s' % ('torica.out', new_file_name\
+            #            , strerror)
+            #    print(logMsg)
+            #    services.exception(logMsg)
+            #    raise
 
             #SF removed mapin direct mapping now used
             # For qldce mode need to also run mapin
-#            if arg_toric_Mode == 'qldce':
-#                mapin_bin = self.try_get_component_param(services,'MAPIN_BIN')
-#                print('\nRunning ' + mapin_bin)
-#                services.send_portal_event(event_type = 'COMPONENT_EVENT', \
-#                     event_comment = 'running ' + mapin_bin)
-#                retcode = subprocess.call([mapin_bin])
-#                if (retcode != 0):
-#                    logMsg = 'Error executing ' + mapin_bin
-#                    self.services.error(logMsg)
-#                    raise Exception(logMsg)
+            #if arg_toric_Mode == 'qldci':
+            #    mapin_bin = self.try_get_component_param(services,'MAPIN_BIN')
+            #    print('\nRunning ' + mapin_bin)
+            #    services.send_portal_event(event_type = 'COMPONENT_EVENT', \
+            #         event_comment = 'running ' + mapin_bin)
+            #    retcode = subprocess.call([mapin_bin])
+            #    if (retcode != 0):
+            #        logMsg = 'Error executing ' + mapin_bin
+            #        self.services.error(logMsg)
+            #        raise Exception(logMsg)
 
 # For toric mode merge partial plasma state containing updated IC data
         if arg_toric_Mode == 'toric':
             try:
-                partial_file = cwd + '/RF_LH_' + cur_state_file
+                partial_file = cwd + '/RF_IC_' + cur_state_file
                 # No process_output code yet
                 #services.merge_current_plasma_state(partial_file, logfile='log.update_state')
-                #print 'merged torlh plasma state data ', partial_file
+                #print 'merged toric plasma state data ', partial_file
                 print('No process_output code yet, so no plasma state merge')
             except:
                 logMsg = 'Error in call to merge_current_plasma_state(' + partial_file + ')'
@@ -532,7 +555,7 @@ class torlh (Component):
 
         if 'last_pwr' in kwargs:
             ps = Dataset(cur_state_file, 'w', format = 'NETCDF3_CLASSIC')
-            ps.variables['power_lh'][0] = saved_pwr
+            ps.variables['power_ic'][0] = saved_pwr
             ps.close()
 
         return 0
@@ -545,7 +568,7 @@ class torlh (Component):
 # ------------------------------------------------------------------------------
 
     def checkpoint(self, timestamp=0.0):
-        print('RF_LH_torlh.checkpoint() called')
+        print('RF_IC_toric.checkpoint() called')
         services = self.services
         services.save_restart_files(timestamp, self.RESTART_FILES)
 
@@ -558,7 +581,7 @@ class torlh (Component):
 # ------------------------------------------------------------------------------
 
     def finalize(self, timestamp=0.0):
-        print('torlh.finalize() called')
+        print('toric.finalize() called')
 
 
 # ------------------------------------------------------------------------------

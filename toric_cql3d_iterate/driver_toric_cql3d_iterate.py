@@ -14,7 +14,7 @@ import math
 from component import Component
 from netCDF4 import *
 
-class generic_driver(Component):
+class toric_driver(Component):
 
     def __init__(self, services, config):
         Component.__init__(self, services, config)
@@ -125,6 +125,15 @@ class generic_driver(Component):
             port_id_list.append(fpComp)
             print (' ')
 
+        if 'DIEL' in port_names:
+            dielComp = services.get_port('DIEL')
+            if(dielComp ==None):
+                print('Error accessing dielectric component')
+                raise
+            port_dict['DIEL'] = dielComp
+            port_id_list.append(dielComp)
+            print (' ')
+            
         if 'MONITOR' in port_names:
             monitorComp = services.get_port('MONITOR')
             if(monitorComp == None):
@@ -170,6 +179,9 @@ class generic_driver(Component):
         if 'FP' in port_names:
             self.component_call(services, 'FP', fpComp, init_mode, t)
 
+        if 'DIEL' in port_names:
+            self.component_call(services, 'DIEL', dielComp, init_mode, t)
+            
         if 'MONITOR' in port_names:
             self.component_call(services, 'MONITOR', monitorComp, init_mode, t)
 
@@ -180,7 +192,7 @@ class generic_driver(Component):
             next_state_file = services.get_config_param('NEXT_STATE')
             shutil.copyfile(cur_state_file, next_state_file)
         except Exception as e:
-            print('generic_driver: No NEXT_STATE file ', e)        
+            print('toric_driver: No NEXT_STATE file ', e)        
         services.update_state()
 
        # Get Portal RUNID and save to a file
@@ -209,7 +221,7 @@ class generic_driver(Component):
 # ------------------------------------------------------------------------------
 
 
-        print(' \nZeroth step - Run torlh only in toric mode and qldce mode for Maxwellian')
+        print(' \nZeroth step - Run torlh only in toric mode and qldci mode for Maxwellian')
         if sim_mode == 'NORMAL' :   # i.e. not RESTART do Maxwellian runs
             t = tlist_str[0]
             print (' ')
@@ -217,7 +229,7 @@ class generic_driver(Component):
             services.update_time_stamp(t)
 
             try:
-                services.call(rf_lhComp, 'step', t, toric_Mode = 'toric', inumin_Mode = 'Maxwell' , isol_Mode = '1')
+                services.call(rf_icComp, 'step', t, toric_Mode = 'toric', inumin_Mode = 'Maxwell' , isol_Mode = '1')
             except Exception:
                 message = 'RF_LH toric mode step failed'
                 print(message)
@@ -225,10 +237,10 @@ class generic_driver(Component):
                 raise 
 
             try:
-                services.call(rf_lhComp, 'step', t, toric_Mode = 'qldce', \
+                services.call(rf_icComp, 'step', t, toric_Mode = 'qldci', \
                 inumin_Mode = 'Maxwell' , isol_Mode = '1')
             except Exception:
-                message = 'RF_LH qldce mode step failed'
+                message = 'RF_LH qldci mode step failed'
                 print(message)
                 services.exception(message)
                 raise 
@@ -261,7 +273,7 @@ class generic_driver(Component):
                 raise 
 
             try:
-                services.call(rf_lhComp, 'step', t, toric_Mode = 'toric', \
+                services.call(rf_icComp, 'step', t, toric_Mode = 'toric', \
                 inumin_Mode = 'nonMaxwell' , isol_Mode = '1')
             except Exception:
                 message = 'RF_LH toric mode step failed'
@@ -270,10 +282,10 @@ class generic_driver(Component):
                 raise 
 
             try:
-                services.call(rf_lhComp, 'step', t, toric_Mode = 'qldce', \
+                services.call(rf_icComp, 'step', t, toric_Mode = 'qldci', \
                 inumin_Mode = 'nonMaxwell' , isol_Mode = '1')
             except Exception:
-                message = 'RF_LH qldce mode step failed'
+                message = 'RF_LH qldci mode step failed'
                 print(message)
                 services.exception(message)
                 raise 
@@ -322,6 +334,9 @@ class generic_driver(Component):
         if 'EPA' in port_names:
             self.component_call(services, 'EPA', epaComp, 'finalize', t)
 
+        if 'DIEL' in port_names:
+            self.component_call(services, 'DIEL', dielComp, 'finalize', t)
+            
         if 'MONITOR' in port_names:
             self.component_call(services, 'MONITOR', monitorComp, 'finalize', t)
 
@@ -333,7 +348,7 @@ class generic_driver(Component):
 # ------------------------------------------------------------------------------
 
     def checkpoint(self, timestamp=0.0):
-        print('generic_driver.checkpoint() called')
+        print('toric_driver.checkpoint() called')
         
 
 # ------------------------------------------------------------------------------
@@ -387,7 +402,7 @@ class generic_driver(Component):
         power_ic = 0.0
         if ('power_ic' in list(ps.variables.keys())):
             power_ic = ps.variables['power_ic'][:]
-            print('generic_driver pre_step_logic: power_ic = ', power_ic)
+            print('toric_driver pre_step_logic: power_ic = ', power_ic)
 
         ps.close()
         
@@ -398,7 +413,7 @@ class generic_driver(Component):
         except Exception as e:
             pass       
         
-        print('generic_driver pre_step_logic: timeStamp = ', timeStamp)
+        print('toric_driver pre_step_logic: timeStamp = ', timeStamp)
         
         return
 
