@@ -20,6 +20,7 @@ from ips_xolotlFT.python_scripts_for_coupling import write_tridynDat
 from ips_xolotlFT.python_scripts_for_coupling import handle_tempModel
 from ips_xolotlFT.python_scripts_for_coupling import handle_gridModel
 import inspect
+import h5py
 
 class xolotlFtridynDriver(Component):
     def __init__(self, services, config):
@@ -1522,21 +1523,30 @@ class xolotlFtridynDriver(Component):
                 ## try using keepLastTS to produce netfile with only info from the last TS
                 print('produce new network file using xolotlStop:')
                 try:
-                    iF=cwd+'/xolotlStop.h5'
-                    oF= cwd+'/'+self.XOLOTL_NETWORK_FILE
-                    os.remove(oF) #can not exist & it's copied as w/ time-stamp above
-                    if self.print_test:
-                        print('\t run keepLastTS with: ')
-                        print('\t \t inFile = ', iF)
-                        print( '\t \t outFile = ', oF)
-                    sys.stdout.flush()
-                    keepLastTS.keepLastTS(inFile=iF, outFile=oF, print_test=self.print_test)
-                    if self.print_test:
-                        print('\t ... keepLastTS returned succesfully')
-                    print('done writing a new network file')
-                    print(' ')
-                    sys.stdout.flush()
-                    keep_last_ts_success = True
+                    can_read_network_file = False
+                    while not can_read_network_file:
+                        iF=cwd+'/xolotlStop.h5'
+                        oF= cwd+'/'+self.XOLOTL_NETWORK_FILE
+                        os.remove(oF) #can not exist & it's copied as w/ time-stamp above
+                        if self.print_test:
+                            print('\t run keepLastTS with: ')
+                            print('\t \t inFile = ', iF)
+                            print( '\t \t outFile = ', oF)
+                        sys.stdout.flush()
+                        keepLastTS.keepLastTS(inFile=iF, outFile=oF, print_test=self.print_test)
+                        if self.print_test:
+                            print('\t ... keepLastTS returned succesfully')
+                        print('done writing a new network file')
+                        print(' ')
+                        sys.stdout.flush()
+
+                        # check if we can actually read the output file (in rare cases keepLastTS will write an hdf5 file that is corrupted even if the xolotlStop file exists and is readable)
+                        try:
+                            h5py.File(oF, "r")
+                            can_read_network_file = True
+                            keep_last_ts_success = True
+                        except Exception: 
+                            pass
                 #if fails, use old method of copying entire xolotlStop as networkFile
                 except Exception as e:       
                     print(e)
