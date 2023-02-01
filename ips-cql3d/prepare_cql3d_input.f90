@@ -34,19 +34,16 @@
 !                       ips_mode='init', only initializes some
 !                       component dimensions in the plasma state.
 !                       default='step'
-!                  2nd: cql3d_mode: 'el-only' 'el+ions' 'ions+el'
+!                  2nd: cql3d_mode: 'el-only' 'min' 'min+'
 !                       are possible inputs.  
 !                       In the 'el-only' case, only electron  and Zeff
 !                       PS plasma profiles and Zeff are used. Two additional
 !                       ions are setup for cql3d in accord with the input
 !                       template cqlinput file.
-!                       In 'el+ions' case, electron and ion densities from
-!                       the PS abridged list are set up.  Electrons are
-!                       a cql3d general species. Zeff not used.
-!                       In 'ions-abr' case, PS electron +abridged ion list
-!                       profiles are input to cqlinput.  The first ion
-!                       will be a cql3d general species.  Future work
-!                       can modify this to two or more ion general species.
+!                       In the 'min' case, evolves only a minority species
+!                       PS plasma profiles are used for all profiles.
+!                       In the 'min+' case, evolves minority and additional
+!                       species, such as T in a DT case.        
 !                       default='el-only'
 !                  3rd: cql3d_output, gives types of output power 
 !                       depostion and currents
@@ -208,7 +205,7 @@ c-----------------------------------
      +           deltat_str_present
 
       integer nj,njp1,nrho
-      integer nsteps
+      integer nsteps, isp
       REAL(KIND=rspec) :: dryain
 
 !!$      REAL(KIND=rspec) charge_nc(nspec_maxa),dmas_nc(nspec_maxa),
@@ -217,7 +214,7 @@ c-----------------------------------
       integer, dimension(:), allocatable :: incl_species !indicator for
                                           !species to send to genray.
 
-      integer iargs
+      integer iargs, isp_min
 
 c---------------------------------------------------------------
 !  Unified plasma parameter arrays (in ps%nspec_alla list)
@@ -497,8 +494,8 @@ c           Initialize arrays,
             write(*,*) 'CQL3D grid is rya =', rya(1:nrho-1)
 ! ptb            call zone_check(nrho,ps%rho_lhrf,rya(1))  !rya dims 0:...
 ! ptb added this hack to get the preprare_cql3d_input to run through
-! will need to do something better later on
-! Won't need to recalculate ps%rho_lhrf if we do not allow it to be changed
+!a will need to do something better later on
+!Won't need to recalculate ps%rho_lhrf if we do not allow it to be changed
 !            do itr = 2,nrho-1
 !               ps%rho_lhrf(itr) = 0.5* (rya(itr)+rya(itr-1))
 !            enddo
@@ -532,25 +529,25 @@ c           Initialize arrays,
 c           Following if clause should not happen in ordinary IPS usage
 c           (Can occur if using already initialized PS)
             else if(ps%nrho_icrf.ne.nrho) then
-               write(*,*) 
-     +              ' * prepare_cql3d_input: reset PS IC profile size'
-               write(*,*) ' * from ',ps%nrho_icrf,' to ',nrho
-               
+!               write(*,*) 
+!     +              ' * prepare_cql3d_input: reset PS IC profile size'
+!               write(*,*) ' * from ',ps%nrho_icrf,' to ',nrho
+!               
 !              copy all EXCEPT IC component profiles
-               cclist = ps_cc_all
-               cclist(ps_cnum_IC)=0
-
-               call ps_copy_plasma_state(ps, aux, ierr, cclist = cclist)
-               if(ierr.eq.0) then
-                  ! OK, copy back to ps
-                  call ps_copy_plasma_state(aux, ps, ierr)
-                  
-                  if(ierr.eq.0) then
-                     ! set desired dimension
-                     ps%nrho_icrf=nrho
-                     call ps_alloc_plasma_state(ierr) !set these PS dims in PS
-                  endif
-               endif
+!               cclist = ps_cc_all
+!               cclist(ps_cnum_IC)=0
+!
+!               call ps_copy_plasma_state(ps, aux, ierr, cclist = cclist)
+!               if(ierr.eq.0) then
+!                  ! OK, copy back to ps
+!                  call ps_copy_plasma_state(aux, ps, ierr)
+!                  
+!                  if(ierr.eq.0) then
+!                     ! set desired dimension
+!                     ps%nrho_icrf=nrho
+!                     call ps_alloc_plasma_state(ierr) !set these PS dims in PS
+!                  endif
+!               endif
             endif
             
             if (ierr.ne.0) then
@@ -563,7 +560,7 @@ c           Set ec calc code name
             ps%ic_code_info='cql3d'
 
 c           Initialize arrays, 
-            call zone_check(nrho,ps%rho_icrf,rya(1))  !rya dims 0:...
+!            call zone_check(nrho,ps%rho_icrf,rya(1))  !rya dims 0:...
 
             ps%picrf_totals=0.0_rspec
             ps%picth=0.0_rspec
@@ -774,8 +771,10 @@ c     of ions for the plasma state abridged species list.
 
       write(*,*) 'Step at cql3d_mode'       
 
-      if (cql3d_mode.eq.'el-only') then
+      !WRITE(*,*) 'SF Debug ps%nspec_alla:',ps%nspec_alla
 
+      
+      if (cql3d_mode.eq.'el-only') then
       if (ngen.eq.1 .and. iprozeff.eq.'spline' .and. izeff.eq.'backgrnd' 
      +   .and. bnumb(1).eq.-1.d0) then 
          ! i.e.,  cqlinput set up for single electron gen species
@@ -785,21 +784,18 @@ c     of ions for the plasma state abridged species list.
          write(*,*)'CHECK: ngen,iprozeff,izeff,bnumb(1)'
          stop
       endif
+      !in case of minorities do minority with max thermals in 'min' or
+      !minority with an additional non-max thermal bulk species 'min+'
+      elseif (cql3d_mode.eq.'min') then
+         nmax=ps%nspec_alla
+         ngen=1
+         !PS thermal species + electrons
 
-      elseif (cql3d_mode.eq.'el-ions' .or. cql3d_mode.eq.'ions-el') then
-
-         ! Get number of ion species from PS abridged list
-         ! BH111108         ntotal=ps%nspec_alla+1
-!        cqlinput ngen=1 is assumed  for time being.  It is
-!        expected the single gen species will be consistent
-!        with the PS.  [Probably an ion in this case, but e might work.]
-         nmax=ps%nspec_alla+1   !PS thermal species + electrons
-
-c        Check/adjust izeff
-         if (izeff.ne.'ion') then
-            write(*,*)'Resetting izeff=ion for all ion spec-d cases'
-            izeff='ion'
-         endif
+      elseif (cql3d_mode.eq.'min+')then
+         nmax=ps%nspec_alla-1
+         ngen=2
+         !this mode simulates both minority and evolves one of the
+         !bulk populations.
       endif
 
 c---------------------------------------------------------------
@@ -810,8 +806,6 @@ c---------------------------------------------------------------
       if (njene.ne.101) then
          write(*,*)'Resetting njene for uniform, 101-pt plasma profs'
          njene=101
-         !nj=njene    !local variable
-         !njp1=nj+1   !local variable
          if (njene.gt.njenea) then
             write(*,*)'Stop:  Need njenea bigger in param.h'
             stop
@@ -896,25 +890,21 @@ c     Check that no more than 1 nbi source (Else need to adjust code.)
 !             pwrscale(1)=ps%power_ec(1)*1.d-6  !Convert to Watts
              pwrscale(1)=1.d0
 
-! ptb         elseif (rfmode.eq.'LH') then
          elseif (cql3d_output.eq.'LH') then
             
 !              pwrscale(1)=ps%power_lh(1)*1.d-6
               pwrscale(1)=1.d0
 
-! ptb         elseif (rfmode.eq.'LH+RW') then
          elseif (cql3d_output.eq.'LH+RW') then
             
 !              pwrscale(1)=ps%power_lh(1)*1.d-6
               pwrscale(1)=1.d0
 
-! ptb         elseif (rfmode.eq.'IC') then
          elseif (cql3d_output.eq.'IC') then
             
 !              pwrscale(1)=ps%power_ic(1)*1.d-6
               pwrscale(1)=1.d0
 
-! ptb         elseif (rfmode.eq.'NBI') then
          elseif (cql3d_output.eq.'NBI') then
             
               if (ps%nbeam.ne.1) then
@@ -924,7 +914,6 @@ c     Check that no more than 1 nbi source (Else need to adjust code.)
               endif
               bptor(1)=ps%power_nbi(1)
 
-! ptb         elseif (rfmode.eq.'NBI+IC') then
          elseif (cql3d_output.eq.'NBI+IC') then
  
               if (ps%nbeam.ne.1) then
@@ -944,220 +933,6 @@ c     Check that no more than 1 nbi source (Else need to adjust code.)
          
       endif                     ! on PS_add_nml.eq.'disabled'
       
-
-
-!!$!.......................................................................
-!!$!     Usual operation: PS_add_nml will be 'disabled', and cqlinput data
-!!$!     will be set from the PS data, as above.
-!!$!     However,
-!!$!     check whether plasma state RF variables are defined.
-!!$!     If not, and command line variable PS_add_nml.eq.'enabled',
-!!$!     then will add data to the PS from the genraynml data.
-!!$!     If RF variables are defined or not, but PS_add_nml.eq.'force',
-!!$!     the values from genraynml data will be inserted in the PS.
-!!$!.......................................................................
-!!$
-!!$      if (PS_add_nml.eq.'enabled' .or. PS_add_nml.eq.'force') then
-!!$                                      !Some genraynml data added to PS
-!!$
-!!$         i_check_rf=0           !Set =1 if PS and genraynml agree
-!!$                                !on number of sources.
-!!$         
-!!$         if (rfmode.eq.'EC') then
-!!$            nxxrf_src=ps%necrf_src
-!!$            if (ngenray_source.eq.nxxrf_src) i_check_rf=1
-!!$            
-!!$         elseif (rfmode.eq.'LH') then
-!!$            nxxrf_src=ps%nlhrf_src
-!!$            if (ngenray_source.eq.nxxrf_src) i_check_rf=1
-!!$            
-!!$         elseif (rfmode.eq.'IC') then
-!!$            nxxrf_src=ps%nicrf_src
-!!$            if (ngenray_source.eq.nxxrf_src) i_check_rf=1
-!!$            
-!!$         else
-!!$            write(*,*)'Incorrect command line rfmode spec'
-!!$            STOP
-!!$         endif
-!!$
-!!$         write(*,*)'i_check_rf=',i_check_rf
-!!$         if (i_check_rf.eq.0 .and. PS_add_nml.eq.'enabled') then
-!!$            write(*,*)'prepare_genray_input: genraynml and PS disagree'
-!!$            write(*,*)'                      on number of rfsources, '
-!!$            write(*,*)'                      and ps_add_nml.eq.enabled'
-!!$            write(*,*)'                      ngenray_source=',ngenray_source
-!!$            write(*,*)'                      ps%nxxrf_src=',nxxrf_src
-!!$            write(*,*)'                      Need ps_add_nml.eq.force'
-!!$            STOP
-!!$         endif
-!!$
-!!$c     For genray.in and PS agree on number of sources, but for
-!!$c     frequency not set, then put in in PS from genray.in.
-!!$         if (i_check_rf.eq.1  .and. PS_add_nml.eq.'enabled')  then
-!!$            if (rfmode.eq.'EC') then
-!!$               do is=1,ngenray_source
-!!$                   if(ps%freq_ec(isource+(is-1)).eq.0.0_rspec)
-!!$     +                ps%freq_ec(isource+(is-1))=frqncy
-!!$               enddo
-!!$            elseif (rfmode.eq.'LH') then
-!!$               do is=1,ngenray_source
-!!$                   if(ps%freq_lh(isource+(is-1)).eq.0.0_rspec)
-!!$     +                ps%freq_lh(isource+(is-1))=frqncy
-!!$               enddo
-!!$            elseif (rfmode.eq.'IC') then
-!!$               do is=1,ngenray_source
-!!$                   if(ps%freq_ic(isource+(is-1)).eq.0.0_rspec)
-!!$     +                ps%freq_ic(isource+(is-1))=frqncy
-!!$               enddo
-!!$            endif
-!!$         endif
-!!$
-!!$
-!!$c     For number of PS sources .ne. genraynml sources:
-!!$c     if  PS_add_nml.eq.'force',  modify PS to agree, and set PS power
-!!$c     freq_xx, number of sources, and source names.
-!!$
-!!$         if (i_check_rf.eq.0 .and. PS_add_nml.eq.'force') then
-!!$            
-!!$            if (rfmode.eq.'EC') then
-!!$               if (ps%necrf_src.eq.0) then
-!!$                  ps%necrf_src=ngenray_source
-!!$                  call ps_alloc_plasma_state(ierr) !set PS dims for rf
-!!$               else
-!!$                  write(*,*) 
-!!$     +              'prepare_genray_input: resetting PS EC source count'
-!!$                  write(*,*) ' from ',ps%necrf_src,' to ',ngenray_source
-!!$                  
-!!$!     copy all EXCEPT EC component profiles
-!!$                  cclist = ps_cc_all
-!!$                  cclist(ps_cnum_EC)=0
-!!$                  
-!!$                  call ps_copy_plasma_state(ps,aux,ierr,cclist= cclist)
-!!$                  if(ierr.eq.0) then
-!!$!     OK, copy back to ps
-!!$                     call ps_copy_plasma_state(aux, ps, ierr)
-!!$                     
-!!$!                     if(ierr.eq.0) then
-!!$!     set desired dimension
-!!$                        ps%necrf_src=ngenray_source
-!!$                        call ps_alloc_plasma_state(ierr) !set dims in PS
-!!$!                     endif      !on ierr
-!!$                  endif         !on ierr
-!!$                  
-!!$               endif            !on ps%necrf_src
-!!$
-!!$c     Set EC PS values from genraynml[NOTE: only 1 frqncy]
-!!$
-!!$!     Reminder of data to be passed to PS:
-!!$!     EC   necrf_src=   number of ECRF sources
-!!$!          power_ec(necrf_src)= power on each ECRF source (W)
-!!$!          freq_ec(necrf_src)=frequency on each ECRF source (Hz)
-!!$!
-!!$!     LH   nlhrf_src= number of LHRF sources
-!!$!          power_lh(nlhrf_src)= power on each LHRF source (W)
-!!$!          freq_lh(nlhrf_src)= frequency on each LHRF source (Hz)
-!!$!
-!!$!     IC   nicrf_src= number of ICRF sources (includes FW, HHFW)
-!!$!          power_ic(nicrf_src)= power on each ICRF source
-!!$!          freq_ic(nicrf_src)= frequency on each ICRF source (Hz)
-!!$!
-!!$               do i=1,ngenray_source
-!!$                  ps%ecrf_src_name=achar(48+i) !achar(48)='0'
-!!$                  if (istart.eq.1) ps%power_ec(i)=powtot(i)
-!!$                  if (istart.gt.1) ps%power_ec(i)=powers(i)
-!!$ !MKSA issue
-!!$                  ps%freq_ec(i)=frqncy  !PS in Hz
-!!$               enddo
-!!$                  
-!!$               
-!!$            elseif (rfmode.eq.'LH') then
-!!$               ps%lhrf_src_name=achar(48+i) !achar(48)='0'
-!!$               if (ps%nlhrf_src.eq.0) then
-!!$                  ps%nlhrf_src=ngenray_source
-!!$                  call ps_alloc_plasma_state(ierr) !set PS dims for rf
-!!$               else
-!!$                  write(*,*) 
-!!$     +              'prepare_genray_input: resetting PS LH source count'
-!!$                  write(*,*) 'from ',ps%nlhrf_src,' to ',ngenray_source
-!!$                  
-!!$!     copy all EXCEPT EC component profiles
-!!$                  cclist = ps_cc_all
-!!$                  cclist(ps_cnum_LH)=0
-!!$                  
-!!$                  call ps_copy_plasma_state(ps,aux,ierr,cclist= cclist)
-!!$                  if(ierr.eq.0) then
-!!$!     OK, copy back to ps
-!!$                     call ps_copy_plasma_state(aux, ps, ierr)
-!!$                     
-!!$!                     if(ierr.eq.0) then
-!!$!     set desired dimension
-!!$                        ps%nlhrf_src=ngenray_source
-!!$                        call ps_alloc_plasma_state(ierr) !set dims in PS
-!!$!                     endif !on ierr
-!!$                  endif !on ierr
-!!$
-!!$               endif !on ps%nlhrf_src
-!!$
-!!$               do i=1,ngenray_source
-!!$                  ps%lhrf_src_name=achar(48+i)  !achar(48)='0'
-!!$                  if (istart.eq.1) ps%power_lh(i)=powtot(i)
-!!$                  if (istart.gt.1) ps%power_lh(i)=powers(i)
-!!$!MKSA issue
-!!$                  ps%freq_lh(i)=frqncy
-!!$               enddo
-!!$                  
-!!$            elseif (rfmode.eq.'IC') then
-!!$               if (ps%nicrf_src.eq.0) then
-!!$                  ps%nicrf_src=ngenray_source
-!!$                  call ps_alloc_plasma_state(ierr) !set PS dims
-!!$               else
-!!$                  write(*,*) 'prepare_genray_input: '//
-!!$     +                 'resetting PS IC source count'
-!!$                  write(*,*) 'from ',ps%nicrf_src,
-!!$     +                 ' to ',ngenray_source
-!!$                  
-!!$!     copy all EXCEPT EC component profiles
-!!$                  cclist = ps_cc_all
-!!$                  cclist(ps_cnum_IC)=0
-!!$                  
-!!$                  call ps_copy_plasma_state
-!!$     +                 (ps,aux,ierr,cclist=cclist)
-!!$                  if(ierr.eq.0) then
-!!$!     OK, copy back to ps
-!!$                     call ps_copy_plasma_state(aux, ps, ierr)
-!!$                     
-!!$!                     if(ierr.eq.0) then
-!!$!     set desired dimension
-!!$                        ps%nicrf_src=ngenray_source
-!!$                        call ps_alloc_plasma_state(ierr) !set dims in PS
-!!$!                     endif      ! on ierr
-!!$                  endif         ! on ierr
-!!$                  
-!!$               endif            ! on ps%nicrf_src
-!!$
-!!$               do i=1,ngenray_source
-!!$                  ps%icrf_src_name=achar(48+i)  !achar(48)='0'
-!!$                  write(*,*)'icrf_src_name=',achar(48+i)
-!!$                  if (istart.eq.1) ps%power_ic(i)=powtot(i)
-!!$                  if (istart.gt.1) ps%power_ic(i)=powers(i)
-!!$!MKSA issue
-!!$                  ps%freq_ic(i)=frqncy
-!!$               enddo
-!!$               
-!!$            endif     ! on rfmode
-!!$            
-!!$         endif        ! on i_check_rf.eq.0 .and. PS_add_nml.eq.'force'
-!!$         
-!!$      endif           ! on (PS_add_nml.eq.'enabled' .or. PS_add_nml.eq.'force
-!!$                     
-!!$
-!!$!.......................................................................
-!!$!     In general, as many genray namelist parameters as possible will be
-!!$!     specified only through the genray.in/.dat file, usually set up
-!!$!     for a particular rf mode and machine.  Depending on these
-!!$!     settings, additional data will be obtained from the plasma state.
-!!$!.......................................................................
-!!$
 
 
 !.......................................................................
@@ -1189,27 +964,27 @@ c     Equispaced, bin-boundary grid for profiles to cql3d
      +     .5_rspec*(ryain(1:nj-1)+ryain(2:nj))
 
 !.......................................................................
-!     cql3d_mode: 'el-only' 'el+ions' 'ions+el'
+!     cql3d_mode: 'el-only' 'min' 'min+'
 c     First treat electrons-only and zeff case:
 c     See Plasma_State2_V0.pdf, fr. 18, for ps_rho_rezone.
 !.......................................................................
 
       if (cql3d_mode.eq.'el-only') then
 c     Choose ion species to be highest central dens of abrdgd ions (SA)
-      iden_sa=0
+         iden_sa=0
 !ptb      den_sa_max=0d0
-      den_sa_max=0.0_rspec
-      do i=1,ps%nspec_tha
+         den_sa_max=0.0_rspec
+         do i=1,ps%nspec_tha
 ! ptb hacking
 ! It turns out that care must be taken when using ps%sa_index(j) since 
 ! ps%sa_index(j)=-1 indicates that element of (j) is derived from a composite
 ! of ions in the "S" list using Zeff and quasinetrality.
 !         ii=ps%sa_index(i)
-         if (ps%sa_index(i) .eq. -1) then
-            ii = i
-         else
-            ii = ps%sa_index(i)
-         endif
+            if (ps%sa_index(i) .eq. -1) then
+               ii = i
+            else
+               ii = ps%sa_index(i)
+            endif
 !end of ptb hacking
          if (ps%ns(1,ii).gt.den_sa_max) then
             den_sa_max=ps%ns(1,ii)
@@ -1262,33 +1037,6 @@ c     and zeff.
       ntotal=ngen+nmax
       kelecg=1
       kelecm=3
-
-!!$      Don't need to do this, since simply setting kelecg/kelecm values
-!!$      At any rate, these are not namelist variables.
-!!$      do k=1,ngen
-!!$        if (fmass(k) .lt. 1.e-27) then
-!!$          kelecg=k
-!!$          goto 2001
-!!$        endif
-!!$      continue
-!!$ 2001 continue
-!!$      kelecm=0
-!!$
-!!$      do  k=ngen+1,ntotal
-!!$        if (fmass(k) .lt. 1.e-27) then
-!!$          kelecm=k
-!!$          goto 2003
-!!$        endif
-!!$      enddo
-!!$ 2003 continue
-!!$
-!!$c     What is this?
-!!$      do k=1,ntotal
-!!$         if (k.eq.kelecg .or. k.eq.kelecm) then
-!!$            incl_species(0)=1   !Using PS index convention here.
-!!$         endif
-!!$      enddo
-
 !.......................................................................
 !     Fill in  electron radial profiles for cqlinput file
 !.......................................................................
@@ -1361,448 +1109,78 @@ c     Checking interpolation
 
       endif  !On cql3d_mode.eq.'el-only'
 
+      if (cql3d_mode .eq.'min') then
 
-!.......................................................................
-!     For additional interfacing of to cql3d, the alla species
-!     (electrons, abridged thermal ions [fully stripped light ions
-!     and two impuritied], and the nonthermal species [NBI, Minority
-!     ion species for RF, and fusion products]) are brought in.
-!     These can then be rearranged as required.
-!
-!     Use Doug McCune coding from his plasma_state_test.f90, to get
-!     density/temperatures, and augment with rotation rate.
-!     The interpolation is on to the above rho_bdy_rezon, appropriate
-!     for cql3d namelist input.
-!.......................................................................
+      !evolves minority species as general species in model
+      !SF i've stripped out the old modes in this routine. they didn't work
+      !properly as is with the current iteration framework and may be retrieved
+      !by looking at the git history.
+         WRITE(*,*) 'SF debug ps%id_ns', ps%id_ns(:)
 
-      if (cql3d_mode .ne. 'el-only') then
+         !set profiles to splines of dataset
+         iprone = 'spline'
+         iprote = 'spline'
+         iproti = 'spline'
+         iprozeff = 'disabled' !must be disabled right now
+         
+         !set number of diff coeffs
+         rdcmod = 'format1'
+         rdcfile(1) = 'du0u0_input'
+         nrdc = 1
+         nrdcspecies = 1
+         rdc_netcdf = 'disabled'
+         rdcscale = 1.0
+         
+         !minority species data
+         isp_min = ps%rfmin_to_alla(1)
+         kspeci(1,1) = trim(ps%alla_name(isp_min))
+         kspeci(2,1) = 'general'
+         fmass(1)    = ps%m_alla(isp_min)*1.d+3
+         bnumb(1)    = NINT(ps%q_alla(isp_min)/ps_xe)
+         call ps_rho_rezone(rho_bdy_rezon, ps%id_nmini(1),enein(1:nj,1),
+     +                      ierr, zonesmoo=.TRUE.)
 
-  !  May 2008: demonstrate  (DMC, in relation to BH genray work).
-  !  creation of single arrays of all the densities and temperatures
-  !  for the nspec_alla list:
-  !       abridged thermal ion species + all fast species
-  !
-  !  rezoned to a boundary oriented grid; use rho_bdy_rezone(...) for
-  !  this rezoning.
-  !
+         
+         !ion species data
+         do isp = 1,ps%nspec_tha
+            kspeci(1,isp+1) = trim(ps%alla_name(isp))
+            kspeci(2,isp+1) = 'maxwell'
+            fmass(isp+1) = ps%m_alla(isp)*1.d+3
+            bnumb(isp+1) = NINT(ps%q_alla(isp)/ps_xe)
+            call ps_rho_rezone(rho_bdy_rezon, ps%id_ns(isp), enein(1:nj,isp+1),
+     +                         ierr, zonesmoo=.TRUE.)
+         enddo
+        
+         !electron species data
+         kspeci(1,ps%nspec_tha+2) = 'e'
+         kspeci(2,ps%nspec_tha+2) = 'maxwell'
+         fmass(ps%nspec_tha+2) = me*1.d+3
+         bnumb(ps%nspec_tha+2) = -1
+         call ps_rho_rezone(rho_bdy_rezon, ps%id_ns(0), enein(1:nj,ps%nspec_tha+2),
+     +                         ierr, zonesmoo=.TRUE.)
 
-!      nrho_user=201
-!      nrhop1=nrho_user+1
-      nrho_user=nj
-      nrhop1=nj+1
+         call ps_rho_rezone(rho_bdy_rezon, ps%id_Ts(0), tein(1:nj), ierr,
+     +     zonesmoo=.TRUE.)
+         call ckerr('ps_rho_rezone (U2)',ierr)
+         
+         call ps_rho_rezone(rho_bdy_rezon, ps%id_Ts(1), tiin(1:nj), ierr,
+     +     zonesmoo=.TRUE.)
+         call ckerr('ps_rho_rezone (U2)',ierr)
 
-!  allocate(rho_user(nrho_user),rho_bdy_rezon(nrhop1))
-!
-!  do ii=1,nrho_user
-!     rho_user(ii) = (ii-1)*1.0_rspec/(nrho_user-1)
-!  enddo
-      allocate(rho_user(nrho_user))
-      rho_user(:)=ryain(:)
+         !zeff profile
+         call ps_rho_rezone(rho_bdy_rezon, ps%id_Zeff, zeffin(1:nj), ierr,
+     +                      zonesmoo=.TRUE.)
+         call ckerr('ps_rho_rezone (U2)',ierr)
+     
+      endif  !cql3d_mode.ne.'min'
 
-      !  rho_bdy_rezon(...) has a half width zone at the center and edge, and a
-      !  full width zone around each interior boundary in rho_user(...).
-      !  size(rho_bdy_rezon) = size(rho_user) + 1
-
-      rho_bdy_rezon(1)=rho_user(1)
-      rho_bdy_rezon(nrhop1)=rho_user(nrho_user)
-      rho_bdy_rezon(2:nrho_user) =
-     +      0.5_rspec*(rho_user(1:nrho_user-1)+rho_user(2:nrho_user))
-
-      allocate(dense(nrho_user),tempe(nrho_user))
-      allocate(densi(nrho_user,ps%nspec_alla),tempi(nrho_user,ps%nspec_alla))
-      
-      call ps_rho_rezone(rho_bdy_rezon, ps%id_ns(0), dense, ierr, zonesmoo=.TRUE.)
-      call ckerr('ps_rho_rezone (U1)')
-      
-      call ps_rho_rezone(rho_bdy_rezon, ps%id_Ts(0), tempe, ierr, zonesmoo=.TRUE.)
-      call ckerr('ps_rho_rezone (U2)')
-      
-      !  get the abridged thermal species list first...
-      
-      call ps_tha_rezone(rho_bdy_rezon, ierr, zonesmoo=.TRUE.,
-     +     ns = densi(:,1:ps%nspec_tha), Ts = tempi(:,1:ps%nspec_tha))
-      call ckerr('ps_tha_rezone')
-      
-      !  get the fast species; in general these will be on different grids.
-      
-      allocate(wk_dens(nrho_user),wk_eperp(nrho_user),wk_epll(nrho_user))
-      
-      do ii=ps%nspec_tha + 1, ps%nspec_alla
-         jj = ps%alla_index(ii)   ! index in "all species" list
-         !       jj=-1 if ps%alla_type(ii).eq.ps_impurity, but this should not
-         !       occur as here we loop over fast ions only.  Still, I test this...
-         if(jj.le.0) then
-            write(iout,*) ' ? unexpected alla_index(ii) value: ',jj
-         else
-            !  OK, jj=alla_index(ii) points to the element index of whatever
-            !  fast species list element corresponds to element ii of the alla list
-            
-            if(ps%alla_type(ii).eq.ps_beam_ion) then
-               call ps_rho_rezone(rho_bdy_rezon, ps%id_nbeami(jj), wk_dens,
-     +              ier1, zonesmoo=.TRUE.)
-               call ps_rho_rezone(rho_bdy_rezon, ps%id_eperp_beami(jj), wk_eperp,
-     +              ier2, zonesmoo=.TRUE.)
-               call ps_rho_rezone(rho_bdy_rezon, ps%id_epll_beami(jj), wk_epll,
-     +              ier3, zonesmoo=.TRUE.)
-               
-            else if(ps%alla_type(ii).eq.ps_rf_minority) then
-               call ps_rho_rezone(rho_bdy_rezon, ps%id_nmini(jj), wk_dens,
-     +              ier1, zonesmoo=.TRUE.)
-               call ps_rho_rezone(rho_bdy_rezon, ps%id_eperp_mini(jj), wk_eperp,
-     +              ier2, zonesmoo=.TRUE.)
-               call ps_rho_rezone(rho_bdy_rezon, ps%id_epll_mini(jj), wk_epll,
-     +              ier3, zonesmoo=.TRUE.)
-               
-            else if(ps%alla_type(ii).eq.ps_fusion_ion) then
-               call ps_rho_rezone(rho_bdy_rezon, ps%id_nfusi(jj), wk_dens,
-     +              ier1, zonesmoo=.TRUE.)
-               call ps_rho_rezone(rho_bdy_rezon, ps%id_eperp_fusi(jj), wk_eperp,
-     +              ier2, zonesmoo=.TRUE.)
-               call ps_rho_rezone(rho_bdy_rezon, ps%id_epll_fusi(jj), wk_epll,
-     +              ier3, zonesmoo=.TRUE.)
-               
-            endif
-            
-            ierr = ier1 + ier2 + ier3
-            call ckerr('ps_rho_rezone (fast specie)')
-            
-            densi(:,ii) = wk_dens
-            tempi(:,ii) = (2.0_rspec/3.0_rspec)*(wk_eperp + wk_epll)
-            
-         endif
-      enddo  !On ii=ps%nspec_tha + 1, ps%nspec_alla
-      
-      write(iout,'(A,1pe12.5)')
-     +    '  density      Temperature   Species @ rho_user(7) = ',
-     +    rho_user(7)
-      write(iout,'(2(1x,1pe12.5),3x,a)') dense(7),tempe(7),
-     +     trim(ps%alla_name(0))
-      do ii=1,ps%nspec_alla
-         write(iout,'(2(1x,1pe12.5),3x,a)') densi(7,ii),tempi(7,ii),
-     +        trim(ps%alla_name(ii))
-      enddo
-
-      call ps_rho_rezone(rho_bdy_rezon, ps%id_Zeff, zeffin(:), ierr,
+      !loop voltage profiles
+      iproelec = 'spline'
+      call ps_rho_rezone(rho_bdy_rezon, ps%id_V_loop, elecin(1:nj), ierr,
      +     zonesmoo=.TRUE.)
       call ckerr('ps_rho_rezone (U2)',ierr)
-
-!     Check ion densities/temperatures
-         do ii=1,ps%nspec_alla
-            do j=1,nj-1
-               if(abs(densi(j,ii)).lt.eps_dens) incl_species(ii)=0 
-!!$               if(abs(tempi(j,ii)).lt.eps_temp) incl_species(ii)=0
-            enddo
-!!$            if(abs(tempi(nj,ii)).lt.eps_temp) incl_species(ii)=0
-         enddo
-
-!!$         write(*,*)'incl_species(0:ps%nspec_alla)=',
-!!$     +              incl_species(0:ps%nspec_alla)
-         write(*,*)'incl_species(0:ps%nspec_tha)=',
-     +              incl_species(0:ps%nspec_tha)
-
-
-      endif  !cql3d_mode.ne.'el-only'
-
-
-
-      if (cql3d_mode .eq. 'el+ions') then
+      elecin(1:nj) = elecin(1:nj) / (2.*pi*ps%r_axis*1.0d+02) 
       
-!.......................................................................
-!     Electrons are assumed to be the general cql3d (first) species.
-!     Will put the Maxwln electrons at the end of the species list.
-!     Ion Maxwln species are species 1:nspec_tha (abridged species list).
-!     CQL3D does not treat separate thermal and fast ion species
-!     such as from NBI or fusion;  the fast+thermal ions are one
-!     non-Maxwln species.
-!     In processing cql3d output:
-!     it would be possible, to separate the "thermal" and
-!     "nonthermal" species, say by fitting a Maxwln to the bulk,
-!     or, to divide at some appropriate velocity ~2-3 vth.
-!
-!     For the time being, will only set up electrons (first general
-!     species) and thermal ions, and thermal equivalents of the the
-!     fast ion species.   This will provide an alternative
-!     treatment of above 'el-only' case, and in cases where the 
-!     wave particle interaction is with electrons-only, and no
-!     nonthermal ions, it should give same results.
-!
-!     If there is a nonthermal species, this can affect Zeff;
-!     we thus include them in to the following.
-!
-!     CQL3D spline fits use a single "background" ion temperature.
-!     We use a PS density weighted average of the nspec_tha ions,
-!     obtained with plasma state module routine ps_Ti_rezone.
-!     CQL3D can be readily adapted to multiple ion temperature input,
-!     if there is need.  For example, it might be useful to provide
-!     collisional power going to each of the ion species.
-!
-!     Ref: Plasma_State_V2.003.pdf (May 2008) re Abridged Species.
-!.......................................................................
-
-
-c     Set cql3d species parameters:
-
-      ngen=1 !Can be increased in future, as needed
-      nmax=ps%nspec_alla !ions (abridged and fast) plus maxwl electrons
-
-      bnumb(1)=-1.d0
-      kspeci(1,1)='e'
-      kspeci(2,1)='general'
-! ptb: clq3d namelist description says that fmass should be in cgs - g. 
-! ptb: But me and ps%m_SA are in kG. So they should be multiplied by 10^3
-! ptb: to convert to g (not multiplied by 10^-3 !!!).
-      fmass(1)=me*1.d+3
-! ptb:      fmass(1)=me*1.d-3
-      do i=2,ps%nspec_alla
-         bnumb(i)=ps%q_alla(i)/xe
-! ptb         fmass(i)=ps%m_alla(i)*1.d-3
-         fmass(i)=ps%m_alla(i)*1.d+3
-         kspeci(1,2)=trim(ps%alla_name(i))
-         kspeci(2,2)='maxwell'
-      enddo
-      ntotal=ngen+nmax
-
-      !Add in electron maxwl species after maxwl ions
-      bnumb(ntotal)=-1.d0
-      fmass(ntotal)=fmass(1)
-      kspeci(1,ntotal)='e'
-      kspeci(2,ntotal)='maxwell'
-
-      iprone='spline'
-      iprote='spline'
-      iproti='spline'  !Will ion density weighted value, from PS
-      iprozeff='disabled'  !Will be calculated from given ions
-      iproelec='spline'
-      efswtch='method1'
-      iprovphi='spline'  !Will use ion density weighted value, from PS
-
-c     Set spline profiles expected for electrons, ions, efld, vphi
-
-      
-      
-      
-!BH120807:  Replace this section with DMC coding, as above
-!BH120807:  We may need some following commented coding to eliminate
-!BH120807:  unallocated fast species, so keep it for time being.
-
-!!$       allocate(densi(nj,0:ps%nspec_alla+1),tempi(nj)) !densi incls elec
-!!$       densi(:,:)=0.0_rspec
-!!$       tempi(:,:)=0.0_rspec
-!!$
-!!$!     get electrons
-!!$
-!!$       call ps_rho_rezone(rho_bdy_rezon, ps%id_ns(0), densi(:,0),
-!!$     +                         ierr, zonesmoo=.TRUE.)
-!!$       write(*,*)'after ps_rho_rezone: ierr=',ierr
-!!$       call ckerr('ps_rho_rezone (U1)',ierr)
-!!$
-!!$       call ps_rho_rezone(rho_bdy_rezon, ps%id_Ts(0), tein(:),
-!!$     +                         ierr, zonesmoo=.TRUE.)
-!!$       call ckerr('ps_rho_rezone (U2)',ierr)
-!!$
-!!$       enein(:,ntotal)=enein(:,1)
-!!$            
-!!$         
-!!$!     get the alla ion species (abridged thermal + fast ions)
-!!$         
-!!$         call ps_tha_rezone(rho_bdy_rezon, ierr, zonesmoo=.TRUE.,
-!!$     +       ns = densi(1:nj,1:ps%nspec_alla))
-!!$         call ckerr('ps_tha_rezone',ierr)
-!!$
-!!$!     get ni-wtd average temp and tor rotation for thermal ion species
-!!$
-!!$         call ps_ti_rezone(rho_bdy_rezon, ierr, zonesmoo=.TRUE.,
-!!$     +                     Ti=tempi(:), omegat=vphi(:))
-!!$
-!!$         incl_species(1:ps%nspec_tha)=1
-         
-!BH120802:  Skip nonthermal species for now.  Need to decide how
-!BH120802:  how to best interface cql3d with them.
-!!$
-!!$!     get the fast species; in general these will be on different grids.
-!!$         
-!!$         allocate(wk_dens(nj),wk_eperp(nj),wk_epll(nj))
-!!$         
-!!$         do ii=ps%nspec_tha + 1, ps%nspec_alla
-!!$            jj = ps%alla_index(ii) ! index in "all species" list
-!!$.
-!!$            write(*,*)'ii,jj,ps%nspec_tha,ps%nspec_alla',
-!!$     +                 ii,jj,ps%nspec_tha,ps%nspec_alla
-!!$
-!!$            write(*,*)'ps%alla_type(0:ps%nspec_alla),ps_beam_ion',
-!!$     +                 ps%alla_type(0:ps%nspec_alla),ps_beam_ion
-!!$
-!!$!     jj=-1 if ps%alla_type(ii).eq.ps_impurity, but this 
-!!$!     should not occur as here we loop over fast ions only.
-!!$!     Still, I test this...
-!!$            if(jj.le.0) then
-!!$               write(*,*) '? unexpected alla_index(ii) value: ',jj
-!!$            else
-!!$!     OK, jj=alla_index(ii) points to the element index of whatever
-!!$!     fast species list element corresponds to element ii of the alla list
-!!$               wk_dens(:)=0.0_rspec
-!!$               wk_eperp(:)=0.0_rspec
-!!$               wk_epll(:)=0.0_rspec
-!!$
-!!$               if(ps%alla_type(ii).eq.ps_beam_ion) then
-!!$ 
-!!$                if (allocated(nbeami)) then
-!!$                incl_species(ii)=1
-!!$                call ps_rho_rezone(rho_bdy_rezon, ps%id_nbeami(jj),
-!!$     +                 wk_dens, ier1, zonesmoo=.TRUE.)
-!!$                call ckerr('ps_rho_rezone: ier1',ier1)
-!!$                call ps_rho_rezone(rho_bdy_rezon, ps%id_eperp_beami(jj),
-!!$     +                 wk_eperp, ier2, zonesmoo=.TRUE.)
-!!$                call ps_rho_rezone(rho_bdy_rezon, ps%id_epll_beami(jj),
-!!$     +                 wk_epll, ier3, zonesmoo=.TRUE.)
-!!$                endif
-!!$              
-!!$                  
-!!$               else if(ps%alla_type(ii).eq.ps_rf_minority) then
-!!$                if (allocated(nmini)) then
-!!$                incl_species(ii)=1
-!!$                call ps_rho_rezone(rho_bdy_rezon, ps%id_nmini(jj),
-!!$     +                 wk_dens, ier1, zonesmoo=.TRUE.)
-!!$                call ps_rho_rezone(rho_bdy_rezon, ps%id_eperp_mini(jj),
-!!$     +                 wk_eperp, ier2, zonesmoo=.TRUE.)
-!!$                call ps_rho_rezone(rho_bdy_rezon, ps%id_epll_mini(jj),
-!!$     +                 wk_epll, ier3, zonesmoo=.TRUE.)
-!!$                endif
-!!$                  
-!!$               else if(ps%alla_type(ii).eq.ps_fusion_ion) then
-!!$                if (allocated(nfusi)) then
-!!$                incl_species(ii)=1
-!!$                call ps_rho_rezone(rho_bdy_rezon, ps%id_nfusi(jj),
-!!$     +                 wk_dens, ier1, zonesmoo=.TRUE.)
-!!$                call ps_rho_rezone(rho_bdy_rezon, ps%id_eperp_fusi(jj),
-!!$     +                 wk_eperp, ier2, zonesmoo=.TRUE.)
-!!$                call ps_rho_rezone(rho_bdy_rezon, ps%id_epll_fusi(jj),
-!!$     +                 wk_epll, ier3, zonesmoo=.TRUE.)
-!!$                endif
-!!$                  
-!!$               endif  !  On ps%alla_type(ii)
-!!$               
-!!$               ierr = ier1 + ier2 + ier3
-!!$               call ckerr('ps_rho_rezone (fast specie)',ierr)
-!!$               
-!!$               densi(:,ii) = wk_dens
-!!$
-!!$!     McCune rational for following is that wk_perp and wk_epll
-!!$!     are average perp and parallel energies.  (For isotropic
-!!$!     distns, wk_eperp will be 2.*wkpell.)
-!!$
-!!$               tempi(:,ii) = (2.0_rspec/3.0_rspec)*(wk_eperp + wk_epll)
-!!$               
-!!$            endif  !  On jj
-!!$         enddo  !  On ii
-!!$
-!!$         write(*,*)'incl_species(0:ps%nspec_all)=',
-!!$     +              incl_species(0:ps%nspec_all)
-!!$
-!!$!     Determine reduced species list if any densities are ~zero inside
-!!$!     LCFS, or temperatures zero, including LCFS.  
-!!$!     Indicator is stored in incl_species(0:ps%nspec_alla).
-!!$
-!!$         eps_dens=1.e-6_rspec
-!!$         eps_temp=1.e-6_rspec
-!!$         write(*,*)'eps_dens,eps_temp=',eps_dens,eps_temp
-!!$
-!!$!     Check electron density/temperature
-!!$         do j=1,nj-1
-!!$            if(abs(densi(j,0)).lt.eps_den) incl_species(0)=0
-!!$            if(abs(tempe(j)).lt.eps_temp) incl_species(0)=0
-!!$         enddo
-!!$         if(abs(tempe(nj)).lt.eps_temp) incl_species(0)=0
-!!$
-!!$         if (incl_species(0).eq.0) then
-!!$            write(*,*)
-!!$            write(*,*)'Electron density or temperature ~zero'
-!!$            write(*,*)"Can't FP. Will stop"
-!!$            write(*,*)
-!!$            STOP
-!!$         endif
-
-
-!!$         jj=1  ! genray index for electrons
-!!$         do ii=1,ps%nspec_alla
-!!$         do ii=1,ps%nspec_tha
-!!$            if (incl_species(ii).ne.0) then
-!!$               jj=jj+1
-!!$               charge_nc(jj)=abs(ps%q_alla(ii)/xe)
-!!$               dmas_nc(jj)=ps%m_alla(ii)/me
-!!$               do j=1,nj
-!!$                  en_nc(j,jj)=densi(j,ii)
-!!$                  temp_nc(j,jj)=tempi(j,ii)
-!!$               enddo ! On j
-!!$            endif
-!!$         enddo ! On ii
-!!$         nspecgr=jj
-!!$         nbulk=nspecgr
-!!$         ndens=nj
-
-         write(*,*)'ps%nspec_alla=',ps%nspec_alla
-         write(*,*)'ps%nspec_tha=',ps%nspec_tha
-
-
-!!$         ll=1
-!!$         iout=5
-!!$c         write(iout,'(A,1pe12.5,i3)') '  density      Temperature'//
-!!$         write(*,'(A,1pe12.5,i3)') '  density      Temperature'//
-!!$     +        '   atm_no   charge   Species @ r_nc(ll),ll= ',r_nc(ll),ll
-!!$
-!!$!BH111108         do ii=1,ps%nspec_alla
-!!$         do ii=1,nbulk
-!!$!             Write(iout,'(4(1x,1pe12.5),3x,a)') densi(1,ii+1),
-!!$             Write(*,'(4(1x,1pe12.5),3x,a)') en_nc(ll,ii),
-!!$     +       temp_nc(ll,ii), dmas_nc(ii), charge_nc(ii)
-!!$         enddo  ! On ii
-!!$
-!!$      endif ! On nbulk.gt.1
-!!$
-!!$      do k=1,nbulk
-!!$         charge(k)=charge_nc(k)
-!!$         dmas(k)=dmas_nc(k)
-!!$      enddo
-!!$
-!!$
-!!$      do k=1,nbulk
-!!$         do j=1,ndens
-!!$            dens1(j,k)=en_nc(j,k)
-!!$            temp1(j,k)=temp_nc(j,k)
-!!$            tpop1(j,k)=1.d0
-!!$            vflow1(j,k)=0.d0
-!!$         enddo
-!!$      enddo
-!!$      do j=1,ndens
-!!$         zeff1(j)=zeff_nc(j)
-!!$      enddo
-
-         do i=1,ps%nspec_alla
-            enein(:,i)=densi(:,i)
-         enddo
-         tein(:)=tempe(:)
-         tiin(:)=tempi(:,1)
-c        There is no input for FI temperatures into cql3d.
-c        This is not difficult to change in cql3d, if/when needed.
-c        (For the general cql3d FP species, bulk and FI are 
-c        a single species).
-
-      endif  !On cql3d_mode .eq. 'el+ions'
-
-
-c---------------------------------------------------------------
-c     Add in coding for 'ions+el' here.
-c     Rearrange species for above 'el+ions' case.
-c     May be sufficient for 'ions-aor' or 'ions-tor'
-c----------------------------------------------------------------
-
-      if (cql3d_mode .eq. 'ions+el') then
-         write(*,*)
-         write(*,*)'STOP: Need to add coding for this case'
-         write(*,*)
-         stop
-      endif
-
 c---------------------------------------------------------------
 c     write all namelist to  cqlinput file
 c----------------------------------------------------------------

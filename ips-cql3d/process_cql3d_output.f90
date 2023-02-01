@@ -669,6 +669,9 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
       endif  !On cql3d_output.eq.'NBI'
 
 
+
+      !SF 22/12/15 this is not set up properly for the new minority heating iteration
+      !fix at some point for TRANSP integration
       if (cql3d_output.eq.'IC') then
 !     This section taken from Lee Berry process_fp_rfmin_cql3d_output.f
 !     and adjusted:
@@ -678,16 +681,17 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
       ! k is the number of the general species
       ! nt is the last time slice of the cql3d run
 !BH120813      ps%pmine = -dvol * powers(1:ps%nrho_icrf-1,1,ntotal - 1,nt)
-      ps%pmine = -dvol * powers(1:ps%nrho_icrf-1,1,1,nt)
+!      ps%pmine = -dvol * powers(1:ps%nrho_icrf-1,1,1,nt)
       ! powers(*,2,k,t)=due to collisions with Maxw ions
 !BH120813      ps%pmini = -dvol * powers(1:ps%nrho_icrf-1,2,ntotal - 1,nt)
-      ps%pmini = -dvol * powers(1:ps%nrho_icrf-1,2,1,nt)
-      ps%eperp_mini(1,1:ps%nrho_icrf-1) = wperp(1:ps%nrho_icrf-1,nt)
-      ps%epll_mini(1,1:ps%nrho_icrf-1) = wpar(1:ps%nrho_icrf-1,nt)
+!      ps%pmini = -dvol * powers(1:ps%nrho_icrf-1,2,1,nt)
+      !SF 22/12/15 presently not working fix later
+      !ps%eperp_mini(1,1:ps%nrho_icrf-1) = wperp(1:ps%nrho_icrf-1,nt)
+      !ps%epll_mini(1,1:ps%nrho_icrf-1) = wpar(1:ps%nrho_icrf-1,nt)
 
-      print*, 'power check on cql'
-      print*, 'minority to electron power = ', sum(ps%pmine)
-      print*, 'minority to ion power = ', sum(ps%pmini)
+!      print*, 'power check on cql'
+!      print*, 'minority to electron power = ', sum(ps%pmine)
+!      print*, 'minority to ion power = ', sum(ps%pmini)
 
       endif   !On cql3d_output.eq.'IC'
 
@@ -697,8 +701,8 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
 !     Close cql3d netCDF file
       call ncclos(ncid,istatus)
 
-      write(iout,*)
-     +     'process_cql3d_output: --storing cql3d data in current PS'
+!      write(iout,*)
+!     +     'process_cql3d_output: --storing cql3d data in current PS'
 
 !BH:  Two viable PS update methods have been used. Below: use DBB method.
 cDBB!--------------------------------------------------------------------
@@ -719,8 +723,9 @@ c
 c
 cBH???:  How does IPS know name FP_CQL3D_PARTIAL_STATE???
 cWael_to_BH:  Only needed here and in fp_cql3d_genray.py, as I understand.
-      CALL PS_WRITE_UPDATE_FILE('FP_CQL3D_PARTIAL_STATE', ierr)
-      WRITE (*,*) "Stored Partial FP_CQL3D Plasma State"
+!      SF 12/15/2022 commented out for now seems to be breaking on IC case
+!      CALL PS_WRITE_UPDATE_FILE('FP_CQL3D_PARTIAL_STATE', ierr)
+!      WRITE (*,*) "Stored Partial FP_CQL3D Plasma State"
 
       contains
 

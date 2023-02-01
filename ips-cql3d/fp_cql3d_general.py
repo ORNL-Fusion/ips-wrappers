@@ -126,8 +126,8 @@ class cql3d(Component):
     # Get global configuration parameters
         cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
         cur_eqdsk_file = get_global_param(self, services, 'CURRENT_EQDSK')
-        cur_dql_file = get_global_param(self, services, 'CURRENT_DQL')
         cur_cql_file = get_global_param(self, services,'CURRENT_CQL', optional = True)
+        cur_dql_file = get_global_param(self, services, 'CURRENT_DQL',optional = True)
         cur_ImChizz_inp_file = get_global_param(self, services,'CURRENT_ImChizz_inp', optional = True)
 
     # Get component-specific configuration parameters. Note: Not all of these are
@@ -150,6 +150,7 @@ class cql3d(Component):
         ps_add_nml = get_component_param(self, services, 'PS_ADD_NML')
 
         # enorm which is used here and in cql3d
+        arg_enorm = 'None'
         arg_enorm = get_component_param(self, services, 'ENORM', optional = True)
 
     # Copy plasma state files over to working directory
@@ -240,12 +241,9 @@ class cql3d(Component):
                  restart = 'enabled'
                  shutil.copyfile('cql3d.nc','distrfunc.nc')
 
-    # ptb: End of ptb hack
-
-    # ptb:    command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
-    # ptb:    cql3d_output + ' ' + cql3d_nml + ' ' + nsteps_str + ' ' + ps_add_nml
         command = prepare_input_bin + ' ' + ips_mode + ' ' + cql3d_mode  + ' ' +\
         cql3d_output + ' ' + cql3d_nml + ' ' + restart + ' '+ ps_add_nml
+
         if nsteps_str != None:
             command = command + ' ' + nsteps_str
 
@@ -369,7 +367,7 @@ class cql3d(Component):
     # Get global configuration parameters
         cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
         cur_eqdsk_file = get_global_param(self, services, 'CURRENT_EQDSK')
-        cur_dql_file = get_global_param(self, services, 'CURRENT_DQL')
+        cur_dql_file = get_global_param(self, services, 'CURRENT_DQL', optional = True)
         cur_cql_file = get_global_param(self, services,'CURRENT_CQL', optional = True)
         cur_ImChizz_inp_file = get_global_param(self, services,'CURRENT_ImChizz_inp', optional = True)
         

@@ -272,6 +272,7 @@ class toric_driver(Component):
                 services.exception(message)
                 raise 
 
+            #do initial step of TORIC
             try:
                 services.call(rf_icComp, 'step', t, toric_Mode = 'toric', \
                 inumin_Mode = 'nonMaxwell' , isol_Mode = '1')
@@ -280,7 +281,7 @@ class toric_driver(Component):
                 print(message)
                 services.exception(message)
                 raise 
-
+            
             try:
                 services.call(rf_icComp, 'step', t, toric_Mode = 'qldci', \
                 inumin_Mode = 'nonMaxwell' , isol_Mode = '1')
@@ -290,6 +291,25 @@ class toric_driver(Component):
                 services.exception(message)
                 raise 
 
+            try:
+                services.call(rf_icComp, 'sub', t, toric_Mode = 'toric', \
+                inumin_Mode = 'nonMaxwell' , isol_Mode = '1')
+            except Exception:
+                message = 'RF_LH toric mode step failed'
+                print(message)
+                services.exception(message)
+                raise 
+            
+            try:
+                services.call(rf_icComp, 'sub', t, toric_Mode = 'qldci', \
+                inumin_Mode = 'nonMaxwell' , isol_Mode = '1')
+            except Exception:
+                message = 'RF_LH qldci mode step failed'
+                print(message)
+                services.exception(message)
+                raise 
+
+            
             if 'MONITOR' in port_names:
                 self.component_call(services, 'MONITOR', monitorComp, 'step', t)
 

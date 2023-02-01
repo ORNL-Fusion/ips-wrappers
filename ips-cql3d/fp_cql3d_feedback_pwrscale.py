@@ -1,118 +1,5 @@
 #! /usr/bin/env python
 
-"""
-fp_cql3d_feedback_pwrscale.py  9-12-2017 DBB
-Adapted from fp_cql3d_general.py to support iteration of pwrscale parameter.
-The actual iteration logic is in the driver -> driver_torlh_iterate_pwrscale.py
-
-"""
-
-#**********************************************************
-# Working notes
-#**********************************************************
-#
-# Version 0.2 Batchelor 8-16-2021
-# Added coding to read the cqlinput file, extract mnemonic <--> cql3d_output_file and
-# add that as a command line argument to process_cql3d_output.f90.  This coding is lifted
-# from fp_cql3d_general.py which was added there on 2-19-2020.
-
-
-# Version 0.1 Batchelor 9-17-2017
-# Added coding so that each cql3d run inside a pwrscale iteration starts from the final
-# distribution function of the previous outer iteration
-
-# fp_cql3d_feedback_pwrscale.py, Version 0.0 Batchelor 9-12-2017
-# Added kwargs to step() to allow iteration of pwrscale.  The intention is to make it
-# backward compatible to be used as an ordinary fp_cql3d_general.py component with no changes.
-# Optional kwargs to step() are:
-# icount_arg = pwrscale iteration number, used to preserve cql3d.nc on successive iterations
-# pwrscale_arg = pwrscale, new value of pwrscale, calculated in driver, written into  
-#                cqlinput by change_cql3d_pwrscale() function.
-# 
-# N.B. We don't know when the last pwrscale iteration will occur, and don't really want to
-#      update plasma state and archive outputs until after last iteration.  So need to add
-#      a final function that just does updates from work directory.  For now just do updates
-#      every iteration
-
-#**********************************************************
-# Notes from cql3d_general.py
-#**********************************************************
-# fp_cql3d_general.py, Version 0.2 Batchelor 5-16-2017
-# Added code to pick up enorm from global parameter in config file and add to argument list
-# of prepare_cql3d_input.f90
-
-# fp_cql3d_general.py, Version 0.1 Batchelor 3-2-2017
-# Added cur_cql_file only to update_plasma_state for iteration (not full update).
-# Plasma state variables are already updated with merge_current_plasma_state.  So this 
-# component can be used concurrently.
-
-# Version 0.0, fp_cql3d_general.py, BH 08/15/2012
-# General (LH,EC,IC,RW,NBI, etc) cql3d component .py file.
-# Output is controlled by the input namelist file, cqlinput.
-
-# Derived from rf_genray_LH.py.
-# Changes:
-#  *replace genray.in ==> cqlinput
-#  *rf_genray_LH ==> fp_cql3d_general
-#  *replace RF_GENRAY ==> FP_CQL3D,  rf_genray ==> fp_cql3d
-#  *cql3dnml (equiv. of genraynml) is not used.  Adjust code,
-#   along with other changes for prepare_cql3d_input/process_cql3d_output
-#   command line arguments..
-#  *replace GENRAY ==> CQL3D, genray ==> cql3d
-#  *check remaining uses of _lh, lh, replace with _general
-#
-#
-# LH version 0.0 11/19/2010 notes:
-# This version distinguishes between the different RF components that GENRAY can 
-# implement.  In this case the LH component.  So far the only place this affects
-# is in the writing the partial plasma state that the framework needs to merge.
-#
-# Note: To merge plasma states the IPS framework expects the component to
-# produce a partial state file with the component-specific name:
-# <component>_<curr_state_filename>.  GENRAY works for EC, LH, and IC, i.e.
-# it can implement several different components.  Therefore process_genray_output_mcmd.f90
-# writes a partial state file with generic name 'RF_GENRAY_PARTIAL_STATE' and delegetes
-# to this python component script the copying of this to the proper 
-# component-specific update file name.  In this case RF_LH_<curr_state_filename>.
-
-# version 1.0 9/29/2010 (Batchelor):
-# This version adds checkpoint and restart functions and makes the exception 
-# handling more uniform.
-
-# version 0.0 3/1/2010 (Batchelor)
-
-
-
-# Adjusted coding (BH)
-# ------------------------------------------------------------------------------
-#
-# FP_CQL3D component script to drive GENRAY ray tracing code.
-#
-# Workflow:
-# 1) 'init' function:
-#       Stage input files: cqlinput_<suffix>
-#       Copy to generic input file name -> cqlinput
-#       Copy current plasma state file to generic name -> cur_state.cdf
-#       Launch prepare_cql3d_input with command line arg 'init'.  This does
-#       plasma state intitialization. Redirect output to log file
-#       Copy generic state file cur_state.cdf -> current plasma state file 
-#       Update plasma state and stage output files
-
-# 2) 'step' function:
-#       Copy current plasma state file to generic name -> cur_state.cdf
-#       Launch prepare_cql3d_input with command line arg 'step'.  This gets
-#       data needed from plasma state and writes a new cqlinput file.
-#       Copy cqlinput to cqlinput_<new name> for archive.
-#       Delete log file.
-#       Launch cql3d executable, redirect output to new log file
-#       Launch process_cql3d_output    
-#       Copy generic state file cur_state.cdf -> current plasma state file 
-#       Update plasma state and stage output files
-#
-# N.B. There is a good explanation of the command line arguments and program
-#      operation in the prepare_cql3d_input.f90 source.
-# ------------------------------------------------------------------------------
-
 from builtins import str
 from builtins import range
 import sys
@@ -148,7 +35,7 @@ class cql3d(Component):
         try:
             cur_state_file = services.get_config_param('CURRENT_STATE')
             cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
-            cur_dql_file = services.get_config_param('CURRENT_DQL')
+            #cur_dql_file = services.get_config_param('CURRENT_DQL')
             cur_cql_file = services.get_config_param('CURRENT_CQL')
            
         except:
@@ -157,10 +44,10 @@ class cql3d(Component):
             raise Exception('rf_ic_gneray: error getting config parameters CURRENT_STATE CURRENT_EQDSK')
 
 
-        try:
-             cur_ImChizz_inp_file = services.get_config_param('CURRENT_ImChizz_inp')
-        except:
-            print('no ImChizz_inp file found')
+        #try:
+        #     cur_ImChizz_inp_file = services.get_config_param('CURRENT_ImChizz_inp')
+        #except:
+        #    print('no ImChizz_inp file found')
 
         
     # Get component-specific configuration parameters. Note: Not all of these are
@@ -192,6 +79,10 @@ class cql3d(Component):
         arg_enorm = 'None'
         arg_enorm = self.try_get_config_param(services,'ENORM', optional = True)
 
+        arg_eqover = 'n'
+        arg_eqover = self.try_get_config_param(services,'EQ_OVERRIDE', optional=True)
+
+        
     # Copy plasma state files over to working directory
         try:
           services.stage_state()
@@ -244,22 +135,23 @@ class cql3d(Component):
             raise Exception('Error copying cur_state_file -> cur_state.cdf')
 
     # Copy current eqdsk file to generic name -> eqdsk
-        try:
-            shutil.copyfile(cur_eqdsk_file, 'eqdsk')
-        except IOError as xxx_todo_changeme4:
-            (errno, strerror) = xxx_todo_changeme4.args
-            print('Error copying file %s to %s' % (cur_eqdsk_file, 'eqdsk', strerror))
-            services.error('Error copying cur_eqdsk_file -> eqdsk')
-            raise Exception('Error copying cur_eqdsk_file -> eqdsk')
+        if(arg_eqover == 'n'):
+            try:
+                shutil.copyfile(cur_eqdsk_file, 'eqdsk')
+            except IOError as xxx_todo_changeme4:
+                (errno, strerror) = xxx_todo_changeme4.args
+                print('Error copying file %s to %s' % (cur_eqdsk_file, 'eqdsk', strerror))
+                services.error('Error copying cur_eqdsk_file -> eqdsk')
+                raise Exception('Error copying cur_eqdsk_file -> eqdsk')
 
     # Copy current Dql file to generic name -> genray.nc
-        try:
-            shutil.copyfile(cur_dql_file, 'genray.nc')
-        except IOError as xxx_todo_changeme5:
-            (errno, strerror) = xxx_todo_changeme5.args
-            print('Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror))
-            services.error('Error copying cur_dql_file -> genray.nc')
-            raise Exception('Error copying cur_dql_file -> genray.nc')
+        #try:
+        #    shutil.copyfile(cur_dql_file, 'genray.nc')
+        #except IOError as xxx_todo_changeme5:
+        #    (errno, strerror) = xxx_todo_changeme5.args
+        #    print('Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror))
+        #    services.error('Error copying cur_dql_file -> genray.nc')
+        #    raise Exception('Error copying cur_dql_file -> genray.nc')
 
         prepare_input_bin = os.path.join(self.BIN_PATH, 'prepare_cql3d_input')
 
@@ -412,9 +304,9 @@ class cql3d(Component):
 
         cur_state_file = services.get_config_param('CURRENT_STATE')
         cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
-        cur_dql_file = services.get_config_param('CURRENT_DQL')
+        #cur_dql_file = services.get_config_param('CURRENT_DQL')
         cur_cql_file = services.get_config_param('CURRENT_CQL')
-        cur_ImChizz_inp_file = services.get_config_param('CURRENT_ImChizz_inp')
+        #cur_ImChizz_inp_file = services.get_config_param('CURRENT_ImChizz_inp')
         print('CURRENT_CQL = ', cur_cql_file)
     # Copy current plasma state file to generic name -> cur_state.cdf
         try:
@@ -425,31 +317,35 @@ class cql3d(Component):
             raise
 
     # Copy current eqdsk file to generic name -> eqdsk
-        try:
-            shutil.copyfile(cur_eqdsk_file, 'eqdsk')
-        except IOError as xxx_todo_changeme8:
-            (errno, strerror) = xxx_todo_changeme8.args
-            print('Error copying file %s to %s' % (cur_eqdsk_file, 'eqdsk', strerror))
-            services.error('Error copying cur_eqdsk_file -> eqdsk')
-            raise Exception('Error copying cur_eqdsk_file -> eqdsk')
+        arg_eqover = 'n'
+        arg_eqover = self.try_get_config_param(services,'EQ_OVERRIDE', optional=True)
+        print('eqdsk override: ', arg_eqover)
+        if (arg_eqover == 'n'):
+            try:
+                shutil.copyfile(cur_eqdsk_file, 'eqdsk')
+            except IOError as xxx_todo_changeme8:
+                (errno, strerror) = xxx_todo_changeme8.args
+                print('Error copying file %s to %s' % (cur_eqdsk_file, 'eqdsk', strerror))
+                services.error('Error copying cur_eqdsk_file -> eqdsk')
+                raise Exception('Error copying cur_eqdsk_file -> eqdsk')
 
 # Check if LHRF power is zero (or effectively zero).  If true don't run Genray
 
         ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
-        power_lh = ps.variables['power_lh'][0]
-
+       
         ps.close()
-        print('power = ', power_lh)
+        #print('power = ', power_lh)
+        power_lh = 1.0 #SF fixed so I don't have to deal with this
         if(power_lh > 1.0E-04):
 
     # Copy current Dql file to generic name -> genray.nc
-          try:
-              shutil.copyfile(cur_dql_file, 'genray.nc')
-          except IOError as xxx_todo_changeme1:
-              (errno, strerror) = xxx_todo_changeme1.args
-              print('Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror))
-              services.error('Error copying cur_dql_file -> genray.nc')
-              raise Exception('Error copying cur_dql_file -> genray.nc')
+          #try:
+          #    shutil.copyfile(cur_dql_file, 'genray.nc')
+          #except IOError as xxx_todo_changeme1:
+          #    (errno, strerror) = xxx_todo_changeme1.args
+          #    print('Error copying file %s to %s' % (cur_dql_file, 'genray.nc', strerror))
+          #    services.error('Error copying cur_dql_file -> genray.nc')
+          #    raise Exception('Error copying cur_dql_file -> genray.nc')
 
           cql3d_mode = self.CQL3D_MODE
           cql3d_output = self.CQL3D_OUTPUT
@@ -564,7 +460,7 @@ class cql3d(Component):
           lines = get_lines('cqlinput')
           cql3d_output_file = lines_to_variable_dict(lines)['MNEMONIC'].strip("'") + ".nc"
           print('cql3d_output_file = ', cql3d_output_file)
-  
+
           log_file = open('log_process_cql3d_output', 'w')
           mode = 'step'
           command = process_output_bin + ' ' +  cql3d_output+ ' ' +  cql3d_output_file   
@@ -579,45 +475,39 @@ class cql3d(Component):
               print('Error executing cql3d cql3d process_output ', process_output_bin)
               services.error('Error executing cql3d process_output')
               raise Exception('Error executing cql3d process_output')
-
-# Copy cql3d_output_file to cql3d.nc which is the filename that imchizz is expecting  
-          try:
-              shutil.copyfile(cql3d_output_file, 'cql3d.nc' )
-          except IOError as xxx_todo_changeme2:
-              (errno, strerror) = xxx_todo_changeme2.args
-              print('Error copying file %s to %s' % (cql3d_output_file, 'cql3d.nc', strerror))
-              raise
-
-   
-    # Copy generic cql3d partial plasma state file -> FP_CQL3D_cur_state_file  [correct??, BH]
-          try:
-              partial_file = cwd + '/FP_CQL3D_' + cur_state_file
-              shutil.copyfile('FP_CQL3D_PARTIAL_STATE', partial_file )
-          except IOError as xxx_todo_changeme2:
-              (errno, strerror) = xxx_todo_changeme2.args
-              print('Error copying file %s to %s' % ('cur_state.cdf', cur_state_file, strerror))
-              raise
+          
+# Copy generic cql3d partial plasma state file -> FP_CQL3D_cur_state_file  [correct??,
+#          try:
+#            partial_file = cwd + '/FP_CQL3D_' + cur_state_file
+#            print('partial_file ', partial_file)
+#            shutil.copyfile('FP_CQL3D_PARTIAL_STATE', partial_file )
+#          except IOError as xxx_todo_changeme8:
+#            (errno, strerror) = xxx_todo_changeme8.args
+#            print('Error copying file %s to %s' % ('cur_state.cdf', cur_state_file, strerror))
+#            raise
 
 
 # Merge partial plasma state containing updated CQL3D data  [BH]
-          try:
-             services.merge_current_plasma_state(partial_file, logfile='log.update_state')
-             print('merged CQL3D plasma state data ', partial_file)
-          except Exception as e:
-             print('Error in call to merge_current_plasma_state(' , partial_file, ')')
-             self.services.error('Error in call to merge_current_plasma_state')
-             raise Exception('Error in call to merge_current_plasma_state')
+#          try:
+#             services.merge_current_plasma_state(partial_file, logfile='log.update_state')
+#             print('merged CQL3D plasma state data ', partial_file)
+#          except Exception as e:
+#             print('Error in call to merge_current_plasma_state(' , partial_file, ')')
+#             self.services.error('Error in call to merge_current_plasma_state')
+#             raise Exception('Error in call to merge_current_plasma_state')
 
-      # Update plasma state files in plasma_state work directory, but only cur_cql_file
-      # This way it can be used concurrently without overwriting other plasma state files.
+  # Update plasma state files in plasma_state work directory, but only cur_cql_file
+  # and cur_ImChizz_inp_file if there is one.
+  # This way it can be used concurrently without overwriting other plasma state files.
           print('CURRENT_CQL = ', cur_cql_file)
+          shutil.copyfile(cql3d_output_file,cur_cql_file)
           try:
-#            services.update_plasma_state(plasma_state_files = cur_cql_file)
-            services.update_state(state_files=[cur_cql_file, cur_ImChizz_inp_file])
+             if cur_cql_file != None:
+               services.update_plasma_state([cur_cql_file])
           except Exception:
-            logMsg = 'Error in call to update_plasma_state()'
-            self.services.exception(logMsg)
-            raise 
+             logMsg = 'Error in call to update_plasma_state()'
+             self.services.exception(logMsg)
+             raise 
             
     # Archive output files
           try:

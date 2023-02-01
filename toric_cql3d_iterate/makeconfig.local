@@ -26,7 +26,8 @@ F77_INCLUDE_PREFIX = -I
 
 INSTALL = /usr/bin/install
 
-NTCCHOME=/project/projectdirs/atom/atom-install-edison/ntcc-intel
+#NTCCHOME=/project/projectdirs/atom/atom-install-edison/ntcc-intel
+NTCCHOME = /project/projectdirs/atom/DELETEME_old_hopper_edison_dirs/atom-install-edison/ntcc-intel-oldOS
 F90FLAGS += -I${NTCCHOME}/mod
 
 

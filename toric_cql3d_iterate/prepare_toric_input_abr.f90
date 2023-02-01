@@ -131,6 +131,7 @@
       character(80), dimension(:) :: files_toric(max_runs)
       character(80) :: path 
       integer :: num_runs, npsi_qld,wdelta,iH_Dql,ispec_Dql
+      integer :: subsmth
       real(rspec) :: d_u, enorm=0._rspec, uasp=1.0, pwtot=1.0
       real(rspec) :: deltapsi,ntres
       real(rspec) :: rho_min, rho_max
@@ -211,7 +212,7 @@
 
 !   inumin vectors for arg_inumin_Mode == Maxwell or nonMaxwell modes
       integer, dimension(:) :: INUMIN_Maxwell(0:nspmx) = 0
-      integer, dimension(:) :: INUMIN_nonMaxwell(0:nspmx) = (/2, (0,I=1,nspmx) /)
+      !integer, dimension(:) :: INUMIN_nonMaxwell(0:nspmx) = (/2, (0,I=1,nspmx) /) SF not used
 
 ! SF RF minority is now controlled through state initiation and feedback
 !    from CQL3D/ABJ. This namelist served only to add complexity and increase
@@ -250,7 +251,7 @@
      &     num_runs, path, files_toric,  &
      &     npsi_qld, d_u, rho_min, rho_max, &      
      &     enorm, wdelta, deltapsi, ispec_Dql, iH_Dql, &
-     &     pw_nphi, pwtot
+     &     pw_nphi, pwtot,subsmth
       
 !originally in t0_mod_toi2mex.F
 !specifies numerical equilibrium (EFIT usually) settings
@@ -514,7 +515,7 @@
 		 if (trim(arg_inumin_Mode) == 'Maxwell') then
 			inumin = INUMIN_Maxwell
 		 else if (trim(arg_inumin_Mode) == 'nonMaxwell') then
-			inumin = INUMIN_nonMaxwell
+			inumin = inumin_maxwell
 		 else
 			write (*,*) 'prepare_torlh_input_abr: unknown arg_inumin_Mode = ', arg_inumin_Mode
 			stop
@@ -545,7 +546,7 @@
 		 if (trim(arg_inumin_Mode) == 'Maxwell') then
 			inumin = INUMIN_Maxwell
 		 else if (trim(arg_inumin_Mode) == 'nonMaxwell') then
-			inumin = INUMIN_nonMaxwell
+			inumin = INUMIN_Maxwell
 		 else
 			write (*,*) 'prepare_torlh_input_abr: unknown arg_inumin_Mode = ', arg_inumin_Mode
 			stop
@@ -616,10 +617,10 @@
               form='formatted')
       INQUIRE(inp_unit, exist=lex)
       IF (lex) THEN
-         IF (trim(toricmode) == 'qldci') THEN
+         IF (trim(toricmode) == 'qldci_CQL3D') THEN
              write (*,*) 'reading namelist qldceinp'
        			 read(inp_unit, nml = qldciinp)
-       			 !WRITE (*, nml = qldceinp)
+       			 WRITE (*, nml = qldciinp)
        			 WRITE (*,*)
          END IF
 
@@ -682,6 +683,9 @@
          toric_to_alla(isp)=ps%rfmin_to_alla(1)
          atm(isp) = NINT(ps%m_ALLA(ps%rfmin_to_alla(1))/ps_mp)
          azi(isp) = NINT(ps%q_ALLA(ps%rfmin_to_alla(1))/ps_xe)
+         if(trim(arg_inumin_mode) .eq. 'nonMaxwell')then
+            inumin(isp-1) = 1 !SF turn on abj mode for minority species
+         end if
       endif
 
       if (allocated(ps%nfusi)) then
@@ -771,9 +775,9 @@
 	  psi_poloidal_eq = ps%psipol
       call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, psi_poloidal_eq, x_torlh, ierr )
       x_torlh = sqrt(x_torlh/x_torlh(nprodt))
-	  write (*,*) " "
-	  write (*,*) "x_torlh = "
-	  write (*,*) x_torlh
+	  !write (*,*) " "
+	  !write (*,*) "x_torlh = "
+	  !write (*,*) x_torlh
 ! DBB ends
 
 !     write(out_unit,'(A10)')  'rho'
@@ -786,7 +790,7 @@
 ! PTB ends
 
       write(out_unit,'(A10)')  'n_e'
-      write(*,*) 'ps%ns(1,0)', ps%ns(1,0)
+      !write(*,*) 'ps%ns(1,0)', ps%ns(1,0)
 !
 ! Interpolate the electron density profile from the Plasma State grid to the Toric grid
 ! N.B. Toric grid maps directly to rho grid ps%rho, same radii.
@@ -796,9 +800,9 @@
 !
          call ps_user_1dintrp_vec(ps%rho, ps%rho_eq, ps%vol(:), vol_int(:),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS volume onto Toric grid'
-	  write (*,*) " "
-	  write (*,*) "interpolated vol_int = "
-	  write (*,*) vol_int
+	  !write (*,*) " "
+	  !write (*,*) "interpolated vol_int = "
+	  !write (*,*) vol_int
 
 !
 ! PTB Compare the volume average of the orginal density profile from the Plasma State
@@ -818,17 +822,17 @@
          end do
          Q_ps = Q_ps / ps%vol(nprodt)
          Q_int = Q_int / ps%vol(nprodt)
-      write(*,*) '<n_e(m-3)-PS> =',  Q_ps
-      write(*,*) '<n_e(m-3)-Interpolated> =', Q_int
+      !write(*,*) '<n_e(m-3)-PS> =',  Q_ps
+      !write(*,*) '<n_e(m-3)-Interpolated> =', Q_int
       write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
 
       write(out_unit,'(A10)')  't_e'
          call ps_user_1dintrp_vec(ps%rho, x_orig, ps%Ts(:,0), tmp_prof(:),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS electron temperature profile onto Torlh grid'
       write(out_unit,'(5E16.9)')  tmp_prof   !keV
-	  write (*,*) " "
-	  write (*,*) "tmp_prof = "
-	  write (*,*) tmp_prof
+	  !write (*,*) " "
+	  !write (*,*) "tmp_prof = "
+	  !write (*,*) tmp_prof
 ! PTB - begins
         call ps_tha_fetch (ierr, ps, tol_zero, &
              ns_tha, ts_tha, v_pars, iwarn)
@@ -838,19 +842,19 @@
          call ps_user_1dintrp_vec(ps%rho, x_orig, ns_tha(:,isp), tmp_prof(:),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS ion density profile onto Torlh grid'
          write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
-	     write (*,*) " "
-	     write (*,*) "density_prof = "
-	     write (*,*) tmp_prof
+	   !  write (*,*) " "
+	   !  write (*,*) "density_prof = "
+	   !  write (*,*) tmp_prof
 
          write(out_unit,'(A4,I2.2)')  't_i_',isp
-         write(*,*) "Thermal ion name, A, Z, dens, temp = "
-         write(*,*) trim(ps%alla_name(isp)), atm(isp),azi(isp),ns_tha(1,isp),ts_tha(1,isp)
+         !write(*,*) "Thermal ion name, A, Z, dens, temp = "
+         !write(*,*) trim(ps%alla_name(isp)), atm(isp),azi(isp),ns_tha(1,isp),ts_tha(1,isp)
          call ps_user_1dintrp_vec(ps%rho, x_orig, Ts_tha(:,isp), tmp_prof(:),ierr )  !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS ion temperature profile onto Torlh grid'
          write(out_unit,'(5E16.9)')  tmp_prof !keV
-	     write (*,*) " "
-	     write (*,*) "temperature_prof = "
-	     write (*,*) tmp_prof
+	    ! write (*,*) " "
+	    ! write (*,*) "temperature_prof = "
+	    ! write (*,*) tmp_prof
       end do
 ! PTB - ends
 
@@ -917,9 +921,9 @@
          tmp_prof(:) = ps%fracmin(1)*tmp_prof(:)
          write(out_unit,'(A4,I2.2)')  'n_rfmin_',isp
          write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
- 	      write (*,*) " "
-	      write (*,*) "rf minority density = "
-	      write (*,*) tmp_prof
+ 	      !write (*,*) " "
+	      !write (*,*) "rf minority density = "
+	      !write (*,*) tmp_prof
 
 !
 ! Next update ps%nmini in the Plasma State with th new minority ion density profile, by mapping
@@ -929,9 +933,9 @@
                ps%nmini(:,1),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating new minority desnity profile onto PS grid'
         endif
- 	      write (*,*) " "
-	      write (*,*) "rf minority density put back into plasma state = "
-	      write (*,*) ps%nmini(:,1)
+ 	      !write (*,*) " "
+	      !write (*,*) "rf minority density put back into plasma state = "
+	      !write (*,*) ps%nmini(:,1)
 
 !
 ! If (kdens_rfmin .EQ. 'data') then assume nmini is available in the PS, read it, and interpolate
@@ -959,9 +963,9 @@
 				   tmp_prof(:),ierr ) !DBB 6-27_2017
 			 if(ierr .ne. 0) stop 'error interpolating PS RF minority temperature profile onto Torlh grid'
 			 write(out_unit,'(5E16.9)')  tmp_prof !keV
-			  write (*,*) " "
-			  write (*,*) "rf minority tail temperature interpolated from Ts_tha(:,1) = "
-			  write (*,*) tmp_prof
+			  !write (*,*) " "
+			  !write (*,*) "rf minority tail temperature interpolated from Ts_tha(:,1) = "
+			  !write (*,*) tmp_prof
          endif
 !
 ! If isThermal=2 then assume the RF minority tail temperature data is available in the PS. In this
