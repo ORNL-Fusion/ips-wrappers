@@ -1,3 +1,0 @@
-Different configuarations may be desired for model simulations.  To change the config,
-copy all of the files in a config directory, e.g., CMOD into this directory--there should be three:
-an nml, a geq, and a ps.  The latter two are named in the nml.  The nml also containes parabolic probile parameters in the event a ps is not available.
