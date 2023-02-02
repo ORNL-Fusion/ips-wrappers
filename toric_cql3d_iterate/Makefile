@@ -1,12 +1,12 @@
 VPATH = $(PWD)
 OBJDIR= .
 
-include Makefile.include
+include Makefile.config.perlmutter
 
 F90_SRC = $(shell ls *.f90)
 
 OBJS = $(F90_SRC:%.f90=$(OBJDIR)/%.o) $(F95_SRC:%.f95=$(OBJDIR)/%.o)
-F90_MOD_INCLUDE =  $(F90_MOD_INCLUDE_PREFIX). $(F90_MOD_INCLUDE_PREFIX)$(IPS_ROOT)/include $(F90_MOD_INCLUDE_PREFIX)$(NETCDFHOME)/include
+F90_MOD_INCLUDE =  $(F90_MOD_INCLUDE_PREFIX). $(F90_MOD_INCLUDE_PREFIX)$(NETCDFHOME)/include
 
 EXECUTABLES = do_toric_init_abr prepare_toric_input_abr prepare_abj_input
 
@@ -30,13 +30,13 @@ toric_utils_mod.o:
 do_toric_init_abr.o: toric_utils_mod.o
 
 do_toric_init_abr: do_toric_init_abr.o toric_utils_mod.o toric_namelists.h
-	$(F90) -g -traceback -o $@ $@.o toric_utils_mod.o $(LIBS)
+	$(F90) -o $@ $@.o toric_utils_mod.o $(LIBS)
 
 prepare_toric_input_abr: prepare_toric_input_abr.o
-	$(F90) -g -traceback -o $@ $@.o $(LIBS)
+	$(F90) -o $@ $@.o $(LIBS)
 
 prepare_abj_input: prepare_abj_input.o
-	$(F90) -g -traceback -o $@ $@.o $(LIBS)
+	$(F90) -o $@ $@.o $(LIBS)
 
 install:
 	$(INSTALL) $(EXECUTABLES) $(SCRIPTS) $(IPS_ROOT)/bin
