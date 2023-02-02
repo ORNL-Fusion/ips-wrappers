@@ -1,20 +1,12 @@
 VPATH = $(PWD)
 OBJDIR= .
 
-include Makefile.include
+include Makefile.config.perlmutter
 
 F90_SRC = $(shell ls *.f90)
 
 OBJS = $(F90_SRC:%.f90=$(OBJDIR)/%.o) $(F95_SRC:%.f95=$(OBJDIR)/%.o)
-F90_MOD_INCLUDE =  $(F90_MOD_INCLUDE_PREFIX). $(F90_MOD_INCLUDE_PREFIX)$(IPS_ROOT)/include $(F90_MOD_INCLUDE_PREFIX)$(NETCDFHOME)/include
-
-#MDSPLUSLIB = -L$(MDSPLUS_ROOT)/lib -L$(GLOBUS_LOCATION)/lib -lMdsLib -lglobus_xio_gcc64
-#LAPACKLIB= -L$(MKLHOME)/lib/64 -lmkl_lapack -lmkl_ipf -lguide -lpthread
-#NETCDFLIB= -L$(NETCDFHOME)/lib -lnetcdf
-#NTCCLIB = -L$(NTCCHOME)/lib -lxplasma2 -lgeqdsk_mds -lmdstransp -lvaxonly -lnscrunch -lfluxav -lr8bloat -lpspline -lezcdf -llsode -llsode_linpack -lcomput -lportlib
-#PLASMA_STATE_LIB = -L$(IPS_ROOT)/lib -lplasma_state -lplasma_state_kernel -lps_xplasma2
-
-#LIBS = $(PLASMA_STATE_LIB) $(NTCCLIB) $(MDSPLUSLIB) $(NETCDFLIB) $(LAPACKLIB) -L$(IPS_ROOT)/lib -lswim-utils
+F90_MOD_INCLUDE =  $(F90_MOD_INCLUDE_PREFIX). $(F90_MOD_INCLUDE_PREFIX)$(NETCDFHOME)/include
 
 EXECUTABLES = model_epa model_epa_ps_file_init model_epa_ps_file_init_no_RF model_EPA_mdescr
 SCRIPTS = model_epa.py model_epa_ps_init.py model_epa_ps_file_init.py  py_model_epa_ps_init.py model_epa_ps_file_init_no_RF.py model_EPA_mdescr.py
