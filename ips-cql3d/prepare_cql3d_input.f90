@@ -190,10 +190,11 @@
 c----------------------------------------
 c     type declaration and storage of all namelists variables
 c-----------------------------------
-      include 'name.h'
       include 'name_decl.h'
-      include 'frname.h'
       include 'frname_decl.h'
+      include 'name.h'
+      include 'frname.h'
+      
 
 
       character*8 ips_mode,cql3d_mode,cql3d_output,restart,ps_add_nml
@@ -314,9 +315,9 @@ c     F2003-syntax: command_argument_count()/get_command_argument(,)
       write(*,*)'prepare_cql3d_input command line arguments: ',
      +  ips_mode,'  ',cql3d_mode,'  ',cql3d_output,'  ',cql3d_nml,
      +  '  ',restart,'  ',ps_add_nml
-      if (nsteps_str_present == .TRUE.) write(*,*) nsteps_str
-      if (deltat_str_present == .TRUE.) write(*,*) deltat_str
-      if (enorm_str_present == .TRUE.) write(*,*) enorm_str
+      if (nsteps_str_present) write(*,*) nsteps_str
+      if (deltat_str_present) write(*,*) deltat_str
+      if (enorm_str_present) write(*,*) enorm_str
 
 
 c-----------------------------------------------------------------------

@@ -14,7 +14,7 @@ c..................................................................
 
       namelist/setup/
      1  acoefne,acoefte,
-     1  ampfmod,nampfmax,nonampf,ampferr,
+     1  ampfmod,ampfadd,nampfmax,nonampf,ampferr,bctimescal,bctshift,
      1  bnumb,btor,bth,bootst,bootcalc,bootupdt,bootsign,nonboot,jhirsh,
      1  contrmin,constr,chang,colmodl,
      1  deltabdb,denpar,droptol,dtr,dtr1,
@@ -47,13 +47,14 @@ c..................................................................
      1  nr_delta,nz_delta,nt_delta,
      1  nr_f4d,nz_f4d,nv_f4d,nt_f4d,
      1  npwr,negy,ntorloss,njene,njte,njti,
-     1  nstop,nondtr1,nplot,ncoef,nchec,ncont,nrstrt,nstps,nfpld,
+     1  nstop,nondtr1,nplot,nsave,ncoef,nchec,ncont,nrstrt,nstps,nfpld,
      1  noncntrl,nonel,noffel,nonvphi,noffvphi,nonavgf,nofavgf,
      1  nonloss,noffloss,nummods,numixts,
      1  numby,negyrg,
      1  oldiag,
      1  plt3d,pltvs,partner,paregy,peregy,pegy,
-     1  zeffin,zeffin_t,zeffscal,vphiplin,vphiplin_t,vphiscal,
+     1  zeffin,zeffin_t,zeffscal,zrelax,zrelax_exp,
+     &  vphiplin,vphiplin_t,vphiscal,
      1  pltdn,pltvecal,pltvecc,pltvecrf,pltvece,
      1  pltstrm,pltflux,pltmag,pltsig,pltlim,pltlimm,
      1  pltrst,plturfb,pltvflu,pltra,pltfvs,pltd,pltprpp,pltfofv,pltlos,
@@ -79,13 +80,34 @@ c..................................................................
      1  mpwrelec,npwrelec,
      1  redenc,redenb,temp_den,tempc,tempb,zeffc,zeffb,elecc,elecb,
      1  vphic,vphib,xjc,xjb,xjin_t,totcrt,efswtch,efswtchn,
-     1  efiter,efflag,curr_edge,efrelax,efrelax1,currerr,
+     1  efiter,efflag,curr_edge,efrelax,efrelax1,efrelax_exp,currerr,
      1  bctime,nbctime,
+     &  read_data, read_data_filenames, !BH,YuP[2021-01-21] namelist variables to read data files
+     &  temp_min_data, ![keV] Lower limit, to adjust Te and Ti data
      1  zmax,
-     1  fow,outorb,nmu,npfi,nsteps_orb,nptsorb,i_orb_width,iorb2,
-     1  j0_ini,j0_end,inc_j0, i0_ini,i0_end,inc_i0,
-     1  j2_ini,j2_end,inc_j2, i2_ini,i2_end,inc_i2
+     1  fow,outorb,nmu,npfi,nsteps_orb,nptsorb,i_orb_width,
+     
+     &  adpak,
+     &  imp_type, ! for gamafac.eq."hesslow" !YuP[2019-07-31]--[2019-09]
+     &  imp_depos_method, imp_ne_method, tstart_imp, dens0_imp,  !YuP[2019-12-05]
+     &  imp_bounde_collscat, imp_bounde_collslow,
+     &  model_dens_nD0, dens_nD0_b, dens_nD0_l, adpak_tau_r,
+     & pellet, pellet_Rstart, pellet_tstart, pellet_V, pellet_M0,
+     & pellet_rp0, pellet_rcloud1, pellet_rcloud2,
+     & pellet_pn, pellet_pt, pellet_pm,
+     & ipellet_method, pellet_fract_rem, 
+     & ipellet_iter_max, pellet_iter_accur, pellet_Cablation,
+     & temp_expt_Tend, temp_expt_tau0, temp_expt_tau1,
+     & temp_expt_tstart,
+     
+     & cfp_integrals
+       !YuP[2020-07-02] Added, for usage in ainalloc,tdchief,cfpcoefn
+       !character*8 cfp_integrals ! "enabled" or "disabled"(by default)
 
+! Not ready yet:
+!     & ,dens_expt_Tend, dens_expt_tau0, dens_expt_tau1,
+!     & dens_expt_tstart
+     
 c..................................................................
 c     Namelist (trsetup) for "tr" transport routines
 c..................................................................
@@ -130,7 +152,17 @@ c..................................................................
      1  nconteq,nconteqn,
      1  povdelp,
      1  rtol,rmag,rbox,rboxdst,
-     1  zbox
+     1  zbox,  b00_mirror,
+     +  eq_miller_rmag,
+     +  eq_miller_zmag,
+     +  eq_miller_btor,
+     +  eq_miller_radmin,
+     +  eq_miller_cursign,
+     +  eq_miller_psimag,eq_miller_psilim,
+     +  eq_miller_psi_n,eq_miller_psi_m,
+     +  eq_miller_deltaedge,
+     +  eq_miller_kappa,
+     +  eq_miller_drr0     
 
 c..................................................................
 c      Namelist (rfsetup) for "urf", "vlh", "vlf", rdcmod  modules.

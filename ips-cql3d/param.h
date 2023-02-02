@@ -23,6 +23,7 @@ c     to contribute to the collision integral.
 c
 c     mx is the order of Legendre terms used in Rosenbluth
 c     expansions of the collision integral.
+cBH180901/YuP: Following restriction on mx has been removed.
 c     NOTE:   If relativ="enabled" mx => 2,
 c             BUT, 2*jx*(mx+3)*(mx+3) <= (iyp1+1)*(jxp1+1) to
 c                  avoid overwrite by tamt1 and tamt2.
@@ -54,9 +55,10 @@ c..................................................................
 c     PARAMETERS CHOSEN BY USER FOLLOW
 
       character version*64
-      parameter(version="cql3d_cswim_180101.2")
+      parameter(version="cql3d_git_210125.1")
       character precursr*64
-      parameter(precursr="cql3d_cswim_180101.1")
+      parameter(precursr="cql3d_git_201207.0") !=cql3d_git_200101.3
+                !cql3d_git_190309.1 with updates
       parameter(machinea=2)
 cBH081218:  Present usage, machinea=2 works with 32- and 64-bit machines
       parameter(ngena=4)
@@ -70,6 +72,8 @@ ccc      parameter(noncha=2000) YuP-101221: Not used anymore
       parameter(nbctimea=101)
       parameter(ndtr1a=10)
       parameter(nplota=10)
+      parameter(nsavea=10)   !Max number of distn time steps saves
+                             !as specified through n.eq.nsave()
       parameter(nefitera=10)
       parameter(ntavga=16)
 
@@ -102,7 +106,8 @@ c     equatorial pitch angle.
 c
 c..................................................................
 
-      parameter (i0param=1001)
+cBH180720      parameter (i0param=1001)
+      parameter (i0param=2001)
 
 
 c*******************************************************************
@@ -341,17 +346,14 @@ c     (1 byte contains 8 bits).
 c     It is used for packing data for urf subroutines.
 c     jjxa is 1st multiple of 8 greater than jxa.
       parameter(ibytes=8/machinea)      
-ccc      parameter(jjxa=((jxa-1)/ibytes)*ibytes+ibytes)
-ccc      parameter(ipacka=jjxa/ibytes*nrayelta*nraya) !moved to urfalloc
 
 c     Set up new dimensioning for ifct1_,ifct2_ (from previous
 c     1 byte per word to 2 bytes per word, improving accuracy.
-c     BH, 050812).
+c     BH, 050812). ![2020-12-18] Also for ilowp and iupp arrays.
 c     ibytes16 is number of 16-bit words per integer word.
-c     ipack16a is number of integer words required to store 1 set
+c     ipack16 is number of integer words required to store 1 set
 c     of ray data (*jjxa) in the ifct1_,ifct2_ 16-bit-word arrays.
       parameter(ibytes16=ibytes/2)
-ccc      parameter(ipack16a=jjxa/ibytes16*nrayelta*nraya)!->to urfalloc
 
 cBH070118      parameter (nrada=129,ninta=8,nint1a=ninta+1)
       parameter (nrada=nnra,ninta=8,nint1a=ninta+1)
