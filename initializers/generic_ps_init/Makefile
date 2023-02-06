@@ -9,7 +9,7 @@ OBJS = $(F90_SRC:%.f90=$(OBJDIR)/%.o) $(F95_SRC:%.f95=$(OBJDIR)/%.o)
 F90_MOD_INCLUDE =  $(F90_MOD_INCLUDE_PREFIX). $(F90_MOD_INCLUDE_PREFIX)$(NETCDFHOME)/include
 
 EXECUTABLES = model_epa model_epa_ps_file_init model_epa_ps_file_init_no_RF model_EPA_mdescr
-SCRIPTS = model_epa.py model_epa_ps_init.py model_epa_ps_file_init.py  py_model_epa_ps_init.py model_epa_ps_file_init_no_RF.py model_EPA_mdescr.py
+SCRIPTS = generic_ps_init.py
 
 TARGETS = $(EXECUTABLES)
 
@@ -23,16 +23,7 @@ all: .depend
         fi;\
 	done;
 
-model_epa:model_epa.o
-	$(F90) -o $@ $@.o $(LIBS)
-
-model_epa_ps_file_init:model_epa_ps_file_init.o
-	$(F90) -o $@ $@.o $(LIBS)
-
-model_epa_ps_file_init_no_RF:model_epa_ps_file_init_no_RF.o
-	$(F90) -o $@ $@.o $(LIBS)
-
-model_EPA_mdescr:model_EPA_mdescr.o
+generic_ps_init: generic_ps_init.o
 	$(F90) -o $@ $@.o $(LIBS)
 
 clean:
