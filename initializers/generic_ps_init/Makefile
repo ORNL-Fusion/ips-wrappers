@@ -8,7 +8,7 @@ F90_SRC = $(shell ls *.f90)
 OBJS = $(F90_SRC:%.f90=$(OBJDIR)/%.o) $(F95_SRC:%.f95=$(OBJDIR)/%.o)
 F90_MOD_INCLUDE =  $(F90_MOD_INCLUDE_PREFIX). $(F90_MOD_INCLUDE_PREFIX)$(NETCDFHOME)/include
 
-EXECUTABLES = model_epa model_epa_ps_file_init model_epa_ps_file_init_no_RF model_EPA_mdescr
+EXECUTABLES = generic_ps_init
 SCRIPTS = generic_ps_init.py
 
 TARGETS = $(EXECUTABLES)
