@@ -1,7 +1,7 @@
 VPATH = $(PWD)
 OBJDIR= .
 
-include Makefile.include
+include Makefile.config.perlmutter
 
 F90_SRC = $(wildcard *.f90)
 OBJS = $(F90_SRC:%.f90=%.o)
@@ -35,7 +35,8 @@ clean:
 distclean: clean
 	$(RM) .depend
 
-.depend: $(F90MOD_SRC) $(F90_SRC)
-	$(MAKEDEPF90) -b ../obj $(F90MOD_SRC) $(F90_SRC) > $@
+.depend: $(F90MOD_SRC) $(F90_SRC) $(F95_SRC)
+	touch .depend
+	$(MAKEDEPF90) -b . $(F90MOD_SRC) $(F90_SRC) $(F95_SRC) > $@
 
 -include .depend
