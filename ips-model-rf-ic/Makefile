@@ -6,7 +6,7 @@ include Makefile.config.perlmutter
 F90_SRC = $(wildcard *.f90)
 OBJS = $(F90_SRC:%.f90=%.o)
 
-F90_MOD_INCLUDE =  $(F90_MOD_INCLUDE_PREFIX). $(F90_MOD_INCLUDE_PREFIX)$(IPS_ROOT)/include
+F90_MOD_INCLUDE =  $(F90_MOD_INCLUDE_PREFIX). $(F90_MOD_INCLUDE_PREFIX)$(NETCDFHOME)/include
 
 EXECUTABLES = model_RF_IC
 SCRIPTS =  model_RF_IC.py

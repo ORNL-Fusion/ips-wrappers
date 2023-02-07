@@ -2,7 +2,6 @@ MAKEDEPF90=/global/common/software/atom/perlmutter/binaries/makedepf90/default/m
 
 
 NTCCHOME=/global/cfs/cdirs/atom/atom-install-perlmutter/ntcc
-#NTCCHOME=$(HOME)/ntcc-22.1.4
 
 #MKLHOME=$(CRAY_LD_LIBRARY_PATH)
 NETCDFHOME=$(NETCDF_DIR)
@@ -24,7 +23,6 @@ F90_FREEFORM_FLAG = -free
 F90_FIXEDFORM_FLAG = -fixed
 F90_MOD_INCLUDE_PREFIX = -I
 F90_INCLUDE_PREFIX = -I
-#F90FLAGS += -I${NTCCHOME}/mod
 
 F77 = ftn
 F77FLAGS = -g -fpp -extend-source
