@@ -29,7 +29,7 @@ from ipsframework import Component
 class model_EPA(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
 
 # ------------------------------------------------------------------------------
 #
@@ -40,7 +40,7 @@ class model_EPA(Component):
 # ------------------------------------------------------------------------------
 
     def init(self, timeStamp):
-        print 'model_epa.init() called'
+        print('model_epa.init() called')
 
         services = self.services
 
@@ -53,11 +53,11 @@ class model_EPA(Component):
         cur_eqdsk_file = self.services.get_config_param('CURRENT_EQDSK')
         change_bin = os.path.join(self.BIN_PATH, 'model_epa')
 
-        print 'Executing ', [change_bin, cur_state_file, 'INIT', timeStamp]
+        print('Executing ', [change_bin, cur_state_file, 'INIT', timeStamp])
         retcode = subprocess.call([change_bin, cur_state_file, next_state_file,
         cur_eqdsk_file, 'INIT', timeStamp])
         if (retcode != 0):
-            print 'Error executing ', change_bin
+            print('Error executing ', change_bin)
             return 1
 
 # Update (original) plasma state
@@ -74,10 +74,10 @@ class model_EPA(Component):
 # ------------------------------------------------------------------------------
 
     def step(self, timeStamp):
-        print 'model_epa.step() called'
+        print('model_epa.step() called')
 
         if (self.services == None) :
-            print 'Error in model_epa: step () : init() function not called before step().'
+            print('Error in model_epa: step () : init() function not called before step().')
             sys.exit(1)
         services = self.services
 
@@ -94,7 +94,7 @@ class model_EPA(Component):
         retcode = subprocess.call([change_bin, cur_state_file, next_state_file,
         cur_eqdsk_file, 'STEP', timeStamp])
         if (retcode != 0):
-            print 'Error executing command: ', change_bin
+            print('Error executing command: ', change_bin)
             sys.exit(1)
 
 # Update plasma state
@@ -113,4 +113,4 @@ class model_EPA(Component):
 
 
     def finalize(self, timestamp=0.0):
-        print 'model_epa finalize() called'
+        print('model_epa finalize() called')

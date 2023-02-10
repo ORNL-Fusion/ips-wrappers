@@ -51,7 +51,7 @@ from ipsframework import Component
 class model_EPA(Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
 
 # ------------------------------------------------------------------------------
 #
@@ -62,7 +62,7 @@ class model_EPA(Component):
 # ------------------------------------------------------------------------------
 
     def init(self, timeStamp):
-        print 'model_epa.init() called'
+        print('model_epa.init() called')
 
         if (self.services == None) :
             services.error('Error in model_EPA init (): No self.services')
@@ -75,9 +75,9 @@ class model_EPA(Component):
             cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
 
         except:
-            print 'model_epa: error in getting config parameters'
+            print('model_epa: error in getting config parameters')
             services.error('model_epa: error in getting config parameters')
-            raise Exception, 'model_epa: error in getting config parameters'
+            raise Exception('model_epa: error in getting config parameters')
 
     # Get component-specific configuration parameters. Note: Not all of these are
     # used in 'init' but if any are missing we get an exception now instead of
@@ -93,64 +93,64 @@ class model_EPA(Component):
             input_eqdsk_file = self.INPUT_EQDSK_FILE
 
         except:
-            print 'model_epa init: error getting component-specific config parameters'
+            print('model_epa init: error getting component-specific config parameters')
             services.error('model_epa: error getting component-specific\
             config parameters')
-            raise Exception, 'model_epa: error getting model_epa-specific\
-            config parameters'
+            raise Exception('model_epa: error getting model_epa-specific\
+            config parameters')
             
     # Copy plasma state files over to working directory
         try:
           services.stage_state()
-        except Exception, e:
-          print 'Error in call to stage_state()' , e
+        except Exception as e:
+          print('Error in call to stage_state()' , e)
           services.error('Error in call to stage_state()')
-          raise Exception, 'Error in call to stage_state()'
+          raise Exception('Error in call to stage_state()')
         
     # Get input files  
         try:
           services.stage_input_files(INPUT_FILES)
-        except Exception, e:
-          print 'Error in call to stage_input_files()' , e
+        except Exception as e:
+          print('Error in call to stage_input_files()' , e)
           services.error('Error in call to stage_input_files()')
-          raise Exception, 'Error in call to stage_input_files()'
+          raise Exception('Error in call to stage_input_files()')
           
      # Copy input_state_file to generic name "input_state_file"
         try:
             subprocess.call(['cp', input_state_file, "input_state_file" ])
-        except Exception, e:
-          print 'Error in renaming input_state_file' , e
+        except Exception as e:
+          print('Error in renaming input_state_file' , e)
           services.error('Error in renaming input_state_file')
-          raise Exception, 'Error in renaming input_state_file'
-          raise Exception, 'Error in call to stage_input_files()'
+          raise Exception('Error in renaming input_state_file')
+          raise Exception('Error in call to stage_input_files()')
                     
      # Copy input_eqdsk_file to generic name "input_eqdsk_file"
         try:
             subprocess.call(['cp', input_eqdsk_file, "input_eqdsk_file" ])
-        except Exception, e:
-          print 'Error in renaming input_eqdsk_file' , e
+        except Exception as e:
+          print('Error in renaming input_eqdsk_file' , e)
           services.error('Error in renaming input_eqdsk_file')
-          raise Exception, 'Error in renaming input_eqdsk_file'
+          raise Exception('Error in renaming input_eqdsk_file')
         
      # Copy input_eqdsk_file to cur_eqdsk_file
         try:
             subprocess.call(['cp', input_eqdsk_file, cur_eqdsk_file ])
-        except Exception, e:
-          print 'Error in renaming input_eqdsk_file' , e
+        except Exception as e:
+          print('Error in renaming input_eqdsk_file' , e)
           services.error('Error in renaming input_eqdsk_file')
-          raise Exception, 'Error in renaming input_eqdsk_file'
+          raise Exception('Error in renaming input_eqdsk_file')
         
         model_epa_bin = os.path.join(self.BIN_PATH, 'model_epa_ps_file_init')
 
 # Call model_epa
         epa_bin = os.path.join(BIN_PATH, 'model_epa_ps_file_init')
-        print 'Executing ', ' '.join([epa_bin, cur_state_file, cur_eqdsk_file, 'INIT', timeStamp])
+        print('Executing ', ' '.join([epa_bin, cur_state_file, cur_eqdsk_file, 'INIT', timeStamp]))
         cwd = os.getcwd()
         task_id = services.launch_task(NPROC, cwd, epa_bin, cur_state_file,
             cur_eqdsk_file, 'INIT', timeStamp)
         retcode = services.wait_task(task_id)
         if (retcode != 0):
-            print 'Error executing command: ', epa_bin
+            print('Error executing command: ', epa_bin)
             sys.exit(1)
 
 #         print 'Executing ', [model_epa_bin, cur_state_file, 'INIT', timeStamp]
@@ -165,18 +165,18 @@ class model_EPA(Component):
     # Update plasma state files in plasma_state work directory
         try:
           services.update_state()
-        except Exception, e:
-          print 'Error in call to update_state()', e
+        except Exception as e:
+          print('Error in call to update_state()', e)
           services.error('Error in call to update_state()')
-          raise Exception, 'Error in call to update_state()'
+          raise Exception('Error in call to update_state()')
 
 # "Archive" output files in history directory
         try:
           services.stage_output_files(timeStamp, self.OUTPUT_FILES)
-        except Exception, e:
-          print 'Error in call to stage_output_files()', e
+        except Exception as e:
+          print('Error in call to stage_output_files()', e)
           services.error('Error in call to stage_output_files()')
-          raise Exception, 'Error in call to stage_output_files()'
+          raise Exception('Error in call to stage_output_files()')
 
         return 0
 
@@ -190,7 +190,7 @@ class model_EPA(Component):
 # ------------------------------------------------------------------------------
         
     def restart(self, timeStamp):
-      print 'model_epa_ps_init.restart() called'
+      print('model_epa_ps_init.restart() called')
 
       services = self.services
       workdir = services.get_working_dir()
@@ -200,10 +200,10 @@ class model_EPA(Component):
             restart_root = services.get_config_param('RESTART_ROOT')
             restart_time = services.get_config_param('RESTART_TIME')
             services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
-      except Exception, e:
-            print 'Error in call to get_restart_files()' , e
+      except Exception as e:
+            print('Error in call to get_restart_files()' , e)
             self.services.error('model_epa_ps_init: error in call to get_restart_files()')
-            raise Exception, 'model_epa_ps_init: error in call to get_restart_files()'
+            raise Exception('model_epa_ps_init: error in call to get_restart_files()')
 
 # ------------------------------------------------------------------------------
 #
@@ -214,7 +214,7 @@ class model_EPA(Component):
 # ------------------------------------------------------------------------------
 
     def step(self, timeStamp):
-        print 'model_epa.step() called'
+        print('model_epa.step() called')
 
         if (self.services == None) :
             services.error('Error in model_epa step (): No self.services')
@@ -227,20 +227,20 @@ class model_EPA(Component):
             cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
 
         except:
-            print 'model_epa: error in getting config parameters'
+            print('model_epa: error in getting config parameters')
             services.error('model_epa: error in getting config parameters')
-            raise Exception, 'model_epa: error in getting config parameters'
+            raise Exception('model_epa: error in getting config parameters')
 
     # Get component-specific configuration parameters.
         try:
             NPROC = self.NPROC
             BIN_PATH = self.BIN_PATH
         except:
-            print 'model_epa init: error getting component-specific config parameters'
+            print('model_epa init: error getting component-specific config parameters')
             services.error('model_epa: error getting component-specific\
             config parameters')
-            raise Exception, 'model_epa: error getting model_epa-specific\
-            config parameters'
+            raise Exception('model_epa: error getting model_epa-specific\
+            config parameters')
 
     # Get optional config parameter
         try:
@@ -251,29 +251,29 @@ class model_EPA(Component):
     # Copy plasma state files over to working directory
         try:
           services.stage_state()
-        except Exception, e:
-          print 'Error in call to stage_state()' , e
+        except Exception as e:
+          print('Error in call to stage_state()' , e)
           services.error('Error in call to stage_state()')
-          raise Exception, 'Error in call to stage_state()'
+          raise Exception('Error in call to stage_state()')
       
     # Get input files  
         try:
           services.stage_input_files(self.INPUT_FILES)
-        except Exception, e:
-          print 'Error in call to stage_input_files()' , e
+        except Exception as e:
+          print('Error in call to stage_input_files()' , e)
           self.services.error('Error in call to stage_input_files()')
-          raise Exception, 'Error in call to stage_input_files()'
+          raise Exception('Error in call to stage_input_files()')
 
 # Call model_epa
         model_epa_bin = os.path.join(BIN_PATH, 'model_epa_ps_file_init')
-        print 'Executing ', [model_epa_bin, cur_state_file, 'STEP', timeStamp]
+        print('Executing ', [model_epa_bin, cur_state_file, 'STEP', timeStamp])
         cwd = services.get_working_dir()
         task_id  = services.launch_task(NPROC, cwd, model_epa_bin, cur_state_file,
             cur_eqdsk_file, 'STEP', timeStamp)
         retcode = services.wait_task(task_id)
         partial_file = cwd + '/EPA_' + cur_state_file
         if (retcode != 0):
-            print 'Error executing ', model_epa_bin
+            print('Error executing ', model_epa_bin)
             return 1
 
 # Either update plasma state or merge plasma state depending on STATE_WRITE_MODE
@@ -282,30 +282,30 @@ class model_EPA(Component):
         # Update plasma state files in plasma_state work directory
             try:
               services.update_state()
-              print 'Updated model_epa plasma state data ', cur_state_file
-            except Exception, e:
-              print 'Error in call to update_state()', e
+              print('Updated model_epa plasma state data ', cur_state_file)
+            except Exception as e:
+              print('Error in call to update_state()', e)
               services.error('Error in call to update_state()')
-              raise Exception, 'Error in call to update_state()'
+              raise Exception('Error in call to update_state()')
         else:
     # Merge partial plasma state containing updated EPA data
             try:
               cwd = services.get_working_dir()
               partial_file = cwd + '/EPA_' + cur_state_file
               services.merge_current_state(partial_file, logfile='log.update_state')
-              print 'Merged model_epa plasma state data ', partial_file
-            except Exception, e:
-              print 'Error in call to merge_current_state(' , partial_file, ')'
+              print('Merged model_epa plasma state data ', partial_file)
+            except Exception as e:
+              print('Error in call to merge_current_state(' , partial_file, ')')
               self.services.error('Error in call to merge_current_state')
-              raise Exception, 'Error in call to merge_current_state'
+              raise Exception('Error in call to merge_current_state')
 
     # Archive output files
         try:
           services.stage_output_files(timeStamp, self.OUTPUT_FILES)
-        except Exception, e:
-          print 'Error in call to stage_output_files()', e
+        except Exception as e:
+          print('Error in call to stage_output_files()', e)
           self.services.error('Error in call to stage_output_files()')
-          raise Exception, 'Error in call to stage_output_files()'
+          raise Exception('Error in call to stage_output_files()')
           
         return 0
 
@@ -317,7 +317,7 @@ class model_EPA(Component):
 # ------------------------------------------------------------------------------
 
     def checkpoint(self, timestamp=0.0):
-            print 'model_epa.checkpoint() called'
+            print('model_epa.checkpoint() called')
             services = self.services
             services.save_restart_files(timestamp, self.RESTART_FILES)
 
@@ -333,4 +333,4 @@ class model_EPA(Component):
 
 
     def finalize(self, timestamp=0.0):
-        print 'model_epa finalize() called'
+        print('model_epa finalize() called')
