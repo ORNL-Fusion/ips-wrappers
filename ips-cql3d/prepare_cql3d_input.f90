@@ -339,6 +339,14 @@ c-----------------------------------------------------------------------
       call urfindfl
       call frinitl
 
+! some new options that are annoying to deal with as they can cause random
+! run failures if set arbitrarily. these do not have defaults right now
+! in cql3d
+      read_data = 'disabled'
+      ipxy = 1
+      jpxy = 1
+
+      
 c-----------------------------------------------------------------------
 c     Read all namelists [storage setup in name_decl.h,frname_decl.h].
 c-----------------------------------------------------------------------
@@ -843,6 +851,10 @@ c      eqdskin=trim(ps%eqdsk_file)
 c     Reset cqlinput radcoord to ensure radial coord proportional
 c     to sqrt(tor flux)
       radcoord='sqtorflx'
+
+c SF new safety setting that prevents the latest version of CQL3D from
+c excluding collisions
+      CFP_INTEGRALS='disabled'
 
       
 

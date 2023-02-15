@@ -392,7 +392,7 @@ WRITE(*,*)
 
 		! V_loop profile
 		IF (TRIM(V_loop_profile_model_name) == 'Power_Parabolic') THEN
-			CALL Power_Parabolic(V_loop_0, V_loop_edge, alpha_V_loop_1, alpha_V_loop_2, zone_center, ps%V_loop(:))
+			CALL Power_Parabolic(V_loop_0, V_loop_edge, alpha_V_loop_1, alpha_V_loop_2, ps%rho(:), ps%V_loop(:))
 			!WRITE (*,*) 'model_EPA_mdescr:  V_loop profile = ', ps%V_loop(:)
 			!WRITE (*,*)
 		END IF

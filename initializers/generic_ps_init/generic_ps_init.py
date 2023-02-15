@@ -164,7 +164,7 @@ import getopt
 import shutil
 import string
 import datetime
-from  component import Component
+from ipsframework import Component
 from netCDF4 import *
 from simple_file_editing_functions import put_lines
 from get_IPS_config_parameters import get_global_param, get_component_param
@@ -276,7 +276,7 @@ class generic_ps_init (Component):
             if init_mode in ['touch_only', 'TOUCH_ONLY'] :
                 # Update plasma state
                 try:
-                    services.update_plasma_state()
+                    services.update_state()
                 except Exception as e:
                     print('Error in call to updatePlasmaState()', e)
                     raise
@@ -359,7 +359,7 @@ class generic_ps_init (Component):
             # init from machine description file and possibly sconfig file
             if init_mode in ['mdescr', 'MDESCR', 'mixed', 'MIXED'] :
                 MDESCR_FILE = get_component_param(self, services, 'MDESCR_FILE')
-                nml_lines.append(' mdescr_file = ' + MDESCR_FILE + '\n')
+                nml_lines.append(' mdescr_file = \"'+ MDESCR_FILE+'\"\n')
                 SCONFIG_FILE = get_component_param(self, services, 'SCONFIG_FILE', \
                 optional = 'TRUE')
 
@@ -448,9 +448,9 @@ class generic_ps_init (Component):
 
 # Update plasma state
         try:
-            services.update_plasma_state()
+            services.update_state()
         except Exception as e:
-            print('Error in call to updatePlasmaState()', e)
+            print('Error in call to update_state()', e)
             raise
 
 # "Archive" output files in history directory
@@ -467,7 +467,7 @@ class generic_ps_init (Component):
         print('generic_ps_init.checkpoint() called')
 
         services = self.services
-        services.stage_plasma_state()
+        services.stage_state()
         services.save_restart_files(timestamp, self.RESTART_FILES)
 
 

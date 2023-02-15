@@ -108,7 +108,7 @@ import getopt
 import shutil
 import string
 from netCDF4 import *
-from  component import Component
+from  ipsframework import Component
 
 class toric (Component):
 
@@ -460,9 +460,11 @@ class toric (Component):
                 # Run ABJ
                 abj_bin = self.ABJ_BIN
                 cmd_abj=self.ABJ_BIN
-                nproc_abj = self.NPROC_ABJ
+                nproc_abj = int(self.NPROC_ABJ)
+                nppn_abj = int(self.NPPN_ABJ)
+                cpp_abj = int(2 * int(128/int(nppn_abj)))
                 abj_log = os.path.join(workdir, 'log.abj')
-                task_id = services.launch_task(nproc_abj,cwd,abj_bin, logfile=abj_log)
+                task_id = services.launch_task(nproc_abj,cwd,abj_bin, logfile=abj_log,whole_nodes=True, task_ppn = nppn_abj, task_cpp= cpp_abj)
                 retcode = services.wait_task(task_id, timeout = 1800.0, delay = 60.)
                 if (retcode != 0):
                     services.error("ABJ Failed")
@@ -472,15 +474,17 @@ class toric (Component):
             # Launch toric executable
             # Set number of processors depending on toric_mode
             run_nproc = self.NPROC
+            run_nppn = self.NPPN
             if arg_toric_Mode == 'qldci':
                 run_nproc = self.NPROC_QLDCI
-
+                run_nppn = self.NPPN_QLDCI
             print('arg_toric_Mode = ', arg_toric_Mode, '   toric processors = ', run_nproc)
             time_limit = float(self.TORIC_TIME_LIMIT)
             # Try to launch TORIC multiple times if TORIC_TRIES > 1 in config file
             for i in range(int(self.NUM_TORIC_TRIES)):
                 print(' TORIC try number ', i + 1)
-                task_id = services.launch_task(run_nproc, cwd, toric_bin, logfile=toric_log)
+                coresPerProc = int(2 * int(128/int(run_nppn)))
+                task_id = services.launch_task(run_nproc, cwd, toric_bin, logfile=toric_log, whole_nodes=True, task_ppn = run_nppn, task_cpp = coresPerProc)
                 retcode = services.wait_task(task_id, timeout = time_limit, delay = 60.)
                 if (retcode == 0):
                     break

@@ -201,7 +201,7 @@
       integer ::   nspec,  mainsp, iudsym=0
 
       integer, dimension(:) ::                                       &
-     &             atm(nspmx)=0._rspec,       azi(nspmx)=0._rspec
+     &             atm(nspmx)=0,       azi(nspmx)=0
 
       real(rspec), dimension(:) ::                                   &
      &             aconc(nspmx)=0._rspec,     tempic(nspmx)=0._rspec,&
@@ -276,8 +276,8 @@
 ! Namelist in torica.inp for transfering data to process output
       namelist /ips/ toric_to_alla
 !other variables for output of profiles
-    integer :: nprodt, nproeq, kdiff_idens=1, kdiff_itemp=1
-
+    integer :: nprodt, nproeq, kdiff_idens=1, kdiff_itemp=1, N_tmp
+    
 !Not used yet
     real(rspec) :: prfin
 !I/O units
@@ -813,17 +813,17 @@
          do irho = 1,nprodt-1
             dVol = ps%vol(irho+1) - ps%vol(irho)
             Q_ps = Q_ps + 0.5_rspec * (ps%ns(irho,0) + &
-                   ps%ns(irho+1,0)) * dVol
+                   ps%ns(irho,0)) * dVol
          end do
          do irho = 1,nproeq-1
             dVol_int = vol_int(irho+1) - vol_int(irho)
             Q_int = Q_int +  0.5_rspec * (tmp_prof(irho) + &
-                   tmp_prof(irho+1)) * dVol_int
+                   tmp_prof(irho)) * dVol_int
          end do
          Q_ps = Q_ps / ps%vol(nprodt)
          Q_int = Q_int / ps%vol(nprodt)
-      !write(*,*) '<n_e(m-3)-PS> =',  Q_ps
-      !write(*,*) '<n_e(m-3)-Interpolated> =', Q_int
+      write(*,*) '<n_e(m-3)-PS> =',  Q_ps
+      write(*,*) '<n_e(m-3)-Interpolated> =', Q_int
       write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
 
       write(out_unit,'(A10)')  't_e'
@@ -915,7 +915,8 @@
 ! compute nmini = fracmin * ne
 !
         if (trim(ps%kdens_rfmin) .EQ. 'fraction') then
-         call ps_user_1dintrp_vec(x_torlh, ps%rho, ps%ns(:,0), &
+           
+         call ps_user_1dintrp_vec(x_orig, ps%rho, ps%ns(:,0), &
      &          tmp_prof(:),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating PS electron density profile onto Torlh grid'
          tmp_prof(:) = ps%fracmin(1)*tmp_prof(:)
@@ -925,11 +926,18 @@
 	      !write (*,*) "rf minority density = "
 	      !write (*,*) tmp_prof
 
+         
+         
 !
 ! Next update ps%nmini in the Plasma State with th new minority ion density profile, by mapping
 ! fracmin * ps%ns(:,0) from the PS grid to the ICRF rho grid:
 !
-       call ps_user_1dintrp_vec(ps%rho_icrf,ps%rho, ps%fracmin(1)*ps%ns(:,0), &
+
+        !SF the way this was done is not right will need to fix later. The way the plasma state
+        !sets rho_icrf is not actually the rho_icrf grid used in TORIC. This would cause
+        !issues in an integrated simulation
+        N_tmp = ps%nrho_icrf-1
+        call ps_user_1dintrp_vec(ps%rho_icrf(1:N_tmp),x_torlh,tmp_prof, &
                ps%nmini(:,1),ierr ) !DBB 6-27_2017
          if(ierr .ne. 0) stop 'error interpolating new minority desnity profile onto PS grid'
         endif

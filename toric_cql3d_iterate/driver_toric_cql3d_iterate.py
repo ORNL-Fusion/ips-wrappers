@@ -11,7 +11,7 @@ import subprocess
 import getopt
 import shutil
 import math
-from component import Component
+from ipsframework import Component
 from netCDF4 import *
 
 class toric_driver(Component):
@@ -43,7 +43,7 @@ class toric_driver(Component):
         services.stage_input_files(self.INPUT_FILES)
 
       # get list of ports
-        ports = services.getGlobalConfigParameter('PORTS')
+        ports = services.get_config_param('PORTS')
         port_names = ports['NAMES'].split()
         print('PORTS =', port_names)
         port_dict = {}
@@ -144,7 +144,7 @@ class toric_driver(Component):
             print (' ')
 
       # Is this a simulation startup or restart
-        sim_mode = services.getGlobalConfigParameter('SIMULATION_MODE')
+        sim_mode = services.get_config_param('SIMULATION_MODE')
         print('SIMULATION_MODE =', sim_mode)
 
       # Get timeloop for simulation
@@ -188,16 +188,16 @@ class toric_driver(Component):
       # Get plasma state files into driver work directory and copy to psn if there is one
         services.stage_state()
         cur_state_file = services.get_config_param('CURRENT_STATE')
-        try:
-            next_state_file = services.get_config_param('NEXT_STATE')
-            shutil.copyfile(cur_state_file, next_state_file)
-        except Exception as e:
-            print('toric_driver: No NEXT_STATE file ', e)        
-        services.update_state()
+        #try:
+        #    next_state_file = services.get_config_param('NEXT_STATE')
+        #    shutil.copyfile(cur_state_file, next_state_file)
+        #except Exception as e:
+        #    print('toric_driver: No NEXT_STATE file ', e)        
+        #services.update_state()
 
        # Get Portal RUNID and save to a file
         run_id = services.get_config_param('PORTAL_RUNID')
-        sym_root = services.getGlobalConfigParameter('SIM_ROOT')
+        sym_root = services.get_config_param('SIM_ROOT')
         path = os.path.join(sym_root, 'PORTAL_RUNID')
         runid_file = open(path, 'a')
         runid_file.writelines(run_id + '\n')
@@ -385,11 +385,11 @@ class toric_driver(Component):
         cur_state_file = self.services.get_config_param('CURRENT_STATE')
 
       #  Copy data from next plasma state (if there is one) to current plasma state
-        try:
-            next_state_file = services.get_config_param('NEXT_STATE')
-            shutil.copyfile(next_state_file, cur_state_file)
-        except Exception as e:
-            pass
+        #try:
+        #    next_state_file = services.get_config_param('NEXT_STATE')
+        #    shutil.copyfile(next_state_file, cur_state_file)
+        #except Exception as e:
+        #    pass
 
       # Update time stamps
 
@@ -407,11 +407,11 @@ class toric_driver(Component):
         ps.close()
         
     # Copy current plasma state to prior state if there is one
-        try:
-            prior_state_file = self.services.get_config_param('PRIOR_STATE')
-            shutil.copyfile(cur_state_file, prior_state_file)
-        except Exception as e:
-            pass       
+        #try:
+        #    prior_state_file = self.services.get_config_param('PRIOR_STATE')
+        #    shutil.copyfile(cur_state_file, prior_state_file)
+        #except Exception as e:
+        #    pass       
         
         print('toric_driver pre_step_logic: timeStamp = ', timeStamp)
         
