@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import sys
 from ips_solps_ftx.python_scripts_for_coupling import plasmaOut2ftxIn
+import pickle
 
 #from contextlib import redirect_stdout
 
@@ -55,7 +56,6 @@ class parent_driver(Component):
         cwd = self.services.get_working_dir()
         self.print_test = self.services.get_config_param('PRINT_TEST')
 
-
         #test giving explicit wrapper path in modernized FTX workflow
         if self.print_test:
             try:
@@ -67,7 +67,7 @@ class parent_driver(Component):
                     print(self.SCRIPT)
             except Exception as e:
                 print(e)
-		print('no script variable defined. use module loaded in environment')
+                print('no script variable defined. use module loaded in environment')
             print(' ')
 
         
@@ -110,7 +110,8 @@ class parent_driver(Component):
                                                      'LOG_FILE' : 'log.component_SOLPS.warning'
                                                      }
         if (self.print_test):
-            print('\t Defined dictionary : ', (self.nested_components['component_SOLPS']))
+            print('Defined dictionary : ')
+            print('\t', (self.nested_components['component_SOLPS']))
 
         print('Creating sub workflow with: ')
         print('\t name: component_SOLPS')
@@ -151,7 +152,8 @@ class parent_driver(Component):
                                                 'LOG_FILE'  : ftx_keys['LOG_FILE']
                                                 }
             if (self.print_test):
-                print('\t Defined dictionary : ', (self.child_components[child_comp]))
+                print('Defined dictionary : ')
+                print('\t', (self.child_components[child_comp]))
                 
             #  Input files will be staged from this directory.
 
@@ -212,6 +214,8 @@ class parent_driver(Component):
 
         cwd = self.services.get_working_dir()
 
+        #if we ever define specific outFile / logFile, do so here:
+        
         #Insert time-loop here:
         timeStamp = self.init_time                
         t_count = self.init_loop_n
@@ -238,7 +242,7 @@ class parent_driver(Component):
 
             #solps init:
             print('run SOLPS init:init')
-            self.async_queue['component_SOLPS:init:init'] = self.services.call(self.nested_components['component_SOLPS']['init'], 'init', timeStamp)
+            self.async_queue['component_SOLPS:init:init'] = self.services.call(self.nested_components['component_SOLPS']['init'], 'init', timeStamp)                    
             print('init:init done \n')
             #del self.async_queue['component_SOLPS:init:init']
             self.services.stage_state()
@@ -358,18 +362,59 @@ class parent_driver(Component):
                 
                 ## 1 - read output of SOLPS from solpsOut.txt (one per child) - DONE?
                 print('re-format SOLPS output into FTX input: ')
-                solps_outFile = self.solps_output_file[0]+'_'+str(i)+'.'+self.solps_output_file[1] #0=filename (solpsOut) ; 1=fomat (txt) 
+                #these three are used later as well, so define here
                 ftxInFileFormat=list(self.services.get_config_param('FTX_INPUT_FORMAT'))
-                ftxInFileName=ftxInFileFormat[0]+str(i)+'.'+ftxInFileFormat[1]                
-                plasmaOut2ftxIn_log='log.plasmaOut2ftxIn'+'_t'+str(timeStamp)
+                ftxInFileName=ftxInFileFormat[0]+str(i)+'.'+ftxInFileFormat[1]
+                solps_outFile=self.solps_output_file[0]+'_'+str(i)+'.'+self.solps_output_file[1] #0=filename (solpsOut) ; 1=fomat (txt)
+                p2ftx_log=cwd+'/log.plasmaOut2ftxIn'+'_t'+str(timeStamp)
+
+                self.plasmaOut2ftxIn={}
+                self.plasmaOut2ftxIn['plasmaOutFile'] = self.INPUT_DIR+'/'+solps_outFile
+                self.plasmaOut2ftxIn['ftxInFile'] = cwd+'/'+ftxInFileName
+                self.plasmaOut2ftxIn['logFile']= p2ftx_log #or logFile (=None) 
+                self.plasmaOut2ftxIn['print_test'] = self.print_test
+
+                #launch plasmaOut2ftxIn instead of calling function:            
+                #plasmaOut2ftxIn.plasmaOut2ftxIn(plasmaOutFile=self.INPUT_DIR+'/'+solps_outFile, ftxInFile=cwd+'/'+ftxInFileName, print_test=self.print_test, logFile=plasmaOut2ftxIn_log)
+                pkl_p2ftx_file=cwd+'/plasmaOut2ftxIn.pkl'  ## TO-DO: define name in config file, here give abs path
+                pickle.dump(self.plasmaOut2ftxIn, open(pkl_p2ftx_file, "wb" ) )
+
                 if (self.print_test):
                     print('call plasmaOut2ftxIn with: ')
-                    print('\t input file: ', solps_outFile)
-                    print('\t output file: ', ftxInFileName)
-                    print('print_test: ', self.print_test)
-                    print('\t output log: ', plasmaOut2ftxIn_log)
-                plasmaOut2ftxIn.plasmaOut2ftxIn(plasmaOutFile=self.INPUT_DIR+'/'+solps_outFile, ftxInFile=cwd+'/'+ftxInFileName, print_test=self.print_test, logFile=plasmaOut2ftxIn_log)
-
+                    print('\t input file: ', self.plasmaOut2ftxIn['plasmaOutFile'])
+                    print('\t output file: ', self.plasmaOut2ftxIn['ftxInFile'])
+                    print('\t print_test: ', self.plasmaOut2ftxIn['print_test'])
+                    print('\t output log: ', self.plasmaOut2ftxIn['logFile'])
+                
+                sys.stdout.flush()
+                try:
+                    self.TRANSLATE_P2FTX
+                    plasma2ftx_script=self.TRANSLATE_P2FTX
+                    print('\t Launch user-defined python script :  ')
+                    print('\t', plasma2ftx_script)
+                    
+                except: #DEFAULT PATH:                                                                                                                                                                        
+                    plasma2ftx_script = 'plasmaOut2ftxIn.py'
+                    print('\t Launch default python script: ')
+                    print('\t ',plasma2ftx_script)
+                    
+                sys.stdout.flush()
+                if self.print_test:
+                    print('\t launch task : ', plasma2ftx_script)
+                    print('\t with pkl file: ', pkl_p2ftx_file)
+                    print('\t logFile : ', p2ftx_log)
+                    print('\t self.services.get_working_dir() = ', self.services.get_working_dir())
+                
+                task_id_p2ftx = self.services.launch_task(1,self.services.get_working_dir(),
+                                                          plasma2ftx_script, logFile=p2ftx_log)
+                ret_val_p2ftx = self.services.wait_task(task_id_p2ftx)
+                if self.print_test:
+                    print('after running ', plasma2ftx_script)
+                    print('ret_val_p2ftx = ', ret_val_p2ftx)
+                sys.stdout.flush()
+                #self.plasmaOut2ftxIn.clear()
+                
+                
                 # 4 - add timeStap to its own file
                 #  For now keep this section in driver 
                 #  Move to its own function is time parameter operations become more complex
@@ -386,7 +431,8 @@ class parent_driver(Component):
                 timeFile.write('LOOP_TIME_STEP={0}\n'.format(self.time_step))
                 timeFile.write('LOOP_N={0}\n'.format(t_count))
                 #print(' ')
-
+                sys.stdout.flush()
+                
                 #set start mode based on loop number ; change to driver's start mode is we implement restarting capabilities
                 if (t_count == 0):
                     print('\t START_MODE = INIT')
@@ -396,7 +442,7 @@ class parent_driver(Component):
                     timeFile.write('START_MODE=RESTART\n')
                 timeFile.close()
                 print(' ')
-
+                sys.stdout.flush()
                 
                 # 5 - copy ftxIn and timeFile to ftx input directory
                 print('copying input to FTX file')
@@ -424,7 +470,7 @@ class parent_driver(Component):
                 print('\t ', cwd+'/'+ftxInFileName, ' as ', ftxInFileName+'_t'+str(timeStamp))
                 print('\t ', timeFileName , ' as ', timeFileName+'_t'+str(timeStamp))
 
-                
+                sys.stdout.flush()
                 #update plasma state file:
                 self.services.update_state()
                 
@@ -456,11 +502,16 @@ class parent_driver(Component):
             self.services.stage_state()
             
             #  Loop over the children and all the initialize driver component.
+            print('\n')
+            print('FTRIDYN-Xolotl:step')
+            print('\n')
             for child_comp, child in list(self.child_components.items()): #.values():
                 print(' ')
                 print('\t for child ', child_comp, ' with sim_name ', child['sim_name']) 
                 print('\t Wait for driver:init to be done')
                 self.services.wait_call(self.running_components['{}:driver:init'.format(child['sim_name'])], True)
+                self.services.update_state()
+                sys.stdout.flush()
                 print('\t Done waiting for driver:init')
                 print('\t Free to call driver:step')
                 sys.stdout.flush()
@@ -471,19 +522,15 @@ class parent_driver(Component):
                                                                                                                      timeStamp,
                                                                                                                      **child) #**keys)
                 sys.stdout.flush()
-
-
-            print('\n')
-            print('FTRIDYN-Xolotl:step')
-            print('\n')
-            self.services.stage_state()
                 
             for child_comp, child in list(self.child_components.items()):
                 print(' ')
                 print('\t for child ', child_comp, ' with sim_name ', child['sim_name'])
                 print('\t Wait for driver:step to be done')
                 self.services.wait_call(self.running_components['{}:driver:step'.format(child['sim_name'])], True)
-                print('\t Done waiting for driver:step')
+                self.services.update_state()
+                sys.stdout.flush()
+                print('\t Done waiTing for driver:step')
                 sys.stdout.flush()
 
             for child_comp, child in list(self.child_components.items()):
@@ -513,6 +560,8 @@ class parent_driver(Component):
             print(' \t ------------\n')
             self.services.update_state()
 
+            sys.stdout.flush()
+            
         print(' ')
 #-------------------------------------------------------------------------------
 #
