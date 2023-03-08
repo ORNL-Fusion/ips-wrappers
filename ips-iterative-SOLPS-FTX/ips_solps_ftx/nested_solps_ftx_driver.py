@@ -98,7 +98,19 @@ class parent_driver(Component):
         #  Then copying of the input files must be performed manually. The first
         #  argument of create sub workflow doesn't appear to do anything.
 
-
+        #create empty files for those defined in plasma state to avoid errors:
+        plasma_state_file = self.services.get_config_param('PLASMA_STATE_FILES')  #to only stage/update what the driver needs ; otherwise use self.STATE_FILES
+        plasma_state_list = plasma_state_file.split()
+        print(' ')
+        print('create empty plasma state files...')
+        for index in range(len(plasma_state_list)):
+            open(plasma_state_list[index], 'a').close()
+            if self.print_test:
+                print('\t created: ', plasma_state_list[index])
+        print('... plasma state files created')
+        print(' ')
+        
+        
         #CREATE THE SOLPS SUB-WORKFLOW:
         print('\n')
         print('CREATE THE SOLPS SUB-WORKFLOW:')
@@ -218,7 +230,12 @@ class parent_driver(Component):
         
         #Insert time-loop here:
         timeStamp = self.init_time                
-        t_count = self.init_loop_n
+        t_count = self.init_loop_n    
+        
+        
+        #solps_profiles = solps_conf['RESULTS_PROFILES']  
+        #solps_fluxes = solps_conf['FLUXES_PROFILES']
+        
         while timeStamp < self.end_time:
 
             print('\n')
@@ -347,6 +364,21 @@ class parent_driver(Component):
             print('--------------------')
             print('--------------------')
             print('\n')
+
+
+            #here implement parsing SOLPS output
+
+            #1-stage the plasma state to have the 2 files: ld_tg_o.dat & fluxes.dat:
+            self.services.stage_state()
+            
+            
+            #2-callParsers
+
+            #3-printNeededParserOutput
+
+            #4-parserOutput2solpsOutFormat
+
+
             
             #print('\n')
             print('READ AND FORMAT INPUT FTX WORKFLOWS')
