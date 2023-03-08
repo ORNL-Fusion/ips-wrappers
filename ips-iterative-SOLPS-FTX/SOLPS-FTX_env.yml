@@ -17,3 +17,4 @@ variables:
     FTRIDYN_PATH: /project/projectdirs/atom/atom-install-cori/fractal-tridyn    
     GITR_PATH: /project/projectdirs/atom/atom-install-cori/GITR
     ATOM_CORI: /project/projectdirs/atom/atom-install-cori
+    ATOM_PERLMUTTER: /global/cfs/cdirs/atom/atom-install-perlmutter

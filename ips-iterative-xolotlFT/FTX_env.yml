@@ -1,4 +1,4 @@
-name: ftx
+name: ftx_perlmutter
 dependencies:
     - pip
     - pip:
