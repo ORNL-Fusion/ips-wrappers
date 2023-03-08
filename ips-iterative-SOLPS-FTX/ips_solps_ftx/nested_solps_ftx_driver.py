@@ -33,7 +33,7 @@ class parent_driver(Component):
         Component.__init__(self, services, config)
         #dictionaries to store the SOLPS and FTX workflows and parametrization (config file, etc.) 
         self.running_components = {}
-        self.child_components = {}
+        self.ftx_components = {}
         self.async_queue = {}
         self.nested_components = {} 
 
@@ -74,8 +74,8 @@ class parent_driver(Component):
         if (self.print_test):
             print('running python ', sys.version_info)
    
-        num_children = int(self.services.get_config_param('NUM_CHILDREN'))
-        child_conf = self.services.get_config_param('CHILD_COMPONENT_CONF')
+        num_ftx = int(self.services.get_config_param('NUM_SUBWF'))
+        ftx_conf = self.services.get_config_param('SUBWF_COMPONENT_CONF')
         solps_conf = self.services.get_config_param('SOLPS_COMPONENT_CONF')
         
         self.solps_output_file=list(self.services.get_config_param('SOLPS_OUTPUT_FORMAT'))
@@ -133,18 +133,18 @@ class parent_driver(Component):
             print('\t', self.nested_components['component_SOLPS'])
         print('\n')
 
-        ## CREATE SUB-WORKFLOW FOR MULTIPLE (num_children) FTRIDYN-XOLOTL RUNS, IN PARALLEL ##
+        ## CREATE SUB-WORKFLOW FOR MULTIPLE (num_ftx) FTRIDYN-XOLOTL RUNS, IN PARALLEL ##
         print('CREATE SUB-WORKFLOW FOR MULTIPLE FTRIDYN-XOLOTL RUNS ')
         print('\n')
-        for i in range(0, num_children):
-            child_comp = 'ftx_{}'.format(i)
+        for i in range(0, num_ftx):
+            ftx_comp = 'ftx_{}'.format(i)
             
-            ftx_keys['LOG_FILE'] = 'log.{}'.format(child_comp)
-            ftx_keys['SIM_NAME'] = child_comp
-            ftx_keys['INPUT_DIR'] = '{}_dir'.format(child_comp)
+            ftx_keys['LOG_FILE'] = 'log.{}'.format(ftx_comp)
+            ftx_keys['SIM_NAME'] = ftx_comp
+            ftx_keys['INPUT_DIR'] = 'input_{}'.format(ftx_comp)
             ftx_keys['INPUT_FILES'] = self.services.get_config_param('INPUT_FTX')
             
-            self.child_components[child_comp] = {
+            self.ftx_components[ftx_comp] = {
                                                 'sim_name'  : None, #keys['SIM_NAME'],
                                                 'init'      : None,
                                                 'driver'    : None,
@@ -153,43 +153,43 @@ class parent_driver(Component):
                                                 }
             if (self.print_test):
                 print('Defined dictionary : ')
-                print('\t', (self.child_components[child_comp]))
+                print('\t', (self.ftx_components[ftx_comp]))
                 
             #  Input files will be staged from this directory.
 
             print('In directory', os.getcwd())
-            print('\t create input directory: ', self.child_components[child_comp]['INPUT_DIR'])
+            print('\t create input directory: ', self.ftx_components[ftx_comp]['INPUT_DIR'])
 
-            if os.path.exists(self.child_components[child_comp]['INPUT_DIR']):
-                shutil.rmtree(self.child_components[child_comp]['INPUT_DIR'])
-            os.mkdir(self.child_components[child_comp]['INPUT_DIR'])
+            if os.path.exists(self.ftx_components[ftx_comp]['INPUT_DIR']):
+                shutil.rmtree(self.ftx_components[ftx_comp]['INPUT_DIR'])
+            os.mkdir(self.ftx_components[ftx_comp]['INPUT_DIR'])
 
             #  Copy files to the created directory.
             input_file_list=ftx_keys['INPUT_FILES'].split()
             print('\t and copy input files:' , input_file_list) #self.child_components[child_comp]['INPUT_FILES']
             for input_file in input_file_list: #self.child_components[child_comp]['INPUT_FILES'])):
-                print('\t \t', input_file , ' from ', self.SUBMIT_DIR, ' to ', self.child_components[child_comp]['INPUT_DIR'])
-                shutil.copyfile(self.SUBMIT_DIR+'/'+input_file,self.child_components[child_comp]['INPUT_DIR']+'/'+input_file)
+                print('\t \t', input_file , ' from ', self.SUBMIT_DIR, ' to ', self.ftx_components[ftx_comp]['INPUT_DIR'])
+                shutil.copyfile(self.SUBMIT_DIR+'/'+input_file,self.ftx_components[ftx_comp]['INPUT_DIR']+'/'+input_file)
             print('\t ...done copying input files')
 
             print(' ')
             print('Create_sub_workflow with parameters:')
-            print('\t child_comp = ', child_comp)
-            print('\t child_conf = ', child_conf)
+            print('\t ftx_comp = ', ftx_comp)
+            print('\t ftx_conf = ', ftx_conf)
             print('\t keys = ', ftx_keys)
-            print('\t self.child_components[child_comp][INPUT_DIR] = ', self.child_components[child_comp]['INPUT_DIR'])
+            print('\t self.ftx_components[ftx_comp][INPUT_DIR] = ', self.ftx_components[ftx_comp]['INPUT_DIR'])
             print('\n')
-            (self.child_components[child_comp]['sim_name'],
-             self.child_components[child_comp]['init'],
-             self.child_components[child_comp]['driver']) = self.services.create_sub_workflow(child_comp, 
-                                                                                              child_conf, 
+            (self.ftx_components[ftx_comp]['sim_name'],
+             self.ftx_components[ftx_comp]['init'],
+             self.ftx_components[ftx_comp]['driver']) = self.services.create_sub_workflow(ftx_comp, 
+                                                                                              ftx_conf, 
                                                                                               ftx_keys, 
-                                                                                              self.child_components[child_comp]['INPUT_DIR'])
+                                                                                              self.ftx_components[ftx_comp]['INPUT_DIR'])
             print('creating FTX sub-workflow DONE!')
             if (self.print_test):
-                print('Child component is:') #TEST PRINT
-            print('\t sim_name : ',self.child_components[child_comp]['sim_name'],'init : ',self.child_components[child_comp]['init'],'driver : ',self.child_components[child_comp]['driver']) #TEST PRINT
-            print('\t keys : ', ftx_keys, 'INPUT_DIR : ', self.child_components[child_comp]['INPUT_DIR'])
+                print('FTX component is:') #TEST PRINT
+            print('\t sim_name : ',self.ftx_components[ftx_comp]['sim_name'],'init : ',self.ftx_components[ftx_comp]['init'],'driver : ',self.ftx_components[ftx_comp]['driver']) #TEST PRINT
+            print('\t keys : ', ftx_keys, 'INPUT_DIR : ', self.ftx_components[ftx_comp]['INPUT_DIR'])
             print('\n')
             
         #print('\n')
@@ -352,12 +352,12 @@ class parent_driver(Component):
             print('READ AND FORMAT INPUT FTX WORKFLOWS')
             print('\n')
             
-            for child_comp, child in list(self.child_components.items()):
+            for ftx_comp, ftx in list(self.ftx_components.items()):
 
                 #to get i, these two ways should work:
                 #i=int(list(filter(str.isdigit, child_comp))[0]) #not tested for cases with more than 1 child
-                i=int(''.join(list(filter(str.isdigit, child_comp))))
-                print('index of ', child_comp, ' is ', i)
+                i=int(''.join(list(filter(str.isdigit, ftx_comp))))
+                print('index of ', ftx_comp, ' is ', i)
                 sys.stdout.flush()
                 
                 ## 1 - read output of SOLPS from solpsOut.txt (one per child) - DONE?
@@ -447,16 +447,16 @@ class parent_driver(Component):
                 # 5 - copy ftxIn and timeFile to ftx input directory
                 print('copying input to FTX file')
                 print('\t from: ', cwd+'/'+ftxInFileName)
-                print('\t to: ', self.child_components[child_comp]['INPUT_DIR']+'/ftxInput.txt')
-                shutil.copyfile(cwd+'/'+ftxInFileName,self.child_components[child_comp]['INPUT_DIR']+'/ftxInput.txt')
+                print('\t to: ', self.ftx_components[ftx_comp]['INPUT_DIR']+'/ftxInput.txt')
+                shutil.copyfile(cwd+'/'+ftxInFileName,self.ftx_components[ftx_comp]['INPUT_DIR']+'/ftxInput.txt')
                 print('copying time parameter ')
                 print('\t from: ', timeFileName)
-                print('\t to: ', self.child_components[child_comp]['INPUT_DIR']+'/'+timeFileName)
-                shutil.copyfile(timeFileName,self.child_components[child_comp]['INPUT_DIR']+'/'+timeFileName)
+                print('\t to: ', self.ftx_components[ftx_comp]['INPUT_DIR']+'/'+timeFileName)
+                shutil.copyfile(timeFileName,self.ftx_components[ftx_comp]['INPUT_DIR']+'/'+timeFileName)
                 print('copying output file of SOLPS')
                 print('\t from: ',self.INPUT_DIR+'/'+solps_outFile)
-                print('\t to: ', self.child_components[child_comp]['INPUT_DIR']+'/solpsOut.txt')
-                shutil.copyfile(self.INPUT_DIR+'/'+solps_outFile,self.child_components[child_comp]['INPUT_DIR']+'/solpsOut.txt')
+                print('\t to: ', self.ftx_components[ftx_comp]['INPUT_DIR']+'/solpsOut.txt')
+                shutil.copyfile(self.INPUT_DIR+'/'+solps_outFile,self.ftx_components[ftx_comp]['INPUT_DIR']+'/solpsOut.txt')
                 
                 print('\n')
                 sys.stdout.flush()
@@ -489,14 +489,14 @@ class parent_driver(Component):
             print('\n')
             
             #  Loop over the children and all the initize component.
-            for child_comp, child in list(self.child_components.items()):
+            for ftx_comp, ftx in list(self.ftx_components.items()):
                 print(' ')
-                print('Call driver:init for child ', child_comp)
-                print('with dictionary ', child)
-                self.running_components['{}:driver:init'.format(child['sim_name'])] = self.services.call_nonblocking(child['driver'],
+                print('Call driver:init for subworkflow ', ftx_comp)
+                print('with dictionary ', ftx)
+                self.running_components['{}:driver:init'.format(ftx['sim_name'])] = self.services.call_nonblocking(ftx['driver'],
                                                                                                                      'init',
                                                                                                                      timeStamp,
-                                                                                                                     **child) #**keys
+                                                                                                                     **ftx) #**keys
             print(' ')
             sys.stdout.flush()
             self.services.stage_state()
@@ -505,11 +505,11 @@ class parent_driver(Component):
             print('\n')
             print('FTRIDYN-Xolotl:step')
             print('\n')
-            for child_comp, child in list(self.child_components.items()): #.values():
+            for ftx_comp, ftx in list(self.ftx_components.items()): #.values():
                 print(' ')
-                print('\t for child ', child_comp, ' with sim_name ', child['sim_name']) 
+                print('\t for subworkflow ', ftx_comp, ' with sim_name ', ftx['sim_name']) 
                 print('\t Wait for driver:init to be done')
-                self.services.wait_call(self.running_components['{}:driver:init'.format(child['sim_name'])], True)
+                self.services.wait_call(self.running_components['{}:driver:init'.format(ftx['sim_name'])], True)
                 self.services.update_state()
                 sys.stdout.flush()
                 print('\t Done waiting for driver:init')
@@ -517,25 +517,25 @@ class parent_driver(Component):
                 sys.stdout.flush()
                 
                 #child['LOG_FILE']='log.step.{}'.format(child_comp)
-                self.running_components['{}:driver:step'.format(child['sim_name'])] = self.services.call_nonblocking(child['driver'],
+                self.running_components['{}:driver:step'.format(ftx['sim_name'])] = self.services.call_nonblocking(ftx['driver'],
                                                                                                                      'step', 
                                                                                                                      timeStamp,
-                                                                                                                     **child) #**keys)
+                                                                                                                     **ftx) #**keys)
                 sys.stdout.flush()
                 
-            for child_comp, child in list(self.child_components.items()):
+            for ftx_comp, ftx in list(self.ftx_components.items()):
                 print(' ')
-                print('\t for child ', child_comp, ' with sim_name ', child['sim_name'])
+                print('\t for subworkflow ', ftx_comp, ' with sim_name ', ftx['sim_name'])
                 print('\t Wait for driver:step to be done')
-                self.services.wait_call(self.running_components['{}:driver:step'.format(child['sim_name'])], True)
+                self.services.wait_call(self.running_components['{}:driver:step'.format(ftx['sim_name'])], True)
                 self.services.update_state()
                 sys.stdout.flush()
                 print('\t Done waiTing for driver:step')
                 sys.stdout.flush()
 
-            for child_comp, child in list(self.child_components.items()):
-                del self.running_components['{}:driver:init'.format(child['sim_name'])]
-                del self.running_components['{}:driver:step'.format(child['sim_name'])] 
+            for ftx_comp, ftx in list(self.ftx_components.items()):
+                del self.running_components['{}:driver:init'.format(ftx['sim_name'])]
+                del self.running_components['{}:driver:step'.format(ftx['sim_name'])] 
                 sys.stdout.flush()
 
 
@@ -582,12 +582,12 @@ class parent_driver(Component):
         #self.async_queue['component_SOLPS:driver:finalize'] = self.services.call_nonblocking(self.nested_components['component_SOLPS']['driver'], 'finalize', timeStamp)
 
         print('finalize FTRIDYN-Xolotl')
-        for child_comp, child in list(self.child_components.items()):
-            self.running_components['{}:driver:finalize'.format(child['sim_name'])] = self.services.call_nonblocking(child['driver'],
+        for ftx_comp, ftx in list(self.ftx_components.items()):
+            self.running_components['{}:driver:finalize'.format(ftx['sim_name'])] = self.services.call_nonblocking(ftx['driver'],
                                                                                                                      'finalize', timeStamp)
 
             print(' ')
-            print('\t Child ', child_comp, ' FINALIZED!')
+            print('\t Subworkflow ', ftx_comp, ' FINALIZED!')
             print(' ')
 
 
