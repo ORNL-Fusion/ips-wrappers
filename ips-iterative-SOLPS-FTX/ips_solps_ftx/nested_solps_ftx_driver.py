@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import sys
 from ips_solps_ftx.python_scripts_for_coupling import plasmaOut2ftxIn
+from ips_solps_ftx.python_scripts_for_coupling import write_ftxOut
 import pickle
 
 #from contextlib import redirect_stdout
@@ -54,8 +55,10 @@ class parent_driver(Component):
 
         import sys
         cwd = self.services.get_working_dir()
+        print('Running in cwd:')
+        print(cwd)
         self.print_test = self.services.get_config_param('PRINT_TEST')
-
+        
         #test giving explicit wrapper path in modernized FTX workflow
         if self.print_test:
             try:
@@ -75,9 +78,17 @@ class parent_driver(Component):
             print('running python ', sys.version_info)
    
         num_ftx = int(self.services.get_config_param('NUM_SUBWF'))
+        ftx_locs_string = self.services.get_config_param('SUBWF_LOC')
         ftx_conf = self.services.get_config_param('SUBWF_COMPONENT_CONF')
         solps_conf = self.services.get_config_param('SOLPS_COMPONENT_CONF')
-        
+
+        self.ftx_locs=[]
+        self.ftx_locs.append(num_ftx)
+        for i in range(0, num_ftx):
+            self.ftx_locs[i]=int(ftx_locs_string.split()[i]) #int(list(ftx_locs_string)[i])
+        if (self.print_test):
+            print('Running ', num_ftx, ' FTX simulation(s), for SOLPS grid point(s): ', self.ftx_locs)
+            
         self.solps_output_file=list(self.services.get_config_param('SOLPS_OUTPUT_FORMAT'))
 
         if (self.print_test):
@@ -88,7 +99,7 @@ class parent_driver(Component):
         self.time_step = float(self.services.get_config_param('TIME_STEP'))
         self.init_loop_n = int(self.services.get_config_param('INIT_LOOP_N'))
 
-        ftx_keys = {} # test without -- not sure it's used'PWD' : self.services.get_config_param('PWD')
+        ftx_keys = {} 
 
 
         #stage input files
@@ -99,7 +110,8 @@ class parent_driver(Component):
         #  argument of create sub workflow doesn't appear to do anything.
 
         #create empty files for those defined in plasma state to avoid errors:
-        plasma_state_file = self.services.get_config_param('PLASMA_STATE_FILES')  #to only stage/update what the driver needs ; otherwise use self.STATE_FILES
+        #to only stage/update what the driver needs, use PLASMA_STATE_FILES ; otherwise use self.STATE_FILES 
+        plasma_state_file = self.services.get_config_param('PLASMA_STATE_FILES')  
         plasma_state_list = plasma_state_file.split()
         print(' ')
         print('create empty plasma state files...')
@@ -141,7 +153,7 @@ class parent_driver(Component):
 
         print('creating SOLPS sub-workflow DONE!')
         if (self.print_test):
-            print('\t SOLPS component is:') #TEST PRINT
+            print('\t SOLPS component is:') 
             print('\t', self.nested_components['component_SOLPS'])
         print('\n')
 
@@ -151,16 +163,16 @@ class parent_driver(Component):
         for i in range(0, num_ftx):
             ftx_comp = 'ftx_{}'.format(i)
             
-            ftx_keys['LOG_FILE'] = 'log.{}'.format(ftx_comp)
+            ftx_keys['LOG_FILE'] = 'log.ftx' #'log.{}'.format(ftx_comp)
             ftx_keys['SIM_NAME'] = ftx_comp
             ftx_keys['INPUT_DIR'] = 'input_{}'.format(ftx_comp)
             ftx_keys['INPUT_FILES'] = self.services.get_config_param('INPUT_FTX')
             
             self.ftx_components[ftx_comp] = {
-                                                'sim_name'  : None, #keys['SIM_NAME'],
+                                                'sim_name'  : None, 
                                                 'init'      : None,
                                                 'driver'    : None,
-                                                'INPUT_DIR' : ftx_keys['INPUT_DIR'], #'{}_dir'.format(child_comp)
+                                                'INPUT_DIR' : ftx_keys['INPUT_DIR'],
                                                 'LOG_FILE'  : ftx_keys['LOG_FILE']
                                                 }
             if (self.print_test):
@@ -169,8 +181,8 @@ class parent_driver(Component):
                 
             #  Input files will be staged from this directory.
 
-            print('In directory', os.getcwd())
-            print('\t create input directory: ', self.ftx_components[ftx_comp]['INPUT_DIR'])
+            print('In cwd:')
+            print('...create input directory: ', self.ftx_components[ftx_comp]['INPUT_DIR'])
 
             if os.path.exists(self.ftx_components[ftx_comp]['INPUT_DIR']):
                 shutil.rmtree(self.ftx_components[ftx_comp]['INPUT_DIR'])
@@ -178,11 +190,13 @@ class parent_driver(Component):
 
             #  Copy files to the created directory.
             input_file_list=ftx_keys['INPUT_FILES'].split()
-            print('\t and copy input files:' , input_file_list) #self.child_components[child_comp]['INPUT_FILES']
-            for input_file in input_file_list: #self.child_components[child_comp]['INPUT_FILES'])):
-                print('\t \t', input_file , ' from ', self.SUBMIT_DIR, ' to ', self.ftx_components[ftx_comp]['INPUT_DIR'])
+            print('... and copy input files:') # , input_file_list)
+            print('\t from submission directory to input file directory, ' , self.ftx_components[ftx_comp]['INPUT_DIR'])
+            for input_file in input_file_list:
+                print('\t', input_file)
+                #print('\t from submission directory to ', input_file , ' from ', self.SUBMIT_DIR, ' to ', self.ftx_components[ftx_comp]['INPUT_DIR']) #<-- without long paths 
                 shutil.copyfile(self.SUBMIT_DIR+'/'+input_file,self.ftx_components[ftx_comp]['INPUT_DIR']+'/'+input_file)
-            print('\t ...done copying input files')
+            print('...done copying input files')
 
             print(' ')
             print('Create_sub_workflow with parameters:')
@@ -199,12 +213,11 @@ class parent_driver(Component):
                                                                                               self.ftx_components[ftx_comp]['INPUT_DIR'])
             print('creating FTX sub-workflow DONE!')
             if (self.print_test):
-                print('FTX component is:') #TEST PRINT
-            print('\t sim_name : ',self.ftx_components[ftx_comp]['sim_name'],'init : ',self.ftx_components[ftx_comp]['init'],'driver : ',self.ftx_components[ftx_comp]['driver']) #TEST PRINT
-            print('\t keys : ', ftx_keys, 'INPUT_DIR : ', self.ftx_components[ftx_comp]['INPUT_DIR'])
+                print('FTX component is:') 
+                print('\t sim_name : ',self.ftx_components[ftx_comp]['sim_name'],'init : ',self.ftx_components[ftx_comp]['init'],'driver : ',self.ftx_components[ftx_comp]['driver'], ', INPUT_DIR : ', self.ftx_components[ftx_comp]['INPUT_DIR']) 
+                print('\t keys : ', ftx_keys)
             print('\n')
             
-        #print('\n')
         print('DONE SETTING UP WORKFLOWS')
         print('\n')
 
@@ -225,17 +238,14 @@ class parent_driver(Component):
         print('parent_driver: step')
 
         cwd = self.services.get_working_dir()
-
+        print('Running in cwd = ', cwd, ':')
+        
         #if we ever define specific outFile / logFile, do so here:
         
         #Insert time-loop here:
         timeStamp = self.init_time                
         t_count = self.init_loop_n    
-        
-        
-        #solps_profiles = solps_conf['RESULTS_PROFILES']  
-        #solps_fluxes = solps_conf['FLUXES_PROFILES']
-        
+
         while timeStamp < self.end_time:
 
             print('\n')
@@ -247,11 +257,6 @@ class parent_driver(Component):
             print('\n')
 
 
-            #test activating the SOLPS environment
-            #subprocess.call("conda deactivate", shell=True)
-            #subprocess.call("conda activate /global/common/software/atom/cori/cesol_conda/v0.1", shell=True)
-
-            
             #RUN init AND driver OF COMPONENT_SOLPS SUB-WORKFLOW
             print('\t \n')
             print('\t SOLPS:init')
@@ -261,89 +266,43 @@ class parent_driver(Component):
             print('run SOLPS init:init')
             self.async_queue['component_SOLPS:init:init'] = self.services.call(self.nested_components['component_SOLPS']['init'], 'init', timeStamp)                    
             print('init:init done \n')
-            #del self.async_queue['component_SOLPS:init:init']
             self.services.stage_state()
 
             print('run SOLPS init:step')
             self.async_queue['component_SOLPS:init:step'] = self.services.call(self.nested_components['component_SOLPS']['init'], 'step', timeStamp)
             print('init:step done \n')
-            #del self.async_queue['component_SOLPS:init:step']
             self.services.stage_state()
 
             print('run SOLPS init:finalize')
             self.async_queue['component_SOLPS:init:finalize'] = self.services.call(self.nested_components['component_SOLPS']['init'], 'step', timeStamp)
             print('init:step done \n')
-            #del self.async_queue['component_SOLPS:init:finalize']
             self.services.stage_state()
 
             
             print('\t \n')
-            print('\t SOLPS:driver') #-solver-b2plot')
+            print('\t SOLPS:driver')
             print('\t \n')
             
             print('run SOLPS driver:init')
             self.async_queue['component_SOLPS:driver:init'] = self.services.call(self.nested_components['component_SOLPS']['driver'], 'init', timeStamp)
             print('driver:init done \n')
-            #del self.async_queue['component_SOLPS:driver:init']  
             self.services.stage_state()
 
-            #print('\t run SOLPS solver:init')
-            #self.async_queue['component_SOLPS:solver:init'] = self.services.call(self.nested_components['component_SOLPS']['solver'], 'init', timeStamp)
-            #print('\t solver:init done')
-            #del self.async_queue['component_SOLPS:solver:init']
-            #self.services.stage_state()
-
-            #print('\t run SOLPS b2plot:init')
-            #self.async_queue['component_SOLPS:b2plot:init'] = self.services.call(self.nested_components['component_SOLPS']['b2plot'], 'init', timeStamp)
-            #print('\t b2plot:init done')
-            #del self.async_queue['component_SOLPS:b2plot:init']
-            #self.services.stage_state()
-
-            
-            
             print('run SOLPS driver:step')
             self.async_queue['component_SOLPS:driver:step'] = self.services.call(self.nested_components['component_SOLPS']['driver'], 'step', timeStamp) 
-            #del self.async_queue['component_SOLPS:driver:step']
             print('driver:step done \n')
             self.services.stage_state()
 
-            #print('\t run SOLPS solver:step')
-            #self.async_queue['component_SOLPS:solver:step'] = self.services.call(self.nested_components['component_SOLPS']['solver'], 'step', timeStamp)
-            #print('\t solver:step done')
-            #del self.async_queue['component_SOLPS:solver:step']
-            #self.services.stage_state()
-
-            #print('\t run SOLPS b2plot:step')
-            #self.async_queue['component_SOLPS:b2plot:step'] = self.services.call(self.nested_components['component_SOLPS']['b2plot'], 'step', timeStamp)
-            #print('\t b2plot:step done')
-            #del self.async_queue['component_SOLPS:b2plot:step']
-            #self.services.stage_state()
-            
             print('run SOLPS driver:finalize')
             self.async_queue['component_SOLPS:driver:finalize'] = self.services.call(self.nested_components['component_SOLPS']['driver'], 'finalize', timeStamp)
-            #del self.async_queue['component_SOLPS:driver:finalize']
             print('driver:finalize done \n')
             self.services.stage_state()
 
-            #print('\t run SOLPS solver:finalize')
-            #self.async_queue['component_SOLPS:solver:finalize'] = self.services.call(self.nested_components['component_SOLPS']['solver'], 'finalize', timeStamp)
-            #print('\t solver:finalize done')
-            #del self.async_queue['component_SOLPS:solver:finalize']
-            #self.services.stage_state()
-
-            #print('\t run SOLPS b2plot:finalize')
-            #self.async_queue['component_SOLPS:b2plot:finalize'] = self.services.call(self.nested_components['component_SOLPS']['b2plot'], 'finalize', timeStamp)
-            #print('\t b2plot:finalize done')
-            #del self.async_queue['component_SOLPS:b2plot:finalize']
-            #self.services.stage_state()
-
-            
             print('\n')
             print('COMPLETED SOLPS')
-            #print('\n')
 
-            ## change copying gitrOut.txt for:
-            ## 1 - read output of SOLPS from solpsOut.txt (one per child) ; if possible as dictionary
+            ## pass plasma information by:
+            ## 1 - read output of SOLPS from solpsOut.txt (one per child) as dictionary
             ## 2 - do ops to calculate/format inputs for FTX:
             ##     a) check inputs expected from SOLPS / that need special care
             ##     i.  inputs that are single values:
@@ -354,8 +313,8 @@ class parent_driver(Component):
             ##         fluxFraction, [Ti, Te, Z] --> E_in ; B-field --> A_in
             ##     b) print all others 'as is'
             ## 3 - print ftxIn.txt
-            ## 4 - figure out how to pass time of loop to FTX (in ftxIn.txt?)
-            ## 5 - copy ftxIn to child's input directory
+            ## 4 - pass time of loop to FTX in its own file
+            ## 5 - copy ftxIn and time-file to child's input directory
 
             print('\n')
             print('--------------------')
@@ -381,16 +340,16 @@ class parent_driver(Component):
 
             
             #print('\n')
-            print('READ AND FORMAT INPUT FTX WORKFLOWS')
+            print('READ AND FORMAT INPUTS TO FTX WORKFLOW(S)')
             print('\n')
             
             for ftx_comp, ftx in list(self.ftx_components.items()):
 
                 #to get i, these two ways should work:
-                #i=int(list(filter(str.isdigit, child_comp))[0]) #not tested for cases with more than 1 child
                 i=int(''.join(list(filter(str.isdigit, ftx_comp))))
-                print('index of ', ftx_comp, ' is ', i)
-                sys.stdout.flush()
+                if (self.print_test):
+                    print('index of ', ftx_comp, ' is ', i)
+                    sys.stdout.flush()
                 
                 ## 1 - read output of SOLPS from solpsOut.txt (one per child) - DONE?
                 print('re-format SOLPS output into FTX input: ')
@@ -403,21 +362,21 @@ class parent_driver(Component):
                 self.plasmaOut2ftxIn={}
                 self.plasmaOut2ftxIn['plasmaOutFile'] = self.INPUT_DIR+'/'+solps_outFile
                 self.plasmaOut2ftxIn['ftxInFile'] = cwd+'/'+ftxInFileName
-                self.plasmaOut2ftxIn['logFile']= p2ftx_log #or logFile (=None) 
+                self.plasmaOut2ftxIn['logFile']= p2ftx_log
                 self.plasmaOut2ftxIn['print_test'] = self.print_test
 
                 #launch plasmaOut2ftxIn instead of calling function:            
-                #plasmaOut2ftxIn.plasmaOut2ftxIn(plasmaOutFile=self.INPUT_DIR+'/'+solps_outFile, ftxInFile=cwd+'/'+ftxInFileName, print_test=self.print_test, logFile=plasmaOut2ftxIn_log)
-                pkl_p2ftx_file=cwd+'/plasmaOut2ftxIn.pkl'  ## TO-DO: define name in config file, here give abs path
+                pkl_p2ftx_file=cwd+'/plasmaOut2ftxIn.pkl' 
                 pickle.dump(self.plasmaOut2ftxIn, open(pkl_p2ftx_file, "wb" ) )
 
+                print('Launch plasmaOut2ftxIn... ')
                 if (self.print_test):
-                    print('call plasmaOut2ftxIn with: ')
-                    print('\t input file: ', self.plasmaOut2ftxIn['plasmaOutFile'])
-                    print('\t output file: ', self.plasmaOut2ftxIn['ftxInFile'])
+                    print('\t with inputs: ')
+                    print('\t input file: ', solps_outFile )#<-- without long paths: self.plasmaOut2ftxIn['plasmaOutFile'])
+                    print('\t output file: ', ftxInFileName) #<-- without cwd: self.plasmaOut2ftxIn['ftxInFile'])
                     print('\t print_test: ', self.plasmaOut2ftxIn['print_test'])
-                    print('\t output log: ', self.plasmaOut2ftxIn['logFile'])
-                
+                    print('\t output log: ', 'log.plasmaOut2ftxIn'+'_t'+str(timeStamp)) #<-- without cwd: self.plasmaOut2ftxIn['logFile'])
+                    print(' ')
                 sys.stdout.flush()
                 try:
                     self.TRANSLATE_P2FTX
@@ -428,24 +387,25 @@ class parent_driver(Component):
                 except: #DEFAULT PATH:                                                                                                                                                                        
                     plasma2ftx_script = 'plasmaOut2ftxIn.py'
                     print('\t Launch default python script: ')
-                    print('\t ',plasma2ftx_script)
+                    print('\t',plasma2ftx_script)
                     
                 sys.stdout.flush()
                 if self.print_test:
                     print('\t launch task : ', plasma2ftx_script)
-                    print('\t with pkl file: ', pkl_p2ftx_file)
-                    print('\t logFile : ', p2ftx_log)
-                    print('\t self.services.get_working_dir() = ', self.services.get_working_dir())
+                    print('\t with pkl file: ', 'plasmaOut2ftxIn.pkl') # <-- without cwd: pkl_p2ftx_file)
+                    print('\t logFile : ', 'log.plasmaOut2ftxIn'+'_t'+str(timeStamp)) #<-- without cwd: p2ftx_log)
+                    #<-- withiout long paths: print('\t self.services.get_working_dir() = ', self.services.get_working_dir())
                 
                 task_id_p2ftx = self.services.launch_task(1,self.services.get_working_dir(),
                                                           plasma2ftx_script, logFile=p2ftx_log)
                 ret_val_p2ftx = self.services.wait_task(task_id_p2ftx)
                 if self.print_test:
-                    print('after running ', plasma2ftx_script)
-                    print('ret_val_p2ftx = ', ret_val_p2ftx)
+                    print('\t after running ', plasma2ftx_script)
+                    print('\t ret_val_p2ftx = ', ret_val_p2ftx)
+                    print(' ')
                 sys.stdout.flush()
                 #self.plasmaOut2ftxIn.clear()
-                
+                print('... done with plasmaOut2ftxIn \n')
                 
                 # 4 - add timeStap to its own file
                 #  For now keep this section in driver 
@@ -478,7 +438,7 @@ class parent_driver(Component):
                 
                 # 5 - copy ftxIn and timeFile to ftx input directory
                 print('copying input to FTX file')
-                print('\t from: ', cwd+'/'+ftxInFileName)
+                print('\t from: cwd+', ftxInFileName) ##<-- without cwd: cwd+ftxInFileName
                 print('\t to: ', self.ftx_components[ftx_comp]['INPUT_DIR']+'/ftxInput.txt')
                 shutil.copyfile(cwd+'/'+ftxInFileName,self.ftx_components[ftx_comp]['INPUT_DIR']+'/ftxInput.txt')
                 print('copying time parameter ')
@@ -498,9 +458,9 @@ class parent_driver(Component):
                 shutil.copyfile(cwd+'/'+ftxInFileName,cwd+'/'+ftxInFileName+'_t'+str(timeStamp))
                 shutil.copyfile(timeFileName,timeFileName+'_t'+str(timeStamp))
                 print('to save input files for each time-loop, copied:')
-                print('\t ', self.INPUT_DIR+'/'+solps_outFile, ' as ', solps_outFile+'_t'+str(timeStamp))
-                print('\t ', cwd+'/'+ftxInFileName, ' as ', ftxInFileName+'_t'+str(timeStamp))
-                print('\t ', timeFileName , ' as ', timeFileName+'_t'+str(timeStamp))
+                print('\t input_dir+', solps_outFile, ' as ', solps_outFile+'_t'+str(timeStamp))
+                print('\t cwd+', ftxInFileName, ' as ', ftxInFileName+'_t'+str(timeStamp)) #<-- without cwd: cwd+ftxInFileName
+                print('\t', timeFileName , ' as ', timeFileName+'_t'+str(timeStamp))
 
                 sys.stdout.flush()
                 #update plasma state file:
@@ -516,29 +476,29 @@ class parent_driver(Component):
             print('-------------------')
             
             #RUN init AND step OF CHILD (FT-X) SUB-WORKFLOW            
-            print('\n')
+            print(' ')
             print('FTRIDYN-Xolotl:init')
-            print('\n')
+            print(' ')
             
             #  Loop over the children and all the initize component.
             for ftx_comp, ftx in list(self.ftx_components.items()):
                 print(' ')
                 print('Call driver:init for subworkflow ', ftx_comp)
                 print('with dictionary ', ftx)
+                print(' ')
                 self.running_components['{}:driver:init'.format(ftx['sim_name'])] = self.services.call_nonblocking(ftx['driver'],
                                                                                                                      'init',
                                                                                                                      timeStamp,
                                                                                                                      **ftx) #**keys
-            print(' ')
+            #print(' ')
             sys.stdout.flush()
             self.services.stage_state()
             
             #  Loop over the children and all the initialize driver component.
-            print('\n')
+            print(' ')
             print('FTRIDYN-Xolotl:step')
-            print('\n')
+            print(' ')
             for ftx_comp, ftx in list(self.ftx_components.items()): #.values():
-                print(' ')
                 print('\t for subworkflow ', ftx_comp, ' with sim_name ', ftx['sim_name']) 
                 print('\t Wait for driver:init to be done')
                 self.services.wait_call(self.running_components['{}:driver:init'.format(ftx['sim_name'])], True)
@@ -546,9 +506,9 @@ class parent_driver(Component):
                 sys.stdout.flush()
                 print('\t Done waiting for driver:init')
                 print('\t Free to call driver:step')
+                print(' ')
                 sys.stdout.flush()
-                
-                #child['LOG_FILE']='log.step.{}'.format(child_comp)
+
                 self.running_components['{}:driver:step'.format(ftx['sim_name'])] = self.services.call_nonblocking(ftx['driver'],
                                                                                                                      'step', 
                                                                                                                      timeStamp,
@@ -556,30 +516,102 @@ class parent_driver(Component):
                 sys.stdout.flush()
                 
             for ftx_comp, ftx in list(self.ftx_components.items()):
-                print(' ')
                 print('\t for subworkflow ', ftx_comp, ' with sim_name ', ftx['sim_name'])
                 print('\t Wait for driver:step to be done')
                 self.services.wait_call(self.running_components['{}:driver:step'.format(ftx['sim_name'])], True)
                 self.services.update_state()
                 sys.stdout.flush()
-                print('\t Done waiTing for driver:step')
+                print('\t Done waiTing for driver:step \n')
+                print(' ')
                 sys.stdout.flush()
 
+                print('--------------------')
+                print('FTX out --> SOLPS in')
+                print('--------------------\n')
+
+                print('stage FTX subworkflow outputs after driver:step')
+                self.services.stage_subflow_output_files()
+                print('done staging subworflow outputs after driver:step\n')
+                
+                #FIGURE OUT WHAT TO DO WHEN WE HAVE MULTIPLE FTX SUBWORKFLOWS
+                #print('call write_ftxOut...')
+                #i=int(''.join(list(filter(str.isdigit, ftx_comp))))
+                #if (self.print_test):
+                #    print('\t with inputs:')
+                #    print('\t location = ', self.ftx_locs[i])
+                #    print('\t last_tridyn = ', 'last_TRIDYN.dat')
+                #    print('\t log_ftx = ', 'log.ftx')
+                #    print('\t retentionFile  = ', 'retentionOut.txt')
+                #    print('\t ftxIn  = ', self.plasmaOut2ftxIn['ftxInFile'])
+                #    print('\t print_test = ',self.print_test)
+                #write_ftxOut.write_ftxOut(grid=self.ftx_locs[i],
+                #                          last_tridyn='last_TRIDYN.dat',
+                #                          log_ftx='log.ftx',
+                #                          ftxIn=self.plasmaOut2ftxIn['ftxInFile'],
+                #                          retentionFile='retentionOut.txt',
+                #                          print_test=self.print_test)
+                #print('... done call to  print_ftxOut \n')
+
+                #file names hard coded for now ; could consider linking to config params
+                write_ftxOut_log=cwd+'/log.write_ftxOut'+'_t'+str(timeStamp)
+                i=int(''.join(list(filter(str.isdigit, ftx_comp))))
+                self.write_ftxOut={}
+                self.write_ftxOut['grid'] = self.ftx_locs[i]
+                self.write_ftxOut['last_tridyn'] = 'last_TRIDYN.dat'
+                self.write_ftxOut['log_ftx']= 'log.ftx'
+                self.write_ftxOut['ftxIn']=self.plasmaOut2ftxIn['ftxInFile']
+                self.write_ftxOut['retentionFile']='retentionOut.txt'
+                self.write_ftxOut['print_test'] = self.print_test
+                self.write_ftxOut['logFile'] = write_ftxOut_log
+
+                #launch write_ftxOut instead of calling function:
+                pkl_ftxOut_file=cwd+'/write_ftxOut.pkl'
+                pickle.dump(self.write_ftxOut, open(pkl_ftxOut_file, "wb" ) )
+
+                print('Launch write_ftxOut...')
+                if (self.print_test):
+                    print('\t with inputs:')
+                    print('\t grid/location: ', self.write_ftxOut['grid'] )
+                    print('\t last_tridyn: ',self.write_ftxOut['last_tridyn'])
+                    print('\t log.ftx: ',self.write_ftxOut['log_ftx'])
+                    print('\t ftxIn: ', ftxInFileName) #<-- without cwd:
+                    print('\t retentionFile: ', self.write_ftxOut['retentionFile'])
+                    print('\t print_test: ', self.write_ftxOut['print_test'])
+                    print('\t output logFile: ', 'log.write_ftxOut'+'_t'+str(timeStamp)) #<-- without cwd:
+                    print(' ')
+                sys.stdout.flush()
+                try:
+                    self.WRITE_FTXOUT
+                    write_ftxOut_script=self.WRITE_FTXOUT
+                    print('\t Launch user-defined python script :  ')
+                    print('\t', write_ftxOut_script)
+
+                except: #DEFAULT PATH:
+                    write_ftxOut_script = 'write_ftxOut.py'
+                    print('\t Launch default python script: ')
+                    print('\t',write_ftxOut_script)
+
+                sys.stdout.flush()
+                if self.print_test:
+                    print('\t launch task : ', write_ftxOut_script)
+                    print('\t with pkl file: ', 'write_ftxOut.pkl') # <-- without cwd: 
+                    print('\t logFile : ', 'log.write_ftxOut'+'_t'+str(timeStamp)) #<-- without cwd                    
+
+                task_id_ftxOut = self.services.launch_task(1,self.services.get_working_dir(),
+                                                        write_ftxOut_script, logFile=write_ftxOut_log)
+                ret_val_ftxOut = self.services.wait_task(task_id_ftxOut)
+                if self.print_test:
+                    print('\t after running ', write_ftxOut_script)
+                    print('\t ret_val_ftxOut = ', ret_val_ftxOut)
+                    print(' ')
+                sys.stdout.flush()
+                print('... done with write_ftxOut \n')
+                
             for ftx_comp, ftx in list(self.ftx_components.items()):
                 del self.running_components['{}:driver:init'.format(ftx['sim_name'])]
                 del self.running_components['{}:driver:step'.format(ftx['sim_name'])] 
                 sys.stdout.flush()
 
-
-            print('\n')
-            print('--------------------')
-            print('FTX out --> SOLPS in')
-            print('--------------------')
-            print('\n')
-
-            #print('\n')
-            print('NOT IMPLEMENTED YET')
-            print('\n')
 
             self.services.update_state()
             
