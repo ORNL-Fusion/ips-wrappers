@@ -358,7 +358,7 @@ class parent_driver(Component):
                 ftxInFileName=ftxInFileFormat[0]+str(i)+'.'+ftxInFileFormat[1]
                 solps_outFile=self.solps_output_file[0]+'_'+str(i)+'.'+self.solps_output_file[1] #0=filename (solpsOut) ; 1=fomat (txt)
                 p2ftx_log=cwd+'/log.plasmaOut2ftxIn'+'_t'+str(timeStamp)
-
+                
                 self.plasmaOut2ftxIn={}
                 self.plasmaOut2ftxIn['plasmaOutFile'] = self.INPUT_DIR+'/'+solps_outFile
                 self.plasmaOut2ftxIn['ftxInFile'] = cwd+'/'+ftxInFileName
@@ -533,36 +533,22 @@ class parent_driver(Component):
                 self.services.stage_subflow_output_files()
                 print('done staging subworflow outputs after driver:step\n')
                 
-                #FIGURE OUT WHAT TO DO WHEN WE HAVE MULTIPLE FTX SUBWORKFLOWS
-                #print('call write_ftxOut...')
-                #i=int(''.join(list(filter(str.isdigit, ftx_comp))))
-                #if (self.print_test):
-                #    print('\t with inputs:')
-                #    print('\t location = ', self.ftx_locs[i])
-                #    print('\t last_tridyn = ', 'last_TRIDYN.dat')
-                #    print('\t log_ftx = ', 'log.ftx')
-                #    print('\t retentionFile  = ', 'retentionOut.txt')
-                #    print('\t ftxIn  = ', self.plasmaOut2ftxIn['ftxInFile'])
-                #    print('\t print_test = ',self.print_test)
-                #write_ftxOut.write_ftxOut(grid=self.ftx_locs[i],
-                #                          last_tridyn='last_TRIDYN.dat',
-                #                          log_ftx='log.ftx',
-                #                          ftxIn=self.plasmaOut2ftxIn['ftxInFile'],
-                #                          retentionFile='retentionOut.txt',
-                #                          print_test=self.print_test)
-                #print('... done call to  print_ftxOut \n')
+                #many file names hard coded for now ; could consider linking to config params
+                ftxOutFileStd = self.services.get_config_param('FTX_OUTPUT_STD')
+                ftxOutFileFormat=list(self.services.get_config_param('FTX_OUTPUT_FORMAT'))
+                ftxOutFileName=ftxOutFileFormat[0]+str(i)+'.'+ftxOutFileFormat[1]
 
-                #file names hard coded for now ; could consider linking to config params
                 write_ftxOut_log=cwd+'/log.write_ftxOut'+'_t'+str(timeStamp)
                 i=int(''.join(list(filter(str.isdigit, ftx_comp))))
                 self.write_ftxOut={}
                 self.write_ftxOut['grid'] = self.ftx_locs[i]
                 self.write_ftxOut['last_tridyn'] = 'last_TRIDYN.dat'
                 self.write_ftxOut['log_ftx']= 'log.ftx'
-                self.write_ftxOut['ftxIn']=self.plasmaOut2ftxIn['ftxInFile']
+                self.write_ftxOut['tridyn']='tridyn.dat' 
                 self.write_ftxOut['retentionFile']='retentionOut.txt'
                 self.write_ftxOut['print_test'] = self.print_test
                 self.write_ftxOut['logFile'] = write_ftxOut_log
+                self.write_ftxOut['outFile'] = cwd+'/'+ftxOutFileStd
 
                 #launch write_ftxOut instead of calling function:
                 pkl_ftxOut_file=cwd+'/write_ftxOut.pkl'
@@ -574,10 +560,11 @@ class parent_driver(Component):
                     print('\t grid/location: ', self.write_ftxOut['grid'] )
                     print('\t last_tridyn: ',self.write_ftxOut['last_tridyn'])
                     print('\t log.ftx: ',self.write_ftxOut['log_ftx'])
-                    print('\t ftxIn: ', ftxInFileName) #<-- without cwd:
+                    print('\t tridyn.dat: ',self.write_ftxOut['tridyn'])
                     print('\t retentionFile: ', self.write_ftxOut['retentionFile'])
                     print('\t print_test: ', self.write_ftxOut['print_test'])
                     print('\t output logFile: ', 'log.write_ftxOut'+'_t'+str(timeStamp)) #<-- without cwd:
+                    print('\t output file: ', ftxOutFileStd) #<-- without cwd:
                     print(' ')
                 sys.stdout.flush()
                 try:
@@ -606,6 +593,12 @@ class parent_driver(Component):
                     print(' ')
                 sys.stdout.flush()
                 print('... done with write_ftxOut \n')
+                
+                #save ftxOut for each loop (with time-stamp)
+                shutil.copyfile(self.write_ftxOut['outFile'], ftxOutFileName+'_t'+str(timeStamp))
+                print('...and save', ftxOutFileStd ,' for each time-loop:')
+                print('\t copy cwd+', ftxOutFileStd, ' as ', ftxOutFileName+'_t'+str(timeStamp)) #<-- without cwd:
+                print(' ')
                 
             for ftx_comp, ftx in list(self.ftx_components.items()):
                 del self.running_components['{}:driver:init'.format(ftx['sim_name'])]

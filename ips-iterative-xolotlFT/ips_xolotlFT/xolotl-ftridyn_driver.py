@@ -767,6 +767,23 @@ class xolotlFtridynDriver(Component):
                 print('\t \t No log file defined; using default sys.stdout')
                 outFile=None
 
+        #if 'LOC' in keywords:
+        #    location=keywords['LOC']
+        #    if (self.print_test):
+        #        print('location defined in keywords (parent workflow)  = ', location)
+        #else:
+        #    try:
+        #        self.LOCATION
+        #        location=self.LOCATION
+        #        if (self.print_test):
+        #            print('location defined in the config file: ', location)
+        #    except Exception as e:
+        #        if (self.print_test):
+        #            print(e)
+        #            print('WARNING: no location found')
+        #        print('no location defined ; set default value of 1 to avoid errors in component')
+        #        location=1
+                
         print('\n')
         print('---------------------------')
         print('---------------------------')
