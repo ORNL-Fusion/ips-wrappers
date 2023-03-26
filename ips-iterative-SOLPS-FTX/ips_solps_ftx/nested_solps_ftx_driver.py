@@ -79,16 +79,23 @@ class parent_driver(Component):
    
         num_ftx = int(self.services.get_config_param('NUM_SUBWF'))
         ftx_locs_string = self.services.get_config_param('SUBWF_LOC')
-        ftx_conf = self.services.get_config_param('SUBWF_COMPONENT_CONF')
+        #ftx_conf = self.services.get_config_param('SUBWF_COMPONENT_CONF')
         solps_conf = self.services.get_config_param('SOLPS_COMPONENT_CONF')
-
-        self.ftx_locs=[]
-        self.ftx_locs.append(num_ftx)
-        for i in range(0, num_ftx):
-            self.ftx_locs[i]=int(ftx_locs_string.split()[i]) #int(list(ftx_locs_string)[i])
-        if (self.print_test):
-            print('Running ', num_ftx, ' FTX simulation(s), for SOLPS grid point(s): ', self.ftx_locs)
-            
+        ftx_input_dir=self.services.get_config_param('FTX_INPUT_DIR')
+        
+        self.ftx_locs=[0]*num_ftx
+        if len(ftx_locs_string.split())<num_ftx:
+            print('WARNING: less grid points than number of ftx runs')
+            print('\t len(ftx_locs_string.split()) = ', len(ftx_locs_string.split()), 'and num_ftx = ', num_ftx )
+            print('\t other grid points set to zero ; continue at your own risk')
+        elif len(ftx_locs_string.split())>num_ftx:
+            print('WARNING: more grid points than number of ftx ; ignore the rest of gridpoints!')
+            print('\t len(ftx_locs_string.split()) = ', len(ftx_locs_string.split()), 'and num_ftx = ', num_ftx )            
+        for i in range(0, num_ftx):        
+            self.ftx_locs[i]=int(ftx_locs_string.split()[i])
+        print('Running ', num_ftx, ' FTX simulation(s), for SOLPS grid point(s): ', self.ftx_locs)
+        sys.stdout.flush()
+        
         self.solps_output_file=list(self.services.get_config_param('SOLPS_OUTPUT_FORMAT'))
 
         if (self.print_test):
@@ -114,7 +121,7 @@ class parent_driver(Component):
         plasma_state_file = self.services.get_config_param('PLASMA_STATE_FILES')  
         plasma_state_list = plasma_state_file.split()
         print(' ')
-        print('create empty plasma state files...')
+        print('create empty plasma state files if they donnot exist...')
         for index in range(len(plasma_state_list)):
             open(plasma_state_list[index], 'a').close()
             if self.print_test:
@@ -125,7 +132,9 @@ class parent_driver(Component):
         
         #CREATE THE SOLPS SUB-WORKFLOW:
         print('\n')
+        print('------------------------------')
         print('CREATE THE SOLPS SUB-WORKFLOW:')
+        print('------------------------------')
         print('\n')
         self.nested_components['component_SOLPS'] = {'sim_name': None,
                                                      'init': None,
@@ -158,16 +167,17 @@ class parent_driver(Component):
         print('\n')
 
         ## CREATE SUB-WORKFLOW FOR MULTIPLE (num_ftx) FTRIDYN-XOLOTL RUNS, IN PARALLEL ##
+        print('----------------------------------------------------')
         print('CREATE SUB-WORKFLOW FOR MULTIPLE FTRIDYN-XOLOTL RUNS ')
+        print('----------------------------------------------------')
         print('\n')
         for i in range(0, num_ftx):
             ftx_comp = 'ftx_{}'.format(i)
             
-            ftx_keys['LOG_FILE'] = 'log.ftx' #'log.{}'.format(ftx_comp)
+            ftx_keys['LOG_FILE'] = 'log.{}'.format(ftx_comp)
             ftx_keys['SIM_NAME'] = ftx_comp
             ftx_keys['INPUT_DIR'] = 'input_{}'.format(ftx_comp)
             ftx_keys['INPUT_FILES'] = self.services.get_config_param('INPUT_FTX')
-            
             self.ftx_components[ftx_comp] = {
                                                 'sim_name'  : None, 
                                                 'init'      : None,
@@ -175,12 +185,12 @@ class parent_driver(Component):
                                                 'INPUT_DIR' : ftx_keys['INPUT_DIR'],
                                                 'LOG_FILE'  : ftx_keys['LOG_FILE']
                                                 }
+            print('-------- ', ftx_comp, ' --------\n')
             if (self.print_test):
                 print('Defined dictionary : ')
                 print('\t', (self.ftx_components[ftx_comp]))
-                
-            #  Input files will be staged from this directory.
 
+            #  Input files will be staged from this directory.
             print('In cwd:')
             print('...create input directory: ', self.ftx_components[ftx_comp]['INPUT_DIR'])
 
@@ -191,24 +201,30 @@ class parent_driver(Component):
             #  Copy files to the created directory.
             input_file_list=ftx_keys['INPUT_FILES'].split()
             print('... and copy input files:') # , input_file_list)
-            print('\t from submission directory to input file directory, ' , self.ftx_components[ftx_comp]['INPUT_DIR'])
+            print('    from ftx input directory :', ftx_input_dir)
+            print('    to sub-wf input file directory : ' , self.ftx_components[ftx_comp]['INPUT_DIR'])
             for input_file in input_file_list:
                 print('\t', input_file)
                 #print('\t from submission directory to ', input_file , ' from ', self.SUBMIT_DIR, ' to ', self.ftx_components[ftx_comp]['INPUT_DIR']) #<-- without long paths 
-                shutil.copyfile(self.SUBMIT_DIR+'/'+input_file,self.ftx_components[ftx_comp]['INPUT_DIR']+'/'+input_file)
+                shutil.copyfile(ftx_input_dir+'/'+input_file,self.ftx_components[ftx_comp]['INPUT_DIR']+'/'+input_file)
             print('...done copying input files')
 
+            ftx_conf = self.services.get_config_param('SUBWF_COMPONENT_CONF')+'_{}'.format(i)
+            if self.print_test:
+                print('config file fot this subworkflow is: ', ftx_conf)
+            
             print(' ')
             print('Create_sub_workflow with parameters:')
             print('\t ftx_comp = ', ftx_comp)
-            print('\t ftx_conf = ', ftx_conf)
+            print('\t ftx_conf = ', ftx_input_dir+'/'+ftx_conf)
             print('\t keys = ', ftx_keys)
-            print('\t self.ftx_components[ftx_comp][INPUT_DIR] = ', self.ftx_components[ftx_comp]['INPUT_DIR'])
+            print('\t input_dir = ', self.ftx_components[ftx_comp]['INPUT_DIR'])
             print('\n')
+            sys.stdout.flush()
             (self.ftx_components[ftx_comp]['sim_name'],
              self.ftx_components[ftx_comp]['init'],
              self.ftx_components[ftx_comp]['driver']) = self.services.create_sub_workflow(ftx_comp, 
-                                                                                              ftx_conf, 
+                                                                                              ftx_input_dir+'/'+ftx_conf, 
                                                                                               ftx_keys, 
                                                                                               self.ftx_components[ftx_comp]['INPUT_DIR'])
             print('creating FTX sub-workflow DONE!')
@@ -217,8 +233,10 @@ class parent_driver(Component):
                 print('\t sim_name : ',self.ftx_components[ftx_comp]['sim_name'],'init : ',self.ftx_components[ftx_comp]['init'],'driver : ',self.ftx_components[ftx_comp]['driver'], ', INPUT_DIR : ', self.ftx_components[ftx_comp]['INPUT_DIR']) 
                 print('\t keys : ', ftx_keys)
             print('\n')
-            
+
+        print('-------------------------')
         print('DONE SETTING UP WORKFLOWS')
+        print('-------------------------')
         print('\n')
 
         self.services.stage_state()
@@ -239,7 +257,8 @@ class parent_driver(Component):
 
         cwd = self.services.get_working_dir()
         print('Running in cwd = ', cwd, ':')
-        
+
+        ftx_input_dir=self.services.get_config_param('FTX_INPUT_DIR')
         #if we ever define specific outFile / logFile, do so here:
         
         #Insert time-loop here:
@@ -355,12 +374,12 @@ class parent_driver(Component):
                 print('re-format SOLPS output into FTX input: ')
                 #these three are used later as well, so define here
                 ftxInFileFormat=list(self.services.get_config_param('FTX_INPUT_FORMAT'))
-                ftxInFileName=ftxInFileFormat[0]+str(i)+'.'+ftxInFileFormat[1]
+                ftxInFileName=ftxInFileFormat[0]+'_'+str(i)+'.'+ftxInFileFormat[1]
                 solps_outFile=self.solps_output_file[0]+'_'+str(i)+'.'+self.solps_output_file[1] #0=filename (solpsOut) ; 1=fomat (txt)
                 p2ftx_log=cwd+'/log.plasmaOut2ftxIn'+'_t'+str(timeStamp)
-                
+
                 self.plasmaOut2ftxIn={}
-                self.plasmaOut2ftxIn['plasmaOutFile'] = self.INPUT_DIR+'/'+solps_outFile
+                self.plasmaOut2ftxIn['plasmaOutFile'] = ftx_input_dir+'/'+solps_outFile #for now, located in ftx input dir ; when it's solps output, it should be in driver dir
                 self.plasmaOut2ftxIn['ftxInFile'] = cwd+'/'+ftxInFileName
                 self.plasmaOut2ftxIn['logFile']= p2ftx_log
                 self.plasmaOut2ftxIn['print_test'] = self.print_test
@@ -446,19 +465,19 @@ class parent_driver(Component):
                 print('\t to: ', self.ftx_components[ftx_comp]['INPUT_DIR']+'/'+timeFileName)
                 shutil.copyfile(timeFileName,self.ftx_components[ftx_comp]['INPUT_DIR']+'/'+timeFileName)
                 print('copying output file of SOLPS')
-                print('\t from: ',self.INPUT_DIR+'/'+solps_outFile)
+                print('\t from: ftx_input_dir+', solps_outFile)
                 print('\t to: ', self.ftx_components[ftx_comp]['INPUT_DIR']+'/solpsOut.txt')
-                shutil.copyfile(self.INPUT_DIR+'/'+solps_outFile,self.ftx_components[ftx_comp]['INPUT_DIR']+'/solpsOut.txt')
+                shutil.copyfile(ftx_input_dir+'/'+solps_outFile,self.ftx_components[ftx_comp]['INPUT_DIR']+'/solpsOut.txt') #modify ftx_input_dir to be driver dir when output comes from solps
                 
                 print('\n')
                 sys.stdout.flush()
 
                 #save ftxIn and solpsOut for each loop (with time-stamp)
-                shutil.copyfile(self.INPUT_DIR+'/'+solps_outFile, solps_outFile+'_t'+str(timeStamp))
+                shutil.copyfile(ftx_input_dir+'/'+solps_outFile, solps_outFile+'_t'+str(timeStamp)) #modify ftx_input_dir to be driver dir when output comes from solps
                 shutil.copyfile(cwd+'/'+ftxInFileName,cwd+'/'+ftxInFileName+'_t'+str(timeStamp))
                 shutil.copyfile(timeFileName,timeFileName+'_t'+str(timeStamp))
                 print('to save input files for each time-loop, copied:')
-                print('\t input_dir+', solps_outFile, ' as ', solps_outFile+'_t'+str(timeStamp))
+                print('\t ftx_input_dir+', solps_outFile, ' as ', solps_outFile+'_t'+str(timeStamp))
                 print('\t cwd+', ftxInFileName, ' as ', ftxInFileName+'_t'+str(timeStamp)) #<-- without cwd: cwd+ftxInFileName
                 print('\t', timeFileName , ' as ', timeFileName+'_t'+str(timeStamp))
 
@@ -483,15 +502,15 @@ class parent_driver(Component):
             #  Loop over the children and all the initize component.
             for ftx_comp, ftx in list(self.ftx_components.items()):
                 print(' ')
-                print('Call driver:init for subworkflow ', ftx_comp)
-                print('with dictionary ', ftx)
+                print('\t for subworkflow ', ftx_comp)
+                print('\t Call driver:init with dictionary ', ftx)
                 print(' ')
                 self.running_components['{}:driver:init'.format(ftx['sim_name'])] = self.services.call_nonblocking(ftx['driver'],
                                                                                                                      'init',
                                                                                                                      timeStamp,
                                                                                                                      **ftx) #**keys
-            #print(' ')
-            sys.stdout.flush()
+                print(' ')
+                sys.stdout.flush()
             self.services.stage_state()
             
             #  Loop over the children and all the initialize driver component.
@@ -521,35 +540,98 @@ class parent_driver(Component):
                 self.services.wait_call(self.running_components['{}:driver:step'.format(ftx['sim_name'])], True)
                 self.services.update_state()
                 sys.stdout.flush()
-                print('\t Done waiTing for driver:step \n')
+                print('\t Done waiting for driver:step of ', ftx_comp, '\n')
                 print(' ')
                 sys.stdout.flush()
 
                 print('--------------------')
                 print('FTX out --> SOLPS in')
+                print('  for ',ftx_comp)
                 print('--------------------\n')
 
-                print('stage FTX subworkflow outputs after driver:step')
-                self.services.stage_subflow_output_files()
+                print('stage ', ftx_comp , ' subworkflow outputs after driver:step') 
+                self.services.stage_subflow_output_files(subflow_name=ftx_comp) #tried arguments: ftx_comp, ftx['sim_name'] 
                 print('done staging subworflow outputs after driver:step\n')
-                
-                #many file names hard coded for now ; could consider linking to config params
-                ftxOutFileStd = self.services.get_config_param('FTX_OUTPUT_STD')
-                ftxOutFileFormat=list(self.services.get_config_param('FTX_OUTPUT_FORMAT'))
-                ftxOutFileName=ftxOutFileFormat[0]+str(i)+'.'+ftxOutFileFormat[1]
 
-                write_ftxOut_log=cwd+'/log.write_ftxOut'+'_t'+str(timeStamp)
+                #many file names hard coded for now ; could consider linking to config params
                 i=int(''.join(list(filter(str.isdigit, ftx_comp))))
+
+                ##if PRINT_TEST=TRUE, CHECK THAT WE'RE STAGING FILES CORRECTLY
+                #WOULD BE WORTH TURNING THIS INTO A LOOP OVER FILES,
+                #      IF I CAN ACCESS LIST OF FILES STAGED FROM SUBWORKFLOW
+                if (self.print_test):
+                    print('Check that staged files exist and are not empty')
+                    if os.path.exists("last_TRIDYN.dat"):
+                        open_lastTRIDYN = open("last_TRIDYN.dat")
+                        print('\t Succesfully opened :', open_lastTRIDYN.name)
+                        lines_lastTRIDYN = open_lastTRIDYN.readlines()
+                        print('\t len(lines_lastTRIDYN) = ', len(lines_lastTRIDYN))
+                    else:
+                        print('\t WARNING: no last_TRIDYN.dat found!')
+                        print("\t write_ftxOut won't work")
+                    print(' ')
+                    sys.stdout.flush()
+                
+                    if os.path.exists("tridyn.dat"):
+                        open_tridyn = open("tridyn.dat")
+                        print('\t Succesfully opened :', open_tridyn.name)
+                        lines_tridyn = open_tridyn.readlines()
+                        print('\t len(lines_tridyn) = ', len(lines_tridyn))
+                    else:
+                        print('\t WARNING: no tridyn.dat found!')
+                        print("\t write_ftxOut won't work")
+                    print(' ')
+                    sys.stdout.flush()
+                
+                    if os.path.exists("retentionOut.txt"):
+                        open_ret = open("retentionOut.txt")
+                        print('\t Succesfully opened :', open_ret.name)
+                        lines_ret = open_ret.readlines()
+                        print('\t len(lines_ret) = ', len(lines_ret))
+                    else:
+                        print('\t WARNING: no retentionOut.txt found!')
+                        print("\t write_ftxOut won't work")
+                    print(' ')
+                    sys.stdout.flush()
+                    
+                    if os.path.exists("log.ftx_{}".format(i)):
+                        open_log = open('log.ftx_{}'.format(i))
+                        print('\t Succesfully opened :', open_log.name)
+                        lines_log = open_log.readlines()
+                        print('\t len(lines_log) = ', len(lines_log))
+                    else:
+                        print('\t WARNING: no log.ftx_{} found!'.format(i))
+                        print("\t write_ftxOut won't work")
+                    print(' ')
+                    sys.stdout.flush()                
+                print(' ')
+                sys.stdout.flush()
+                
+                ftxOutFileFormat=list(self.services.get_config_param('FTX_OUTPUT_FORMAT'))
+                ftxOutFileName=ftxOutFileFormat[0]+'_'+str(i)+'.'+ftxOutFileFormat[1]
+
+                write_ftxOut_log=cwd+'/log.write_ftxOut_{}'.format(i)+'_t'+str(timeStamp)
                 self.write_ftxOut={}
                 self.write_ftxOut['grid'] = self.ftx_locs[i]
-                self.write_ftxOut['last_tridyn'] = 'last_TRIDYN.dat'
-                self.write_ftxOut['log_ftx']= 'log.ftx'
-                self.write_ftxOut['tridyn']='tridyn.dat' 
-                self.write_ftxOut['retentionFile']='retentionOut.txt'
+                self.write_ftxOut['last_tridyn'] = 'last_TRIDYN_{}.dat'.format(i)
+                self.write_ftxOut['log_ftx']= 'log.ftx_{}'.format(i)
+                self.write_ftxOut['tridyn']='tridyn_{}.dat'.format(i) 
+                self.write_ftxOut['retentionFile']='retentionOut_{}.txt'.format(i)
                 self.write_ftxOut['print_test'] = self.print_test
                 self.write_ftxOut['logFile'] = write_ftxOut_log
-                self.write_ftxOut['outFile'] = cwd+'/'+ftxOutFileStd
+                self.write_ftxOut['outFile'] = cwd+'/'+ftxOutFileName #ftxOutFileStd
 
+                #to avoid overwritting, copy files with the ftx-index
+                if (self.print_test):
+                    print('add ftx-index to files staged from subworkflow to avoid overwritting when multiple FTX run in parallel. copy:')
+                    print('\t last_TRIDYN.dat as ', self.write_ftxOut['last_tridyn'])
+                    print('\t tridyn.dat as ', self.write_ftxOut['tridyn'])
+                    print('\t retentionOut.txt as', self.write_ftxOut['retentionFile'])
+                    print(' ')
+                shutil.copyfile('last_TRIDYN.dat',self.write_ftxOut['last_tridyn'])
+                shutil.copyfile('tridyn.dat',self.write_ftxOut['tridyn'])
+                shutil.copyfile('retentionOut.txt',self.write_ftxOut['retentionFile'])
+                
                 #launch write_ftxOut instead of calling function:
                 pkl_ftxOut_file=cwd+'/write_ftxOut.pkl'
                 pickle.dump(self.write_ftxOut, open(pkl_ftxOut_file, "wb" ) )
@@ -559,12 +641,12 @@ class parent_driver(Component):
                     print('\t with inputs:')
                     print('\t grid/location: ', self.write_ftxOut['grid'] )
                     print('\t last_tridyn: ',self.write_ftxOut['last_tridyn'])
-                    print('\t log.ftx: ',self.write_ftxOut['log_ftx'])
+                    print('\t log.ftx_{}'': '.format(i) , self.write_ftxOut['log_ftx'])
                     print('\t tridyn.dat: ',self.write_ftxOut['tridyn'])
                     print('\t retentionFile: ', self.write_ftxOut['retentionFile'])
                     print('\t print_test: ', self.write_ftxOut['print_test'])
                     print('\t output logFile: ', 'log.write_ftxOut'+'_t'+str(timeStamp)) #<-- without cwd:
-                    print('\t output file: ', ftxOutFileStd) #<-- without cwd:
+                    print('\t output file: ', ftxOutFileName) #ftxOutFileStd) #<-- without cwd:
                     print(' ')
                 sys.stdout.flush()
                 try:
@@ -596,8 +678,8 @@ class parent_driver(Component):
                 
                 #save ftxOut for each loop (with time-stamp)
                 shutil.copyfile(self.write_ftxOut['outFile'], ftxOutFileName+'_t'+str(timeStamp))
-                print('...and save', ftxOutFileStd ,' for each time-loop:')
-                print('\t copy cwd+', ftxOutFileStd, ' as ', ftxOutFileName+'_t'+str(timeStamp)) #<-- without cwd:
+                print('...and save', ftxOutFileName ,' for each time-loop:')
+                print('\t copy cwd+', ftxOutFileName, ' as ', ftxOutFileName+'_t'+str(timeStamp)) #<-- without cwd: 
                 print(' ')
                 
             for ftx_comp, ftx in list(self.ftx_components.items()):

@@ -30,7 +30,7 @@ class xolotlFtridynDriver(Component):
 
         cwd = self.services.get_working_dir()
 
-        print('FT-X driver:init called ')
+        print('  FT-X driver:init called ')
         print('\t with keywords: ',keywords)
         print(' ')
         
@@ -402,11 +402,6 @@ class xolotlFtridynDriver(Component):
             if rm_regularGrid:
                 del self.xp.parameters['regularGrid']
 
-        #if not coupling, delete -tridyn from petsc arguments to not print TRIDYN_*.dat files
-        #if self.driver['FTX_COUPLING']=='False':
-        #    del self.xp.parameters['petscArgs']['-tridyn']
-
-
         #CONTROL WHICH PROCESSES ARE ON:
         #delete Xolotl processes that are specified as false in ips.config
         print(' ')
@@ -767,23 +762,6 @@ class xolotlFtridynDriver(Component):
                 print('\t \t No log file defined; using default sys.stdout')
                 outFile=None
 
-        #if 'LOC' in keywords:
-        #    location=keywords['LOC']
-        #    if (self.print_test):
-        #        print('location defined in keywords (parent workflow)  = ', location)
-        #else:
-        #    try:
-        #        self.LOCATION
-        #        location=self.LOCATION
-        #        if (self.print_test):
-        #            print('location defined in the config file: ', location)
-        #    except Exception as e:
-        #        if (self.print_test):
-        #            print(e)
-        #            print('WARNING: no location found')
-        #        print('no location defined ; set default value of 1 to avoid errors in component')
-        #        location=1
-                
         print('\n')
         print('---------------------------')
         print('---------------------------')
@@ -1655,9 +1633,23 @@ class xolotlFtridynDriver(Component):
                 print(('\t Xolotls max time step ({}) unchanged (factor=1)'.format(self.xp.parameters['petscArgs']['-ts_adapt_dt_max'])))
 
             print(' ')
+            
             sys.stdout.flush()
             self.services.update_state()
-
+            
+        if (self.print_test):
+            print('\n')
+            print('Done with looping over time')
+            print("Look driver's output files, as defined in config file:")
+            try:
+                self.OUTPUT_FILES
+                print('\t Output files are defined as:')
+                print('\t', self.OUTPUT_FILES)
+            except:
+                print('\t No output files defined in config file')
+            print(' ')
+            sys.stdout.flush()
+            
     def finalize(self, timeStamp=0.0,**keywords):
 
         print('  FT-X driver:finalize called')
