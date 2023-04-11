@@ -2,8 +2,8 @@
 import numpy as np
 import sys
 import os
-import matplotlib.pyplot as plt
 import pickle
+import matplotlib.pyplot as plt
 from fort44ext import fort44ext # fort.44 parser
 from b2fextract import b2fextract # b2fstate parser
 from rizp_extract import rizp_extract # return rizp from ionization_potentials.txt
@@ -12,31 +12,26 @@ from rizp_extract import rizp_extract # return rizp from ionization_potentials.t
 # read and post-process plasma heat load from b2fstate
 # read and post-process neutral heat load from fort.44
 
-
-### Example of input parameter for the funcion ###
-#rad_grid = [17,19,20,22,25] # index convention? Fortran (Python) or MATLAB?
-
-def SOLPS_heatflux_for_FTX(rad_grid=1, b2fstate_file='b2fstate', b2fgmtry_file='b2fgmtry', fort44_file='fort.44', outputFile=None, print_test=False, logFile=None): 
+# Function begins
+def SOLPS_heatflux_for_FTX(rad_grid=1, b2fstate_file='b2fstate', b2fgmtry_file='b2fgmtry', fort44_file='fort.44', outputFile=None, print_test=False, logFile=None):
 
     cwd = os.getcwd()
     print(' ')
     print('\t Called SOLPS_heatflux_for_FTX:')
-
-    #if pikle file exists, read from pkl file:
-    #more elegant: turn into loop over keys,values
+    
+    #if pikle file exists, read input dictionary from pkl file:
+    #would be more elegant: turn into loop over keys,values (?)
     pkl_file=cwd+'/writePlasmaOut.pkl'
     if os.path.exists(pkl_file):
         print('\t use inputs from pkl file: ', pkl_file)
         dic = pickle.load( open( pkl_file, "rb" ) )
-        #first check the log file, to print everything there
-        if 'logFile' in dic:
-            logFile=dic['logFile']
         rad_grid=dic['rad_grid']
         b2fstate_file=dic['b2fstate_file']
         b2fgmtry_file=dic['b2fgmtry_file']
         fort44_file=dic['fort44_file']
-        print_test=dic['print_test']        
+        print_test=dic['print_test']
         outputFile=dic['outputFile']
+        logFile=dic['logFile']
     else:
         print('no pkl file found, continue with function-call-inputs or defaults')
 
@@ -47,7 +42,7 @@ def SOLPS_heatflux_for_FTX(rad_grid=1, b2fstate_file='b2fstate', b2fgmtry_file='
         print('\t b2fstate_file = ', b2fstate_file)
         print('\t b2fgmtry_file = ', b2fgmtry_file)
         print('\t fort44_file = ', fort44_file)
-        print('\t logFile =', logFile)        
+        print('\t logFile =', logFile)
 
     print(' ')
     if logFile is not None:
@@ -60,19 +55,7 @@ def SOLPS_heatflux_for_FTX(rad_grid=1, b2fstate_file='b2fstate', b2fgmtry_file='
     else:
         print('\t No log file defined; using default sys.stdout')
         sys.stdout.flush()
-        
-    if outputFile is not None:
-        print('\t writing output to file defined in keywords: ')
-        print('\t', outputFile)
-        outFile=open(outputFile , 'a')
-    elif logFile is not None:
-        print('\t No output file defined, but log file exists. Write output to:')
-        print('\t', logFile)
-        outFile=logF
-    else:
-        print('\t No log or output files defined; using default sys.stdout')
-    sys.stdout.flush()
-    
+
     # constant
     ec = 1.60217662e-19
     
@@ -110,8 +93,12 @@ def SOLPS_heatflux_for_FTX(rad_grid=1, b2fstate_file='b2fstate', b2fgmtry_file='
     # Load geometry variables from b2fgmtry
     dv = b2fextract('vol',b2fgmtry_file) # cell volume
     gs = b2fextract('gs',b2fgmtry_file) # area
+    bb = b2fextract('bb',b2fgmtry_file) # B field
+    bx = bb[:,:,0]
+    by = bb[:,:,1]
+    bz = bb[:,:,2]
+    btot = bb[:,:,3]
     gsx = gs[:,:,0] # area, x direction (target area etc.)
-
 
     # Plasma heat load calculation    
     # Load variables from b2fstate
@@ -280,56 +267,68 @@ def SOLPS_heatflux_for_FTX(rad_grid=1, b2fstate_file='b2fstate', b2fgmtry_file='
             neutral_energy_flux[pr_indices[col][0]+1, pr_indices[col][1]] += ewld_load_sum[res_slices[col]]
             reflected_energy_flux[pr_indices[col][0]+1, pr_indices[col][1]] += ewldrp_res[res_slices[col]]
             # +1 to pol coordinate to match flux convention in B2.5 (always left cell surface)
-    
-   
-    
+      
     # Wpls: divide by area to make it [W/m^2], subtract reflected energy
     if print_test:
         print('check value of area (non zero) before deviding energy flux')
         print('gsx = ', gsx)
-        sys.stdout.flush()
-    total_energy_flux_outer = total_energy_flux/gsx - reflected_energy_flux
+    sys.stdout.flush()
+
+    total_energy_flux_outer = total_energy_flux/gsx -reflected_energy_flux
     total_energy_flux_inner = -total_energy_flux/gsx - reflected_energy_flux
 
     # Wpls + Wneut
     total_energy_flux_add_neutral_inner = total_energy_flux_inner + neutral_energy_flux
     total_energy_flux_add_neutral_outer = total_energy_flux_outer + neutral_energy_flux
 
+    output_values={}
+    output_values['te']=te[pol_B25-1, rad_grid]
+    output_values['ti']=ti[pol_B25-1, rad_grid]
+    output_values['bb']=bb[pol_B25-1, rad_grid,:]
+    output_values['partFlux']=fnax[pol_B25-1, rad_grid, 1]
+    output_values['heatFlux']=total_energy_flux_add_neutral_outer[pol_B25-1,rad_grid]
+
     if print_test:
         print(' ')
         print('\t check where to return the output and close files')
 
-    if (logFile is not None) or (outputFile is not None): 
-        outFile.write(str(total_energy_flux_add_neutral_outer[pol_B25-1,rad_grid]))
+    if (outputFile is not None):
         if print_test:
-            print('\t wrote result into ', outFile.name)
+            print('\t writing results to file defined in keywords :  ')
+            print('\t', outputFile)
+        outFile=open(outputFile , 'a')
+        for k,v in output_values.items():
+            if print_test:
+                print('\t ...', k, ' = ', str(v))
+            writeString=k+" = "+str(v)+"\n"
+            outFile.write(writeString)
+        if print_test:
+            print('\t ... done writing result into ', outFile.name)
 
-        try:
-            if print_test:
-                print('\t close outputFile', outFile.name)
-            outFile.close()
-        except:
-            if print_test:
-                print('\t could not close outputFile')
-                
-        if logFile is not None:
-            if print_test:
-                print('\t close logFile ', logF.name)
-            sys.stdout.flush()
-            logF.close()
-            sys.stdout = orig_sys
+        if print_test:
+            print('\t close outputFile : ', outFile.name)
+        outFile.close()
+    else:
+        print('\t no output file defined in keywords')
+        print('\t return output (not printed to file)')
+    sys.stdout.flush()
+        
+    if (logFile is not None):
+        if print_test:
+            print('\t close logFile : ', logF.name)
+        sys.stdout.flush()
+        logF.close()
+        sys.stdout = orig_sys            
 
-        else:
-            if print_test:
-                print('\t could not close logFile')
+    if (outputFile is not None):
         return
     else:
-        print('\t no log or output file. return output')
-        sys.stdout.flush()
-        return total_energy_flux_add_neutral_outer[pol_B25-1,rad_grid]
-    
+        return output_values
+    #te[pol_B25-1, rad_grid], ti[pol_B25-1, rad_grid], bb[pol_B25-1, rad_grid,:], fnax[pol_B25-1, rad_grid, 1], total_energy_flux_add_neutral_outer[pol_B25-1,rad_grid]
+
+
 if __name__ == '__main__':
-
-   import shutil
-
-   SOLPS_heatflux_for_FTX()
+    
+    import shutil
+    
+    SOLPS_heatflux_for_FTX()
