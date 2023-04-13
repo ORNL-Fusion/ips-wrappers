@@ -15,6 +15,7 @@ from ips_solps_ftx.python_scripts_for_coupling import plasmaOut2ftxIn
 from ips_solps_ftx.python_scripts_for_coupling import write_ftxOut
 #from ips_solps_ftx.python_scripts_for_coupling import SOLPS_heatflux_for_FTX #maybe generalize name
 from ips_solps_ftx.python_scripts_for_coupling import writePlasmaOut
+from ips_solps_ftx.python_scripts_for_coupling import average_SOLPS_input
 import pickle
 
 #from contextlib import redirect_stdout
@@ -323,8 +324,8 @@ class parent_driver(Component):
             print('COMPLETED SOLPS')
 
             ## pass plasma information by:
-            ## 1 - read output of SOLPS from solpsOut.txt (one per child) 
-            ## 2 - do ops to calculate/format inputs for FTX:
+            ## 1 - read output of SOLPS from solpsOut.txt (one per child) using writePlasmaOut script 
+            ## 2 - do ops to calculate/format inputs for FTX in plasmaOut2ftxIn:
             ##     a) check inputs expected from SOLPS / that need special care
             ##     i.  inputs that are single values:
             ##         particle flux, heat flux
@@ -369,15 +370,16 @@ class parent_driver(Component):
                 for f in ['b2fgmtry', 'b2fstate', 'fort.44']: #'b2fpardf', 'b2frates',  also exist but not needed here
                     if os.path.exists(f):
                         open_file = open(f)
-                        print('\t Succesfully opened :', open_file.name)
                         lines_file = open_file.readlines()
-                        print('\t len(',open_file.name,') = ', len(lines_file))
+                        if len(lines_file) > 0:
+                            print('\t Succesfully opened file (not empty) :', open_file.name)
+                        #print('\t len(',open_file.name,') = ', len(lines_file))
                         open_file.close()
                     else:
                         print('\t WARNING: no ', f ,' found!')
                         print("\t SOLPS out --> FTX in won't work")
-                    print(' ')
-                    sys.stdout.flush()
+                print(' ')
+                sys.stdout.flush()
 
                     
             # 2 - Call SOLPS_heatflux_for_FTX to write SOLPS output into FTX readable form
@@ -417,15 +419,12 @@ class parent_driver(Component):
                     print('\t logFile : ', self.writePlasmaOut['logFile'])
                     print(' ')
                 sys.stdout.flush()
-                try:
-                    self.WRITE_PLASMAOUT
-                    writePlasmaOut_script=self.WRITE_PLASMAOUT
-                    print('\t Launch user-defined python script :  ')
-                except: #DEFAULT PATH:                  
-                    writePlasmaOut_script = 'writePlasmaOut.py'
-                    print('\t Launch default python script: ')
+
+                writePlasmaOut_script = 'writePlasmaOut.py'
+                print('\t Launch python script: ')
                 print('\t', writePlasmaOut_script)                
                 sys.stdout.flush()
+                
                 if self.print_test:
                     print('\t launch task : ', writePlasmaOut_script)
                     print('\t with pkl file: ', 'writePlasmaOut.pkl')
@@ -441,16 +440,6 @@ class parent_driver(Component):
                     print(' ')
                 sys.stdout.flush()
 
-                #writePlasmOut_output=writePlasmaOut.SOLPS_heatflux_for_FTX(rad_grid=self.writePlasmaOut['rad_grid'],
-                #                                                           b2fstate_file=self.writePlasmaOut['b2fstate_file'],
-                #                                                           b2fgmtry_file=self.writePlasmaOut['b2fgmtry_file'],
-                #                                                           fort44_file=self.writePlasmaOut['fort44_file'],
-                #                                                           outputFile=self.writePlasmaOut['outputFile'],
-                #                                                           print_test=self.writePlasmaOut['print_test'],
-                #                                                           logFile=self.writePlasmaOut['logFile'])
-                #if self.print_test: 
-                #    print('\t SOLPS_heatflux_for_FTX returned:', writePlasmOut_output)
-                
                 print('... done with writePlasmaOut for ftx '+str(i)+' \n')
                 sys.stdout.flush()
 
@@ -461,10 +450,11 @@ class parent_driver(Component):
             
             #print('\n')
             print('READ AND FORMAT INPUTS TO FTX WORKFLOW(S)')
-            print('\n')
+            print(' ')
             
             for ftx_comp, ftx in list(self.ftx_components.items()):
 
+                print(' ')
                 #to get i, these two ways should work:
                 i=int(''.join(list(filter(str.isdigit, ftx_comp))))
                 if (self.print_test):
@@ -498,15 +488,10 @@ class parent_driver(Component):
                     print('\t output log: ', 'log.plasmaOut2ftxIn'+'_t'+str(timeStamp)) #<-- without cwd: self.plasmaOut2ftxIn['logFile'])
                     print(' ')
                 sys.stdout.flush()
-                try:
-                    self.TRANSLATE_P2FTX
-                    plasma2ftx_script=self.TRANSLATE_P2FTX
-                    print('\t Launch user-defined python script :  ')
-                    print('\t', plasma2ftx_script)                    
-                except: #DEFAULT PATH:
-                    plasma2ftx_script = 'plasmaOut2ftxIn.py'
-                    print('\t Launch default python script: ')
-                    print('\t',plasma2ftx_script)
+
+                plasma2ftx_script = 'plasmaOut2ftxIn.py'
+                print('\t Launch python script: ')
+                print('\t',plasma2ftx_script)
                     
                 sys.stdout.flush()
                 if self.print_test:
@@ -580,7 +565,6 @@ class parent_driver(Component):
                 print('\t ftx_input_dir+', solps_outFile, ' as ', solps_outFile+'_t'+str(timeStamp))
                 print('\t cwd+', ftxInFileName, ' as ', ftxInFileName+'_t'+str(timeStamp)) #<-- without cwd: cwd+ftxInFileName
                 print('\t', timeFileName , ' as ', timeFileName+'_t'+str(timeStamp))
-
                 sys.stdout.flush()
                 #update plasma state file:
                 self.services.update_state()
@@ -634,6 +618,9 @@ class parent_driver(Component):
                                                                                                                      **ftx) #**keys)
                 sys.stdout.flush()
                 
+            ftxOutFileFormat=list(self.services.get_config_param('FTX_OUTPUT_FORMAT'))
+            ftxOutFileName=ftxOutFileFormat[0]+'.'+ftxOutFileFormat[1] # without i, so all ftx output goes into the same file
+                
             for ftx_comp, ftx in list(self.ftx_components.items()):
                 print('\t for subworkflow ', ftx_comp, ' with sim_name ', ftx['sim_name'])
                 print('\t Wait for driver:step to be done')
@@ -656,27 +643,22 @@ class parent_driver(Component):
                 #many file names hard coded for now ; could consider linking to config params
                 i=int(''.join(list(filter(str.isdigit, ftx_comp))))
 
-                ##if PRINT_TEST=TRUE, CHECK THAT WE'RE STAGING FILES CORRECTLY
-                #      SEE IF I CAN ACCESS LIST OF FILES STAGED FROM SUBWORKFLOW
-
                 if (self.print_test):
                     print('Check that staged files exist and are not empty')
                     print(' ')
                     for f in ['last_TRIDYN.dat', 'tridyn.dat', 'retentionOut.txt', 'log.ftx_{}'.format(i)]:
                         if os.path.exists(f):
-                            open_file = open(f)
-                            print('\t Succesfully opened :', open_file.name)
+                            open_file = open(f)                            
                             lines_file = open_file.readlines()
-                            print('\t len(',open_file.name,') = ', len(lines_file))
+                            if len(lines_file) > 0:
+                                print('\t Succesfully opened file (not empty) :', open_file.name)                                
+                            #print('\t len(',open_file.name,') = ', len(lines_file))
                             open_file.close()
                         else:
                             print('\t WARNING: no ', f ,' found!')
                             print("\t SOLPS out --> FTX in won't work")
-                        print(' ')
-                        sys.stdout.flush()
-
-                ftxOutFileFormat=list(self.services.get_config_param('FTX_OUTPUT_FORMAT'))
-                ftxOutFileName=ftxOutFileFormat[0]+'_'+str(i)+'.'+ftxOutFileFormat[1]
+                    print(' ')
+                    sys.stdout.flush()
 
                 write_ftxOut_log=cwd+'/log.write_ftxOut_{}'.format(i)+'_t'+str(timeStamp)
                 self.write_ftxOut={}
@@ -717,16 +699,10 @@ class parent_driver(Component):
                     print('\t output file: ', ftxOutFileName) #ftxOutFileStd) #<-- without cwd:
                     print(' ')
                 sys.stdout.flush()
-                try:
-                    self.WRITE_FTXOUT
-                    write_ftxOut_script=self.WRITE_FTXOUT
-                    print('\t Launch user-defined python script :  ')
-                    print('\t', write_ftxOut_script)
 
-                except: #DEFAULT PATH:
-                    write_ftxOut_script = 'write_ftxOut.py'
-                    print('\t Launch default python script: ')
-                    print('\t',write_ftxOut_script)
+                write_ftxOut_script = 'write_ftxOut.py'
+                print('\t Launch python script: ')
+                print('\t',write_ftxOut_script)
 
                 sys.stdout.flush()
                 if self.print_test:
@@ -745,11 +721,23 @@ class parent_driver(Component):
                 print('... done with write_ftxOut \n')
                 
                 #save ftxOut for each loop (with time-stamp)
-                shutil.copyfile(self.write_ftxOut['outFile'], ftxOutFileName+'_t'+str(timeStamp))
-                #print('...and save', ftxOutFileStd ,' for each time-loop:')
-                #print('\t copy cwd+', ftxOutFileStd, ' as ', ftxOutFileName+'_t'+str(timeStamp)) #<-- without cwd:
+                shutil.copyfile(self.write_ftxOut['outFile'], ftxOutFileName+'_ftx'+str(i)+'_t'+str(timeStamp))
                 print('...and save', ftxOutFileName ,' for each time-loop:')
-                print('\t copy cwd+', ftxOutFileName, ' as ', ftxOutFileName+'_t'+str(timeStamp)) #<-- without cwd: 
+                print('\t copy cwd+', ftxOutFileName, ' as ', ftxOutFileName+'_ftx'+str(i)+'_t'+str(timeStamp)) #<-- without cwd: 
+                print(' ')
+
+
+            # SOLPS can only take average the FTX recycling factors
+            [ave_twall, ave_Rft, ave_Rxol, ave_Rtot] = average_SOLPS_input.average_SOLPS_input(ftxOut_file=self.write_ftxOut['outFile'], print_test=self.print_test, logFile=None)
+
+            #do whatever needed by SOLPS with these values
+            #for now, just print them
+            if self.print_test:
+                print('from driver, average FTX outputs are:')
+                print('\t average T wall = ', ave_twall)
+                print('\t average R_FT = ', ave_Rft)
+                print('\t average R_Xol = ', ave_Rxol)
+                print('\t average R_tot = ', ave_Rtot)
                 print(' ')
                 
             for ftx_comp, ftx in list(self.ftx_components.items()):
