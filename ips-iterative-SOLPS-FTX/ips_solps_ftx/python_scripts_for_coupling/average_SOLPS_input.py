@@ -25,7 +25,8 @@ def average_SOLPS_input(ftxOut_file='ftxOut.txt', print_test=False, logFile=None
     print('RUN average_SOLPS_input:')
     print(' ')
     sys.stdout.flush()
-    
+
+    grid=[]
     t_wall=[]
     recycling_FT=[]
     recycling_xol=[]
@@ -36,6 +37,7 @@ def average_SOLPS_input(ftxOut_file='ftxOut.txt', print_test=False, logFile=None
     
     for x in lines:
         l=x.strip()
+        grid.append(int(l.split('\t')[0]))
         t_wall.append(float(l.split('\t')[1]))
         recycling_FT.append(float(l.split('\t')[2]))
         recycling_xol.append(float(l.split('\t')[3]))
@@ -44,12 +46,14 @@ def average_SOLPS_input(ftxOut_file='ftxOut.txt', print_test=False, logFile=None
     f.close()
 
     try:
+        ave_grid=int(sum(grid)/len(grid))
         ave_twall=sum(t_wall)/len(t_wall)
         ave_Rft=sum(recycling_FT)/len(recycling_FT)
         ave_Rxol=sum(recycling_xol)/len(recycling_xol)
         ave_Rtot=sum(recycling_total)/len(recycling_total)
         if print_test:
             print('succesfully calculated average FTX outputs are:')
+            print('\t average grid = ', ave_grid)
             print('\t average T wall = ', ave_twall)
             print('\t average R_FT = ', ave_Rft)
             print('\t average R_Xol = ', ave_Rxol)
@@ -57,14 +61,15 @@ def average_SOLPS_input(ftxOut_file='ftxOut.txt', print_test=False, logFile=None
             print('Done with average_SOLPS_input')
             sys.stdout.flush()
 
-            return  ave_twall, ave_Rft, ave_Rxol, ave_Rtot
+            return  ave_grid, ave_twall, ave_Rft, ave_Rxol, ave_Rtot
     except:
         print("some average calculation went wrong:")
         if print_test:
+            print("\t grid sum = ", sum(grid), " and len = ", len(grid))
             print("\t Twall sum = ", sum(t_wall), " and len = ", len(t_wall))
-            print("\t Twall sum = ", sum(recycling_FT), " and len = ", len(recycling_FT))
-            print("\t Twall sum = ", sum(recycling_xol), " and len = ", len(recycling_xol))
-            print("\t Twall sum = ", sum(recycling_total), " and len = ", len(recycling_total))
+            print("\t recycling_FT sum = ", sum(recycling_FT), " and len = ", len(recycling_FT))
+            print("\t recycling_xol sum = ", sum(recycling_xol), " and len = ", len(recycling_xol))
+            print("\t recycling_total sum = ", sum(recycling_total), " and len = ", len(recycling_total))
         print("do not return any values")
         print('Done with average_SOLPS_input')
         sys.stdout.flush()

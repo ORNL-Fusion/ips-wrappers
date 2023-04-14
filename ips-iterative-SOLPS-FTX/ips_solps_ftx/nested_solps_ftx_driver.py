@@ -11,13 +11,15 @@ import os
 import shutil
 import subprocess
 import sys
+import pickle
+import difflib
 from ips_solps_ftx.python_scripts_for_coupling import plasmaOut2ftxIn
 from ips_solps_ftx.python_scripts_for_coupling import write_ftxOut
 #from ips_solps_ftx.python_scripts_for_coupling import SOLPS_heatflux_for_FTX #maybe generalize name
 from ips_solps_ftx.python_scripts_for_coupling import SOLPS_outputs_for_FTX
 from ips_solps_ftx.python_scripts_for_coupling import average_SOLPS_input
-import pickle
-
+from ips_solps_ftx.python_scripts_for_coupling import updateSOLPSinput
+ 
 #from contextlib import redirect_stdout
 
 #-------------------------------------------------------------------------------
@@ -85,6 +87,7 @@ class parent_driver(Component):
         #ftx_conf = self.services.get_config_param('SUBWF_COMPONENT_CONF')
         solps_conf = self.services.get_config_param('SOLPS_COMPONENT_CONF')
         ftx_input_dir=self.services.get_config_param('FTX_INPUT_DIR')
+        solps_input_dir=self.services.get_config_param('SOLPS_INPUT_DIR')
 
         print('read various parent config file parameters:')
         self.ftx_locs=[0]*num_ftx
@@ -155,7 +158,7 @@ class parent_driver(Component):
         print('\t name: component_SOLPS')
         print('\t config: ', solps_conf)
         print('\t keys: SIM_NAME : solps_iter', 'LOG_FILE : log.component_SOLPS.warning')
-        print('\t INPUT DIR ', self.services.get_config_param('SOLPS_INPUT_DIR'))
+        print('\t INPUT DIR ', solps_input_dir)
 
         (self.nested_components['component_SOLPS']['sim_name'],
          self.nested_components['component_SOLPS']['init'],
@@ -163,7 +166,7 @@ class parent_driver(Component):
                                                                                                   solps_conf, 
                                                                                                   {'SIM_NAME' : 'solps_iter',
                                                                                                    'LOG_FILE' : 'log.component_SOLPS.warning'},
-                                                                                                  self.services.get_config_param('SOLPS_INPUT_DIR'))
+                                                                                                  solps_input_dir)
 
         print('creating SOLPS sub-workflow DONE!')
         if (self.print_test):
@@ -736,17 +739,44 @@ class parent_driver(Component):
 
 
             # SOLPS can only take average the FTX recycling factors
-            [ave_twall, ave_Rft, ave_Rxol, ave_Rtot] = average_SOLPS_input.average_SOLPS_input(ftxOut_file=self.write_ftxOut['outFile'], print_test=self.print_test, logFile=None)
+            [ave_grid, ave_twall, ave_Rft, ave_Rxol, ave_Rtot] = average_SOLPS_input.average_SOLPS_input(ftxOut_file=self.write_ftxOut['outFile'], print_test=self.print_test, logFile=None)
 
             #do whatever needed by SOLPS with these values
             #for now, just print them
             if self.print_test:
                 print('from driver, average FTX outputs are:')
+                print('\t average grid = ', ave_grid)
                 print('\t average T wall = ', ave_twall)
                 print('\t average R_FT = ', ave_Rft)
                 print('\t average R_Xol = ', ave_Rxol)
                 print('\t average R_tot = ', ave_Rtot)
                 print(' ')
+
+            #UPDATE SOLPS input.dat
+            inputDat='input.dat'
+            old_inputDat=inputDat+'_t'+str(timeStamp)
+            shutil.copyfile(inputDat, old_inputDat) #save a copy
+            
+            RECYCF = updateSOLPSinput.calc_RECYCF(inputDat, 'fort.44', ave_grid, ave_Rft) #not sure which grid point I should use here
+            updateSOLPSinput.input_dat_update(inputDat, RECYCF, ave_Rtot, ave_twall, ave_grid) #assume RECYCT = total?!?!
+
+            shutil.copyfile(inputDat, inputDat+'updated_t'+str(timeStamp))
+            #add printlines to know what's being saved where
+            
+            # JUST FOR TESTING!!
+            with open(inputDat_old) as file_1:
+                file_1_text = file_1.readlines()
+ 
+            with open(inputDat) as file_2:
+                file_2_text = file_2.readlines()
+ 
+            # Find and print the diff:
+            for line in difflib.unified_diff(
+                    file_1_text, file_2_text, fromfile='file1.txt',
+                    tofile='file2.txt', lineterm=''):
+                print('TEST: updated input.dat: ', line)
+            file_1.close
+            file_2.close
                 
             for ftx_comp, ftx in list(self.ftx_components.items()):
                 del self.running_components['{}:driver:init'.format(ftx['sim_name'])]
