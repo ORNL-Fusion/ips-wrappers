@@ -14,7 +14,7 @@ import sys
 from ips_solps_ftx.python_scripts_for_coupling import plasmaOut2ftxIn
 from ips_solps_ftx.python_scripts_for_coupling import write_ftxOut
 #from ips_solps_ftx.python_scripts_for_coupling import SOLPS_heatflux_for_FTX #maybe generalize name
-from ips_solps_ftx.python_scripts_for_coupling import writePlasmaOut
+from ips_solps_ftx.python_scripts_for_coupling import SOLPS_outputs_for_FTX
 from ips_solps_ftx.python_scripts_for_coupling import average_SOLPS_input
 import pickle
 
@@ -85,23 +85,25 @@ class parent_driver(Component):
         #ftx_conf = self.services.get_config_param('SUBWF_COMPONENT_CONF')
         solps_conf = self.services.get_config_param('SOLPS_COMPONENT_CONF')
         ftx_input_dir=self.services.get_config_param('FTX_INPUT_DIR')
-        
+
+        print('read various parent config file parameters:')
         self.ftx_locs=[0]*num_ftx
         if len(ftx_locs_string.split())<num_ftx:
-            print('WARNING: less grid points than number of ftx runs')
+            print('\t WARNING: less grid points than number of ftx runs')
             print('\t len(ftx_locs_string.split()) = ', len(ftx_locs_string.split()), 'and num_ftx = ', num_ftx )
             print('\t other grid points set to zero ; continue at your own risk')
         elif len(ftx_locs_string.split())>num_ftx:
-            print('WARNING: more grid points than number of ftx ; ignore the rest of gridpoints!')
+            print('\t WARNING: more grid points than number of ftx ; ignore the rest of gridpoints!')
             print('\t len(ftx_locs_string.split()) = ', len(ftx_locs_string.split()), 'and num_ftx = ', num_ftx )            
         for i in range(0, num_ftx):        
             self.ftx_locs[i]=int(ftx_locs_string.split()[i])
-        print('Running ', num_ftx, ' FTX simulation(s), for SOLPS grid point(s): ', self.ftx_locs)
+        print('\t Running ', num_ftx, ' FTX simulation(s), for SOLPS grid point(s): ', self.ftx_locs)
         sys.stdout.flush()
         
         self.solps_output_file=list(self.services.get_config_param('SOLPS_OUTPUT_FORMAT'))
 
         if (self.print_test):
+            print(' ')
             print('will be reading solps output from:', self.solps_output_file)
         
         self.init_time = float(self.services.get_config_param('INIT_TIME'))
@@ -324,7 +326,7 @@ class parent_driver(Component):
             print('COMPLETED SOLPS')
 
             ## pass plasma information by:
-            ## 1 - read output of SOLPS from solpsOut.txt (one per child) using writePlasmaOut script 
+            ## 1 - read output of SOLPS from solpsOut.txt (one per child) using SOLPS_outputs_for_FTX script 
             ## 2 - do ops to calculate/format inputs for FTX in plasmaOut2ftxIn:
             ##     a) check inputs expected from SOLPS / that need special care
             ##     i.  inputs that are single values:
@@ -385,62 +387,67 @@ class parent_driver(Component):
             # 2 - Call SOLPS_heatflux_for_FTX to write SOLPS output into FTX readable form
 
             #these parameters don't change with the FTX location
-            self.writePlasmaOut={}
-            self.writePlasmaOut['b2fstate_file'] = 'b2fstate'
-            self.writePlasmaOut['b2fgmtry_file'] = 'b2fgmtry'
-            self.writePlasmaOut['fort44_file'] = 'fort.44'
+            self.SOLPSoutputs={}
+            self.SOLPSoutputs['b2fstate_file'] = 'b2fstate'
+            self.SOLPSoutputs['b2fgmtry_file'] = 'b2fgmtry'
+            self.SOLPSoutputs['fort44_file'] = 'fort.44'
+            SOLPSoutputs_log='log.SOLPSoutputs_t'+str(timeStamp)
+
             
             for ftx_comp, ftx in list(self.ftx_components.items()):
                 i=int(''.join(list(filter(str.isdigit, ftx_comp))))
-                #solps_outFile=self.solps_output_file[0]+'_'+str(i)+'.'+self.solps_output_file[1] #0=filename (solpsOut) ; 1=fomat (txt)
-                solps_outFile='solpsOutput_'+str(i)+'.test'
-                writePlasmaOut_log='log.writePlasmaOut_'+str(i)+'_t'+str(timeStamp)
+                solps_outFile=self.solps_output_file[0]+'_'+str(i)+'.'+self.solps_output_file[1] #0=filename (solpsOut) ; 1=fomat (txt)
+                #solps_outFile='solpsOutput_'+str(i)+'.test' #test file to avoid overwritting the one from input
 
                 #these parameters are location-dependent
-                self.writePlasmaOut['rad_grid'] = self.ftx_locs[i]
-                self.writePlasmaOut['outputFile']=solps_outFile
-                self.writePlasmaOut['print_test']=self.print_test
-                self.writePlasmaOut['logFile']=writePlasmaOut_log
+                self.SOLPSoutputs['rad_grid'] = self.ftx_locs[i]
+                self.SOLPSoutputs['pickleOutputFile']=solps_outFile
+                self.SOLPSoutputs['print_test']=self.print_test
+                self.SOLPSoutputs['logFile']=SOLPSoutputs_log
 
-                #launch writePlasmaOut instead of calling function:
-                pkl_writePlasmaOut_file=cwd+'/writePlasmaOut.pkl'
-                pickle.dump(self.writePlasmaOut, open(pkl_writePlasmaOut_file, "wb" ) )
-                shutil.copyfile(pkl_writePlasmaOut_file, 'writePlasmaOut_'+str(i)+'.pkl')
+                #launch SOLPSoutputs instead of calling function:
+                pkl_SOLPSoutputs_file='SOLPSoutputs.pkl' #rm cwd+'/'
+                pickle.dump(self.SOLPSoutputs, open(pkl_SOLPSoutputs_file, "wb" ) )
+                shutil.copyfile(pkl_SOLPSoutputs_file, 'SOLPSoutputs_'+str(i)+'.pkl')
 
-                print('Launch writePlasmaOut... ')
+                print('Launch SOLPS_outputs_for_FTX ... ')
                 if (self.print_test):
                     print('\t with inputs: ')
-                    print('\t rad_grid : ', self.writePlasmaOut['rad_grid'])
-                    print('\t b2fstate_file :', self.writePlasmaOut['b2fstate_file'])
-                    print('\t b2fgmtry_file :', self.writePlasmaOut['b2fgmtry_file'])
-                    print('\t fort44_file :', self.writePlasmaOut['fort44_file'])
-                    print('\t SOLPSoutput file : ', self.writePlasmaOut['outputFile'])
-                    print('\t print_test : ', self.writePlasmaOut['print_test'])
-                    print('\t logFile : ', self.writePlasmaOut['logFile'])
+                    print('\t rad_grid : ', self.SOLPSoutputs['rad_grid'])
+                    print('\t b2fstate_file :', self.SOLPSoutputs['b2fstate_file'])
+                    print('\t b2fgmtry_file :', self.SOLPSoutputs['b2fgmtry_file'])
+                    print('\t fort44_file :', self.SOLPSoutputs['fort44_file'])
+                    print('\t SOLPSoutput file : ', self.SOLPSoutputs['pickleOutputFile'])
+                    print('\t print_test : ', self.SOLPSoutputs['print_test'])
+                    print('\t logFile : ', self.SOLPSoutputs['logFile'])
                     print(' ')
                 sys.stdout.flush()
 
-                writePlasmaOut_script = 'writePlasmaOut.py'
+                SOLPSoutputs_script = 'SOLPS_outputs_for_FTX.py'
                 print('\t Launch python script: ')
-                print('\t', writePlasmaOut_script)                
+                print('\t', SOLPSoutputs_script)                
                 sys.stdout.flush()
                 
                 if self.print_test:
-                    print('\t launch task : ', writePlasmaOut_script)
-                    print('\t with pkl file: ', 'writePlasmaOut.pkl')
-                    print('\t logFile : ',writePlasmaOut_log)
+                    print('\t launch task : ', SOLPSoutputs_script)
+                    print('\t with pkl file: ', 'SOLPSoutputs.pkl')
+                    print('\t logFile : ', SOLPSoutputs_log)
                     print(' ')
-                task_id_writePlasmaOut = self.services.launch_task(1,self.services.get_working_dir(),
-                                                                   writePlasmaOut_script, logFile=writePlasmaOut_log)
-                ret_val_writePlasmaOut = self.services.wait_task(task_id_writePlasmaOut)
+                task_id_SOLPSoutputs = self.services.launch_task(1,self.services.get_working_dir(),
+                                                                 SOLPSoutputs_script, logFile=SOLPSoutputs_log)
+                ret_val_SOLPSoutputs = self.services.wait_task(task_id_SOLPSoutputs)
 
                 if self.print_test:
-                    print('\t after running ', writePlasmaOut_script)
-                    print('\t ret_val_writePlasmaOut = ', ret_val_writePlasmaOut)
+                    print('\t after running ', SOLPSoutputs_script)
+                    print('\t ret_val_SOLPSoutputs = ', ret_val_SOLPSoutputs)
                     print(' ')
                 sys.stdout.flush()
 
-                print('... done with writePlasmaOut for ftx '+str(i)+' \n')
+                if self.print_test:
+                    print('save SOLPS output file ', self.SOLPSoutputs['pickleOutputFile'], 'as ', self.SOLPSoutputs['pickleOutputFile']+'_t'+str(timeStamp))
+                shutil.copyfile(self.SOLPSoutputs['pickleOutputFile'],self.SOLPSoutputs['pickleOutputFile']+'_t'+str(timeStamp))                
+                
+                print('... done with SOLPSoutputs for ftx '+str(i)+' \n')
                 sys.stdout.flush()
 
 
@@ -467,16 +474,16 @@ class parent_driver(Component):
                 ftxInFileFormat=list(self.services.get_config_param('FTX_INPUT_FORMAT'))
                 ftxInFileName=ftxInFileFormat[0]+'_'+str(i)+'.'+ftxInFileFormat[1]
                 solps_outFile=self.solps_output_file[0]+'_'+str(i)+'.'+self.solps_output_file[1] #0=filename (solpsOut) ; 1=fomat (txt)
-                p2ftx_log=cwd+'/log.plasmaOut2ftxIn'+'_t'+str(timeStamp)
+                p2ftx_log='log.plasmaOut2ftxIn'+'_t'+str(timeStamp) #rm cwd+'/'
 
                 self.plasmaOut2ftxIn={}
-                self.plasmaOut2ftxIn['plasmaOutFile'] = ftx_input_dir+'/'+solps_outFile #for now, located in ftx input dir ; when it's solps output, it should be in driver dir
-                self.plasmaOut2ftxIn['ftxInFile'] = cwd+'/'+ftxInFileName
+                self.plasmaOut2ftxIn['plasmaOutFile'] = solps_outFile #ftx_input_dir+'/'+solps_outFile #for now, located in ftx input dir ; when it's solps output, it should be in driver dir
+                self.plasmaOut2ftxIn['ftxInFile'] = ftxInFileName #rm cwd+'/'
                 self.plasmaOut2ftxIn['logFile']= p2ftx_log
                 self.plasmaOut2ftxIn['print_test'] = self.print_test
 
                 #launch plasmaOut2ftxIn instead of calling function:            
-                pkl_p2ftx_file=cwd+'/plasmaOut2ftxIn.pkl' 
+                pkl_p2ftx_file='plasmaOut2ftxIn.pkl' #rm cwd+'/'
                 pickle.dump(self.plasmaOut2ftxIn, open(pkl_p2ftx_file, "wb" ) )
 
                 print('Launch plasmaOut2ftxIn... ')
@@ -503,6 +510,7 @@ class parent_driver(Component):
                 task_id_p2ftx = self.services.launch_task(1,self.services.get_working_dir(),
                                                           plasma2ftx_script, logFile=p2ftx_log)
                 ret_val_p2ftx = self.services.wait_task(task_id_p2ftx)
+                
                 if self.print_test:
                     print('\t after running ', plasma2ftx_script)
                     print('\t ret_val_p2ftx = ', ret_val_p2ftx)
@@ -542,29 +550,29 @@ class parent_driver(Component):
                 
                 # 5 - copy ftxIn and timeFile to ftx input directory
                 print('copying input to FTX file')
-                print('\t from: cwd+', ftxInFileName) ##<-- without cwd: cwd+ftxInFileName
+                print('\t from: ', ftxInFileName) ##<-- without cwd: cwd+ftxInFileName
                 print('\t to: ', self.ftx_components[ftx_comp]['INPUT_DIR']+'/ftxInput.txt')
-                shutil.copyfile(cwd+'/'+ftxInFileName,self.ftx_components[ftx_comp]['INPUT_DIR']+'/ftxInput.txt')
+                shutil.copyfile(ftxInFileName,self.ftx_components[ftx_comp]['INPUT_DIR']+'/ftxInput.txt') #rm cwd+'/'
                 print('copying time parameter ')
                 print('\t from: ', timeFileName)
                 print('\t to: ', self.ftx_components[ftx_comp]['INPUT_DIR']+'/'+timeFileName)
                 shutil.copyfile(timeFileName,self.ftx_components[ftx_comp]['INPUT_DIR']+'/'+timeFileName)
                 print('copying output file of SOLPS')
-                print('\t from: ftx_input_dir+', solps_outFile)
-                print('\t to: ', self.ftx_components[ftx_comp]['INPUT_DIR']+'/solpsOut.txt')
-                shutil.copyfile(ftx_input_dir+'/'+solps_outFile,self.ftx_components[ftx_comp]['INPUT_DIR']+'/solpsOut.txt') #modify ftx_input_dir to be driver dir when output comes from solps
+                print('\t from: ', solps_outFile)
+                print('\t to: ', self.ftx_components[ftx_comp]['INPUT_DIR']+'/solpsOut.pkl')
+                shutil.copyfile(solps_outFile,self.ftx_components[ftx_comp]['INPUT_DIR']+'/solpsOut.pkl') #modify ftx_input_dir to be driver dir when output comes from solps
                 
                 print('\n')
                 sys.stdout.flush()
 
                 #save ftxIn and solpsOut for each loop (with time-stamp)
-                shutil.copyfile(ftx_input_dir+'/'+solps_outFile, solps_outFile+'_t'+str(timeStamp)) #modify ftx_input_dir to be driver dir when output comes from solps
-                shutil.copyfile(cwd+'/'+ftxInFileName,cwd+'/'+ftxInFileName+'_t'+str(timeStamp))
+                shutil.copyfile(solps_outFile, solps_outFile+'_t'+str(timeStamp)) #modify ftx_input_dir to be driver dir when output comes from solps
+                shutil.copyfile(ftxInFileName,ftxInFileName+'_t'+str(timeStamp)) #rm cwd+'/' #rm cwd+'/'
                 shutil.copyfile(timeFileName,timeFileName+'_t'+str(timeStamp))
                 print('to save input files for each time-loop, copied:')
-                print('\t ftx_input_dir+', solps_outFile, ' as ', solps_outFile+'_t'+str(timeStamp))
-                print('\t cwd+', ftxInFileName, ' as ', ftxInFileName+'_t'+str(timeStamp)) #<-- without cwd: cwd+ftxInFileName
-                print('\t', timeFileName , ' as ', timeFileName+'_t'+str(timeStamp))
+                print('\t ', solps_outFile, ' as ', solps_outFile+'_t'+str(timeStamp))
+                print('\t ', ftxInFileName, ' as ', ftxInFileName+'_t'+str(timeStamp)) #<-- without cwd: cwd+ftxInFileName
+                print('\t ', timeFileName , ' as ', timeFileName+'_t'+str(timeStamp))
                 sys.stdout.flush()
                 #update plasma state file:
                 self.services.update_state()
@@ -660,7 +668,7 @@ class parent_driver(Component):
                     print(' ')
                     sys.stdout.flush()
 
-                write_ftxOut_log=cwd+'/log.write_ftxOut_{}'.format(i)+'_t'+str(timeStamp)
+                write_ftxOut_log='log.write_ftxOut_{}'.format(i)+'_t'+str(timeStamp) #rm cwd+'/'
                 self.write_ftxOut={}
                 self.write_ftxOut['grid'] = self.ftx_locs[i]
                 self.write_ftxOut['last_tridyn'] = 'last_TRIDYN_{}.dat'.format(i)
@@ -669,7 +677,7 @@ class parent_driver(Component):
                 self.write_ftxOut['retentionFile']='retentionOut_{}.txt'.format(i)
                 self.write_ftxOut['print_test'] = self.print_test
                 self.write_ftxOut['logFile'] = write_ftxOut_log
-                self.write_ftxOut['outFile'] = cwd+'/'+ftxOutFileName #ftxOutFileStd
+                self.write_ftxOut['outFile'] = ftxOutFileName #ftxOutFileStd #rm cwd+'/'
 
                 #to avoid overwritting, copy files with the ftx-index
                 if (self.print_test):
@@ -683,7 +691,7 @@ class parent_driver(Component):
                 shutil.copyfile('retentionOut.txt',self.write_ftxOut['retentionFile'])
                 
                 #launch write_ftxOut instead of calling function:
-                pkl_ftxOut_file=cwd+'/write_ftxOut.pkl'
+                pkl_ftxOut_file='write_ftxOut.pkl' #rm cwd+'/'
                 pickle.dump(self.write_ftxOut, open(pkl_ftxOut_file, "wb" ) )
 
                 print('Launch write_ftxOut...')
@@ -723,7 +731,7 @@ class parent_driver(Component):
                 #save ftxOut for each loop (with time-stamp)
                 shutil.copyfile(self.write_ftxOut['outFile'], ftxOutFileName+'_ftx'+str(i)+'_t'+str(timeStamp))
                 print('...and save', ftxOutFileName ,' for each time-loop:')
-                print('\t copy cwd+', ftxOutFileName, ' as ', ftxOutFileName+'_ftx'+str(i)+'_t'+str(timeStamp)) #<-- without cwd: 
+                print('\t copy ', ftxOutFileName, ' as ', ftxOutFileName+'_ftx'+str(i)+'_t'+str(timeStamp)) #<-- without cwd: 
                 print(' ')
 
 

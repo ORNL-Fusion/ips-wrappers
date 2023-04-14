@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-## Bin the output from Xolotl
 
 import os
 from ips_xolotlFT.python_scripts_for_coupling import param_handler
 import sys
 import pickle
+import numpy as np
 
-def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt',print_test=True,logFile=None):
+def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.pkl', ftxInFile='ftxIn.txt',print_test=True,logFile=None):
 
     cwd = os.getcwd()
     print(' ')
@@ -37,7 +37,7 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt',print_t
     sys.stdout.flush()
     
     if print_test:
-        print('\t launched script with inputs:')
+        print('Launched script with inputs:')
         print('\t plasmaOutFile = ', plasmaOutFile)
         print('\t ftxInFile = ', ftxInFile)
         print('\t print_test = ', print_test)
@@ -47,14 +47,20 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt',print_t
     print(' ')
     print('RUN plasmaOut2ftxIn:')
     print(' ')
-    
-    solpsParams=param_handler.read(plasmaOutFile) #(INPUT_DIR+'/'+solps_outFile)
 
-    print('\t reading output of SOLPS:')
-    for k,v, in solpsParams.items():
-        print(('\t {0} : {1}'.format(k, v)))
-    print(' ')
+    solpsParams=pickle.load(open(plasmaOutFile, "rb" ))
+    if print_test:
+        print('\t Reading output of SOLPS:')
+        print('\t', solpsParams)
+        print(' ')
     sys.stdout.flush()
+    
+    #solpsParams=param_handler.read(plasmaOutFile) #(INPUT_DIR+'/'+solps_outFile)
+    #print('\t reading output of SOLPS:')
+    #for k,v, in solpsParams.items():
+    #    print(('\t {0} : {1}'.format(k, v)))
+    #print(' ')
+    #sys.stdout.flush()
     
     #format float to list if needed
     #currently implemented for inputEnergy, Ti, Te, inputAngle, bfieldAngle
@@ -63,13 +69,14 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt',print_t
     #idea is: if solpsParams[k] is a single value (float or int),
     #turn into list with one Ein value per species (all same value)
     #otherwise (if not float/int, no plasmaSpecies given, etc), leave as is
-    print('\t Format Ein, Ti, Te, Ain and/or Bin as lists when posible:')
+    print('\t Format Ein, Ti, Te, Ain and/or Bin as lists of len(plasmaSpecies) :')
     if ('inputEnergy' in solpsParams):
         Ein=[]
-        if (isinstance(solpsParams['inputEnergy'],float) or isinstance(solpsParams['inputEnergy'],int)):
+        #TO-DO!! can be re-written as isinstance(param, (int, float)) , together
+        if (isinstance(solpsParams['inputEnergy'],float) or isinstance(solpsParams['inputEnergy'],int) or (isinstance(solpsParams['inputEnergy'],np.ndarray) and (solpsParams['inputEnergy'].size < len(solpsParams['plasmaSpecies'])))):
             if ('plasmaSpecies' in solpsParams):
                 for n in range(len(solpsParams['plasmaSpecies'])):
-                    Ein.append(solpsParams['inputEnergy'])
+                    Ein.append(float(solpsParams['inputEnergy']))
             else: #without plasmaSpecies, just leave as is
                 Ein=solpsParams['inputEnergy']
         else: #if it's not float or int, leave as is (whether it's a list or not)
@@ -78,10 +85,10 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt',print_t
 
     if ('Ti' in solpsParams):
         Ti=[]
-        if (isinstance(solpsParams['Ti'],float) or isinstance(solpsParams['Ti'],int)):
+        if (isinstance(solpsParams['Ti'],float) or isinstance(solpsParams['Ti'],int) or (isinstance(solpsParams['Ti'],np.ndarray) and (solpsParams['Ti'].size < len(solpsParams['plasmaSpecies'])))):
             if ('plasmaSpecies' in solpsParams):
                 for n in range(len(solpsParams['plasmaSpecies'])):
-                    Ti.append(solpsParams['Ti'])
+                    Ti.append(float(solpsParams['Ti']))
             else: #without plasmaSpecies, just leave as is
                 Ti=solpsParams['Ti']
         else: #if it's not float or int, leave as is (whether it's a list or not)
@@ -90,10 +97,10 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt',print_t
 
     if ('Te' in solpsParams):
         Te=[]
-        if (isinstance(solpsParams['Te'],float) or isinstance(solpsParams['Te'],int)):
+        if (isinstance(solpsParams['Te'],float) or isinstance(solpsParams['Te'],int) or (isinstance(solpsParams['Te'],np.ndarray) and (solpsParams['Te'].size < len(solpsParams['plasmaSpecies'])))):
             if ('plasmaSpecies' in solpsParams):
                 for n in range(len(solpsParams['plasmaSpecies'])):
-                    Te.append(solpsParams['Te'])
+                    Te.append(float(solpsParams['Te']))
             else: #without plasmaSpecies, just leave as is
                 Te=solpsParams['Te']
         else: #if it's not float or int, leave as is (whether it's a list or not)
@@ -102,7 +109,7 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt',print_t
 
     if ('inputAngle' in solpsParams):
         Ain=[]
-        if (isinstance(solpsParams['inputAngle'],float) or isinstance(solpsParams['inputAngle'],int)):
+        if (isinstance(solpsParams['inputAngle'],float) or isinstance(solpsParams['inputAngle'],int) or (isinstance(solpsParams['inputAngle'],np.ndarray) and (solpsParams['inputAngle'].size < len(solpsParams['plasmaSpecies'])))):
             if ('plasmaSpecies' in solpsParams):
                 for n in range(len(solpsParams['plasmaSpecies'])):
                     Ain.append(solpsParams['inputAngle'])
@@ -115,7 +122,7 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt',print_t
 
     if ('bfieldAngle' in solpsParams):
         Bin=[]
-        if (isinstance(solpsParams['bfieldAngle'],float) or isinstance(solpsParams['bfieldAngle'],int)):
+        if (isinstance(solpsParams['bfieldAngle'],float) or isinstance(solpsParams['bfieldAngle'],int) or (isinstance(solpsParams['bfieldAngle'],np.ndarray) and (solpsParams['bfieldAngle'].size < len(solpsParams['plasmaSpecies'])))):
             if ('plasmaSpecies' in solpsParams):
                 for n in range(len(solpsParams['plasmaSpecies'])):
                     Bin.append(solpsParams['bfieldAngle'])
@@ -129,12 +136,12 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt',print_t
 
     sys.stdout.flush()
     ## 2 - do ops to calculate/format inputs for FTX:
-    print ('\t REFORMAT SOLPS output --> FTX input')
+    print ('\t Estimates for SOLPS output --> FTX input')
     ftxInputs={}
 
-    if print_test:
-        print('\t solps output dict = ', solpsParams)
-    sys.stdout.flush()
+    #if print_test:
+    #    print('\t solps output dict = ', solpsParams)
+    #sys.stdout.flush()
     
     print('\n')
     ## 2.a : check for parameters expected from SOLPS & 'translate' accordingly
@@ -177,6 +184,7 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt',print_t
         #ftxInputs['plasmaSpecies'] = 'He W D T C'
         #C_f : different options for C in F-TRIDYN: _a, _b, _d... ; _f noted as "C for fusion"
         ftxInputs['plasmaSpecies'] = ['He','W', 'D', 'T', 'C_f']
+        std_plasmaSpecies = ['He','W', 'D', 'T', 'C'] #output from SOLPS will contain C, not C_f
         print('\t hard coded plasma species in ftx = ', ftxInputs['plasmaSpecies'] )
         print('\n')
         
@@ -206,8 +214,8 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt',print_t
        
     print('\t reformat to have Ein, Ain for each species:')
     nCount=0
-    for n in range(len(ftxInputs['plasmaSpecies'])):
-        s = ftxInputs['plasmaSpecies'][n]
+    for n in range(len(std_plasmaSpecies)): #use std list to avoid C vs C_f conflict #range(len(ftxInputs['plasmaSpecies'])):
+        s = std_plasmaSpecies[n] #ftxInputs['plasmaSpecies'][n]
         print('\t for n  = ', n , ' ; s = ', s, ' :')
         
         #initialize dictionary entries:
@@ -390,7 +398,7 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt',print_t
             print(('\t \t {0} : {1}'.format(k, v)))
             ftxIn.write(('{0}={1}\n'.format(k, v)))
         else: #not float, int or string; assume it's list
-            print('type of v is ', type(v))
+            print('type of', k, ' is ', type(v))
             sys.stdout.flush()
             v_string=''
             for i in range(len(v)):

@@ -13,15 +13,14 @@ from rizp_extract import rizp_extract # return rizp from ionization_potentials.t
 # read and post-process neutral heat load from fort.44
 
 # Function begins
-def SOLPS_heatflux_for_FTX(rad_grid=1, b2fstate_file='b2fstate', b2fgmtry_file='b2fgmtry', fort44_file='fort.44', outputFile=None, print_test=False, logFile=None):
+def SOLPS_heatflux_for_FTX(rad_grid=1, b2fstate_file='b2fstate', b2fgmtry_file='b2fgmtry', fort44_file='fort.44', pickleOutputFile=None, print_test=False, logFile=None):
 
-    cwd = os.getcwd()
     print(' ')
     print('\t Called SOLPS_heatflux_for_FTX:')
-    
+
     #if pikle file exists, read input dictionary from pkl file:
     #would be more elegant: turn into loop over keys,values (?)
-    pkl_file=cwd+'/writePlasmaOut.pkl'
+    pkl_file='SOLPSoutputs.pkl'
     if os.path.exists(pkl_file):
         print('\t use inputs from pkl file: ', pkl_file)
         dic = pickle.load( open( pkl_file, "rb" ) )
@@ -30,11 +29,26 @@ def SOLPS_heatflux_for_FTX(rad_grid=1, b2fstate_file='b2fstate', b2fgmtry_file='
         b2fgmtry_file=dic['b2fgmtry_file']
         fort44_file=dic['fort44_file']
         print_test=dic['print_test']
-        outputFile=dic['outputFile']
+        pickleOutputFile=dic['pickleOutputFile']
         logFile=dic['logFile']
     else:
         print('no pkl file found, continue with function-call-inputs or defaults')
 
+    print(' ')
+    if logFile is not None:
+        print('\t printing stdout and stderr to log file defined in keywords: ')
+        print('\t', logFile)
+        sys.stdout.flush()
+        logF=open(logFile , 'a')
+        orig_stdout = sys.stdout
+        orig_stderr = sys.stderr
+        sys.stdout = logF
+        sys.stderr = logF
+    else:
+        print('\t No log file defined; using default sys.stdout')
+        sys.stdout.flush()
+
+    print('Run SOLPS_outputs_for_FTX:')
     if print_test:
         print(' ')
         print('\t launched script with inputs:')
@@ -43,18 +57,7 @@ def SOLPS_heatflux_for_FTX(rad_grid=1, b2fstate_file='b2fstate', b2fgmtry_file='
         print('\t b2fgmtry_file = ', b2fgmtry_file)
         print('\t fort44_file = ', fort44_file)
         print('\t logFile =', logFile)
-
     print(' ')
-    if logFile is not None:
-        print('\t printing to log file defined in keywords: ')
-        print('\t', logFile)
-        sys.stdout.flush()
-        logF=open(logFile , 'a')
-        orig_sys = sys.stdout
-        sys.stdout = logF
-    else:
-        print('\t No log file defined; using default sys.stdout')
-        sys.stdout.flush()
 
     # constant
     ec = 1.60217662e-19
@@ -99,6 +102,10 @@ def SOLPS_heatflux_for_FTX(rad_grid=1, b2fstate_file='b2fstate', b2fgmtry_file='
     bz = bb[:,:,2]
     btot = bb[:,:,3]
     gsx = gs[:,:,0] # area, x direction (target area etc.)
+    qz = b2fextract('qz',b2fgmtry_file)
+    pitch = bx/btot # would be the same as pbs[:,:,0]/qz[:,:,2]/sx - Jeremy
+    cosine_Bin = pitch*qz[:,:,1] # pitch * cos t (2D incident angle (on x, y plane)) gives 3D cosine of Bin
+    angle_Bin = 57.2958*np.arccos(cosine_Bin) # in degree (180/pi ~ 57.2958 converts unit: rad -> deg)
 
     # Plasma heat load calculation    
     # Load variables from b2fstate
@@ -137,7 +144,14 @@ def SOLPS_heatflux_for_FTX(rad_grid=1, b2fstate_file='b2fstate', b2fgmtry_file='
         temp += zamax[is_] * fnax[:, :, is_]
     fnex = temp - fchx/ec # different from fnex_32+fnex_52      
     
-    
+    # Load neutral density
+    dab2 = fort44ext('dab2',fort44_file)
+    dab2 = dab2.reshape(nx, ny, natom, order = 'F')
+    dab2_extended = np.zeros((nx+2, ny+2, natom)) # make it like a B2 shape
+    dab2_extended[1:nx+1, 1:ny+1, :] = dab2
+
+
+
     # map cell centered quantities to cell face using average (1/2 weight) as wlld does
     te_face = np.zeros((pol_B25, rad_B25))
     ti_face = np.zeros((pol_B25, rad_B25))
@@ -267,68 +281,118 @@ def SOLPS_heatflux_for_FTX(rad_grid=1, b2fstate_file='b2fstate', b2fgmtry_file='
             neutral_energy_flux[pr_indices[col][0]+1, pr_indices[col][1]] += ewld_load_sum[res_slices[col]]
             reflected_energy_flux[pr_indices[col][0]+1, pr_indices[col][1]] += ewldrp_res[res_slices[col]]
             # +1 to pol coordinate to match flux convention in B2.5 (always left cell surface)
-      
-    # Wpls: divide by area to make it [W/m^2], subtract reflected energy
-    if print_test:
-        print('check value of area (non zero) before deviding energy flux')
-        print('gsx = ', gsx)
-    sys.stdout.flush()
 
+    if print_test:
+        print('calculating the total energy flux may cause RuntimeWarning error message(s) ')
+        print('\t please ignore ; this does not affect the coupled simulation')
+        
+    # Wpls: divide by area to make it [W/m^2], subtract reflected energy
     total_energy_flux_outer = total_energy_flux/gsx -reflected_energy_flux
     total_energy_flux_inner = -total_energy_flux/gsx - reflected_energy_flux
+    sys.stdout.flush()
 
     # Wpls + Wneut
     total_energy_flux_add_neutral_inner = total_energy_flux_inner + neutral_energy_flux
     total_energy_flux_add_neutral_outer = total_energy_flux_outer + neutral_energy_flux
 
-    output_values={}
-    output_values['te']=te[pol_B25-1, rad_grid]
-    output_values['ti']=ti[pol_B25-1, rad_grid]
-    output_values['bb']=bb[pol_B25-1, rad_grid,:]
-    output_values['partFlux']=fnax[pol_B25-1, rad_grid, 1]
-    output_values['heatFlux']=total_energy_flux_add_neutral_outer[pol_B25-1,rad_grid]
+
+
+
+    # Flux fractions and average charge state of each element
+    flux_fraction = []
+    average_charge_state = []
+    species_indices = [0]
+    for i in range(1, len(zamax)):
+        if zamax[i] < zamax[i - 1]:
+            species_indices.append(i)
+    species_indices.append(len(zamax))
+
+    dab2_counter = 0
+    for i in range(len(species_indices) - 1):
+        start = species_indices[i]
+        end = species_indices[i + 1]
+        flux_fraction_this = np.sum(fnax[:,:,start:end],axis=2)/np.sum(fnax,axis=2)
+        flux_fraction_this = flux_fraction_this[pol_B25-1,rad_grid]
+        flux_fraction.append(flux_fraction_this)
+        #average_charge_state_this = np.sum(na[:,:,start:end]*zamax[start:end],axis=2)/(dab2_extended[:,:,dab2_counter]+np.sum(na[:,:,start+1:end],axis=2))
+        #average_charge_state_this = np.sum(na[:,:,start:end]*zamax[start:end], axis=2) / (dab2_extended[:,:,dab2_counter] + np.sum(na[:,:,start+1:end], axis=2, keepdims=True))
+        #average_charge_state_this = np.sum(na[:,:,start:end] * np.array(zamax[start:end])[None, None, :], axis=2) / (dab2_extended[:,:,dab2_counter] + np.sum(na[:,:,start+1:end], axis=2, keepdims=True))
+        #average_charge_state_this = np.sum(na[:,:,start:end] * np.array(zamax[start:end])[None, None, :], axis=2) / (dab2_extended[:,:,dab2_counter][:,:,None] + np.sum(na[:,:,start+1:end], axis=2, keepdims=True))
+        average_charge_state_this = np.sum(na[:,:,start:end] * np.array(zamax[start:end])[None, None, :], axis=2) / np.sum(dab2_extended[:,:,dab2_counter][:,:,None] + np.sum(na[:,:,start+1:end], axis=2, keepdims=True), axis=2)
+        average_charge_state_this = average_charge_state_this[pol_B25-2,rad_grid]
+        # no need to include dab2 in the nominator since zamax = 0 for neutrals
+        dab2_counter += 1
+        average_charge_state.append(average_charge_state_this)
+
+    output_values={}    
+    output_values['Te']=te[pol_B25-2, rad_grid]
+    output_values['Ti']=ti[pol_B25-2, rad_grid]
+    output_values['bfieldAngle']=angle_Bin[pol_B25-2, rad_grid]
+    output_values['flux']=fnax[pol_B25-1, rad_grid, 1]
+    output_values['fluxFraction']=flux_fraction
+    output_values['heat']=total_energy_flux_add_neutral_outer[pol_B25-1,rad_grid]
+    output_values['plasmaSpecies']=species_names
+    output_values['Z']=average_charge_state
 
     if print_test:
         print(' ')
         print('\t check where to return the output and close files')
 
-    if (outputFile is not None):
+    if (pickleOutputFile is not None):
         if print_test:
             print('\t writing results to file defined in keywords :  ')
-            print('\t', outputFile)
-        outFile=open(outputFile , 'a')
-        for k,v in output_values.items():
-            if print_test:
-                print('\t ...', k, ' = ', str(v))
-            writeString=k+" = "+str(v)+"\n"
-            outFile.write(writeString)
+            print('\t', pickleOutputFile)
+        pickle.dump(output_values, open(pickleOutputFile, "wb" ) )
+        #outFile=open(outputFile , 'w')
+        #for k,v in output_values.items():
+        #    if print_test:
+        #        print('\t ...', k, ' = ', str(v))
+        #    writeString=k+" = "+str(v)+"\n"
+        #    outFile.write(writeString)
         if print_test:
-            print('\t ... done writing result into ', outFile.name)
+            print('\t ... done writing result into ', pickleOutputFile)
 
-        if print_test:
-            print('\t close outputFile : ', outFile.name)
-        outFile.close()
+        #if print_test:
+        #    print('\t close outputFile : ', outFile.name)
+        #outFile.close()
+        print(' ')
     else:
         print('\t no output file defined in keywords')
         print('\t return output (not printed to file)')
+        print(' ')
     sys.stdout.flush()
-        
+
     if (logFile is not None):
         if print_test:
             print('\t close logFile : ', logF.name)
+            print(' ')
         sys.stdout.flush()
         logF.close()
-        sys.stdout = orig_sys            
+        sys.stdout = orig_stdout
+        sys.stderr = orig_stderr
 
-    if (outputFile is not None):
+    if (pickleOutputFile is not None):
         return
     else:
         return output_values
-    #te[pol_B25-1, rad_grid], ti[pol_B25-1, rad_grid], bb[pol_B25-1, rad_grid,:], fnax[pol_B25-1, rad_grid, 1], total_energy_flux_add_neutral_outer[pol_B25-1,rad_grid]
+    
+#    print('dab2',dab2_extended[pol_B25-2,rad_grid,0])
+#    print('dab2',dab2[89,[16,18,19,21,24],0])
+#    print('te',te[pol_B25-2, rad_grid])
+#    print('ti',ti[pol_B25-2, rad_grid])
+    #print('bb',bb[pol_B25-1, rad_grid,:])
+#    print('angle_Bin',angle_Bin[pol_B25-2, rad_grid])
+#    print('fnax',fnax[pol_B25-1, rad_grid, 1])
+#    print('flux_fraction',flux_fraction)
+#    print('heatflux',total_energy_flux_add_neutral_outer[pol_B25-1,rad_grid])
+#    print('species_names',species_names)
+#    print('average_charge_state',average_charge_state)
 
+#    return te[pol_B25-2, rad_grid], ti[pol_B25-2, rad_grid], angle_Bin[pol_B25-2, rad_grid], fnax[pol_B25-1, rad_grid, 1], flux_fraction, total_energy_flux_add_neutral_outer[pol_B25-1,rad_grid], species_names, average_charge_state
+    
 
 if __name__ == '__main__':
-    
+
     import shutil
     
     SOLPS_heatflux_for_FTX()
