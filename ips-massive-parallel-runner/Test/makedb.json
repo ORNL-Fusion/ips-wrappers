@@ -1,12 +1,11 @@
 {
-"variable": {
-    "r"          : ["instate" , "r0"       , "input" ], 
+"variable" : {
+    "r"          : ["instate" , "r0"       , "input" ],
     "a"          : ["instate" , "a0"       , "input" ],
     "kappa"      : ["instate" , "kappa"    , "input" ],
     "delta"      : ["instate" , "delta"    , "input" ],
     "ip"         : ["instate" , "ip"       , "input" ],
     "bt"         : ["instate" , "b0"       , "input" ],
-    "betan_ped"  : ["instate" , "betan_ped", "input" ],
     "wped"       : ["instate" , "xwid"     , "input" ],
     "ne_axis"    : ["instate" , "ne_axis"  , "input" ],
     "ne_ped"     : ["instate" , "ne_ped"   , "input" ],
@@ -49,13 +48,15 @@
     "irf"        : ["fastran" , "irf"      , "output"],
     "pfuse"      : ["fastran" , "pfuse"    , "output"],
     "pfusi"      : ["fastran" , "pfusi"    , "output"],
-    "fgw_ped"    : ["derived" , "fgw_ped"  , "output"],
-    "nepeak"     : ["derived" , "ne_peak"  , "output"],
-    "q95_input"  : ["derived" , "q95_inout", "putput"],
-    "aratio"     : ["derived" , "aratio"   , "output"],
-    "nues_edge"  : ["function", "nues_edge", "output"],
-    "nues_core"  : ["function", "nues_core", "output"],
-    "taur"       : ["function", "taur"     , "output"],
-    "q0"         : ["function", "q0"       , "output"]
+}
+"model" : {
+    "aratio"    : ["expr", "r/a"                           ],
+    "betan_ped" : ["expr", "0.8048*a*ne_ped*te_ped/(ip*bt)"],
+    "ngw"       : ["base", {}                              ],
+    "fgw_ped"   : ["expr", "ne_ped/ngw"                    ],
+    "nepeak"    : ["expr", "ne_axis/ne_ped"                ],
+    "fbs"       : ["expr", "ibs/ip"                        ],
+    "pinj"      : ["expr", "pnbe + pnbi + prfe + prfi"     ],
+    "pnet"      : ["base", {}                              ]
 }
 }
