@@ -8,12 +8,13 @@ dependencies:
         - matplotlib
         - netcdf4
         - mpi4py
-        - /global/cfs/cdirs/atom/users/jcanik/DivPed/ips-solps-iter/src
-        - /global/cfs/cdirs/atom/users/jcanik/DivPed/ips-solps-iter/lib
         - scipy
         - ../ips-iterative-xolotlFT
+        - ../../ips-solps-iter/src
+        - ../../ips-solps-iter/lib
         - .
 variables:
     FTRIDYN_PATH: /project/projectdirs/atom/atom-install-cori/fractal-tridyn    
     GITR_PATH: /project/projectdirs/atom/atom-install-cori/GITR
     ATOM_CORI: /project/projectdirs/atom/atom-install-cori
+    ATOM_PERLMUTTER: /global/cfs/cdirs/atom/atom-install-perlmutter

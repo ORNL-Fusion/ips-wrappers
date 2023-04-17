@@ -10,14 +10,18 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt',print_t
 
     cwd = os.getcwd()
     print(' ')
-    print('called plasmaOut2ftxIn')
-    print('from directory: ', cwd)
+    print('\t Called plasmaOut2ftxIn')
+    print('\t from directory: ')
+    print('\t', cwd)
     sys.stdout.flush()
     
     #if pikle file exists, read from pkl file:
     pkl_file=cwd+'/plasmaOut2ftxIn.pkl'
     if os.path.exists(pkl_file):
         dic = pickle.load( open( pkl_file, "rb" ) )
+        plasmaOutFile=dic['plasmaOutFile']
+        ftxInFile=dic['ftxInFile']
+        print_test=dic['print_test']
         #first check the log file, to print everything there
         if 'logFile' in dic:
             logFile=dic['logFile']
@@ -26,15 +30,11 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.txt', ftxInFile='ftxIn.txt',print_t
             
     if logFile  is not None:
         print('\t redirect plasmaOut2ftxIn output of to:')
-        print('\t ' , logFile)
+        print('\t' , logFile)
         outF = open(logFile, "a")
         sys.stdout = outF
 
     sys.stdout.flush()
-     
-    plasmaOutFile=dic['plasmaOutFile']
-    ftxInFile=dic['ftxInFile']
-    print_test=dic['print_test']
     
     if print_test:
         print('\t launched script with inputs:')
