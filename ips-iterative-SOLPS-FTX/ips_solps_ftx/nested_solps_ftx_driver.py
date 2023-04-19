@@ -13,6 +13,7 @@ import subprocess
 import sys
 import pickle
 import difflib
+import numpy as np
 from ips_solps_ftx.python_scripts_for_coupling import plasmaOut2ftxIn
 from ips_solps_ftx.python_scripts_for_coupling import write_ftxOut
 #from ips_solps_ftx.python_scripts_for_coupling import SOLPS_heatflux_for_FTX #maybe generalize name
@@ -271,7 +272,7 @@ class parent_driver(Component):
         
         #Insert time-loop here:
         timeStamp = self.init_time                
-        t_count = self.init_loop_n    
+        t_count = self.init_loop_n
 
         while timeStamp < self.end_time:
 
@@ -756,15 +757,24 @@ class parent_driver(Component):
             inputDat='input.dat'
             old_inputDat=inputDat+'_t'+str(timeStamp)
             shutil.copyfile(inputDat, old_inputDat) #save a copy
-            
-            RECYCF = updateSOLPSinput.calc_RECYCF(inputDat, 'fort.44', ave_grid, ave_Rft) #not sure which grid point I should use here
-            updateSOLPSinput.input_dat_update(inputDat, RECYCF, ave_Rtot, ave_twall, ave_grid) #assume RECYCT = total?!?!
 
-            shutil.copyfile(inputDat, inputDat+'updated_t'+str(timeStamp))
-            #add printlines to know what's being saved where
+            #for now, all FTX in DIMES; eventually implement check for grid point falling in rad_grid_name = Left, DIMES or right
+            ave_Rft_array = np.array([ave_Rft]) #as array -->, dtype = np.float64)
+            print('TEST TEST: ave_Rft = ', ave_Rft, ' ave_Rft_array =', ave_Rft_array, ' and ave_Rft_array[0] =', ave_Rft_array[0])
+            RECYCF = updateSOLPSinput.calc_RECYCF(inputDat, 'fort.44', ['DIMES'], ave_Rft_array) #ave_Rft) 
+            ave_Rtot_array = np.array([ave_Rtot])
+            ave_twall_array = np.array([ave_twall])
+            print('TEST TEST: ave_Rtot = ', ave_Rtot, ' ave_Rtot_array =', ave_Rtot_array, ' and ave_Rtot_array[0] =', ave_Rtot_array[0])
+            print('TEST TEST: ave_twall = ', ave_Rft, ' ave_twall_array =', ave_twall_array, ' and ave_twall_array[0] =', ave_twall_array[0])
+            updateSOLPSinput.input_dat_update(inputDat, RECYCF, ave_Rtot_array, ave_twall_array, ['DIMES']) 
+
+            shutil.copyfile(inputDat, inputDat+'_updated_t'+str(timeStamp))
+            if self.print_test:
+                print('\t copy ', inputDat, 'as ', inputDat+'_updated_t'+str(timeStamp))
             
             # JUST FOR TESTING!!
-            with open(inputDat_old) as file_1:
+            print('\t TEST: compare old ', old_inputDat, ' and new ', inputDat, ' files')
+            with open(old_inputDat) as file_1:
                 file_1_text = file_1.readlines()
  
             with open(inputDat) as file_2:
