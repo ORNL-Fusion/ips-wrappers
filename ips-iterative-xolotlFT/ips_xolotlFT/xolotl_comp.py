@@ -5,8 +5,8 @@ import os
 import shutil
 import subprocess
 import glob
-from .python_scripts_for_coupling import param_handler
-from .python_scripts_for_coupling import keepLastTS
+from ips_xolotlFT.python_scripts_for_coupling import param_handler
+from ips_xolotlFT.python_scripts_for_coupling import keepLastTS
 import sys
 import numpy as np
 
@@ -72,11 +72,24 @@ class xolotlWorker(Component):
 
         try:
             #shutil.copyfile(xp.parameters['networkFile'],xp.parameters['networkFile']+'_t'+str(self.driverTime))
-            shutil.copyfile(self.NETWORK_FILE,self.NETWORK_FILE+'_t'+str(self.driverTime))
+            networkFile_timeCopy = self.NETWORK_FILE+'_t'+str(self.driverTime)
+            shutil.copyfile(self.NETWORK_FILE,networkFile_timeCopy)
             if print_test:
-                print('\t TEST: copied ',self.NETWORK_FILE,' as ' , self.NETWORK_FILE+'_t'+str(self.driverTime))
-                print('\t file size of ', self.NETWORK_FILE ,' is: ', os.path.getsize(self.NETWORK_FILE))
-
+                print('\t TEST: copied ',self.NETWORK_FILE,' as ' , networkFile_timeCopy)
+                netFile_size=os.path.getsize(self.NETWORK_FILE)
+                netFile_tCopy_size=os.path.getsize(networkFile_timeCopy)
+                print('\t TEST: file size of ', self.NETWORK_FILE ,' is: ', netFile_size)
+                print('\t TEST: file size of ', networkFile_timeCopy ,' is: ', netFile_tCopy_size)
+            if netFile_size != netFile_tCopy_size:
+                while  netFile_size != netFile_tCopy_size:
+                    print('\t WARNING: network files have different sizes')
+                    print('\t          try copying again')
+                    shutil.copyfile(self.NETWORK_FILE,networkFile_timeCopy)
+                    netFile_tCopy_size=os.path.getsize(networkFile_timeCopy)
+                    print('\t          new file size of ', networkFile_timeCopy ,' is: ', netFile_tCopy_size)
+            #else:
+            print('\t', self.NETWORK_FILE , 'succesfully copied (same file size)')
+                
         except Exception as e:
             print('\t', e)
             print('\t could not save network file for t = ', str(self.driverTime))            

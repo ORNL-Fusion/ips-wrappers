@@ -114,7 +114,8 @@ class parent_driver(Component):
         self.end_time = float(self.services.get_config_param('END_TIME'))
         self.time_step = float(self.services.get_config_param('TIME_STEP'))
         self.init_loop_n = int(self.services.get_config_param('INIT_LOOP_N'))
-
+        self.time_decimal = int(self.services.get_config_param('TIME_DECIMAL'))
+        
         ftx_keys = {} 
 
 
@@ -271,11 +272,13 @@ class parent_driver(Component):
         #if we ever define specific outFile / logFile, do so here:
         
         #Insert time-loop here:
-        timeStamp = self.init_time                
+        timeStamp = round(self.init_time, self.time_decimal)         
         t_count = self.init_loop_n
 
         while timeStamp < self.end_time:
 
+            print('\n Starting iteration for time : ', timeStamp)
+            
             print('\n')
             print('-------------------')
             print('-------------------')
@@ -802,7 +805,8 @@ class parent_driver(Component):
 
             self.services.update_state()
             
-            timeStamp+=self.time_step
+            new_time=timeStamp+self.time_step
+            timeStamp = round(new_time, self.time_decimal)
             t_count+=1
             ## END LOOP OVER TIME HERE
             print('\n \t ------------')
