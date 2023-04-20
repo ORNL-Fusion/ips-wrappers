@@ -326,9 +326,26 @@ class parent_driver(Component):
             print('driver:finalize done \n')
             self.services.stage_state()
 
+            print('stage subworkflow outputs of component_SOLPS... ')
+            sys.stdout.flush()
+            try:
+                self.services.stage_subflow_output_files(subflow_name='component_SOLPS')
+                print('... succesfully staged component_SOLPS outputs')
+            except:
+                print('... could not stage component_SOLPS outputs')
+            print('... done staging subworflow outputs after driver:step\n')
+            sys.stdout.flush()            
+
+            #save solps log file so that it's not overwritten in every iteration:
+            print(' ')
+            print('Copy SOLPS log file to avoid overwriting in next iteration')
+            print('solps.log as solps.log_t'+str(timeStamp))
+            shutil.copyfile('solps.log', 'solps.log_t'+str(timeStamp))
+
             print('\n')
             print('COMPLETED SOLPS')
-
+            
+            
             ## pass plasma information by:
             ## 1 - read output of SOLPS from solpsOut.txt (one per child) using SOLPS_outputs_for_FTX script 
             ## 2 - do ops to calculate/format inputs for FTX in plasmaOut2ftxIn:
@@ -355,20 +372,7 @@ class parent_driver(Component):
 
             #here implement parsing SOLPS output
 
-            #1-stage solps output to have the 2 files: ld_tg_o.dat & fluxes.dat:
-
-            #uncomment when I test that the for loop works for FTX outputs
-            print('stage ', 'component_SOLPS' , ' subworkflow outputs... ')
-            sys.stdout.flush()
-            try:
-                self.services.stage_subflow_output_files(subflow_name='component_SOLPS')
-                print('... succesfully staged component_SOLPS outputs')
-            except:
-                print('... could not stage component_SOLPS outputs')               
-            print('... done staging subworflow outputs after driver:step\n')
-            sys.stdout.flush()
-
-            #check that the files were staged correctly:
+            #check that the files needed for analysis were staged correctly:
             #for now hard coded ; define files in config file if we want
             if (self.print_test):
                 print('Check that staged files exist and are not empty')
@@ -732,16 +736,17 @@ class parent_driver(Component):
                 sys.stdout.flush()
                 print('... done with write_ftxOut \n')
                 
-                #save ftxOut for each loop (with time-stamp)
-                shutil.copyfile(self.write_ftxOut['outFile'], ftxOutFileName+'_ftx'+str(i)+'_t'+str(timeStamp))
-                print('...and save', ftxOutFileName ,' for each time-loop:')
-                print('\t copy ', ftxOutFileName, ' as ', ftxOutFileName+'_ftx'+str(i)+'_t'+str(timeStamp)) #<-- without cwd: 
-                print(' ')
-
 
             # SOLPS can only take average the FTX recycling factors
             [ave_grid, ave_twall, ave_Rft, ave_Rxol, ave_Rtot] = average_SOLPS_input.average_SOLPS_input(ftxOut_file=self.write_ftxOut['outFile'], print_test=self.print_test, logFile=None)
 
+            #save ftxOut for each loop (with time-stamp) ; move file so that it's not appended next iteration
+            shutil.move(self.write_ftxOut['outFile'], ftxOutFileName+'_t'+str(timeStamp))
+            print('...and save', ftxOutFileName ,' for each time-loop:')
+            print('\t move ', ftxOutFileName, ' as ', ftxOutFileName+'_t'+str(timeStamp))
+            print(' ')
+
+            
             #do whatever needed by SOLPS with these values
             #for now, just print them
             if self.print_test:
@@ -755,8 +760,9 @@ class parent_driver(Component):
 
             #UPDATE SOLPS input.dat
             inputDat='input.dat'
-            old_inputDat=inputDat+'_t'+str(timeStamp)
-            shutil.copyfile(inputDat, old_inputDat) #save a copy
+            orig_inputDat=inputDat+'_orig_t'+str(timeStamp)
+            new_inputDat=inputDat+'_updated_t'+str(timeStamp)
+            shutil.copyfile(inputDat, orig_inputDat) #save a copy
 
             #for now, all FTX in DIMES; eventually implement check for grid point falling in rad_grid_name = Left, DIMES or right
             ave_Rft_array = np.array([ave_Rft]) #as array -->, dtype = np.float64)
@@ -766,25 +772,25 @@ class parent_driver(Component):
             ave_twall_array = np.array([ave_twall])
             print('TEST TEST: ave_Rtot = ', ave_Rtot, ' ave_Rtot_array =', ave_Rtot_array, ' and ave_Rtot_array[0] =', ave_Rtot_array[0])
             print('TEST TEST: ave_twall = ', ave_Rft, ' ave_twall_array =', ave_twall_array, ' and ave_twall_array[0] =', ave_twall_array[0])
-            updateSOLPSinput.input_dat_update(inputDat, RECYCF, ave_Rtot_array, ave_twall_array, ['DIMES']) 
-
-            shutil.copyfile(inputDat, inputDat+'_updated_t'+str(timeStamp))
+            updateSOLPSinput.input_dat_update(orig_inputDat, inputDat, RECYCF, ave_Rtot_array, ave_twall_array, ['DIMES']) 
+            shutil.copyfile(inputDat, new_inputDat)
             if self.print_test:
                 print('\t copy ', inputDat, 'as ', inputDat+'_updated_t'+str(timeStamp))
             
             # JUST FOR TESTING!!
-            print('\t TEST: compare old ', old_inputDat, ' and new ', inputDat, ' files')
-            with open(old_inputDat) as file_1:
+            print(' ')
+            print('\t TEST: compare original ', orig_inputDat, ' and new ', inputDat, ' files')
+            with open(orig_inputDat) as file_1:
                 file_1_text = file_1.readlines()
  
-            with open(inputDat) as file_2:
+            with open(new_inputDat) as file_2:
                 file_2_text = file_2.readlines()
  
             # Find and print the diff:
             for line in difflib.unified_diff(
                     file_1_text, file_2_text, fromfile='file1.txt',
                     tofile='file2.txt', lineterm=''):
-                print('TEST: updated input.dat: ', line)
+                print('\t TEST: found difference between input.dat files: ', line)
             file_1.close
             file_2.close
                 

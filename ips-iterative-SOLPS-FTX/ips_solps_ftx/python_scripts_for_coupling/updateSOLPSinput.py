@@ -210,6 +210,9 @@ for surfmod_name in rad_grid_name:
 
 def calc_RECYCF(inputdat_file, fort44_file, rad_grid_name, R_FT):
 
+    print(' ')
+    print('from calc_RECYCF:')
+    
     lines = read_lines(inputdat_file)
     line_block_3a = find_line(lines,'Data for non-default standard surfaces')
     line_block_3b = find_line(lines, 'Data for additional surfaces')
@@ -268,6 +271,7 @@ def calc_RECYCF(inputdat_file, fort44_file, rad_grid_name, R_FT):
     
     R_FT_counter = 0
     RECYCF = []
+    
     for surfmod_name in rad_grid_name:
         print(surfmod_name)
         line_SURFMOD_def = find_line(lines[line_block_3a:line_block_3b], 'SURFMOD_'+surfmod_name)
@@ -410,7 +414,9 @@ def get_R_F_TRIM(Ein,Ain,TRIM_file):
 
 
 #Find "*** 6a. General data for reflection model" in input.dat, and update it with FTX output
-def input_dat_update(inputdat_file, RECYCF, RECYCT, Twall, rad_grid_name):
+def input_dat_update(orig_inputdat_file, new_inputdat_file, RECYCF, RECYCT, Twall, rad_grid_name):
+    print(' ')
+    print('from input_dat_update:')
     K_to_eV = 8.6173e-05 # boltzmann constant / electron charge to convert K to eV
     # string list to numpy array
     Twall = np.asarray(Twall, dtype = np.float64)
@@ -428,7 +434,7 @@ def input_dat_update(inputdat_file, RECYCF, RECYCT, Twall, rad_grid_name):
 
     # replace relevant lines in input.dat block 6a
     # find block *** 6a. General data for reflection model
-    lines = read_lines(inputdat_file)
+    lines = read_lines(orig_inputdat_file)
     line_block_6a = find_line(lines,'General data for reflection model')
     line_block_7 = find_line(lines, 'Data for primary sources')
     #print(lines[line_block_6a])
@@ -458,8 +464,9 @@ def input_dat_update(inputdat_file, RECYCF, RECYCT, Twall, rad_grid_name):
         print(lines[line_block_6a+line_SURFMOD_def+2])
         print(lines[line_block_6a+line_SURFMOD_def+3])
 
-# write changes to new input.dat (test_inputdat.txt)
-    with open('test_inputdat.txt', 'w') as file:
+    # write changes to new input.dat (test_inputdat.txt)
+    print('write new inputDat file to:', new_inputdat_file)
+    with open(new_inputdat_file, 'w') as file:
         file.writelines(lines)
     file.close()
 
@@ -476,6 +483,6 @@ def input_dat_update(inputdat_file, RECYCF, RECYCT, Twall, rad_grid_name):
 # To be developed
 #RECYCF = scale_factor_RECYCF(R_FT, rad_grid, b2fstate_file) # scale factor R_FT/R_F_TRIM
 
-#AL input_dat_update(inputdat_file, RECYCF, RECYCT, Twall, rad_grid_name)
+#AL input_dat_update(inputdat_file, new_inputdat_file, RECYCF, RECYCT, Twall, rad_grid_name)
 #AL get_Te_Ti_Bin(rad_grid, b2fstate_file, b2fgmtry_file)
 
