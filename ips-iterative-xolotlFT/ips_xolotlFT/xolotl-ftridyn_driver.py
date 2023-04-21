@@ -109,14 +109,23 @@ class xolotlFtridynDriver(Component):
                 print(e)
                 print('no script variable defined. use module loaded in environment')
             print(' ')
-
-        
+            
         #stage input files
         print('staging input files {} '.format(self.INPUT_FILES))
         self.services.stage_input_files(self.INPUT_FILES)
         print('\t ...input files staged succesfully')
         print(('input directory for this simulation is {} \n'.format( self.INPUT_DIR)))
 
+
+        #round the time to the decimal point
+        if 'time_decimal' in keywords:
+            self.time_decimal=int(keywords['time_decimal'])
+        else:
+            self.time_decimal=5
+        print('round time to the ', self.time_decimal, 'th digit')
+        print(' ')
+
+        
         plasma_state_file = self.STATE_FILES #to only stage/update what the driver needs ; self.services.get_config_param('PLASMA_STATE_FILES')
         plasma_state_list = plasma_state_file.split()
         for index in range(len(plasma_state_list)):
@@ -776,20 +785,28 @@ class xolotlFtridynDriver(Component):
         
         self.services.stage_state() 
 
+        #round the time to the decimal point
+        if 'time_decimal' in keywords:
+            self.time_decimal=int(keywords['time_decimal'])
+        else:
+            self.time_decimal=5
+        print('round time to the ', self.time_decimal, 'th digit')
+        print(' ')
+        
         #check that loop doesnt go over the end time
-        if (self.print_uq):
-            print("PR: >>> Rounding time step here:")
+        #if (self.print_uq):
+        print("\t Rounding time step here:")
         time=self.time['INIT_TIME']
-        rounded_time = round(time, 14)
-        if (self.print_uq):
-            print(f"PR: >>> Given time step is {time}, rounding to {rounded_time}")
+        rounded_time = round(time, self.time_decimal)
+        #if (self.print_uq):
+        print(f"\t Given time step is {time}, rounding to {rounded_time}")
         time = rounded_time
-        if (self.print_uq):
-            print("PR: >>> Rounding end time here:")
+        #if (self.print_uq):
+        print("\t Rounding end time here:")
         end_time=self.time['END_TIME']
-        rounded_end_time = round(end_time, 14)
-        if (self.print_uq):
-            print(f"PR: >>> Given end time is {end_time}, rounding to {rounded_end_time}")
+        rounded_end_time = round(end_time, self.time_decimal)
+        #if (self.print_uq):
+        print(f"\t end time is {end_time}, rounding to {rounded_end_time}")
         end_time = rounded_end_time
 
         if time >= end_time:
@@ -1370,6 +1387,8 @@ class xolotlFtridynDriver(Component):
             shutil.copyfile(self.XOLOTL_NETWORK_FILE, temp_network_file)
             print(f"\u2B95 Successfully copied network file {self.XOLOTL_NETWORK_FILE} to temporary network file {temp_network_file}")
 
+            network_size_file=cwd+'/worker_netFile_size.txt'
+            
             # loop until keepLastTS is successful
             while not keep_last_ts_success:
                 keep_last_ts_loop_number += 1
@@ -1392,8 +1411,33 @@ class xolotlFtridynDriver(Component):
                     #set a maximum number of tries
                     if self.collapsedLoops<=int(self.driver['MAX_COLLAPSE_LOOPS']):
 
-                        self.services.call(xolotl, 'init', timeStamp, dTime=time, xParameters=self.xp.parameters, output_file=outFile, print_test=self.print_test) #, xFtCoupling=self.driver['FTX_COUPLING'])
-                        self.services.call(xolotl, 'step', timeStamp, dTime=time, xHe_conc=self.petsc_heConc, xParameters=self.xp.parameters, output_file=outFile, dZipOutput=self.driver['ZIP_XOLOTL_OUTPUT'], n_overgrid_loops=n_overgrid_loops, xolotl_num_tries=self.driver['XOLOTL_NUM_TRIES'], print_test=self.print_test)
+                        self.services.call(xolotl, 'init', timeStamp, dTime=time, time_decimal=self.time_decimal, xParameters=self.xp.parameters, network_size_file=network_size_file, output_file=outFile, print_test=self.print_test)
+                        if os.path.exists(network_size_file):
+                            print('found network_size_file')
+                            worker_network_sizeFile=open(network_size_file, 'r')
+                            worker_netFile_size=int(worker_network_sizeFile.readline())
+                            worker_network_sizeFile.close
+                            print('\t workers network file size is ', worker_netFile_size)
+                            driver_netFile_size=int(os.path.getsize(self.XOLOTL_NETWORK_FILE))
+                            print('\t driver network file size is ', driver_netFile_size)
+                            temp_netFile_size=int(os.path.getsize(temp_network_file))
+                            print('\t temp network file size is ', temp_netFile_size)
+                            inputDir_netFile_size=int(os.path.getsize(self.INPUT_DIR+'/'+self.XOLOTL_NETWORK_FILE))
+                            print('\t input dir network file size is ', inputDir_netFile_size)
+                            sys.stdout.flush()
+                            #while worker_netFile_size != driver_netFile_size:
+                            while worker_netFile_size != temp_netFile_size:
+                                print ('temp and workfer network sizes differ')
+                                print(' try running worker init again')
+                                self.services.call(xolotl, 'init', timeStamp, dTime=time, time_decimal=self.time_decimal, xParameters=self.xp.parameters, network_size_file=network_size_file, output_file=outFile, print_test=self.print_test)
+                                sys.stdout.flush()
+                            print('network file sizes are the same. continue with worker:step')
+                        else:
+                            print('WARNING: could not find network size file')
+                            print('\t continue at your own risk ')
+                        sys.stdout.flush()
+                            
+                        self.services.call(xolotl, 'step', timeStamp, dTime=time, time_decimal=self.time_decimal, xHe_conc=self.petsc_heConc, xParameters=self.xp.parameters, output_file=outFile, dZipOutput=self.driver['ZIP_XOLOTL_OUTPUT'], n_overgrid_loops=n_overgrid_loops, xolotl_num_tries=self.driver['XOLOTL_NUM_TRIES'], print_test=self.print_test)
 
                         sys.stdout.flush()
                         self.services.stage_state()

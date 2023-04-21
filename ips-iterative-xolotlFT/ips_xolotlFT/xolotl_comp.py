@@ -48,6 +48,16 @@ class xolotlWorker(Component):
         print (' ')
         print('xolotl_worker: init')
         print(' ')
+        
+        #round the time to the decimal point 
+        if 'time_decimal' in keywords:
+            self.time_decimal=int(keywords['time_decimal'])
+        else:
+            self.time_decimal=5
+        print('round time to the ', self.time_decimal, 'th digit')
+        print(' ')
+        self.driverTime = round(self.driverTime, self.time_decimal)
+        
         # if TEST:
         if print_test:
             print('\t TEST: check that all arguments are read well by xolotl-init and write Xolotl input file (from dictionary)')
@@ -74,21 +84,33 @@ class xolotlWorker(Component):
             #shutil.copyfile(xp.parameters['networkFile'],xp.parameters['networkFile']+'_t'+str(self.driverTime))
             networkFile_timeCopy = self.NETWORK_FILE+'_t'+str(self.driverTime)
             shutil.copyfile(self.NETWORK_FILE,networkFile_timeCopy)
+            netFile_size=os.path.getsize(self.NETWORK_FILE)
             if print_test:
                 print('\t TEST: copied ',self.NETWORK_FILE,' as ' , networkFile_timeCopy)
-                netFile_size=os.path.getsize(self.NETWORK_FILE)
-                netFile_tCopy_size=os.path.getsize(networkFile_timeCopy)
-                print('\t TEST: file size of ', self.NETWORK_FILE ,' is: ', netFile_size)
-                print('\t TEST: file size of ', networkFile_timeCopy ,' is: ', netFile_tCopy_size)
-            if netFile_size != netFile_tCopy_size:
-                while  netFile_size != netFile_tCopy_size:
-                    print('\t WARNING: network files have different sizes')
-                    print('\t          try copying again')
-                    shutil.copyfile(self.NETWORK_FILE,networkFile_timeCopy)
-                    netFile_tCopy_size=os.path.getsize(networkFile_timeCopy)
-                    print('\t          new file size of ', networkFile_timeCopy ,' is: ', netFile_tCopy_size)
+            
+            if 'network_size_file' in keywords:
+                size_file=open(keywords['network_size_file'], 'w')
+                size_file.write(str(int(netFile_size)))
+                print('\t TEST: xolotl worker wrote ', netFile_size, ' in ', keywords['network_size_file'])
+                size_file.close
+            sys.stdout.flush()
+            
+            ## rather than comparing here to the copy, write size to file
+            #the read file in driver to compare to size of netFile in input dir
+
+            #netFile_tCopy_size=os.path.getsize(networkFile_timeCopy)
+            #    print('\t TEST: file size of ', self.NETWORK_FILE ,' is: ', netFile_size)
+            #    print('\t TEST: file size of ', networkFile_timeCopy ,' is: ', netFile_tCopy_size)
+
+            #if netFile_size != netFile_tCopy_size:
+            #    while  netFile_size != netFile_tCopy_size:
+            #        print('\t WARNING: network files have different sizes')
+            #        print('\t          try copying again')
+            #        shutil.copyfile(self.NETWORK_FILE,networkFile_timeCopy)
+            #        netFile_tCopy_size=os.path.getsize(networkFile_timeCopy)
+            #        print('\t          new file size of ', networkFile_timeCopy ,' is: ', netFile_tCopy_size)
             #else:
-            print('\t', self.NETWORK_FILE , 'succesfully copied (same file size)')
+            #print('\t', self.NETWORK_FILE , 'succesfully copied (same file size)')
                 
         except Exception as e:
             print('\t', e)
@@ -99,6 +121,7 @@ class xolotlWorker(Component):
 
     def step(self, timeStamp=0.0,**keywords):
 
+        #asign a local variable to arguments used multiple times
         self.services.stage_state()
         cwd = self.services.get_working_dir()
         zipOutput=keywords['dZipOutput']
@@ -126,8 +149,9 @@ class xolotlWorker(Component):
         print('xolotl_worker: step ')
         print(' ')
 
+        print('\t for time (rounded): ', self.driverTime)
+        print(' ')
 
-        #asign a local variable to arguments used multiple times      
         # if TEST mode:
         if print_test:
             print('\t TEST: checking that all arguments are read well by xolotl-step')
