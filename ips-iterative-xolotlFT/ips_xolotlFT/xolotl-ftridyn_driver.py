@@ -123,8 +123,6 @@ class xolotlFtridynDriver(Component):
         else:
             self.time_decimal=5
         print('round time to the ', self.time_decimal, 'th digit')
-        print(' ')
-
         
         plasma_state_file = self.STATE_FILES #to only stage/update what the driver needs ; self.services.get_config_param('PLASMA_STATE_FILES')
         plasma_state_list = plasma_state_file.split()
@@ -189,7 +187,7 @@ class xolotlFtridynDriver(Component):
                     self.time[k]=v
             print('\n')
             if self.print_test:
-                print('TEST: after reading parameters from config file time section, the time dictionary is:')
+                print('\t TEST: after reading parameters from config file time section, the time dictionary is:')
                 print('\t', self.time)
             print(' ')
             sys.stdout.flush()
@@ -216,7 +214,7 @@ class xolotlFtridynDriver(Component):
                 self.time['START_MODE']=self.driver['START_MODE']
 
         if self.print_test:
-            print('TEST: after reading parameters from config file, the time dictionary (in driver) is:')
+            print('\t TEST: after reading parameters from config file, the time dictionary (in driver) is:')
             print('\t', self.time)
             print(' ')
         #Check if/what's given in input file
@@ -224,7 +222,7 @@ class xolotlFtridynDriver(Component):
         try:
             self.TIME_FILE
             print('\t use input from time file defined in config file (overwirte config file values)')
-            print(self.INPUT_DIR+'/'+self.TIME_FILE)
+            print('\t', self.INPUT_DIR+'/'+self.TIME_FILE)
             sys.stdout.flush()
             self.time_temp=param_handler.read(self.INPUT_DIR+'/'+self.TIME_FILE)            
             
@@ -754,7 +752,7 @@ class xolotlFtridynDriver(Component):
         print('\t output file of the FT-X workflow:')
         if 'LOG_FILE' in keywords:
             logFile=keywords['LOG_FILE']
-            outFile=cwd+'/'+logFile
+            outFile=cwd+'/'+logFile 
             print('\t \t log file defined in keywords: ')
             print('\t \t ', outFile)
             outF=open(outFile , 'a')
@@ -786,56 +784,79 @@ class xolotlFtridynDriver(Component):
         self.services.stage_state() 
 
         #round the time to the decimal point
+        #if 'time_decimal' in keywords:
+        #    self.time_decimal=int(keywords['time_decimal'])
+        #else:
+        #    self.time_decimal=5
+        #print('round time to the ', self.time_decimal, 'th digit')
+        #print(' ')
+        #sys.stdout.flush()
+        
+        #check that loop doesnt go over the end time
+        ##if (self.print_uq):
+        #print("\t Rounding time step here:")
+        #time=self.time['INIT_TIME']
+        #rounded_time = round(time, self.time_decimal)
+        ##if (self.print_uq):
+        #print(f"\t Given time step is {time}, rounding to {rounded_time}")
+        #time = rounded_time
+        ##if (self.print_uq):
+        #print("\t Rounding end time here:")
+        #end_time=self.time['END_TIME']
+        #rounded_end_time = round(end_time, self.time_decimal)
+        ##if (self.print_uq):
+        #print(f"\t end time is {end_time}, rounding to {rounded_end_time}")
+        #end_time = rounded_end_time
+
+        #if time >= end_time:
+        #    print('init time ', time , ' >= end time', end_time)
+        #    print("EXIT SIMULATION")
+        #    sys.stdout.flush()
+        #    return
+
+        #estimated_end_time=round(time+self.time['LOOP_TIME_STEP'], self.time_decimal)
+        #print('TEST: time+self.time[LOOP_TIME_STEP] = ', time+self.time['LOOP_TIME_STEP'] , ' ; estimated_end_time (rounded) = ', estimated_end_time)
+        #print('\t before starting time-loop, checked that time step given in config file is not longer than needed to reach the end of the simulation')
+        #if estimated_end_time > end_time: #time+self.time['LOOP_TIME_STEP']>end_time:
+        #    self.time['LOOP_TIME_STEP']=round(end_time-time,self.time_decimal)
+        #    self.xp.parameters['petscArgs']['-start_stop']=end_time/10.0
+        #    if (self.print_uq):
+        #        print(f"PR: >>> Updated -start_stop to {self.xp.parameters['petscArgs']['-start_stop']:.4f}")
+        #    print('\t WARNING: time step given in config file longer than needed for last loop ')
+        #    print('\t \t before starting time-loop, adapt driver time step to {} to reach exactly endTime (rounded to {}th decimal) '.format(self.time['LOOP_TIME_STEP'], self.time_decimal))
+        #    self.xp.parameters['petscArgs']['-start_stop']=self.time['LOOP_TIME_STEP']/10.0
+        #    print(('\t \t accordingly, Xolotls data is saved every (start_stop) = {} '.format( self.xp.parameters['petscArgs']['-start_stop'])))
+        #else:
+        #    print('\t time-step is shorter than needed. Continue with it')
+        #    self.xp.parameters['petscArgs']['-start_stop']=(time+self.time['LOOP_TIME_STEP'])/10.0
+        #    if (self.print_uq):
+        #        print(f"PR: >>> Updated -start_stop to {self.xp.parameters['petscArgs']['-start_stop']:.4f}")
+
+        #print(' ')
+        #sys.stdout.flush()
+
+        time=self.time['INIT_TIME']
+        
+        print('before starting time-loop, checked that time-parameters:')
+
+        #round the time to the decimal point
         if 'time_decimal' in keywords:
             self.time_decimal=int(keywords['time_decimal'])
         else:
             self.time_decimal=5
         print('round time to the ', self.time_decimal, 'th digit')
         print(' ')
-        
-        #check that loop doesnt go over the end time
-        #if (self.print_uq):
-        print("\t Rounding time step here:")
-        time=self.time['INIT_TIME']
-        rounded_time = round(time, self.time_decimal)
-        #if (self.print_uq):
-        print(f"\t Given time step is {time}, rounding to {rounded_time}")
-        time = rounded_time
-        #if (self.print_uq):
-        print("\t Rounding end time here:")
-        end_time=self.time['END_TIME']
-        rounded_end_time = round(end_time, self.time_decimal)
-        #if (self.print_uq):
-        print(f"\t end time is {end_time}, rounding to {rounded_end_time}")
-        end_time = rounded_end_time
-
-        if time >= end_time:
-            print('init time ', time , ' >= end time', end_time)
-            print("EXIT SIMULATION")
-            sys.stdout.flush()
-            return
-
-        print('\t before starting time-loop, checked that time step given in config file is not longer than needed to reach the end of the simulation')
-        if time+self.time['LOOP_TIME_STEP']>end_time:
-            self.time['LOOP_TIME_STEP']=end_time-time
-            self.xp.parameters['petscArgs']['-start_stop']=end_time/10.0
-            if (self.print_uq):
-                print(f"PR: >>> Updated -start_stop to {self.xp.parameters['petscArgs']['-start_stop']:.4f}")
-            print('\t WARNING: time step given in config file longer than needed for last loop ')
-            print(('\t \t before starting time-loop, adapt driver time step to {} to reach exactly endTime '.format( self.time['LOOP_TIME_STEP'])))
-            self.xp.parameters['petscArgs']['-start_stop']=self.time['LOOP_TIME_STEP']/10.0
-            print(('\t \t accordingly, Xolotls data is saved every (start_stop) = {} '.format( self.xp.parameters['petscArgs']['-start_stop'])))
-        else:
-            print('\t time-step is shorter than needed. Continue with it')
-            self.xp.parameters['petscArgs']['-start_stop']=(time+self.time['LOOP_TIME_STEP'])/10.0
-            if (self.print_uq):
-                print(f"PR: >>> Updated -start_stop to {self.xp.parameters['petscArgs']['-start_stop']:.4f}")
-
-        print(' ')
         sys.stdout.flush()
 
         
-
+        print("\t Round end time:")
+        end_time=self.time['END_TIME']
+        rounded_end_time = round(end_time, self.time_decimal)
+        print(f"\t end time is {end_time}, rounding to {rounded_end_time}")
+        end_time = rounded_end_time
+        self.time['END_TIME']=rounded_end_time
+        print('\t assign rounded value back : self.time[END_TIME] = ', self.time['END_TIME'])
+        
         #for time in numpy.arange(self.initTime,self.endTime,self.timeStep):
         while time<end_time: #self.driver['END_TIME']:
 
@@ -843,6 +864,57 @@ class xolotlFtridynDriver(Component):
             print(('driver time (in loop) {}'.format(time)))
             self.services.update_state()
 
+            #round the time to the decimal point
+            print("\t Round time step:")
+            rounded_time = round(time, self.time_decimal)
+            print(f"\t Given time is {time}, rounding to {rounded_time}")
+            time = rounded_time
+            
+            print('\t Round loop time step: ')
+            rounded_loop_time_step = round(self.time['LOOP_TIME_STEP'], self.time_decimal)
+            print(f"\t loop time step is {self.time['LOOP_TIME_STEP']}, rounding to {rounded_loop_time_step}")
+            
+            print('\t Round start_stop: ')
+            rounded_start_stop = round(self.xp.parameters['petscArgs']['-start_stop'], self.time_decimal)
+            print(f"\t loop time step is {self.xp.parameters['petscArgs']['-start_stop']}, rounding to {rounded_start_stop}")
+            
+            print('Check that step given in config file (rounded) is not longer than needed to reach the end of the simulation')
+            if time >= end_time:
+                print('time ', time , ' >= end time', end_time)
+                print("EXIT SIMULATION")
+                sys.stdout.flush()
+                return
+
+            #TO-DO: once it's working, add print_test
+            estimated_end_time=round(rounded_time+rounded_loop_time_step, self.time_decimal)
+            print('TEST: rounded_time+rounded_loop_time_step = ', time+rounded_loop_time_step , ' ; estimated_end_time (rounded) = ', estimated_end_time)
+            print('\t before starting time-loop, checked that time step given in config file (rounded) is not longer than needed to reach the end of the simulation')
+            if estimated_end_time > end_time: #time+self.time['LOOP_TIME_STEP']>end_time:
+                rounded_loop_time_step=round(end_time-time,self.time_decimal)
+                rounded_start_stop=round(rounded_loop_time_step/10, self.time_decimal) #end_time/10.0
+                print('\t WARNING: time step given in config file longer than needed for last loop ')
+                print('\t          adapt driver time step to {} to reach exactly endTime (rounded) '.format(rounded_loop_time_step))
+                print('\t          and save Xolotls every (start_stop) = {} (rounded)'.format(rounded_start_stop))
+            else:
+                print('\t time-step is shorter than or exactly as needed to reach end time. Continue with:')
+                print('\t rounded time step = ', rounded_loop_time_step)                
+                print('\t rounded start_stop = ', rounded_start_stop)
+
+            final_time = time+rounded_loop_time_step #self.time['LOOP_TIME_STEP']
+            rounded_final_time = round(final_time, self.time_decimal)
+            print('\t final time of this loop (rounded) is = ', rounded_final_time)
+            
+            #copy rounded values to time dictionary
+            print('assign rounded values back to time dictionary:')
+            self.time['LOOP_TIME_STEP']=rounded_loop_time_step
+            self.xp.parameters['petscArgs']['-ts_final_time']=rounded_final_time
+            self.xp.parameters['petscArgs']['-start_stop']=rounded_start_stop
+            print('\t self.time[LOOP_TIME_STEP] = ', self.time['LOOP_TIME_STEP'])
+            print('\t self.xp.parameters[petscArgs][-ts_final_time] = ', self.xp.parameters['petscArgs']['-ts_final_time'])
+            print('\t self.xp.parameters[petscArgs][-start_stop] = ', self.xp.parameters['petscArgs']['-start_stop'])
+            print(' ')
+            sys.stdout.flush()
+            
             #keep all files to be saved (not plasma state) in folder with time stamp
             timeFolder='t'+str(time)
             if not os.path.exists(timeFolder):
@@ -1014,7 +1086,7 @@ class xolotlFtridynDriver(Component):
                         ft_implProfiles_dictionary['logFile']=outFile
 
 
-                        pkl_impl_file=cwd+'/ft_implProfiles.pkl'  ## define name in config file, here give abs path
+                        pkl_impl_file='ft_implProfiles.pkl' #cwd+'/ft_implProfiles.pkl' ; rm cwd from paths
                         pickle.dump(ft_implProfiles_dictionary, open(pkl_impl_file, "wb" ) )
 
                         print('\t translate_ft2xol:')
@@ -1061,7 +1133,7 @@ class xolotlFtridynDriver(Component):
                     ft_getYields_dictionary['logFile']=outFile
                     ft_getYields_dictionary['print_test']=self.print_test
                     
-                    pkl_gy_file=cwd+'/ft_getYields.pkl'  ## define name in config file, here give abs path
+                    pkl_gy_file='ft_getYields.pkl' # cwd+'/ft_getYields.pkl' ; rm cwd from paths
                     #we need to close this file later (to open it again and read yields), so use alternative to
                     #pickle.dump(ft_getYields_dictionary, open(pkl_gy_file, "wb" ) )
                     with open(pkl_gy_file, "wb") as pf:
@@ -1292,12 +1364,12 @@ class xolotlFtridynDriver(Component):
             print(' ')
             sys.stdout.flush()
             
-            #time and time-step related parameters
-            final_time = time+self.time['LOOP_TIME_STEP']
-            rounded_final_time = round(final_time, 14)
-            if (self.print_uq):
-                print(f"PR: >>> Rounding final time from {final_time} to {rounded_final_time} here")
-            self.xp.parameters['petscArgs']['-ts_final_time']=rounded_final_time
+            #time and time-step related parameters - moved to beginning of while loop
+            #final_time = time+self.time['LOOP_TIME_STEP']
+            #rounded_final_time = round(final_time, self.time_decimal)
+            ##if (self.print_uq):
+            #print(f"Rounding final time from {final_time} to {rounded_final_time} before running Xolotl")
+            #self.xp.parameters['petscArgs']['-ts_final_time']=rounded_final_time
 
             print('\n')
             print('run XOLOTL: ')
@@ -1387,7 +1459,7 @@ class xolotlFtridynDriver(Component):
             shutil.copyfile(self.XOLOTL_NETWORK_FILE, temp_network_file)
             print(f"\u2B95 Successfully copied network file {self.XOLOTL_NETWORK_FILE} to temporary network file {temp_network_file}")
 
-            network_size_file=cwd+'/worker_netFile_size.txt'
+            network_size_file=cwd+'/worker_netFile_size.txt' #this one needs the full path
             
             # loop until keepLastTS is successful
             while not keep_last_ts_success:
@@ -1410,7 +1482,7 @@ class xolotlFtridynDriver(Component):
 
                     #set a maximum number of tries
                     if self.collapsedLoops<=int(self.driver['MAX_COLLAPSE_LOOPS']):
-
+                        #this first call can probably be removed, and just keep while over netFile size
                         self.services.call(xolotl, 'init', timeStamp, dTime=time, time_decimal=self.time_decimal, xParameters=self.xp.parameters, network_size_file=network_size_file, output_file=outFile, print_test=self.print_test)
                         if os.path.exists(network_size_file):
                             print('found network_size_file')
@@ -1426,11 +1498,27 @@ class xolotlFtridynDriver(Component):
                             print('\t input dir network file size is ', inputDir_netFile_size)
                             sys.stdout.flush()
                             #while worker_netFile_size != driver_netFile_size:
-                            while worker_netFile_size != temp_netFile_size:
-                                print ('temp and workfer network sizes differ')
-                                print(' try running worker init again')
+                            while worker_netFile_size != inputDir_netFile_size:
+                                print ('input dir and worker network sizes differ')
+                                print(' copy input dir network file here, update state and try running worker init again')
+                                shutil.copyfile(self.INPUT_DIR+'/'+self.XOLOTL_NETWORK_FILE, self.XOLOTL_NETWORK_FILE)
+                                self.services.update_state()
                                 self.services.call(xolotl, 'init', timeStamp, dTime=time, time_decimal=self.time_decimal, xParameters=self.xp.parameters, network_size_file=network_size_file, output_file=outFile, print_test=self.print_test)
-                                sys.stdout.flush()
+                                if os.path.exists(network_size_file):
+                                    worker_network_sizeFile=open(network_size_file, 'r')
+                                    worker_netFile_size=int(worker_network_sizeFile.readline())
+                                    worker_network_sizeFile.close
+                                    print('\t updated workers network file size is ', worker_netFile_size)
+                                    driver_netFile_size=int(os.path.getsize(self.XOLOTL_NETWORK_FILE))
+                                    print('\t updated driver network file size is ', driver_netFile_size)
+                                    temp_netFile_size=int(os.path.getsize(temp_network_file))
+                                    print('\t updated temp network file size is ', temp_netFile_size)
+                                    inputDir_netFile_size=int(os.path.getsize(self.INPUT_DIR+'/'+self.XOLOTL_NETWORK_FILE))
+                                    print('\t updated input dir network file size is ', inputDir_netFile_size)
+                                    sys.stdout.flush()
+                                else:
+                                    print('WARNING: could not find network size file')
+                                    print('\t continue at your own risk ')
                             print('network file sizes are the same. continue with worker:step')
                         else:
                             print('WARNING: could not find network size file')
@@ -1579,8 +1667,8 @@ class xolotlFtridynDriver(Component):
                 ## try using keepLastTS to produce netfile with only info from the last TS
                 print('produce new network file using xolotlStop:')
                 try:
-                    iF=cwd+'/xolotlStop.h5'
-                    oF= cwd+'/'+self.XOLOTL_NETWORK_FILE
+                    iF= 'xolotlStop.h5' #cwd+'/xolotlStop.h5' ; rm cwd from paths
+                    oF= self.XOLOTL_NETWORK_FILE #cwd+'/'+self.XOLOTL_NETWORK_FILE ; rm cwd from paths
                     os.remove(oF) #can not exist & it's copied as w/ time-stamp above
                     if self.print_test:
                         print('\t run keepLastTS with: ')
@@ -1647,20 +1735,21 @@ class xolotlFtridynDriver(Component):
             else:
                 print(('\t driver time step (({0}) and start_stop ({1}) unchanged (factor=1) \n'.format( self.time['LOOP_TIME_STEP'], self.xp.parameters['petscArgs']['-start_stop'])))
 
-            if time+self.time['LOOP_TIME_STEP']>end_time: 
-                self.time['LOOP_TIME_STEP']=end_time-time
-                self.xp.parameters['petscArgs']['-start_stop']=end_time/10.0
-                if (self.print_uq):
-                    print(f"PR: >>> Updated -start_stop to {self.xp.parameters['petscArgs']['-start_stop']:.4f}")
-                print(' ')
-                print('\t time step longer than needed for last loop ')
-                print(('\t adapting driver time step to {} to reach exactly endTime '.format(self.time['LOOP_TIME_STEP'])))
-                self.xp.parameters['petscArgs']['-start_stop']=self.time['LOOP_TIME_STEP']/10.0
-                print(('\t and Xolotls data is saved every (start_stop) = {} \n'.format( self.xp.parameters['petscArgs']['-start_stop'])))
-            else:
-                self.xp.parameters['petscArgs']['-start_stop']=(time+self.time['LOOP_TIME_STEP'])/10.0
-                if (self.print_uq):
-                    print(f"PR: >>> Updated -start_stop to {self.xp.parameters['petscArgs']['-start_stop']:.4f}")
+            #no need for this here anymore ; check done in the very beginning of the while loop
+            #if time+self.time['LOOP_TIME_STEP']>end_time: 
+            #    self.time['LOOP_TIME_STEP']=end_time-time
+            #    self.xp.parameters['petscArgs']['-start_stop']=end_time/10.0
+            #    if (self.print_uq):
+            #        print(f"PR: >>> Updated -start_stop to {self.xp.parameters['petscArgs']['-start_stop']:.4f}")
+            #    print(' ')
+            #    print('\t time step longer than needed for last loop ')
+            #    print(('\t adapting driver time step to {} to reach exactly endTime '.format(self.time['LOOP_TIME_STEP'])))
+            #    self.xp.parameters['petscArgs']['-start_stop']=self.time['LOOP_TIME_STEP']/10.0
+            #    print(('\t and Xolotls data is saved every (start_stop) = {} \n'.format( self.xp.parameters['petscArgs']['-start_stop'])))
+            #else:
+            #    self.xp.parameters['petscArgs']['-start_stop']=(time+self.time['LOOP_TIME_STEP'])/10.0
+            #    if (self.print_uq):
+            #        print(f"PR: >>> Updated -start_stop to {self.xp.parameters['petscArgs']['-start_stop']:.4f}")
 
             if self.driver['XOLOTL_MAXTS_FACTOR'] != 1:
                 if (self.time['LOOP_N']%self.driver['XOLOTL_MAXTS_NLOOPS']==0):
@@ -1702,7 +1791,7 @@ class xolotlFtridynDriver(Component):
         print('\t output file of the FT-X workflow:')
         if 'LOG_FILE' in keywords:
             logFile=keywords['LOG_FILE']
-            outFile=cwd+'/'+logFile
+            outFile= cwd+'/'+logFile
             print('\t \t log file defined in keywords: ')
             print('\t \t ', outFile)
             outF=open(outFile , 'a')

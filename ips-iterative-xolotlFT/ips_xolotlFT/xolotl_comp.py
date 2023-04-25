@@ -73,13 +73,20 @@ class xolotlWorker(Component):
                     f.write(f"{param}\n")
             xp.parameters.pop('migration')
 
-        #write and store xolotls parameter for each loop 
+        #write, check size > 0 and store xolotls parameter for each loop 
         xp.write('params.txt')
-
+        while (os.path.getsize('params.txt') == 0):
+            print('WARNING: params.txt is empty')
+            print('         with xp  = : ', xp)
+            print('         with xp.parameters = ', xp.parameters)
+            print('         try writing it again')
+            sys.stdout.flush()
+            xp.write('params.txt')
+        print('\t params.txt is not empty. Continue')
         currentXolotlParamFile='params_%f.txt' %self.driverTime
         shutil.copyfile('params.txt',currentXolotlParamFile)
-
-
+        sys.stdout.flush()
+        
         try:
             #shutil.copyfile(xp.parameters['networkFile'],xp.parameters['networkFile']+'_t'+str(self.driverTime))
             networkFile_timeCopy = self.NETWORK_FILE+'_t'+str(self.driverTime)
@@ -95,22 +102,23 @@ class xolotlWorker(Component):
                 size_file.close
             sys.stdout.flush()
             
-            ## rather than comparing here to the copy, write size to file
+            ## in addition to comparing here to the copy, write size to file
             #the read file in driver to compare to size of netFile in input dir
 
-            #netFile_tCopy_size=os.path.getsize(networkFile_timeCopy)
-            #    print('\t TEST: file size of ', self.NETWORK_FILE ,' is: ', netFile_size)
-            #    print('\t TEST: file size of ', networkFile_timeCopy ,' is: ', netFile_tCopy_size)
-
-            #if netFile_size != netFile_tCopy_size:
-            #    while  netFile_size != netFile_tCopy_size:
-            #        print('\t WARNING: network files have different sizes')
-            #        print('\t          try copying again')
-            #        shutil.copyfile(self.NETWORK_FILE,networkFile_timeCopy)
-            #        netFile_tCopy_size=os.path.getsize(networkFile_timeCopy)
-            #        print('\t          new file size of ', networkFile_timeCopy ,' is: ', netFile_tCopy_size)
-            #else:
-            #print('\t', self.NETWORK_FILE , 'succesfully copied (same file size)')
+            netFile_tCopy_size=os.path.getsize(networkFile_timeCopy)
+            if print_test:
+                print('\t TEST: in xolotl-worker, file size of ', self.NETWORK_FILE ,' is: ', netFile_size)
+                print('\t TEST: in xolotl-worker, file size of ', networkFile_timeCopy ,' is: ', netFile_tCopy_size)
+                
+            if netFile_size != netFile_tCopy_size:
+                while  netFile_size != netFile_tCopy_size:
+                    print('\t WARNING: in xolotl-worker, network files have different sizes')
+                    print('\t          in xolotl-worker, try copying again')
+                    shutil.copyfile(self.NETWORK_FILE,networkFile_timeCopy)
+                    netFile_tCopy_size=os.path.getsize(networkFile_timeCopy)
+                    print('\t          new file size of ', networkFile_timeCopy ,' is: ', netFile_tCopy_size)
+            else:
+                print('\t', self.NETWORK_FILE , ' succesfully copied in xolotl-worker (same file size)')
                 
         except Exception as e:
             print('\t', e)
@@ -210,8 +218,8 @@ class xolotlWorker(Component):
                 ## use keepLastTS to produce netfile with only info from the last TS
                 print('\t produce new network file using xolotlStop:')
                 try:
-                    iF=cwd+'/xolotlStop.h5'
-                    oF= cwd+'/'+self.NETWORK_FILE
+                    iF= 'xolotlStop.h5' #cwd+'/xolotlStop.h5' ; rm cwd from paths
+                    oF= self.NETWORK_FILE #cwd+'/'+self.NETWORK_FILE ; rm cwd from paths
                     os.remove(oF) #can not exist & it's copied as w/ time-stamp above
                     print('\t \t run keepLastTS with:')
                     print('\t \t \t inFile = ', iF)
