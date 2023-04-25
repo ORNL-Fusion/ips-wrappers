@@ -1242,7 +1242,7 @@ class xolotlFtridynDriver(Component):
             for i in range(len(self.plasmaSpecies)): #self.plasmaSpecies.iteritems():  
                 prj=self.plasmaSpecies[i]
                 print(('\t{0} :  spY = {1} and rY = {2} '.format(prj,self.spYield[i], self.rYield[i])))
-                prjYieldsString=prj+' ' +str(self.spYield[i])+' '+str(self.rYield[i])
+                prjYieldsString=prj+' ' +str(self.spYield[i])+' '+str(self.rYield[i])+' '
                 yieldString+=prjYieldsString
                 
             #write sp Yields to file (temp) and append to spYield output (final)
