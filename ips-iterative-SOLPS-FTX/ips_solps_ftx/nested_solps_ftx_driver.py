@@ -775,7 +775,7 @@ class parent_driver(Component):
             ave_Rtot_array = np.array([ave_Rtot])
             ave_twall_array = np.array([ave_twall])
             print('TEST TEST: ave_Rtot = ', ave_Rtot, ' ave_Rtot_array =', ave_Rtot_array, ' and ave_Rtot_array[0] =', ave_Rtot_array[0])
-            print('TEST TEST: ave_twall = ', ave_Rft, ' ave_twall_array =', ave_twall_array, ' and ave_twall_array[0] =', ave_twall_array[0])
+            print('TEST TEST: ave_twall = ', ave_twall, ' ave_twall_array =', ave_twall_array, ' and ave_twall_array[0] =', ave_twall_array[0])
             updateSOLPSinput.input_dat_update(orig_inputDat, inputDat, RECYCF, ave_Rtot_array, ave_twall_array, ['DIMES']) 
             shutil.copyfile(inputDat, new_inputDat)
             if self.print_test:
