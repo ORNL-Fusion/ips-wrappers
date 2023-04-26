@@ -10,8 +10,8 @@
 from ipsframework import Component
 import os
 from omfit_classes.omfit_namelist import OMFITnamelist
-from utilities import ZipState
-from utilities import ScreenWriter
+from ips_component_utilities import ZipState
+from ips_component_utilities import ScreenWriter
 
 #-------------------------------------------------------------------------------
 #
