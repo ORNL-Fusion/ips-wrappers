@@ -88,7 +88,7 @@ class parent_driver(Component):
         #ftx_conf = self.services.get_config_param('SUBWF_COMPONENT_CONF')
         solps_conf = self.services.get_config_param('SOLPS_COMPONENT_CONF')
         ftx_input_dir=self.services.get_config_param('FTX_INPUT_DIR')
-        solps_input_dir=self.services.get_config_param('SOLPS_INPUT_DIR')
+        self.solps_input_dir=self.services.get_config_param('SOLPS_INPUT_DIR')
 
         print('read various parent config file parameters:')
         self.ftx_locs=[0]*num_ftx
@@ -146,12 +146,14 @@ class parent_driver(Component):
         print('CREATE THE SOLPS SUB-WORKFLOW:')
         print('------------------------------')
         print('\n')
+        #To-Do: remove this is it's not being used
         self.nested_components['component_SOLPS'] = {'sim_name': None,
                                                      'init': None,
-                                                     'driver': None,
-                                                     'INPUT_DIR' : 'solps_dir',
-                                                     'LOG_FILE' : 'log.component_SOLPS.warning'
+                                                     'driver': None #,
                                                      }
+                                                     #'INPUT_DIR' : 'solps_dir',
+                                                     #'LOG_FILE' : 'log.component_SOLPS.warning'
+                                                     #}
         if (self.print_test):
             print('Defined dictionary : ')
             print('\t', (self.nested_components['component_SOLPS']))
@@ -160,15 +162,23 @@ class parent_driver(Component):
         print('\t name: component_SOLPS')
         print('\t config: ', solps_conf)
         print('\t keys: SIM_NAME : solps_iter', 'LOG_FILE : log.component_SOLPS.warning')
-        print('\t INPUT DIR ', solps_input_dir)
+        print('\t INPUT DIR ', self.solps_input_dir)
+        print(' ')
 
+        #make copy of solps_input_dir as init_solps_input_dir
+        print('Some SOLPS input files will be updated during the simulation')
+        print('Keep a copy of initial SOLPS input dir...')
+        shutil.copytree(self.solps_input_dir, self.solps_input_dir+'_initBackup')
+        print('... done copying input dir as: ', self.solps_input_dir+'_initBackup')
+        print(' ')
+        
         (self.nested_components['component_SOLPS']['sim_name'],
          self.nested_components['component_SOLPS']['init'],
          self.nested_components['component_SOLPS']['driver']) = self.services.create_sub_workflow('component_SOLPS',
                                                                                                   solps_conf, 
                                                                                                   {'SIM_NAME' : 'solps_iter',
                                                                                                    'LOG_FILE' : 'log.component_SOLPS.warning'},
-                                                                                                  solps_input_dir)
+                                                                                                  self.solps_input_dir)
 
         print('creating SOLPS sub-workflow DONE!')
         if (self.print_test):
@@ -276,6 +286,29 @@ class parent_driver(Component):
         time = round(self.init_time, self.time_decimal)         
         t_count = self.init_loop_n
 
+
+        #solps init component before while loop:
+        print('\n')
+        print('\t SOLPS:init')
+        print('\n')
+
+        print('This is run once, in the beginning of the simulation')
+
+        print('run SOLPS init:init')
+        self.async_queue['component_SOLPS:init:init'] = self.services.call(self.nested_components['component_SOLPS']['init'], 'init', time)
+        print('init:init done \n')
+        self.services.stage_state()
+        
+        print('run SOLPS init:step')
+        self.async_queue['component_SOLPS:init:step'] = self.services.call(self.nested_components['component_SOLPS']['init'], 'step', time)
+        print('init:step done \n')
+        self.services.stage_state()
+        
+        print('run SOLPS init:finalize')
+        self.async_queue['component_SOLPS:init:finalize'] = self.services.call(self.nested_components['component_SOLPS']['init'], 'finalize', time)
+        print('init:step done \n')
+        self.services.stage_state()
+        
         while time < self.end_time:
 
             print('\n Starting iteration for time : ', time)
@@ -283,37 +316,10 @@ class parent_driver(Component):
             print('\n')
             print('-------------------')
             print('-------------------')
-            print('run SOLPS')
+            print('run SOLPS driver')
             print('-------------------')
             print('-------------------')
             print('\n')
-
-
-            #RUN init AND driver OF COMPONENT_SOLPS SUB-WORKFLOW
-            print('\t \n')
-            print('\t SOLPS:init')
-            print('\t \n')
-
-            #solps init:
-            print('run SOLPS init:init')
-            self.async_queue['component_SOLPS:init:init'] = self.services.call(self.nested_components['component_SOLPS']['init'], 'init', time)                    
-            print('init:init done \n')
-            self.services.stage_state()
-
-            print('run SOLPS init:step')
-            self.async_queue['component_SOLPS:init:step'] = self.services.call(self.nested_components['component_SOLPS']['init'], 'step', time)
-            print('init:step done \n')
-            self.services.stage_state()
-
-            print('run SOLPS init:finalize')
-            self.async_queue['component_SOLPS:init:finalize'] = self.services.call(self.nested_components['component_SOLPS']['init'], 'step', time)
-            print('init:step done \n')
-            self.services.stage_state()
-
-            
-            print('\t \n')
-            print('\t SOLPS:driver')
-            print('\t \n')
             
             print('run SOLPS driver:init')
             self.async_queue['component_SOLPS:driver:init'] = self.services.call(self.nested_components['component_SOLPS']['driver'], 'init', time)
@@ -805,6 +811,17 @@ class parent_driver(Component):
 
 
             self.services.update_state()
+
+
+            #copy updated files to input.dat, b2fstate... to self.solps_input_dir
+            print('TEST: update inputs to SOLPS before running next iteration...')
+            solps_update_string=self.services.get_config_param('UPDATE_SOLPS_INPUTS')
+            update_list=solps_update_string.split()
+            for f in update_list:
+                print('\t TEST: update ', f, ' in solps input dir')
+                shutil.copyfile(f, self.solps_input_dir+'/'+f)
+            print('... done updating inputs to SOLPS')
+            print(' ')
             
             new_time=time+self.time_step
             time = round(new_time, self.time_decimal)
