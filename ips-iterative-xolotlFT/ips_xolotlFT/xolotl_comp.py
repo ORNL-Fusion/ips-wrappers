@@ -5,8 +5,8 @@ import os
 import shutil
 import subprocess
 import glob
-from .python_scripts_for_coupling import param_handler
-from .python_scripts_for_coupling import keepLastTS
+from ips_xolotlFT.python_scripts_for_coupling import param_handler
+from ips_xolotlFT.python_scripts_for_coupling import keepLastTS
 import sys
 import numpy as np
 
@@ -48,6 +48,16 @@ class xolotlWorker(Component):
         print (' ')
         print('xolotl_worker: init')
         print(' ')
+        
+        #round the time to the decimal point 
+        if 'time_decimal' in keywords:
+            self.time_decimal=int(keywords['time_decimal'])
+        else:
+            self.time_decimal=5
+        print('round time to the ', self.time_decimal, 'th digit')
+        print(' ')
+        self.driverTime = round(self.driverTime, self.time_decimal)
+        
         # if TEST:
         if print_test:
             print('\t TEST: check that all arguments are read well by xolotl-init and write Xolotl input file (from dictionary)')
@@ -63,20 +73,53 @@ class xolotlWorker(Component):
                     f.write(f"{param}\n")
             xp.parameters.pop('migration')
 
-        #write and store xolotls parameter for each loop 
+        #write, check size > 0 and store xolotls parameter for each loop 
         xp.write('params.txt')
-
+        while (os.path.getsize('params.txt') == 0):
+            print('WARNING: params.txt is empty')
+            print('         with xp  = : ', xp)
+            print('         with xp.parameters = ', xp.parameters)
+            print('         try writing it again')
+            sys.stdout.flush()
+            xp.write('params.txt')
+        print('\t params.txt is not empty. Continue')
         currentXolotlParamFile='params_%f.txt' %self.driverTime
         shutil.copyfile('params.txt',currentXolotlParamFile)
-
-
+        sys.stdout.flush()
+        
         try:
             #shutil.copyfile(xp.parameters['networkFile'],xp.parameters['networkFile']+'_t'+str(self.driverTime))
-            shutil.copyfile(self.NETWORK_FILE,self.NETWORK_FILE+'_t'+str(self.driverTime))
+            networkFile_timeCopy = self.NETWORK_FILE+'_t'+str(self.driverTime)
+            shutil.copyfile(self.NETWORK_FILE,networkFile_timeCopy)
+            netFile_size=os.path.getsize(self.NETWORK_FILE)
             if print_test:
-                print('\t TEST: copied ',self.NETWORK_FILE,' as ' , self.NETWORK_FILE+'_t'+str(self.driverTime))
-                print('\t file size of ', self.NETWORK_FILE ,' is: ', os.path.getsize(self.NETWORK_FILE))
+                print('\t TEST: copied ',self.NETWORK_FILE,' as ' , networkFile_timeCopy)
+            
+            if 'network_size_file' in keywords:
+                size_file=open(keywords['network_size_file'], 'w')
+                size_file.write(str(int(netFile_size)))
+                print('\t TEST: xolotl worker wrote ', netFile_size, ' in ', keywords['network_size_file'])
+                size_file.close
+            sys.stdout.flush()
+            
+            ## in addition to comparing here to the copy, write size to file
+            #the read file in driver to compare to size of netFile in input dir
 
+            netFile_tCopy_size=os.path.getsize(networkFile_timeCopy)
+            if print_test:
+                print('\t TEST: in xolotl-worker, file size of ', self.NETWORK_FILE ,' is: ', netFile_size)
+                print('\t TEST: in xolotl-worker, file size of ', networkFile_timeCopy ,' is: ', netFile_tCopy_size)
+                
+            if netFile_size != netFile_tCopy_size:
+                while  netFile_size != netFile_tCopy_size:
+                    print('\t WARNING: in xolotl-worker, network files have different sizes')
+                    print('\t          in xolotl-worker, try copying again')
+                    shutil.copyfile(self.NETWORK_FILE,networkFile_timeCopy)
+                    netFile_tCopy_size=os.path.getsize(networkFile_timeCopy)
+                    print('\t          new file size of ', networkFile_timeCopy ,' is: ', netFile_tCopy_size)
+            else:
+                print('\t', self.NETWORK_FILE , ' succesfully copied in xolotl-worker (same file size)')
+                
         except Exception as e:
             print('\t', e)
             print('\t could not save network file for t = ', str(self.driverTime))            
@@ -86,6 +129,7 @@ class xolotlWorker(Component):
 
     def step(self, timeStamp=0.0,**keywords):
 
+        #asign a local variable to arguments used multiple times
         self.services.stage_state()
         cwd = self.services.get_working_dir()
         zipOutput=keywords['dZipOutput']
@@ -113,8 +157,9 @@ class xolotlWorker(Component):
         print('xolotl_worker: step ')
         print(' ')
 
+        print('\t for time (rounded): ', self.driverTime)
+        print(' ')
 
-        #asign a local variable to arguments used multiple times      
         # if TEST mode:
         if print_test:
             print('\t TEST: checking that all arguments are read well by xolotl-step')
@@ -173,8 +218,8 @@ class xolotlWorker(Component):
                 ## use keepLastTS to produce netfile with only info from the last TS
                 print('\t produce new network file using xolotlStop:')
                 try:
-                    iF=cwd+'/xolotlStop.h5'
-                    oF= cwd+'/'+self.NETWORK_FILE
+                    iF= 'xolotlStop.h5' #cwd+'/xolotlStop.h5' ; rm cwd from paths
+                    oF= self.NETWORK_FILE #cwd+'/'+self.NETWORK_FILE ; rm cwd from paths
                     os.remove(oF) #can not exist & it's copied as w/ time-stamp above
                     print('\t \t run keepLastTS with:')
                     print('\t \t \t inFile = ', iF)
@@ -288,6 +333,20 @@ class xolotlWorker(Component):
             ##save TRIDYN_*.dat files zipped OR delete them 
             ##UPDATE: not TRIDYN files generated by Xolotl (info in HDF5)
 
+            #save retention and surface files for this time
+            print('\t save retention and surface files for this time:')
+            retentionFile = self.RET_FILE
+            if os.path.isfile(retentionFile):
+                shutil.copyfile(retentionFile, retentionFile+'_t'+str(self.driverTime))
+            else:
+                print('retention file ', retentionFile ,' does not exist. could not be saved')
+                
+            surfaceFile=self.SURFACE_FILE
+            if os.path.isfile(surfaceFile):
+                shutil.copyfile(surfaceFile, surfaceFile+'_t'+str(self.driverTime))
+            else:
+                print('surface file ',surfaceFile ,' does not exist. could not be saved')
+            
             #save helium concentration files, zipped
             heConcFiles='heliumConc_*.dat'
 

@@ -157,8 +157,8 @@ def write_ftxOut(grid=20,
     print(' ')
     
     print('\t and write to ', outFile)
-    outputFTFile=open(outFile, "w")
-    outputFTFile.write("#grid \t  T_wall \t R_FT \t R_Xol \t R_tot \n")
+    outputFTFile=open(outFile, "a+")
+    #outputFTFile.write("#grid \t  T_wall \t R_FT \t R_Xol \t R_tot \n") skip the header for now
     outputFTFile.write(str(grid)+'\t'+str(Twall)+'\t'+str(RFT)+'\t'+str(RXol)+'\t'+str(Rtot)+'\n' )
     outputFTFile.close()
     print('Done with write_ftxOut')

@@ -27,7 +27,7 @@ def v1(xp_parameters={},plasma={},print_test=False):
     if ('heat' in plasma) or ('heat' in xp_parameters) or ('startTemp' in plasma) or ('startTemp' in xp_parameters):
         if 'heat' in plasma:
             mod='heat'
-            if len(plasma['heat'])>1:
+            if (isinstance(plasma['heat'],list) and (len(plasma['heat'])>1)):
                 val=[plasma['heat'][0]*1.0e-18,plasma['heat'][1]] 
             else: #no bulkT given in xolotl                                                                                                                                                                                  
                 val=[plasma['heat'][0]*1.0e-18,300]
@@ -37,7 +37,7 @@ def v1(xp_parameters={},plasma={},print_test=False):
                 print('\t \t \t and removed startTemp from xolotl parameters')
         elif 'heat' in xp_parameters:
             mod='heat'
-            if len(xp_parameters['heat'])>1:
+            if (isinstance(xp_parameters['heat'],list) and (len(xp_parameters['heat'])>1)):
                 val=[xp_parameters['heat'][0],xp_parameters['heat'][1]]
             else: #no bulkT given in xolotl
                 val=[xp_parameters['heat'][0],300]
@@ -83,7 +83,7 @@ def v2(xp_parameters={},plasma={},print_test=False):
         if 'heat' in plasma:
             print('\t \t use heat defined by PLASMA')
             mod = 'heat'
-            if len(plasma['heat'])>1:
+            if (isinstance(plasma['heat'],list) and (len(plasma['heat'])>1)):
                 val=[plasma['heat'][0]*1.0e-18, plasma['heat'][1]] 
             else:
                 val=[plasma['heat']*1.0e-18, 300.0] 
@@ -92,7 +92,7 @@ def v2(xp_parameters={},plasma={},print_test=False):
         elif 'heat' in xp_parameters:
             print('\t \t use heat defined by Xolotl')
             mod = 'heat'
-            if len(xp_parameters['heat'])>1:
+            if (isinstance(xp_parameters['heat'],list) and (len(xp_parameters['heat'])>1)):
                 val=[xp_parameters['heat'][0], xp_parameters['heat'][1]]
             else:
                 val=[xp_parameters['heat'], 300.0] 
