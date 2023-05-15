@@ -94,8 +94,8 @@ class solps_iter_init(Component):
                 zip_ref.write('fort.1')
                 zip_ref.set_state(state='needs_update')
             if os.path.exists(eirene_grid):
-                os.rename(eirene_grid, 'fort30')
-                zip_ref.write('fort30')
+                os.rename(eirene_grid, 'fort.30')
+                zip_ref.write('fort.30')
                 zip_ref.set_state(state='needs_update')
             if os.path.exists(eirene_nodes):
                 os.rename(eirene_nodes, 'fort.33')
