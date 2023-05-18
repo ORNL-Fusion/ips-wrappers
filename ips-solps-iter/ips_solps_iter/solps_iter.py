@@ -39,15 +39,15 @@ class solps_iter(Component):
                 self.diag_state = self.services.get_config_param('DIAGNOSTIC_STATE')
             except:
                 pass
-            
+
             os.environ['SOLPSTOP'] = self.services.get_config_param('SOLPSTOP')
-        
+
 #  Remove existing files.
         for file in os.listdir('.'):
             os.remove(file)
-        
+
         self.services.stage_state()
-        
+
         self.zip_ref = ZipState.ZipState(self.current_solps_state, 'a')
         self.zip_ref.extractall()
 
@@ -78,7 +78,7 @@ class solps_iter(Component):
         flags = self.zip_ref.get_state()
 
         if 'state' in flags and flags['state'] == 'needs_update':
-        
+
 #  Rename state file to inital state if it exists before launching the task.
             if os.path.exists('b2fstate'):
                 os.remove('b2fstati')
@@ -129,6 +129,21 @@ class solps_iter(Component):
                 self.services.error('solps_iter: step failed')
                                                   
             self.zip_ref.write(keywords['result_file'])
+
+        if 'comsol_file' in keywords:
+            task_wait = self.services.launch_task(1,
+                                                  self.services.get_working_dir(),
+                                                  self.SOLPS_SIGNALS_EXE,
+                                                  '-task=get_comsol',
+                                                  '-solps_geometry=b2fgmtry',
+                                                  '-solps_state=b2fstate',
+                                                  '-model_result={comsol_file}'.format(**keywords),
+                                                  logfile = 'solps_comsol.log')
+
+            if self.services.wait_task(task_wait) :
+                self.services.error('solps_iter: step failed')
+
+            self.zip_ref.write(keywords['comsol_file'])
 
         self.zip_ref.close()
         self.services.update_state()
