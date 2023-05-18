@@ -137,7 +137,7 @@ class solps_iter(Component):
                                                   '-task=get_comsol',
                                                   '-solps_geometry=b2fgmtry',
                                                   '-solps_state=b2fstate',
-                                                  '-model_result={comsol_file}'.format(**keywords),
+                                                  '-comsol_result={comsol_file}'.format(**keywords),
                                                   logfile = 'solps_comsol.log')
 
             if self.services.wait_task(task_wait) :
