@@ -123,8 +123,7 @@ class solps_iter(Component):
                                                   '-diag_geometry={}'.format(self.diag_geometry),
                                                   '-diag_state={}'.format(self.diag_state),
                                                   '-model_result={result_file}'.format(**keywords),
-                                                  logfile = 'solps_signals.log',
-                                                  whole_nodes = True)
+                                                  logfile = 'solps_signals.log')
         
             if self.services.wait_task(task_wait) :
                 self.services.error('solps_iter: step failed')
