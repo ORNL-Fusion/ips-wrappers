@@ -8,7 +8,7 @@ F90_SRC = $(shell ls *.f90)
 OBJS = $(F90_SRC:%.f90=$(OBJDIR)/%.o) $(F95_SRC:%.f95=$(OBJDIR)/%.o)
 F90_MOD_INCLUDE =  $(F90_MOD_INCLUDE_PREFIX). $(F90_MOD_INCLUDE_PREFIX)$(NETCDFHOME)/include
 
-EXECUTABLES = do_toric_init_abr prepare_toric_input_abr prepare_abj_input
+EXECUTABLES = prepare_toric_input prepare_abj_input
 
 SCRIPTS = rf_ic_toric.py
 
@@ -27,12 +27,7 @@ all: .depend
 toric_utils_mod.o:
 	$(F90) -c toric_utils_mod.f90
 
-do_toric_init_abr.o: toric_utils_mod.o
-
-do_toric_init_abr: do_toric_init_abr.o toric_utils_mod.o toric_namelists.h
-	$(F90) -o $@ $@.o toric_utils_mod.o $(LIBS)
-
-prepare_toric_input_abr: prepare_toric_input_abr.o
+prepare_toric_input: prepare_toric_input.o
 	$(F90) -o $@ $@.o $(LIBS)
 
 prepare_abj_input: prepare_abj_input.o
