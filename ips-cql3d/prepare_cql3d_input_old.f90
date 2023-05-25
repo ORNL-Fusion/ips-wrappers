@@ -190,10 +190,11 @@
 c----------------------------------------
 c     type declaration and storage of all namelists variables
 c-----------------------------------
-      include 'name.h'
       include 'name_decl.h'
-      include 'frname.h'
       include 'frname_decl.h'
+      include 'name.h'
+      include 'frname.h'
+      
 
 
       character*8 ips_mode,cql3d_mode,cql3d_output,restart,ps_add_nml
@@ -314,9 +315,9 @@ c     F2003-syntax: command_argument_count()/get_command_argument(,)
       write(*,*)'prepare_cql3d_input command line arguments: ',
      +  ips_mode,'  ',cql3d_mode,'  ',cql3d_output,'  ',cql3d_nml,
      +  '  ',restart,'  ',ps_add_nml
-      if (nsteps_str_present == .TRUE.) write(*,*) nsteps_str
-      if (deltat_str_present == .TRUE.) write(*,*) deltat_str
-      if (enorm_str_present == .TRUE.) write(*,*) enorm_str
+      if (nsteps_str_present) write(*,*) nsteps_str
+      if (deltat_str_present) write(*,*) deltat_str
+      if (enorm_str_present) write(*,*) enorm_str
 
 
 c-----------------------------------------------------------------------
@@ -338,6 +339,14 @@ c-----------------------------------------------------------------------
       call urfindfl
       call frinitl
 
+! some new options that are annoying to deal with as they can cause random
+! run failures if set arbitrarily. these do not have defaults right now
+! in cql3d
+      read_data = 'disabled'
+      ipxy = 1
+      jpxy = 1
+
+      
 c-----------------------------------------------------------------------
 c     Read all namelists [storage setup in name_decl.h,frname_decl.h].
 c-----------------------------------------------------------------------
@@ -786,12 +795,12 @@ c     of ions for the plasma state abridged species list.
       endif
       !in case of minorities do minority with max thermals in 'min' or
       !minority with an additional non-max thermal bulk species 'min+'
-      elseif (cql3d_mode.eq.'min') then
+      elseif (cql3d_mode.eq.'MIN') then
          nmax=ps%nspec_alla
          ngen=1
          !PS thermal species + electrons
 
-      elseif (cql3d_mode.eq.'min+')then
+      elseif (cql3d_mode.eq.'MIN+')then
          nmax=ps%nspec_alla-1
          ngen=2
          !this mode simulates both minority and evolves one of the
@@ -842,6 +851,10 @@ c      eqdskin=trim(ps%eqdsk_file)
 c     Reset cqlinput radcoord to ensure radial coord proportional
 c     to sqrt(tor flux)
       radcoord='sqtorflx'
+
+c SF new safety setting that prevents the latest version of CQL3D from
+c excluding collisions
+      CFP_INTEGRALS='disabled'
 
       
 
@@ -1109,7 +1122,7 @@ c     Checking interpolation
 
       endif  !On cql3d_mode.eq.'el-only'
 
-      if (cql3d_mode .eq.'min') then
+      if (cql3d_mode .eq.'MIN') then
 
       !evolves minority species as general species in model
       !SF i've stripped out the old modes in this routine. they didn't work
@@ -1125,7 +1138,7 @@ c     Checking interpolation
          
          !set number of diff coeffs
          rdcmod = 'format1'
-         rdcfile(1) = 'du0u0_input'
+         rdcfile(1) = 'du0u0_input_1'
          nrdc = 1
          nrdcspecies = 1
          rdc_netcdf = 'disabled'
@@ -1174,6 +1187,85 @@ c     Checking interpolation
      
       endif  !cql3d_mode.ne.'min'
 
+      WRITE(*,*) cql3d_mode
+      if (cql3d_mode .eq.'MIN+') then
+
+      !evolves minority species as general species in model
+      !SF i've stripped out the old modes in this routine. they didn't work
+      !properly as is with the current iteration framework and may be retrieved
+      !by looking at the git history.
+         WRITE(*,*) 'SF debug ps%id_ns', ps%id_ns(:)
+
+         !set profiles to splines of dataset
+         iprone = 'spline'
+         iprote = 'spline'
+         iproti = 'spline'
+         iprozeff = 'disabled' !must be disabled right now
+         
+         !set number of diff coeffs
+         rdcmod = 'format1'
+         rdcfile(1) = 'du0u0_input_1'
+         rdcfile(2) = 'du0u0_input_2'
+         nrdc = 2
+         nrdcspecies(1) = 1
+         nrdcspecies(2) = 2
+         rdc_netcdf = 'disabled'
+         rdcscale(1) = 1.0
+         rdcscale(2) = 1.0
+         
+         !minority species data
+         isp_min = ps%rfmin_to_alla(1)
+         kspeci(1,1) = trim(ps%alla_name(isp_min))
+         kspeci(2,1) = 'general'
+         fmass(1)    = ps%m_alla(isp_min)*1.d+3
+         bnumb(1)    = NINT(ps%q_alla(isp_min)/ps_xe)
+         call ps_rho_rezone(rho_bdy_rezon, ps%id_nmini(1),enein(1:nj,1),
+     +                      ierr, zonesmoo=.TRUE.)
+
+         
+         !ion species data
+         kspeci(1,2) = trim(ps%alla_name(1))
+         kspeci(2,2) = 'general'
+         fmass(2)    = ps%m_alla(1)*1.d+3
+         bnumb(2)    = NINT(ps%q_alla(1)/ps_xe)
+         call ps_rho_rezone(rho_bdy_rezon, ps%id_ns(1),enein(1:nj,2),
+     +                      ierr, zonesmoo=.TRUE.)
+
+         WRITE(*,*) trim(ps%alla_name(1)), ' general ', ps%m_alla(1)*1.d+3, NINT(ps%q_alla(1)/ps_xe)  
+         do isp = 2,ps%nspec_tha
+            WRITE(*,*) trim(ps%alla_name(isp)), ' maxwell ', ps%m_alla(isp)*1.d+3, NINT(ps%q_alla(isp)/ps_xe)
+            kspeci(1,isp+1) = trim(ps%alla_name(isp))
+            kspeci(2,isp+1) = 'maxwell'
+            fmass(isp+1) = ps%m_alla(isp)*1.d+3
+            bnumb(isp+1) = NINT(ps%q_alla(isp)/ps_xe)
+            call ps_rho_rezone(rho_bdy_rezon, ps%id_ns(isp), enein(1:nj,isp+1),
+     +                         ierr, zonesmoo=.TRUE.)
+         enddo
+        
+         !electron species data
+         kspeci(1,ps%nspec_tha+2) = 'e'
+         kspeci(2,ps%nspec_tha+2) = 'maxwell'
+         fmass(ps%nspec_tha+2) = me*1.d+3
+         bnumb(ps%nspec_tha+2) = -1
+         call ps_rho_rezone(rho_bdy_rezon, ps%id_ns(0), enein(1:nj,ps%nspec_tha+2),
+     +                         ierr, zonesmoo=.TRUE.)
+
+         call ps_rho_rezone(rho_bdy_rezon, ps%id_Ts(0), tein(1:nj), ierr,
+     +     zonesmoo=.TRUE.)
+         call ckerr('ps_rho_rezone (U2)',ierr)
+         
+         call ps_rho_rezone(rho_bdy_rezon, ps%id_Ts(1), tiin(1:nj), ierr,
+     +     zonesmoo=.TRUE.)
+         call ckerr('ps_rho_rezone (U2)',ierr)
+
+         !zeff profile
+         call ps_rho_rezone(rho_bdy_rezon, ps%id_Zeff, zeffin(1:nj), ierr,
+     +                      zonesmoo=.TRUE.)
+         call ckerr('ps_rho_rezone (U2)',ierr)
+     
+      endif  !cql3d_mode.ne.'min+'
+      
+      
       !loop voltage profiles
       iproelec = 'spline'
       call ps_rho_rezone(rho_bdy_rezon, ps%id_V_loop, elecin(1:nj), ierr,

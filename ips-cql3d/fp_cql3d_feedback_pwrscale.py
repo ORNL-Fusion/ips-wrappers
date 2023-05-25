@@ -8,7 +8,7 @@ import subprocess
 import getopt
 import shutil
 import string
-from  ipsframework import Component
+from  component import Component
 from netCDF4 import *
 from simple_file_editing_functions import get_lines, lines_to_variable_dict
 
@@ -87,9 +87,9 @@ class cql3d(Component):
         try:
           services.stage_state()
         except Exception as e:
-          print('Error in call to stage_state()' , e)
-          services.error('Error in call to stage_state()')
-          raise Exception('Error in call to stage_state()')
+          print('Error in call to stage_plasma_state()' , e)
+          services.error('Error in call to stage_plasma_state()')
+          raise Exception('Error in call to stage_plasma_state()')
         
     # Get input files  
         try:
@@ -217,9 +217,9 @@ class cql3d(Component):
         try:
           services.update_state()
         except Exception as e:
-          print('Error in call to update_state()', e)
-          services.error('Error in call to update_state()')
-          raise Exception('Error in call to update_state()')
+          print('Error in call to update_plasma_state()', e)
+          services.error('Error in call to update_plasma_state()')
+          raise Exception('Error in call to update_plasma_state()')
      
     # Archive output files
     # N.B.  prepare_cql3d_input in init mode does not produce a complete set 
@@ -298,9 +298,9 @@ class cql3d(Component):
         try:
           services.stage_state()
         except Exception as e:
-          print('Error in call to stage_state()' , e)
-          services.error('Error in call to stage_state()')
-          raise Exception('Error in call to stage_state()')
+          print('Error in call to stage_plasma_state()' , e)
+          services.error('Error in call to stage_plasma_state()')
+          raise Exception('Error in call to stage_plasma_state()')
 
         cur_state_file = services.get_config_param('CURRENT_STATE')
         cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
@@ -435,8 +435,7 @@ class cql3d(Component):
 #     Launch cql3d - N.B: Path to executable is in config parameter CQL3D_BIN
           print('fp_cql3d: launching cql3d')
           cwd = services.get_working_dir()
-          cpp_cql = int(2 * int(128/int(self.NPPN)))      
-          task_id = services.launch_task(self.NPROC, cwd, self.CQL3D_BIN, whole_nodes=True, task_cpp = cpp_cql, task_ppn=self.NPPN, logfile='log.cql3d')
+          task_id = services.launch_task(self.NPROC, cwd, self.CQL3D_BIN, task_ppn=self.NPPN, logfile='log.cql3d')
           retcode = services.wait_task(task_id)
 
 #          command = 'srun -N 12 -n 64  -c 6 /project/projectdirs/m77/CompX/CQL3D/master/xcql3d_mpi_intel.cori 2>>log.stdErr 1>>log.stdOut'
@@ -459,11 +458,7 @@ class cql3d(Component):
 
 # Get cql3d_output_file file name <--> mnemonic from cqlinput file
           lines = get_lines('cqlinput')
-          cql3d_output_file = lines_to_variable_dict(lines)['MNEMONIC'].strip()
-          lines = get_lines('cqlinput')
-          cql3d_output_file = lines_to_variable_dict(lines)['MNEMONIC']
-          cql3d_output_file = "".join(cql3d_output_file.split()).replace(",","")
-          cql3d_output_file = cql3d_output_file.replace("'", "") + ".nc"
+          cql3d_output_file = lines_to_variable_dict(lines)['MNEMONIC'].strip("'") + ".nc"
           print('cql3d_output_file = ', cql3d_output_file)
 
           log_file = open('log_process_cql3d_output', 'w')
@@ -508,9 +503,9 @@ class cql3d(Component):
           shutil.copyfile(cql3d_output_file,cur_cql_file)
           try:
              if cur_cql_file != None:
-               services.update_state([cur_cql_file])
+               services.update_plasma_state([cur_cql_file])
           except Exception:
-             logMsg = 'Error in call to update_state()'
+             logMsg = 'Error in call to update_plasma_state()'
              self.services.exception(logMsg)
              raise 
             
