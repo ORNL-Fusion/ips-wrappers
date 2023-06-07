@@ -51,7 +51,7 @@ from ipsframework import Component
 class model_RF_IC (Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
 
 # ------------------------------------------------------------------------------
 #
@@ -60,11 +60,11 @@ class model_RF_IC (Component):
 # ------------------------------------------------------------------------------
 
     def init(self, timeStamp=0):
-        print 'model_RF_IC.init() called'
+        print('model_RF_IC.init() called')
 
         if (self.services == None) :
             message = 'Error in model_RF_IC init (): No self.services'
-            print message
+            print(message)
             services.error(message)
             raise
         services = self.services
@@ -83,16 +83,16 @@ class model_RF_IC (Component):
     # Copy plasma state files over to working directory
         try:
           services.stage_state()
-        except Exception, e:
-          print 'Error in call to stage_state()' , e
+        except Exception as e:
+          print('Error in call to stage_state()' , e)
           services.error('Error in call to stage_state()')
           raise
       
     # Get input files  
         try:
           services.stage_input_files(self.INPUT_FILES)
-        except Exception, e:
-          print 'Error in call to stage_input_files()' , e
+        except Exception as e:
+          print('Error in call to stage_input_files()' , e)
           self.services.error('Error in call to stage_input_files()')
           raise
 
@@ -100,7 +100,7 @@ class model_RF_IC (Component):
 
     # Run model_RF_IC fortran
         cmd = [RF_IC_bin, cur_state_file, cur_eqdsk_file, 'INIT', timeStamp]
-        print 'Executing = ', cmd
+        print('Executing = ', cmd)
         services.send_portal_event(event_type = 'COMPONENT_EVENT',\
           event_comment =  cmd)
         retcode = subprocess.call(cmd)
@@ -114,7 +114,7 @@ class model_RF_IC (Component):
           services.update_state()
         except Exception:
           message = 'Error in call to update_state()'
-          print message
+          print(message)
           services.error(message)
           raise
 
@@ -124,7 +124,7 @@ class model_RF_IC (Component):
           services.stage_output_files(timeStamp, self.OUTPUT_FILES)
         except Exception:
           message = 'Error in call to stage_output_files()'
-          print message
+          print(message)
           services.error(message)
           raise
 
@@ -139,11 +139,11 @@ class model_RF_IC (Component):
 # ------------------------------------------------------------------------------
         
     def restart(self, timeStamp):
-        print 'model_RF_IC.restart() called'
+        print('model_RF_IC.restart() called')
 
         if (self.services == None) :
             message = 'Error in model_RF_IC init (): No self.services'
-            print message
+            print(message)
             services.error(message)
             raise
         services = self.services
@@ -157,7 +157,7 @@ class model_RF_IC (Component):
             services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
         except Exception:
             message = 'Error in call to get_restart_files()'
-            print message
+            print(message)
             self.services.error(message)
             raise
         return 0
@@ -171,11 +171,11 @@ class model_RF_IC (Component):
 # ------------------------------------------------------------------------------
 
     def step(self, timeStamp):
-        print 'model_RF_IC.step() called'
+        print('model_RF_IC.step() called')
 
         if (self.services == None) :
             message = 'Error in model_RF_IC init (): No self.services'
-            print message
+            print(message)
             services.error(message)
             raise
         services = self.services
@@ -191,8 +191,8 @@ class model_RF_IC (Component):
     # Copy plasma state files over to working directory
         try:
           services.stage_state()
-        except Exception, e:
-          print 'Error in call to stage_state()' , e
+        except Exception as e:
+          print('Error in call to stage_state()' , e)
           services.error('Error in call to stage_state()')
           raise
       
@@ -200,7 +200,7 @@ class model_RF_IC (Component):
         try:
           services.stage_input_files(self.INPUT_FILES)
         except Exception:
-          print 'Error in call to stage_input_files()'
+          print('Error in call to stage_input_files()')
           self.services.error('Error in call to stage_input_files()')
           raise
 
@@ -208,14 +208,14 @@ class model_RF_IC (Component):
 # Call model_RF_IC
         RF_IC_bin = os.path.join(BIN_PATH, 'model_RF_IC')
 
-        print 'Executing ', [RF_IC_bin, cur_state_file, 'STEP', timeStamp]
+        print('Executing ', [RF_IC_bin, cur_state_file, 'STEP', timeStamp])
         cwd = services.get_working_dir()
         task_id  = services.launch_task(NPROC, cwd, RF_IC_bin, cur_state_file, cur_eqdsk_file,
         'STEP', timeStamp)
         retcode = services.wait_task(task_id)
         if (retcode != 0):
             message = 'Error executing ', RF_IC_bin
-            print message
+            print(message)
             self.services.error(message)
             raise Exception(message)
             return 1
@@ -226,7 +226,7 @@ class model_RF_IC (Component):
             services.merge_current_state(partial_file)
         except Exception:
             message = 'Error in call merge_current_state()'
-            print message
+            print(message)
             services.error(message)
             raise
 
@@ -236,7 +236,7 @@ class model_RF_IC (Component):
             services.stage_output_files(timeStamp, self.OUTPUT_FILES)
         except Exception:
             message = 'Error in call to stage_output_files()'
-            print message
+            print(message)
             services.error(message)
             raise
 
@@ -250,10 +250,10 @@ class model_RF_IC (Component):
 # ------------------------------------------------------------------------------
 
     def checkpoint(self, timestamp=0.0):
-        print 'model_RF_IC.checkpoint() called'
+        print('model_RF_IC.checkpoint() called')
         if (self.services == None) :
             message = 'Error in model_RF_IC init (): No self.services'
-            print message
+            print(message)
             services.error(message)
             raise
         services = self.services
@@ -270,7 +270,7 @@ class model_RF_IC (Component):
 
 
     def finalize(self, timestamp=0.0):
-        print 'model_RF_IC finalize() called'
+        print('model_RF_IC finalize() called')
 
 # ------------------------------------------------------------------------------
 #
@@ -284,14 +284,14 @@ class model_RF_IC (Component):
 
         try:
             value = services.get_config_param(param_name)
-            print param_name, ' = ', value
+            print(param_name, ' = ', value)
         except Exception :
             if optional: 
-                print 'config parameter ', param_name, ' not found'
+                print('config parameter ', param_name, ' not found')
                 value = None
             else:
                 message = 'required config parameter ', param_name, ' not found'
-                print message
+                print(message)
                 services.exception(message)
                 raise
         
@@ -302,13 +302,13 @@ class model_RF_IC (Component):
 
         if hasattr(self, param_name):
             value = getattr(self, param_name)
-            print param_name, ' = ', value
+            print(param_name, ' = ', value)
         elif optional:
-            print 'optional config parameter ', param_name, ' not found'
+            print('optional config parameter ', param_name, ' not found')
             value = None
         else:
             message = 'required component config parameter ', param_name, ' not found'
-            print message
+            print(message)
             services.exception(message)
             raise
         
