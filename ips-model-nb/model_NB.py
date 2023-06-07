@@ -25,7 +25,7 @@ from get_IPS_config_parameters import get_global_param, get_component_param
 class model_NB (Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print 'Created %s' % (self.__class__)
+        print('Created %s' % (self.__class__))
 
 # ------------------------------------------------------------------------------
 #
@@ -34,7 +34,7 @@ class model_NB (Component):
 # ------------------------------------------------------------------------------
 
     def init(self, timeStamp=0):
-        print 'model_NB.init() called'
+        print('model_NB.init() called')
 
         if (self.services == None) :
             services.error('Error in model_NB init (): No self.services')
@@ -47,9 +47,9 @@ class model_NB (Component):
             cur_state_file = get_global_param(self, services,'CURRENT_STATE')
             cur_eqdsk_file = get_global_param(self, services,'CURRENT_EQDSK')
         except:
-            print 'model_NB: error in getting config parameters'
+            print('model_NB: error in getting config parameters')
             services.error('model_NB: error in getting config parameters')
-            raise Exception, 'model_NB: error in getting config parameters'
+            raise Exception('model_NB: error in getting config parameters')
 
     # Get component-specific configuration parameters. Note: Not all of these are
     # used in 'init' but if any are missing we get an exception now instead of
@@ -66,23 +66,23 @@ class model_NB (Component):
     # Copy plasma state files over to working directory
         try:
           services.stage_state()
-        except Exception, e:
-          print 'Error in call to stage_state()' , e
+        except Exception as e:
+          print('Error in call to stage_state()' , e)
           services.error('Error in call to stage_state()')
-          raise Exception, 'Error in call to stage_state()'
+          raise Exception('Error in call to stage_state()')
       
     # Get input files  
         try:
           services.stage_input_files(self.INPUT_FILES)
-        except Exception, e:
-          print 'Error in call to stage_input_files()' , e
+        except Exception as e:
+          print('Error in call to stage_input_files()' , e)
           self.services.error('Error in call to stage_input_files()')
-          raise Exception, 'Error in call to stage_input_files()'
+          raise Exception('Error in call to stage_input_files()')
 
         NB_bin = os.path.join(BIN_PATH, 'model_NB')
 
-        print 'Executing ', ' '.join([NB_bin, cur_state_file, cur_eqdsk_file, 
-            'INIT', timeStamp])
+        print('Executing ', ' '.join([NB_bin, cur_state_file, cur_eqdsk_file, 
+            'INIT', timeStamp]))
         
         try:
             retcode = subprocess.call([NB_bin, cur_state_file, cur_eqdsk_file, 
@@ -94,18 +94,18 @@ class model_NB (Component):
 # Update plasma state files in plasma_state work directory
         try:
           services.update_state()
-        except Exception, e:
-          print 'Error in call to update_state()', e
+        except Exception as e:
+          print('Error in call to update_state()', e)
           services.error('Error in call to update_state()')
-          raise Exception, 'Error in call to update_state()'
+          raise Exception('Error in call to update_state()')
 
 # "Archive" output files in history directory
         try:
           services.stage_output_files(timeStamp, self.OUTPUT_FILES)
-        except Exception, e:
-          print 'Error in call to stage_output_files()', e
+        except Exception as e:
+          print('Error in call to stage_output_files()', e)
           services.error('Error in call to stage_output_files()')
-          raise Exception, 'Error in call to stage_output_files()'
+          raise Exception('Error in call to stage_output_files()')
 
         return 0
 
@@ -118,7 +118,7 @@ class model_NB (Component):
 # ------------------------------------------------------------------------------
         
     def restart(self, timeStamp):
-      print 'model_NB.restart() called'
+      print('model_NB.restart() called')
 
       services = self.services
       workdir = services.get_working_dir()
@@ -128,10 +128,10 @@ class model_NB (Component):
             restart_root = get_global_param(self, services,'RESTART_ROOT')
             restart_time = get_global_param(self, services,'RESTART_TIME')
             services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
-      except Exception, e:
-            print 'Error in call to get_restart_files()' , e
+      except Exception as e:
+            print('Error in call to get_restart_files()' , e)
             self.services.error('model_NB.restart: error in call to get_restart_files()')
-            raise Exception, 'model_NB.restart: error in call to get_restart_files()'
+            raise Exception('model_NB.restart: error in call to get_restart_files()')
       return 0
 
 # ------------------------------------------------------------------------------
@@ -143,7 +143,7 @@ class model_NB (Component):
 # ------------------------------------------------------------------------------
 
     def step(self, timeStamp):
-        print 'model_NB.step() called'
+        print('model_NB.step() called')
 
         if (self.services == None) :
             services.error('Error in model_NB step (): No self.services')
@@ -155,41 +155,41 @@ class model_NB (Component):
             cur_state_file = get_global_param(self, services,'CURRENT_STATE')
             cur_eqdsk_file = get_global_param(self, services,'CURRENT_EQDSK')
         except:
-            print 'model_NB: error in getting config parameters'
+            print('model_NB: error in getting config parameters')
             services.error('model_NB: error in getting config parameters')
-            raise Exception, 'model_NB: error in getting config parameters'
+            raise Exception('model_NB: error in getting config parameters')
 
     # Get component-specific configuration parameters. 
         try:
             BIN_PATH = self.BIN_PATH
             NPROC = self.NPROC
         except:
-            print 'model_NB init: error getting component-specific config parameters'
+            print('model_NB init: error getting component-specific config parameters')
             services.error('model_NB: error getting component-specific\
             config parameters')
-            raise Exception, 'model_NB: error getting model_epa-specific\
-            config parameters'
+            raise Exception('model_NB: error getting model_epa-specific\
+            config parameters')
 
     # Copy plasma state files over to working directory
         try:
           services.stage_state()
-        except Exception, e:
-          print 'Error in call to stage_state()' , e
+        except Exception as e:
+          print('Error in call to stage_state()' , e)
           services.error('Error in call to stage_state()')
-          raise Exception, 'Error in call to stage_state()'
+          raise Exception('Error in call to stage_state()')
       
     # Get input files  
         try:
           services.stage_input_files(self.INPUT_FILES)
-        except Exception, e:
-          print 'Error in call to stage_input_files()' , e
+        except Exception as e:
+          print('Error in call to stage_input_files()' , e)
           self.services.error('Error in call to stage_input_files()')
-          raise Exception, 'Error in call to stage_input_files()'
+          raise Exception('Error in call to stage_input_files()')
 
 # Call model_NB
         NB_bin = os.path.join(BIN_PATH, 'model_NB')
 
-        print 'Executing ', ' '.join([NB_bin, cur_state_file, cur_eqdsk_file, 'STEP', timeStamp])
+        print('Executing ', ' '.join([NB_bin, cur_state_file, cur_eqdsk_file, 'STEP', timeStamp]))
         cwd = os.getcwd()
         task_id = services.launch_task(NPROC, cwd, NB_bin, cur_state_file,
             cur_eqdsk_file, 'STEP', timeStamp)
@@ -202,7 +202,7 @@ class model_NB (Component):
 # Update plasma state
 #        services.update_state()
         services.merge_current_state(partial_file)
-        print 'merged partial nb update'
+        print('merged partial nb update')
 # "Archive" output files in history directory
         services.stage_output_files(timeStamp, self.OUTPUT_FILES)
         return 0
@@ -215,7 +215,7 @@ class model_NB (Component):
 # ------------------------------------------------------------------------------
 
     def checkpoint(self, timestamp=0.0):
-            print 'model_NB.checkpoint() called'
+            print('model_NB.checkpoint() called')
             services = self.services
             services.save_restart_files(timestamp, self.RESTART_FILES)
             return 0
@@ -230,5 +230,5 @@ class model_NB (Component):
 
 
     def finalize(self, timestamp=0.0):
-        print 'model_NB finalize() called'
+        print('model_NB finalize() called')
         return 0

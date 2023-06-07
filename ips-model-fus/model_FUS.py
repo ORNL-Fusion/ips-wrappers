@@ -33,7 +33,7 @@ from get_IPS_config_parameters import get_global_param, get_component_param
 class model_FUS (Component):
     def __init__(self, services, config):
         Component.__init__(self, services, config)
-        print('Created %s' % (self.__class__))
+        print(('Created %s' % (self.__class__)))
 
 # ------------------------------------------------------------------------------
 #
@@ -76,7 +76,7 @@ class model_FUS (Component):
         try:
           services.stage_state()
         except Exception as e:
-          print('Error in call to stage_state()' , e)
+          print(('Error in call to stage_state()' , e))
           services.error('Error in call to stage_state()')
           raise Exception('Error in call to stage_state()')
       
@@ -84,13 +84,13 @@ class model_FUS (Component):
         try:
           services.stage_input_files(self.INPUT_FILES)
         except Exception as e:
-          print('Error in call to stage_input_files()' , e)
+          print(('Error in call to stage_input_files()' , e))
           self.services.error('Error in call to stage_input_files()')
           raise Exception('Error in call to stage_input_files()')
 
         FUS_bin = os.path.join(BIN_PATH, 'model_FUS')
 
-        print('Executing ', [FUS_bin, cur_state_file, 'INIT', timeStamp])
+        print(('Executing ', [FUS_bin, cur_state_file, 'INIT', timeStamp]))
         
         try:
             retcode = subprocess.call([FUS_bin, cur_state_file, cur_eqdsk_file, 
@@ -103,7 +103,7 @@ class model_FUS (Component):
         try:
           services.update_state()
         except Exception as e:
-          print('Error in call to update_state()', e)
+          print(('Error in call to update_state()', e))
           services.error('Error in call to update_state()')
           raise Exception('Error in call to update_state()')
 
@@ -111,7 +111,7 @@ class model_FUS (Component):
         try:
           services.stage_output_files(timeStamp, self.OUTPUT_FILES)
         except Exception as e:
-          print('Error in call to stage_output_files()', e)
+          print(('Error in call to stage_output_files()', e))
           services.error('Error in call to stage_output_files()')
           raise Exception('Error in call to stage_output_files()')
 
@@ -137,7 +137,7 @@ class model_FUS (Component):
             restart_time = get_global_param(self, services,'RESTART_TIME')
             services.get_restart_files(restart_root, restart_time, self.RESTART_FILES)
       except Exception as e:
-            print('Error in call to get_restart_files()' , e)
+            print(('Error in call to get_restart_files()' , e))
             self.services.error('model_FUS.restart: error in call to get_restart_files()')
             raise Exception('model_FUS.restart: error in call to get_restart_files()')
       return 0
@@ -182,7 +182,7 @@ class model_FUS (Component):
         try:
           services.stage_state()
         except Exception as e:
-          print('Error in call to stage_state()' , e)
+          print(('Error in call to stage_state()' , e))
           services.error('Error in call to stage_state()')
           raise Exception('Error in call to stage_state()')
       
@@ -190,14 +190,14 @@ class model_FUS (Component):
         try:
           services.stage_input_files(self.INPUT_FILES)
         except Exception as e:
-          print('Error in call to stage_input_files()' , e)
+          print(('Error in call to stage_input_files()' , e))
           self.services.error('Error in call to stage_input_files()')
           raise Exception('Error in call to stage_input_files()')
 
 # Call model_FUS
         FUS_bin = os.path.join(BIN_PATH, 'model_FUS')
 
-        print('Executing ', [FUS_bin, cur_state_file, 'STEP', timeStamp])
+        print(('Executing ', [FUS_bin, cur_state_file, 'STEP', timeStamp]))
         cwd = os.getcwd()
         task_id = services.launch_task(NPROC, cwd, FUS_bin, cur_state_file,
             cur_eqdsk_file, 'STEP', timeStamp)
