@@ -1,0 +1,78 @@
+! SF cleanup 2023
+
+PROGRAM model_EPA_mdescr
+
+  USE plasma_state_mod
+    
+  USE swim_global_data_mod, only : &
+       & rspec, ispec, &               ! int: kind specification for real and integer
+       & SWIM_name, SWIM_filename, &   ! derived data types: containing one character
+                                                                        ! string
+       & SWIM_error                    ! subroutine: a simple error handling routine
+    
+  IMPLICIT none
+
+  !Command line args
+  CHARACTER (len=256) :: cur_state_file
+  CHARACTER(len=32) :: mode
+  CHARACTER(len=32) :: time_stamp
+
+  !Internal data
+  INTEGER, PARAMETER :: maxDim = 10 ! To avoid a lot of allocates
+  INTEGER :: nzone
+  REAL(KIND=rspec), ALLOCATABLE :: zone_center(:)
+
+  !State data
+  INTEGER :: nrho
+  INTEGER :: isThermal
+  REAL(KIND=rspec) :: fracmin, power_ic, power_lh, power_ec, power_nbi
+  CHARACTER*32 kdens_rfmin
+
+  !Evolving model data
+  CHARACTER(len=32) :: Te_profile_model_name = 'Power_Parabolic' 
+  CHARACTER(len=32) :: ne_profile_model_name = 'Power_Parabolic'
+  CHARACTER(len=32) :: Zeff_profile_model_name = 'Power_Parabolic'
+  CHARACTER(len=32) :: V_loop_profile_model_name = 'Power_Parabolic'
+  CHARACTER(len=32) :: Ti_profile_model_name = 'fraction_of_electron'
+  CHARACTER(len=32) :: ni_profile_model_name = 'fraction_of_electron'
+  CHARACTER(len=32) :: T_min_profile_model_name = 'fraction_of_electron'
+  CHARACTER(len=32) :: n_min_profile_model_name = 'fraction_of_electron'
+    
+  REAL(KIND=rspec) :: Te_0, Te_edge, alpha_Te_1, alpha_Te_2
+  REAL(KIND=rspec) :: ne_0, ne_edge, alpha_ne_1, alpha_ne_2
+  REAL(KIND=rspec) :: Ti_0, Ti_edge, alpha_Ti_1, alpha_Ti_2
+  REAL(KIND=rspec) :: ni_0, ni_edge, alpha_ni_1, alpha_ni_2
+  REAL(KIND=rspec) :: Zeff_0, Zeff_edge, alpha_Zeff_1, alpha_Zeff_2
+  REAL(KIND=rspec) :: V_loop_0, V_loop_edge, alpha_V_loop_1, alpha_V_loop_2
+
+  REAL(KIND=rspec) :: frac_ni(maxDim) = 0.0, frac_Ti(maxDim)
+  REAL(KIND=rspec) :: fracmin_T, fracmin_n = 0.0
+
+  REAL(KIND=rspec) :: Te_ratio, alpha_Te
+  REAL(KIND=rspec) :: ne_ratio, alpha_ne
+  REAL(KIND=rspec) :: T_min_0, T_min_ratio, alpha_Tmin
+    
+  REAL(KIND=rspec), ALLOCATABLE :: numerical_rho, numerical_ne, numerical_Te, numerical_Ti
+  CHARACTER(len = 80) :: equidt_file_name
+
+  !Input namelists
+  namelist /state_data/ &
+          nrho, kdens_rfmin, isThermal, fracmin, power_ic, power_lh, power_ec, power_nbi
+                       
+  namelist /evolving_model_data/ &
+          Te_profile_model_name, ne_profile_model_name, &
+          Te_0, Te_edge, alpha_Te_1, alpha_Te_2, &
+          ne_0, ne_edge, alpha_ne_1, alpha_ne_2, &
+          Ti_profile_model_name, ni_profile_model_name, &
+          Ti_0, Ti_edge, alpha_Ti_1, alpha_Ti_2, &
+          ni_0, ni_edge, alpha_ni_1, alpha_ni_2, &
+          frac_ni, frac_Ti, &
+          fracmin_T, fracmin_n, &
+          Te_ratio, alpha_Te, ne_ratio, alpha_ne, &
+          T_min_0, T_min_ratio, alpha_Tmin, &
+          Zeff_profile_model_name, V_loop_profile_model_name, &
+          Zeff_0, Zeff_edge, alpha_Zeff_1, alpha_Zeff_2, &
+          V_loop_0, V_loop_edge, alpha_V_loop_1, alpha_V_loop_2, &
+          equidt_file_name, source_powers_only
+
+  

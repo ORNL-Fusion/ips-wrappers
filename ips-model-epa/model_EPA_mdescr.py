@@ -108,8 +108,11 @@ class EPA_mdescr(Component):
         cur_state_file = get_global_param(self, services,'CURRENT_STATE')
         bin = os.path.join(self.BIN_PATH, 'model_EPA_mdescr')
 
+        log_file = open('log_model_epa_init', 'w')
+        
         print('Executing ', [bin, cur_state_file, 'INIT', timeStamp])
-        retcode = subprocess.call([bin, cur_state_file, 'INIT', timeStamp])
+        retcode = subprocess.call([bin, cur_state_file, 'INIT', timeStamp], \
+                                  stdout = log_file,stderr = subprocess.STDOUT)
         if (retcode != 0):
             message = 'generic_ps_init: Error executing' + bin
             print(message)
@@ -220,9 +223,11 @@ class EPA_mdescr(Component):
             put_lines('model_EPA_mdescr_input.nml', lines)
 
 # Call model_EPA_mdescr
+        log_file = open('log_model_epa_step', 'w')
         bin = os.path.join(self.BIN_PATH, 'model_EPA_mdescr')
         print('Executing ', [bin, cur_state_file, 'STEP', timeStamp])
-        retcode = subprocess.call([bin, cur_state_file, 'STEP', timeStamp])
+        retcode = subprocess.call([bin, cur_state_file, 'STEP', timeStamp],\
+                                  stdout = log_file,stderr = subprocess.STDOUT)
         if (retcode != 0):
             message = 'generic_ps_init: Error executing' + bin
             print(message)

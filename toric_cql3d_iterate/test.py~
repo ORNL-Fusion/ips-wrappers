@@ -1,0 +1,8 @@
+import string
+
+str = "'ITER_sn2                                                          ',"
+str = str.replace(',','')
+str = str.strip("'")
+str = str.rstrip()
+str = str+".nc"
+print(str)

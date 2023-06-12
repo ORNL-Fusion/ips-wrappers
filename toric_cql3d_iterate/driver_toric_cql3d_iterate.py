@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 """ Version 1 (Batchelor 7/23/2017)
-Driver for torlh/cql3d iteration with logic exposed here rather than buried in the 
+Driver for toric/cql3d iteration with logic exposed here rather than buried in the 
  components.  Adapted from generic_driver.py
 """
 from __future__ import print_function
@@ -124,16 +124,7 @@ class toric_driver(Component):
             port_dict['FP'] = fpComp
             port_id_list.append(fpComp)
             print (' ')
-
-        if 'DIEL' in port_names:
-            dielComp = services.get_port('DIEL')
-            if(dielComp ==None):
-                print('Error accessing dielectric component')
-                raise
-            port_dict['DIEL'] = dielComp
-            port_id_list.append(dielComp)
-            print (' ')
-            
+        
         if 'MONITOR' in port_names:
             monitorComp = services.get_port('MONITOR')
             if(monitorComp == None):
@@ -179,31 +170,23 @@ class toric_driver(Component):
         if 'FP' in port_names:
             self.component_call(services, 'FP', fpComp, init_mode, t)
 
-        if 'DIEL' in port_names:
-            self.component_call(services, 'DIEL', dielComp, init_mode, t)
-            
         if 'MONITOR' in port_names:
             self.component_call(services, 'MONITOR', monitorComp, init_mode, t)
 
-      # Get plasma state files into driver work directory and copy to psn if there is one
+        # Get plasma state files into driver work directory and copy to psn if there is one
         services.stage_state()
         cur_state_file = services.get_config_param('CURRENT_STATE')
-        #try:
-        #    next_state_file = services.get_config_param('NEXT_STATE')
-        #    shutil.copyfile(cur_state_file, next_state_file)
-        #except Exception as e:
-        #    print('toric_driver: No NEXT_STATE file ', e)        
-        #services.update_state()
-
-       # Get Portal RUNID and save to a file
+        
+        # Get Portal RUNID and save to a file
         run_id = services.get_config_param('PORTAL_RUNID')
         sym_root = services.get_config_param('SIM_ROOT')
         path = os.path.join(sym_root, 'PORTAL_RUNID')
+        specs = services.get_config_param('SPECS')
         runid_file = open(path, 'a')
         runid_file.writelines(run_id + '\n')
         runid_file.close()
 
-       # Post init processing: stage plasma state, stage output
+        # Post init processing: stage plasma state, stage output
         services.stage_output_files(t, self.OUTPUT_FILES)
 
         print(' init sequence complete')
@@ -221,7 +204,7 @@ class toric_driver(Component):
 # ------------------------------------------------------------------------------
 
 
-        print(' \nZeroth step - Run torlh only in toric mode and qldci mode for Maxwellian')
+        print('Zeroth step - Run toric only in toric mode and qldci mode for Maxwellian')
         if sim_mode == 'NORMAL' :   # i.e. not RESTART do Maxwellian runs
             t = tlist_str[0]
             print (' ')
@@ -229,43 +212,63 @@ class toric_driver(Component):
             services.update_time_stamp(t)
 
             try:
-                services.call(rf_icComp, 'step', t, toric_Mode = 'toric', inumin_Mode = 'Maxwell' , isol_Mode = '1')
+                services.call(rf_icComp, 'step', t, toric_Mode = 'toric', \
+                              inumin_Mode = 'Maxwell' , isol_Mode = '1', \
+                              save_output = 'False')
             except Exception:
-                message = 'RF_LH toric mode step failed'
+                message = 'RF_IC toric mode step failed'
                 print(message)
                 services.exception(message)
                 raise 
 
-            try:
-                services.call(rf_icComp, 'step', t, toric_Mode = 'qldci', \
-                inumin_Mode = 'Maxwell' , isol_Mode = '1')
-            except Exception:
-                message = 'RF_LH qldci mode step failed'
-                print(message)
-                services.exception(message)
-                raise 
+            if(specs=='MIN'):
+                try:
+                    services.call(rf_icComp, 'step', t, toric_Mode = 'qldci', \
+                                  inumin_Mode = 'Maxwell' , isol_Mode = '1', \
+                                  save_output = 'True')
+                except Exception:
+                    message = 'RF_IC qldci mode step failed'
+                    print(message)
+                    services.exception(message)
+                    raise
+
+            if(specs=='MIN+'):
+                try:
+                    services.call(rf_icComp, 'step', t, toric_Mode = 'qldci1', \
+                                  inumin_Mode = 'Maxwell' , isol_Mode = '1', \
+                                  save_output = 'False')
+                except Exception:
+                    message = 'RF_IC qldci mode step failed'
+                    print(message)
+                    services.exception(message)
+                    raise
+                try:
+                    services.call(rf_icComp, 'step', t, toric_Mode = 'qldci2', \
+                                  inumin_Mode = 'Maxwell' , isol_Mode = '1', \
+                                  save_output = 'True')
+                except Exception:
+                    message = 'RF_LH qldci mode step failed'
+                    print(message)
+                    services.exception(message)
+                    raise
+            
 
         # Iterate through the timeloop, or in this case iteration loop
         for t in tlist_str[1:len(timeloop)]:
-            print (' ')
             print('\nDriver: starting iteration ', t)
             services.update_time_stamp(t)
 
-        # call pre_step_logic
+            # call pre_step_logic
             services.stage_state()
             self.pre_step_logic(float(t))
             services.update_state()
-            print (' ')
 
-       # Call step for each component
-
-            print (' ')
-
+            # Call step for each component
             if 'EPA' in port_names:
                 self.component_call(services, 'EPA', epaComp, 'step', t)
 
             try:
-                services.call(fpComp, 'step', t)
+                services.call(fpComp, 'step', t,rf_code='toric')
             except Exception:
                 message = 'FP step failed'
                 print(message)
@@ -274,21 +277,44 @@ class toric_driver(Component):
 
             try:
                 services.call(rf_icComp, 'step', t, toric_Mode = 'toric', \
-                inumin_Mode = 'nonMaxwell' , isol_Mode = '1')
+                inumin_Mode = 'nonMaxwell' , isol_Mode = '1', \
+                                  save_output = 'False')
             except Exception:
-                message = 'RF_LH toric mode step failed'
+                message = 'RF_IC toric mode step failed'
                 print(message)
                 services.exception(message)
                 raise 
 
-            try:
-                services.call(rf_icComp, 'step', t, toric_Mode = 'qldci', \
-                inumin_Mode = 'nonMaxwell' , isol_Mode = '1')
-            except Exception:
-                message = 'RF_LH qldci mode step failed'
-                print(message)
-                services.exception(message)
-                raise 
+            if(specs=='MIN'):
+                try:
+                    services.call(rf_icComp, 'step', t, toric_Mode = 'qldci', \
+                                  inumin_Mode = 'nonMaxwell' , isol_Mode = '1', \
+                                  save_output = 'True')
+                except Exception:
+                    message = 'RF_IC qldci mode step failed'
+                    print(message)
+                    services.exception(message)
+                    raise
+
+            if(specs=='MIN+'):
+                try:
+                    services.call(rf_icComp, 'step', t, toric_Mode = 'qldci1', \
+                                  inumin_Mode = 'nonMaxwell' , isol_Mode = '1', \
+                                  save_output = 'False')
+                except Exception:
+                    message = 'RF_IC qldci mode step failed'
+                    print(message)
+                    services.exception(message)
+                    raise
+                try:
+                    services.call(rf_icComp, 'step', t, toric_Mode = 'qldci2', \
+                                  inumin_Mode = 'nonMaxwell' , isol_Mode = '1', \
+                                  save_output = 'True')
+                except Exception:
+                    message = 'RF_IC qldci mode step failed'
+                    print(message)
+                    services.exception(message)
+                    raise
 
             if 'MONITOR' in port_names:
                 self.component_call(services, 'MONITOR', monitorComp, 'step', t)
@@ -334,9 +360,6 @@ class toric_driver(Component):
         if 'EPA' in port_names:
             self.component_call(services, 'EPA', epaComp, 'finalize', t)
 
-        if 'DIEL' in port_names:
-            self.component_call(services, 'DIEL', dielComp, 'finalize', t)
-            
         if 'MONITOR' in port_names:
             self.component_call(services, 'MONITOR', monitorComp, 'finalize', t)
 
@@ -384,15 +407,6 @@ class toric_driver(Component):
 
         cur_state_file = self.services.get_config_param('CURRENT_STATE')
 
-      #  Copy data from next plasma state (if there is one) to current plasma state
-        #try:
-        #    next_state_file = services.get_config_param('NEXT_STATE')
-        #    shutil.copyfile(next_state_file, cur_state_file)
-        #except Exception as e:
-        #    pass
-
-      # Update time stamps
-
         ps = Dataset(cur_state_file, 'r+', format = 'NETCDF3_CLASSIC')
         t1 = ps.variables['t1'].getValue()
         ps.variables['t0'].assignValue(t1)
@@ -405,13 +419,6 @@ class toric_driver(Component):
             print('toric_driver pre_step_logic: power_ic = ', power_ic)
 
         ps.close()
-        
-    # Copy current plasma state to prior state if there is one
-        #try:
-        #    prior_state_file = self.services.get_config_param('PRIOR_STATE')
-        #    shutil.copyfile(cur_state_file, prior_state_file)
-        #except Exception as e:
-        #    pass       
         
         print('toric_driver pre_step_logic: timeStamp = ', timeStamp)
         

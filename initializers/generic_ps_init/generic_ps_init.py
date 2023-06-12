@@ -368,13 +368,6 @@ class generic_ps_init (Component):
                 else:
                     nml_lines.append(' sconfig_file = \"' + SCONFIG_FILE + '\"\n')
 
-                INPUT_EQDSK_FILE = get_component_param(self, services, 'INPUT_EQDSK_FILE', \
-                optional = True)
-                if (INPUT_EQDSK_FILE is None) or (len(INPUT_EQDSK_FILE) == 0):
-                   INPUT_EQDSK_FILE = ' '
-                else:
-                   nml_lines.append(' input_eqdsk_file = \"' + INPUT_EQDSK_FILE + '\"\n')
-
 # ------------------------------------------------------------------------------
 			# For init_mode = mixed add input_state_file to namelist
             if init_mode in ['mixed', 'MIXED'] :
