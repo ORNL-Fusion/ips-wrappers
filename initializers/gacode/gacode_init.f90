@@ -246,6 +246,7 @@ PROGRAM gacode_init
      expro_ne = expro_ne + expro_ne * del
      deallocate(f0,f1,del)
      ps%kdens_rfmin = "fraction"
+     ps%fracmin(1) = minfrac
   else
      ps%kdens_rfmin = "data"
   endif
