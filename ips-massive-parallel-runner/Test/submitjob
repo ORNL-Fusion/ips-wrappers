@@ -1,39 +1,31 @@
 #!/bin/bash -l
 
-#SBATCH -p debug
+#SBATCH --qos debug
 
-##SBATCH -p regular
+##SBATCH --qos regular
 ##SBATCH --qos=premium
 
 #SBATCH --account=atom
 
 #SBATCH --nodes=1
 #SBATCH -t 00:30:00
-#SBATCH -C haswell
+#SBATCH -C cpu
 
 #SBATCH -J ips_fastran
 #SBATCH -e ips.err
 #SBATCH -o ips.out
 
-#SBATCH -C haswell
-
 #SBATCH --image=registry.services.nersc.gov/parkjm/ips-fastran:latest
 #SBATCH --volume="/global/cscratch1/sd/rwp/tmpfiles:/tmp:perNodeCache=size=10G"
 
-module load python
-
-WORK_DIRECTORY=test_massive_parallel_runner
+WORK_DIRECTORY=test_massive_parallel_runner_3
 
 rm -rf $SCRATCH/$WORK_DIRECTORY
 mkdir $SCRATCH/$WORK_DIRECTORY
 cp -rd * $SCRATCH/$WORK_DIRECTORY
 cd $SCRATCH/$WORK_DIRECTORY
 
-source activate /global/common/software/atom/cori/adaptive/conda
-
-#FIXME This should be in the conda environment but overwrite this for now.
-#export EFIT_BIN_DIR=/global/common/software/atom/cori/binaries/efit/default
-#export EFIT_BIN_NAME=efitd90
+conda activate /global/common/software/atom/perlmutter/adaptive/conda
 
 ips.py --platform=platform.conf --simulation=ips.massive_parallel_runner.config
 
