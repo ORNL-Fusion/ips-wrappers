@@ -103,10 +103,6 @@ class massive_parallel_runner(Component):
             with ZipState.ZipState('input.zip', 'r') as input_ref:
                 input_ref.extractall()
 
-            override = ConfigObj(infile=self.services.get_config_param('MSR_SERIAL_NODE_CONFIG'), interpolation='template', file_error=True)
-            override['INPUT_DIR_SIM'] = os.getcwd()
-            override.write()
-
             override2 = ConfigObj(infile=self.services.get_config_param('MSR_MODEL_CONFIG'), interpolation='template', file_error=True)
             override2['INPUT_DIR_SIM'] = os.getcwd()
             override2.write()
