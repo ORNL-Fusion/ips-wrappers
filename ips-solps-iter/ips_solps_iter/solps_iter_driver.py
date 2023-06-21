@@ -7,8 +7,8 @@
 #
 #-------------------------------------------------------------------------------
 
-from component import Component
-from utilities import ScreenWriter
+from ipsframework import Component
+from ips_component_utilities import ScreenWriter
 import os
 
 #-------------------------------------------------------------------------------

@@ -87,6 +87,7 @@ class massive_parallel_runner_init(Component):
                                                       self.services.get_working_dir(),
                                                       self.SAMPLE_EXE,
                                                       '--input={}'.format(self.inscan_config_file),
+                                                      '--output=inscan',
                                                       '--nsample={}'.format(self.batch_size),
                                                       '--override={}'.format(self.current_batch),
                                                       logfile=log_file)
@@ -101,6 +102,7 @@ class massive_parallel_runner_init(Component):
                                                       self.services.get_working_dir(),
                                                       self.SAMPLE_EXE,
                                                       '--input={}'.format(self.inscan_config_file),
+                                                      '--output=inscan',
                                                       '--nsample={}'.format(self.batch_size),
                                                       logfile=log_file)
 
