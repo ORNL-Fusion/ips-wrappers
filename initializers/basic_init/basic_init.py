@@ -34,8 +34,10 @@ they must also be specified in the [init] section of the config file.
 
 import subprocess
 import os
-import utils.simple_assignment_file_edit as edit
-import utils.get_IPS_config_parameters as config
+# import utils.simple_assignment_file_edit as edit
+# import utils.get_IPS_config_parameters as config
+import simple_file_editing_functions as edit
+import simple_file_editing_functions as config
 from ipsframework import Component
 
 

@@ -24,7 +24,7 @@ parameter INIT_ONLY = True.
 
 import sys
 import os
-import simple_assignment_file_edit as edit
+import simple_file_editing_functions as edit
 import get_IPS_config_parameters as config
 from ipsframework import Component
 
