@@ -19,9 +19,9 @@ LIBS = $(PLASMA_STATE_LIB) $(NTCCLIB) $(MDSPLUSLIB) $(NETCDFLIB) $(LAPACKLIB)
 
 F90 = ftn
 #F90FLAGS = -g -fpp -extend-source
-F90FLAGS = -g -I${NTCCHOME}/mod
-F90_FREEFORM_FLAG = -free
-F90_FIXEDFORM_FLAG = -fixed
+F90FLAGS = -x f95-cpp-input -g -fbounds-check -I${NTCCHOME}/mod
+F90_FREEFORM_FLAG = -ffree-form
+F90_FIXEDFORM_FLAG = -ffixed-form
 F90_MOD_INCLUDE_PREFIX = -I
 F90_INCLUDE_PREFIX = -I
 #F90FLAGS += -I${NTCCHOME}/mod
