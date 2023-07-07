@@ -55,11 +55,11 @@ class massive_parallel_runner(Component):
 
 #  Keys for the massiver parallel subworkflow.
             keys = {
-                'PWD'            : self.services.get_config_param('PWD'),
+                'PWD'            : '{}/massive_parallel_runner_input_dir'.format(os.getcwd()),
                 'SIM_NAME'       : 'massive_parallel_runner_sub',
                 'LOG_FILE'       : 'log.massive_parallel_runner',
                 'NNODES'         : self.services.get_config_param('MSR_NNODES'),
-                'INPUT_DIR_SIM'  : 'massive_parallel_runner_input_dir',
+                'INPUT_DIR_SIM'  : '{}/massive_parallel_runner_input_dir'.format(os.getcwd()),
                 'OUTPUT_DIR_SIM' : '{}/massive_parallel_runner_output_dir'.format(os.getcwd())
             }
 
@@ -100,14 +100,21 @@ class massive_parallel_runner(Component):
 #  the orginal working directory after extraction.
             with ZipState.ZipState(ms_state, 'r') as zip_ref:
                 zip_ref.extractall()
-            with ZipState.ZipState('input.zip', 'r') as input_ref:
-                input_ref.extractall()
 
             override2 = ConfigObj(infile=self.services.get_config_param('MSR_MODEL_CONFIG'), interpolation='template', file_error=True)
             override2['INPUT_DIR_SIM'] = os.getcwd()
             override2.write()
 
-            os.chdir('../')
+            if os.path.exists('input'):
+                shutil.rmtree('input')
+            os.mkdir('input')
+
+            shutil.copy2('input.zip', 'input')
+            os.chdir('input')
+            with ZipState.ZipState('input.zip', 'r') as input_ref:
+                input_ref.extractall()
+
+            os.chdir('../../')
 
 #-------------------------------------------------------------------------------
 #
