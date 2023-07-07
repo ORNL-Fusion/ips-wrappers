@@ -1,77 +1,72 @@
 {
-    "scan" : {
-        "r"       : {"type" : "range", "ymin" : 1.4,  "ymax" : 2.2 },
-        "aratio"  : {"type" : "range", "ymin" : 2.33, "ymax" : 3.5 },
-        "kappa"   : {"type" : "range", "ymin" : 1.7,  "ymax" : 2.0 },
-        "delta"   : {"type" : "range", "ymin" : 0.5,  "ymax" : 0.65},
-        "bt"      : {"type" : "range", "ymin" : 3.0,  "ymax" : 7.0 },
-        "ip"      : {"type" : "range", "ymin" : 4.0,  "ymax" : 7.0 },
-        "fgw_ped" : {"type" : "range", "ymin" : 0.2,  "ymax" : 1.0 },
-        "nepeak"  : {"type" : "range", "ymin" : 1.5,  "ymax" : 2.0 }
-    },
+  "scan": {
+    "aratio": {"type" : "range", "ymin" : 2.5,  "ymax" : 3.5  },
+    "pinj"  : {"type" : "range", "ymin" : 20.0, "ymax" : 50.0 }
+  },
 
-    "const" : {
-        "xmid"        : 0.97,
-        "xwid"        : 0.06,
-        "ne_alpha"    : 1.5,
-        "ne_beta"     : 1.1,
-        "f_nesep"     : 0.5,
-        "te_alpha"    : 1.5,
-        "te_beta"     : 1.1,
-        "te_sep"      : 0.07,
-        "ti_alpha"    : 1.5,
-        "ti_beta"     : 1.1,
-        "ti_sep"      : 0.07,
-        "zeff_axis"   : 1.70,
-        "omega_axis"  : 0.0,
-        "omega_sep"   : 0.0,
-        "omega_alpha" : 2.0,
-        "omega_beta"  : 2.0
-    },
+  "const": {
+    "a"       : 1.3333,
+    "kappa"   : 2.0,
+    "delta"   : 0.6,
 
-    "model" : {
-        "a"         : ["expr", "r / aratio"               ],
-        "betan_ped" : ["base", {}                         ],
-        "te_ped"    : ["base", {"dependency":"betan_ped"} ],
-        "ti_ped"    : ["expr", "te_ped"                   ],
-        "te_axis"   : ["expr", "5.75 * te_ped"            ],
-        "ti_axis"   : ["expr", "5.0 * ti_ped"             ],
-        "ngw"       : ["base", {}                         ],
-        "ne_ped"    : ["expr", "fgw_ped * ngw"            ],
-        "ne_axis"   : ["expr", "nepeak * ne_ped"          ],
-        "ne_sep"    : ["expr", "f_nesep * ne_ped"         ]
-    },
+    "bt"      : 7.0,
+    "ip"      : 8.1,
 
-    "io" : {
-        "r"           : ["fastran_init", "r0"         ],
-        "a"           : ["fastran_init", "a0"         ],
-        "kappa"       : ["fastran_init", "kappa"      ],
-        "delta"       : ["fastran_init", "delta"      ],
-        "bt"          : ["fastran_init", "b0"         ],
-        "ip"          : ["fastran_init", "ip"         ],
-        "betan_ped"   : ["fastran_init", "betan_ped"  ],
-        "xmid"        : ["fastran_init", "xmid"       ],
-        "xwid"        : ["fastran_init", "xwid"       ],
-        "ne_axis"     : ["fastran_init", "ne_axis"    ],
-        "ne_ped"      : ["fastran_init", "ne_ped"     ],
-        "ne_sep"      : ["fastran_init", "ne_sep"     ],
-        "ne_alpha"    : ["fastran_init", "ne_alpha"   ],
-        "ne_beta"     : ["fastran_init", "ne_beta"    ],
-        "te_axis"     : ["fastran_init", "te_axis"    ],
-        "te_ped"      : ["fastran_init", "te_ped"     ],
-        "te_sep"      : ["fastran_init", "te_sep"     ],
-        "te_alpha"    : ["fastran_init", "te_alpha"   ],
-        "te_beta"     : ["fastran_init", "te_beta"    ],
-        "ti_axis"     : ["fastran_init", "ti_axis"    ],
-        "ti_ped"      : ["fastran_init", "ti_ped"     ],
-        "ti_sep"      : ["fastran_init", "ti_sep"     ],
-        "ti_alpha"    : ["fastran_init", "ti_alpha"   ],
-        "ti_beta"     : ["fastran_init", "ti_beta"    ],
-        "omega_axis"  : ["fastran_init", "omega_axis" ],
-        "omega_sep"   : ["fastran_init", "omega_sep"  ],
-        "omega_alpha" : ["fastran_init", "omega_alpha"],
-        "omega_beta"  : ["fastran_init", "omega_beta" ],
-        "zeff_axis"   : ["fastran_init", "zeff_axis"  ],
-        "fgw_ped"     : ["fastran_init", "fgw_ped"    ]
-    }
+    "xwid"    : 0.08,
+    "xmid"    : 0.96,
+
+    "nepeak"  : 1.75,
+    "fgw_ped" : 0.9,
+    "f_nesep" : 0.5,
+
+    "h98"     : 1.35,
+
+    "f_pinj_e": 0.75
+ },
+
+ "model": {
+    "r"           : ["expr", "a * aratio"                 ],
+    "betan_ped"   : ["base", {}                           ],
+    "te_ped"      : ["base", {"dependency":"betan_ped"}   ],
+    "ti_ped"      : ["expr", "te_ped"                     ],
+    "te_axis"     : ["expr", "5.75 * te_ped"              ],
+    "ti_axis"     : ["expr", "5.0 * ti_ped"               ],
+    "ngw"         : ["base", {}                           ],
+    "ne_ped"      : ["expr", "fgw_ped * ngw"              ],
+    "ne_axis"     : ["expr", "nepeak * ne_ped"            ],
+    "ne_sep"      : ["expr", "f_nesep * ne_ped"           ],
+    "pinj_e"      : ["expr", "pinj * f_pinj_e"            ],
+    "pinj_i"      : ["expr", "pinj * ( 1.0 - f_pinj_e ) " ]
+  },
+
+ "io": {
+    "index"       : ["efit0"       , "TIME_ID"    ],
+
+    "r"           : ["fastran_init", "R0"         ],
+    "a"           : ["fastran_init", "A0"         ],
+    "kappa"       : ["fastran_init", "KAPPA"      ],
+    "delta"       : ["fastran_init", "DELTA"      ],
+
+    "bt"          : ["fastran_init", "B0"         ],
+    "ip"          : ["fastran_init", "IP"         ],
+
+    "xwid"        : ["fastran_init", "XWID"       ],
+    "xmid"        : ["fastran_init", "XMID"       ],
+
+    "ne_axis"     : ["fastran_init", "NE_AXIS"    ],
+    "ne_ped"      : ["fastran_init", "NE_PED"     ],
+    "ne_sep"      : ["fastran_init", "NE_SEP"     ],
+
+    "te_axis"     : ["fastran_init", "TE_AXIS"    ],
+    "te_ped"      : ["fastran_init", "TE_PED"     ],
+
+    "ti_axis"     : ["fastran_init", "TI_AXIS"    ],
+    "ti_ped"      : ["fastran_init", "TI_PED"     ],
+
+    "h98"         : ["fastran_init", "H98_TARGET" ],
+
+    "pinj_e"      : ["hcd_model"   , "INHCD_PE_0" ],
+    "pinj_i"      : ["hcd_model"   , "INHCD_PI_0" ]
+  }
 }
+
