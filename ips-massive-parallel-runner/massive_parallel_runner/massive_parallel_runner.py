@@ -15,6 +15,7 @@ import subprocess
 import math
 import shutil
 from configobj import ConfigObj
+import glob
 
 #-------------------------------------------------------------------------------
 #
@@ -143,12 +144,17 @@ class massive_parallel_runner(Component):
             else:
                 logfile = 'make_db.log'
 
+            os.chdir('massive_parallel_runner_output_dir')
+            filenames = glob.glob('*')
+            lastest = max(filenames, key=os.path.getctime)
+            shutil.unpack_archive(lastest, '.')
+            os.chdir('../')
+
             task_wait = self.services.launch_task(1, self.services.get_working_dir(),
                                                   self.MAKE_DATABASE_EXE,
-                                                  '--rdir=massive_parallel_runner_output_dir',
+                                                  '--rdir=massive_parallel_runner_output_dir/SUMMARY',
                                                   '--input={}'.format(self.database_config),
                                                   '--output={}'.format(database),
-                                                  '--ndir=0', #  FIXME: This command option works around a bug in makedb which shouldn't get called.
                                                   logfile=logfile)
 
             if self.services.wait_task(task_wait):
