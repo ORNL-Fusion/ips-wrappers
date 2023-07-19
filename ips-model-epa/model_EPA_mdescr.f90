@@ -479,7 +479,7 @@ WRITE(*,*)
 
 	! NB: For now assume power is the same on all NBI sources
 	IF (ALLOCATED(ps%power_nbi)) THEN   		       
-		ps%power_ic = power_nbi
+		ps%power_nbi = power_nbi
 	END IF
 		
 
