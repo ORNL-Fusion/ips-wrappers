@@ -359,7 +359,7 @@ class generic_ps_init (Component):
             # init from machine description file and possibly sconfig file
             if init_mode in ['mdescr', 'MDESCR', 'mixed', 'MIXED'] :
                 MDESCR_FILE = get_component_param(self, services, 'MDESCR_FILE')
-                nml_lines.append(' mdescr_file = ' + MDESCR_FILE + '\n')
+                nml_lines.append(' mdescr_file = \"' + MDESCR_FILE + '\"\n')
                 SCONFIG_FILE = get_component_param(self, services, 'SCONFIG_FILE', \
                 optional = 'TRUE')
 
@@ -404,7 +404,9 @@ class generic_ps_init (Component):
             # helper code generic_ps_init.f90 and execute it
             if init_mode in ['minimal', 'MINIMAL', 'mdescr', 'MDESCR', 'mixed', 'MIXED'] :
                 nml_lines.append('/\n')
+                print('nml_lines = ', nml_lines)
                 put_lines('generic_ps_init.nml', nml_lines)
+                print('Did put_lines')
 
                 init_bin = os.path.join(self.BIN_PATH, 'generic_ps_init')
                 print('Executing ', init_bin)
