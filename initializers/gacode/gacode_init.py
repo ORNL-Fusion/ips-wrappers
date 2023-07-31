@@ -105,6 +105,9 @@ class gacode_init (Component):
             #Optional params
             ic_rfpwr = self.try_get_config_param(services, 'RFPWR_IC',optional=True, default = '0.0')
             ic_minfrac = self.try_get_config_param(services, 'ICRF_MINFRAC',optional=True, default = '0.0')
+
+            ic_min_is_thermal_arg = self.try_get_config_param(services, 'MIN_IS_THERMAL',optional=True, default = 'F')
+
             ic_antspec = self.try_get_config_param(services, 'ICRF_SPECFILE',optional=True)
             
             #Component params
@@ -115,6 +118,11 @@ class gacode_init (Component):
             else:
                 antspec = 'F'
                 antspec_file = 'None'
+
+            if ic_min_is_thermal_arg in ['T','True','TRUE','true']:
+                ic_min_is_thermal = 'T'
+            else:
+                ic_min_is_thermal = 'F'
                 
             # Generate state files as dummies so framework has complete set
             for file in ps_file_list:
@@ -161,6 +169,7 @@ class gacode_init (Component):
             nml_lines.append(' cur_gacode_file = \"' + cur_gacode_file + '\",\n')
             nml_lines.append(' icrfpwr = ' + ic_rfpwr + ',\n')
             nml_lines.append(' minfrac = ' + ic_minfrac + ',\n')
+            nml_lines.append(' ministhermal = ' + ic_min_is_thermal + ',\n')
             nml_lines.append(' antspec = ' + antspec + ',\n')
             nml_lines.append(' antspec_file = \"' + antspec_file + '\",\n')
             nml_lines.append('/\n')

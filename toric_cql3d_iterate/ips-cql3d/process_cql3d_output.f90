@@ -238,15 +238,20 @@
          
          ps%picrf_abs(1) = sum(picrf_tmp)
          
-         deallocate(picrf_tmp)
-         deallocate(pmine_tmp)
-         deallocate(pmini_tmp)
+         !WRITE(*,*) wperp(:,1,nt)
+         !WRITE(*,*) wpar(:,1,nt)
+
+         !WRITE(*,*) shape(ps%rho_icrf)
+         !WRITE(*,*) shape(rya)
+         !WRITE(*,*) shape(wpar(:,1,nt))
+         !WRITE(*,*) shape(ps%epll_mini(:,1))
          
-         !effective temperatures
-         call ps_user_1dintrp_vec(ps%rho_icrf, rya, wperp(:,1,nt), 
-     &        ps%eperp_mini(:,1), ierr)
-         call ps_user_1dintrp_vec(ps%rho_icrf, rya, wpar(:,1,nt), 
-     &        ps%epll_mini(:,1), ierr)
+         
+         !effective temperatures (breaking the heap sometimes for some reason)
+!         call ps_user_1dintrp_vec(ps%rho_icrf, rya, wperp(:,1,nt), 
+!     &        ps%eperp_mini(:,1), ierr)
+!         call ps_user_1dintrp_vec(ps%rho_icrf, rya, wpar(:,1,nt), 
+!     &        ps%epll_mini(:,1), ierr)
          
          
          !debug check
@@ -260,6 +265,9 @@
 
       CALL ps_store_plasma_state(ierr)
 
+      deallocate(picrf_tmp)
+      deallocate(pmine_tmp)
+      deallocate(pmini_tmp)
       deallocate (rya)
       deallocate (darea)
       deallocate (dvol)
@@ -269,3 +277,4 @@
       deallocate (curr)
       
       end program process_cql3d_output
+`

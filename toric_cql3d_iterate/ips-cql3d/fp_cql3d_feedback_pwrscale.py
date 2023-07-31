@@ -8,6 +8,9 @@ import subprocess
 import getopt
 import shutil
 import string
+import h5py
+import scipy.io as spio
+import numpy as np
 from  ipsframework import Component
 from netCDF4 import *
 from simple_file_editing_functions import put_lines, get_lines, lines_to_variable_dict
@@ -195,6 +198,8 @@ class cql3d(Component):
 
         # Get kwargs
         arg_rf_code = kwargs.get('rf_code','None')
+        pwrscale_on = kwargs.get('pwrscale_on',False)
+        icount = kwargs.get('icount',0)
         
         # Get 
         prepare_input_bin = os.path.join(self.BIN_PATH, 'prepare_cql3d_input')
@@ -214,12 +219,19 @@ class cql3d(Component):
         
         # Check if there is an existing cql3d distribution file and if there is
         # put the code in restart mode
+        # if first powerscale iteration copy distribution function from first
+        # powerscale iteration
         restart = 'disabled'
-        if os.path.isfile('./cql3d.nc'): 
-           if os.stat('./cql3d.nc')[6] != 0:
-                 restart = 'enabled'
-                 shutil.copyfile('cql3d.nc','distrfunc.nc')
+        if os.path.isfile('./cql3d.nc'):
+            if pwrscale_on and icount==0:
+                shutil.copyfile('cql3d.nc', 'cql3d.nc_ini')
+            elif pwrscale_on:
+                shutil.copyfile('cql3d.nc_ini', 'cql3d.nc')
 
+            if os.stat('./cql3d.nc')[6] != 0:
+                restart = 'enabled'
+                shutil.copyfile('cql3d.nc','distrfunc.nc')
+                 
         #if deltat_str .eq. 0 then use timestep ramp from GENRAY/CQL sims
         t0 = float(timeStamp)
         if(DELTAT_STR=='0'):
@@ -233,7 +245,19 @@ class cql3d(Component):
                DELTAT_STR = '0.005'
             else:
                DELTAT_STR = '0.01'
-                 
+
+        #if pwrscale on set up power rescaling
+        print('pwrscale_on ',pwrscale_on)
+        if pwrscale_on:
+            pwrscale_f = h5py.File('pwrscale.hdf5','r+')
+            pwrtarget_dset = pwrscale_f['pwrtarget']
+            pwrtarget = np.array(pwrtarget_dset)
+            pwrscale_dset = pwrscale_f['pwrscale']
+            pwrscale = np.array(pwrscale_dset)
+            pwrscale_cql3d_dset = pwrscale_f['pfrac_cql3d']
+        else:
+            pwrscale = np.full(2,1.0)
+               
         #Make input prep namelist
         nml_lines = ['&cql3d_prepare_nml\n']
         nml_lines.append(' cur_state_file = \"' + cur_state_file + '\",\n')
@@ -247,6 +271,7 @@ class cql3d(Component):
         nml_lines.append(' arg_nsurfFP = ' + arg_nsurf_FP + ',\n')
         nml_lines.append(' arg_rhoFPlo = ' + arg_rhoFPlo + ',\n')
         nml_lines.append(' arg_rhoFPhi = ' + arg_rhoFPhi + ',\n')
+        nml_lines.append(' pscale = ' + str(pwrscale[0]) + ', ' + str(pwrscale[1]) + ',\n')
         nml_lines.append('/\n')
         put_lines('cql3d_prepare.nml',nml_lines)
         
@@ -289,7 +314,32 @@ class cql3d(Component):
         cql3d_output_file_tmp = lines_to_variable_dict(lines)['MNEMONIC'].replace(',','').replace("'","")
         cql3d_output_file_tmp = cql3d_output_file_tmp.rstrip()
         cql3d_output_file = cql3d_output_file_tmp + ".nc"
-       
+
+        #if power rescaling read rf powers from cql3d file and save
+        #fraction of power to pwrscale hdf5 file
+        if pwrscale_on:
+            cql_nc = spio.netcdf_file(cql3d_output_file,'r')
+            cql_powers_int = np.copy(cql_nc.variables['powers_int'].data)
+            cql_nc.close()
+            
+            if fp_specs == 'MIN':
+                power_ic_min = cql_powers_int[-1,0,4]
+                pwrscale_cql3d_dset[0] = power_ic_min/pwrtarget
+            elif fp_specs == 'MIN+':
+                power_ic_min = cql_powers_int[-1,0,4]
+                power_ic_bulk = cql_powers_int[-1,1,4]
+                pwrscale_cql3d_dset[0] = power_ic_min/pwrtarget
+                pwrscale_cql3d_dset[1] = power_ic_bulk/pwrtarget
+            print('pfrac cql3d',np.array(pwrscale_cql3d_dset))
+            pwrscale_f.close()
+            #update the state with the latest power scale
+            try:
+                services.update_state(['pwrscale.hdf5'])
+            except Exception:
+                logMsg = 'Error in call to update_state()'
+                self.services.exception(logMsg)
+                raise 
+                
         # Call process_output - step
         print("running process output")
         nml_lines = ['&cql3d_process_nml\n']
@@ -322,7 +372,8 @@ class cql3d(Component):
              logMsg = 'Error in call to update_state()'
              self.services.exception(logMsg)
              raise 
-            
+
+        
         # Archive output files
         try:
           services.stage_output_files(timeStamp, self.OUTPUT_FILES)

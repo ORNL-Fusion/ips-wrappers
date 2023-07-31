@@ -31,9 +31,10 @@ PROGRAM gacode_init
   INTEGER :: nicrf=1
   DOUBLE PRECISION :: icrfpwr=0.D0, minfrac =0.D0
   LOGICAL :: antspec = .false.
+  LOGICAL :: ministhermal = .false.
   namelist /ps_init_nml/ &
        cur_state_file, cur_eqdsk_file, cur_gacode_file, &
-       icrfpwr, minfrac, antspec, antspec_file  
+       icrfpwr, minfrac, ministhermal, antspec, antspec_file  
 
   ! Start of program logic
   ! -----------------------------------------------------------------------------
@@ -112,6 +113,13 @@ PROGRAM gacode_init
         amufus_tmp(1)    = nint(expro_mass(i))
         Zatomfus_tmp(1)  = nint(expro_z(i))
         Zionfus_tmp(1)   = nint(expro_z(i))
+     elseif (((expro_name(i).eq.'He3').or.(expro_name(i).eq.'H')) &
+        .and.(ministhermal))then
+        nspecrf_tmp = 1
+        minid = i
+        amurf_tmp(1)    = nint(expro_mass(i))
+        Zatomrf_tmp(1)  = nint(expro_z(i))
+        Zionrf_tmp(1)   = nint(expro_z(i))
      !set others as thermal
      else 
         nspecth_tmp = nspecth_tmp+1

@@ -11,7 +11,10 @@ import subprocess
 import getopt
 import shutil
 import math
+import toric_reader
+import h5py
 from ipsframework import Component
+import numpy as np
 from netCDF4 import *
 
 class toric_driver(Component):
@@ -182,10 +185,36 @@ class toric_driver(Component):
         sym_root = services.get_config_param('SIM_ROOT')
         path = os.path.join(sym_root, 'PORTAL_RUNID')
         specs = services.get_config_param('SPECS')
-        runid_file = open(path, 'a')
-        runid_file.writelines(run_id + '\n')
-        runid_file.close()
+        rfpwr_arg = services.get_config_param('RFPWR_IC')
 
+        # If pwrscale is in config parameters use power rescaling
+        arg_pwrscale = self.get_config_param(services,'PWRSCALE',optional= True)
+        if arg_pwrscale!=None:
+            if arg_pwrscale.strip() in [True, 'true', 'True', 'TRUE']: 
+                pwrscale_on = True
+                #create powerscale hdf5 file
+                pwrscale = np.full(2,1.0)
+                pfrac_toric = np.full(2,1.0)
+                pfrac_cql3d = np.full(2,1.0)
+                pwrtarget = float(rfpwr_arg)
+                pwrscale_f =h5py.File('pwrscale.hdf5','w')
+                pwrtarget_dset = pwrscale_f.create_dataset("pwrtarget",data=pwrtarget)
+                pscale_dset = pwrscale_f.create_dataset("pwrscale",data=pwrscale)
+                pfrac_toric_dset = pwrscale_f.create_dataset("pfrac_toric",data=pfrac_toric)
+                pfrac_cql3d_dset = pwrscale_f.create_dataset("pfrac_cql3d",data=pfrac_cql3d)
+                pwrscale_f.close()
+                # Update plasma state files in plasma_state work directory
+                try:
+                    services.update_state()
+                except Exception:
+                    logMsg = 'Error in call to update_plasma_state()'
+                    self.services.exception(logMsg)
+                    raise
+            else:
+                pwrscale_on = False
+        else:
+            pwrscale_on=False
+        
         # Post init processing: stage plasma state, stage output
         services.stage_output_files(t, self.OUTPUT_FILES)
 
@@ -214,13 +243,13 @@ class toric_driver(Component):
             try:
                 services.call(rf_icComp, 'step', t, toric_Mode = 'toric', \
                               inumin_Mode = 'Maxwell' , isol_Mode = '1', \
-                              save_output = 'False')
+                              save_output = 'False', pwrscale_on=pwrscale_on)
             except Exception:
                 message = 'RF_IC toric mode step failed'
                 print(message)
                 services.exception(message)
                 raise 
-
+   
             if(specs=='MIN'):
                 try:
                     services.call(rf_icComp, 'step', t, toric_Mode = 'qldci', \
@@ -267,18 +296,53 @@ class toric_driver(Component):
             if 'EPA' in port_names:
                 self.component_call(services, 'EPA', epaComp, 'step', t)
 
-            try:
-                services.call(fpComp, 'step', t,rf_code='toric')
-            except Exception:
-                message = 'FP step failed'
-                print(message)
-                services.exception(message)
-                raise 
-
+            # Call powerscale iteration
+            icount = 0
+            running = True
+            if pwrscale_on:
+                while running:
+                    try:
+                        services.call(fpComp, 'step', t,rf_code='toric',pwrscale_on=pwrscale_on,icount=icount)
+                    except Exception:
+                        message = 'FP step failed'
+                        print(message)
+                        services.exception(message)
+                        raise
+                    services.stage_state() #get katest state w/ cql powers
+                    pwrscale_f = h5py.File('pwrscale.hdf5','r+')
+                    pwrtarget_dset = pwrscale_f['pwrtarget']
+                    pwrscale_dset = pwrscale_f['pwrscale']
+                    pwrscale_toric_dset = pwrscale_f['pfrac_toric']
+                    pwrscale_cql3d_dset = pwrscale_f['pfrac_cql3d']
+                    pwrscale_min_ratio = pwrscale_toric_dset[0]/pwrscale_cql3d_dset[0]
+                    pwrscale_bulk_ratio = pwrscale_toric_dset[1]/pwrscale_cql3d_dset[1]
+                    print('pwrscale_min_ratio', pwrscale_min_ratio)
+                    print('pwrscale_bulk_ratio', pwrscale_bulk_ratio)
+                    
+                    if ((pwrscale_min_ratio > 1.05)or(pwrscale_min_ratio<0.95)) or \
+                       ((pwrscale_bulk_ratio > 1.05)or(pwrscale_bulk_ratio<0.95)):
+                        pwrscale_dset[0] = pwrscale_min_ratio*pwrscale_dset[0]
+                        pwrscale_dset[1] = pwrscale_bulk_ratio*pwrscale_dset[1]
+                    else:
+                        running = False
+                    print('pwrscale iter: ', icount, ' pwrscale ', np.array(pwrscale_dset))
+                    print('toric_pfrac', np.array(pwrscale_toric_dset))
+                    print('cql3d_pfrac', np.array(pwrscale_cql3d_dset))
+                    pwrscale_f.close()
+                    services.update_state() #need to do a state update here
+                    icount = icount+1
+            else:
+                try:
+                    services.call(fpComp, 'step', t,rf_code='toric',pwrscale_on=pwrscale_on)
+                except Exception:
+                    message = 'FP step failed'
+                    print(message)
+                    services.exception(message)
+                    raise 
             try:
                 services.call(rf_icComp, 'step', t, toric_Mode = 'toric', \
                 inumin_Mode = 'nonMaxwell' , isol_Mode = '1', \
-                                  save_output = 'False')
+                                  save_output = 'False',pwrscale_on=pwrscale_on)
             except Exception:
                 message = 'RF_IC toric mode step failed'
                 print(message)

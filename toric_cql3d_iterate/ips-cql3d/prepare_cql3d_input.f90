@@ -76,12 +76,13 @@
       INTEGER :: arg_nsurfFP
       REAL(KIND=rspec) :: arg_rhoFPlo = 0.01_rspec
       REAL(KIND=rspec) :: arg_rhoFPhi = 0.95_rspec
+      REAL(KIND=rspec), dimension(2) :: pscale = 1.0_rspec
       
       namelist /cql3d_prepare_nml/
      +    cur_state_file, cql3d_specs, 
      +    cql3d_mode, rf_code, restart,
      +    nsteps, arg_deltat, arg_enorm, arg_nsurfFP,
-     +    arg_rhoFPlo, arg_rhoFPhi
+     +    arg_rhoFPlo, arg_rhoFPhi, pscale
 
       
       ! CQL3D NAMELISTS AND THEIR STORAGE
@@ -181,6 +182,7 @@
       radcoord='sqtorflx'
       CFP_INTEGRALS='disabled'
       pwrscale(:) = 1.d0
+      
 
       !SF saved for later if I ever want to add in beams
 !      if (ps%nbeam.ne.1) then
@@ -254,7 +256,6 @@
             nrdc = 1
             nrdcspecies = 1
             rdc_netcdf = 'disabled'
-            rdcscale = 1.0
          elseif(rf_code.eq.'genray')then
             rdcmod = 'disabled'
             !SF finish later
@@ -347,7 +348,8 @@
          nrdc = 1
          nrdcspecies = 1
          rdc_netcdf = 'disabled'
-         rdcscale = 1.0
+         rdcscale(:) = 1.d0
+         rdcscale(1) = pscale(1)
          
          !minority species data
          isp_min = ps%rfmin_to_alla(1)
@@ -431,8 +433,9 @@
          nrdcspecies(1) = 1
          nrdcspecies(2) = 2
          rdc_netcdf = 'disabled'
-         rdcscale(1) = 1.0
-         rdcscale(2) = 1.0
+         rdcscale(:) = 1.d0
+         rdcscale(1) = pscale(1)
+         rdcscale(2) = pscale(2)
          
          !minority species data
          isp_min = ps%rfmin_to_alla(1)
@@ -442,7 +445,6 @@
          bnumb(1)    = NINT(ps%q_alla(isp_min)/ps_xe)
          call ps_rho_rezone(rho_bdy_rezon, ps%id_nmini(1),enein(1:nj,1),
      +                      ierr, zonesmoo=.TRUE.)
-
 
          !find minorities "pair"
          ipairspec = 0

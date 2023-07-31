@@ -11,8 +11,10 @@ import subprocess
 import getopt
 import shutil
 import string
+import h5py
 import numpy as np
 from netCDF4 import *
+import scipy.io as spio
 from  ipsframework import Component
 from simple_file_editing_functions import put_lines
 import toric_tools as tt
@@ -256,6 +258,7 @@ class toric (Component):
         arg_isol_Mode = kwargs.get('isol_Mode', '1')           
         arg_inumin_Mode = kwargs.get('inumin_Mode', 'Maxwell')
         arg_nphi_indx = kwargs.get('nphi_indx','0')
+        pwrscale_on = kwargs.get('pwrscale_on',False)
 
         # Set working directory and output path
         cwd = os.getcwd()
@@ -409,7 +412,7 @@ class toric (Component):
             raise Exception(logMsg)
 
         toric_proc_log = open('log_process_toric_output','w')
-            
+        
         services.send_portal_event(event_type = 'COMPONENT_EVENT',\
                                    event_comment =  process_output_bin)
 
@@ -420,7 +423,23 @@ class toric (Component):
             logMsg = 'Error executing ' + process_output_bin
             self.services.error(logMsg)
             raise Exception(logMsg)
-            
+
+        #update data powerscale if doing powerscale iterations
+        if pwrscale_on:
+             toric_nc = spio.netcdf_file(cur_toric_file,'r')
+             total_pwr = np.copy(toric_nc.variables['total_power'].data)
+             fund_pwr = np.copy(toric_nc.variables['ICfund_power_ions'].data)
+             harm_pwr = np.copy(toric_nc.variables['ICharm_pwer_ions'].data)
+             toric_nc.close()
+             min_pwr_frac = fund_pwr[rfmin_indx]/total_pwr
+             bulk_pwr_frac = harm_pwr[0]/total_pwr #this should usually be 0 may break sometimes
+             #update pwrscale hdf5
+             pwrscale_f = h5py.File('pwrscale.hdf5','r+')
+             pwrscale_toric_dset = pwrscale_f['pfrac_toric']
+             pwrscale_toric_dset[0] = min_pwr_frac
+             pwrscale_toric_dset[1] = bulk_pwr_frac
+             pwrscale_f.close()
+             
         # Update plasma state files in plasma_state work directory
         try:
             services.update_state()
