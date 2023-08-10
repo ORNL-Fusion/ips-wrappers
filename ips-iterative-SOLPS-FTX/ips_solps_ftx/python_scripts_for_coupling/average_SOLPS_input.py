@@ -10,8 +10,9 @@ def average_SOLPS_input(ftxOut_file='ftxOut.txt', print_test=False, logFile=None
     if logFile  is not None:
         print('\t redirect write_ftxOut output of to:')
         print('\t' , logFile)
-        outF = open(logFile, "a")
-        sys.stdout = outF
+        logF = open(logFile, "a")
+        orig_stdout = sys.stdout
+        sys.stdout = logF
 
 
     print('From average_SOLPS_input')
@@ -61,7 +62,17 @@ def average_SOLPS_input(ftxOut_file='ftxOut.txt', print_test=False, logFile=None
             print('Done with average_SOLPS_input')
             sys.stdout.flush()
 
-            return  ave_grid, ave_twall, ave_Rft, ave_Rxol, ave_Rtot
+
+        if logFile  is not None:
+            if print_test:
+                print('\t close log file ', logF.name)
+                print('\t set sys.stdout back to: ', orig_stdout)
+            sys.stdout.flush()
+            sys.stdout = orig_stdout
+            logF.close()
+            
+        return  ave_grid, ave_twall, ave_Rft, ave_Rxol, ave_Rtot
+
     except:
         print("some average calculation went wrong:")
         if print_test:
@@ -73,6 +84,15 @@ def average_SOLPS_input(ftxOut_file='ftxOut.txt', print_test=False, logFile=None
         print("do not return any values")
         print('Done with average_SOLPS_input')
         sys.stdout.flush()
+
+        if logFile  is not None:
+            if print_test:
+                print('\t close log file ', logF.name)
+                print('\t set sys.stdout back to: ', orig_stdout)
+            sys.stdout.flush()
+            sys.stdOut = orig_stdout
+            logF.close()
+        
         return
 
 ### END OF PYTHON SCRIPT

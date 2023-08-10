@@ -20,7 +20,9 @@ from ips_solps_ftx.python_scripts_for_coupling import write_ftxOut
 from ips_solps_ftx.python_scripts_for_coupling import SOLPS_outputs_for_FTX
 from ips_solps_ftx.python_scripts_for_coupling import average_SOLPS_input
 from ips_solps_ftx.python_scripts_for_coupling import updateSOLPSinput
- 
+from ips_solps_ftx.python_scripts_for_coupling import read_impact_angle
+from ips_solps_ftx.python_scripts_for_coupling import read_impact_energy
+
 #from contextlib import redirect_stdout
 
 #-------------------------------------------------------------------------------
@@ -461,37 +463,138 @@ class parent_driver(Component):
                     print(' ')
                 sys.stdout.flush()
 
-                if self.print_test:
-                    print('save SOLPS output file ', self.SOLPSoutputs['pickleOutputFile'], 'as ', self.SOLPSoutputs['pickleOutputFile']+'_t'+str(time))
-                shutil.copyfile(self.SOLPSoutputs['pickleOutputFile'],self.SOLPSoutputs['pickleOutputFile']+'_t'+str(time))                
-                
                 print('... done with SOLPSoutputs for ftx '+str(i)+' \n')
                 sys.stdout.flush()
 
-
-            # 3 - SHUFFLE SOLPS OUTPUT FILE HERE IF NEEDED
-
-
-            
-            #print('\n')
-            print('READ AND FORMAT INPUTS TO FTX WORKFLOW(S)')
-            print(' ')
-            
-            for ftx_comp, ftx in list(self.ftx_components.items()):
-
+                print('READ AND FORMAT INPUTS TO FTX WORKFLOW(S)')
                 print(' ')
-                #to get i, these two ways should work:
-                i=int(''.join(list(filter(str.isdigit, ftx_comp))))
-                if (self.print_test):
-                    print('index of ', ftx_comp, ' is ', i)
+            
+            #for ftx_comp, ftx in list(self.ftx_components.items()): ## I think we can just continue loop, no need to break and start again
+            #    print(' ')
+            #    i=int(''.join(list(filter(str.isdigit, ftx_comp))))
+            #    if (self.print_test):
+            #        print('index of ', ftx_comp, ' is ', i)
+            #        sys.stdout.flush()
+
+                # 3 - use inputs from hPIC:
+                #     implemented for both angle scalar & distribution; energy scalar & distribution
+                #     different impact angle/energy models: solps, readFileScalar, readFileDistrib
+                #     implement different functions within read_impact_angle : scalar & distrib (idem for energy)
+                #       for a single angle value, read_impact_angle.scalar returns value of angle
+                #       for distributions [not implemented yet!] read_impact_angle.distrib reads file name of distrib, instead of the value
+
+                #3.a angle from hPIC
+                impactAngleModel=self.services.get_config_param('IMPACT_ANGLE_MODEL')
+                if self.print_test:
+                    print('impact angle model is ', impactAngleModel)
+                if impactAngleModel=='solps':
+                    print('will use angle provided in input from SOLPS (= B-field)')
+                elif impactAngleModel=='readFileScalar':
+                    #read a single value for angle
+                    # ADD (i) to these two file names if we need a different distribution for each FTX
+                    hpicAngleFile=self.services.get_config_param('HPIC_ANGLE_FILE_NAME') #e.g. 'hpicAngles.txt'
+                    readAngle_log='log.readImpactAngle_t'+str(time) 
+                    print('read single angle value from file: ', hpicAngleFile)
+                    print('\t using script read_impact_angle.scalar with inputs:')
+                    print('\t t = ', time, ' ; print_test =  ; ', self.print_test, ' ; logFile =', readAngle_log)
+                    ftxImpactAngle = read_impact_angle.scalar(time=time, inputAngleFile=hpicAngleFile, print_test=self.print_test, logFile=readAngle_log)
                     sys.stdout.flush()
+                    
+                    print('\t for time ', time, ' impact angle is ', ftxImpactAngle, ' deg')
+                    #replace angle in solpsOut pkl file
+                    orig_solps_outFile=self.solps_output_file[0]+'_'+str(i)+'_orig.'+self.solps_output_file[1]+'_t'+str(time)
+                    temp_solps_outFile=self.solps_output_file[0]+'_'+str(i)+'_temp.'+self.solps_output_file[1]
+                    shutil.copy(solps_outFile,orig_solps_outFile) #save copy of original
+                    shutil.move(solps_outFile,temp_solps_outFile) #mv solps_outFile to temp
+                    solpsOut_dic=pickle.load( open(temp_solps_outFile, "rb" ))
+                    #if self.print_test:
+                    #    print('\t before changing the angle, solpsOut dictionary is:')
+                    #    print('\t', solpsOut_dic)
+                    solpsOut_dic['inputAngle']=ftxImpactAngle
+                    pickle.dump(solpsOut_dic, open(solps_outFile, "wb" ) ) #same file name, updated values
+                    print('changed solps dictionarys inputAngle  to ', ftxImpactAngle)
+                    #if self.print_test:
+                    #    print('\t after changing the angle, solpsOut dictionary is:')
+                    #    print('\t', solpsOut_dic)
+                    print(' ')
+                    sys.stdout.flush()
+                    
+                elif impactAngleModel=='readFileDistrib':
+                    print('angle distribution model not implemented yet')
+                    print('do nothing')
+                else:
+                    print('angle model not recognized')
+                    print('do nothing')
+                sys.stdout.flush()
+
+                #3.b energy from hPIC
+                impactEnergyModel=self.services.get_config_param('IMPACT_ENERGY_MODEL')
+                if self.print_test:
+                    print('impact energy model is ', impactEnergyModel)
+                if impactEnergyModel=='solps':
+                    print('will use impact energy provided in input from SOLPS (based on Ti and Te)')
+                elif impactEnergyModel=='readFileScalar':
+                    #read a single value for energy (per species)
+                    # ADD (i) to these two file names if we need a different distribution for each FTX
+                    hpicEnergyFile=self.services.get_config_param('HPIC_ENERGY_FILE_NAME') #e.g. 'hpicEnergies.txt'
+                    readEnergy_log='log.readImpactEnergy_t'+str(time)
+                    print('read single energy value from file: ', hpicEnergyFile)
+                    print('\t using script read_impact_energy.scalar with inputs:')
+                    print('\t t = ', time, ' ; print_test =  ; ', self.print_test, ' ; logFile =', readEnergy_log)
+                    [ftxImpactEnergy_D,ftxImpactEnergy_C] = read_impact_energy.scalar(time=time, inputEnergyFile=hpicEnergyFile, print_test=self.print_test, logFile=readEnergy_log)
+                    sys.stdout.flush()                    
+
+                    print('\t for time ', time, ' impact energies of D and C are : ', ftxImpactEnergy_D, ' and ', ftxImpactEnergy_C, ' eV' )
+                    #replace energy in solpsOut pkl file
+                    orig_solps_outFile=self.solps_output_file[0]+'_'+str(i)+'_orig.'+self.solps_output_file[1]+'_t'+str(time)
+                    temp_solps_outFile=self.solps_output_file[0]+'_'+str(i)+'_temp.'+self.solps_output_file[1]
+                    #make copy of original (if file doesn't exist ; otherwise it was already copied in replacing angle)
+                    if os.path.exists(orig_solps_outFile):
+                        if self.print_test:
+                            print('\t TEST: ', orig_solps_outFile, 'already exists. no need to copy')
+                    else:
+                        if self.print_test:
+                            print('\t TEST: ', orig_solps_outFile, 'does not exists. make copy')
+                        shutil.copy(solps_outFile,orig_solps_outFile)
+                    shutil.move(solps_outFile,temp_solps_outFile)
+                    solpsOut_dic=pickle.load( open(temp_solps_outFile, "rb" ))
+                    #if self.print_test:
+                    #    print('\t before changing the energy, solpsOut dictionary is:')
+                    #    print('\t', solpsOut_dic)
+                    solpsOut_dic['inputEnergy']=[ftxImpactEnergy_D,ftxImpactEnergy_C]
+                    pickle.dump(solpsOut_dic, open(solps_outFile, "wb" ) ) #same file name, updated values
+                    print('changed solps dictionarys inputEnergy to ', [ftxImpactEnergy_D,ftxImpactEnergy_C])
+                    #if self.print_test:
+                    #    print('\t after changing the energy, solpsOut dictionary is:')
+                    #    print('\t', solpsOut_dic)
+                    print(' ')
+                    sys.stdout.flush()
+
+                elif impactEnergyModel=='readFileDistrib':
+                    print('energy distribution model not implemented yet')
+                    print('do nothing')
+
+                else:
+                    print('energy model not recognized')
+                    print('do nothing')
+                sys.stdout.flush()
+
+                #END of 3 - use inputs from hPIC
+
+                #save solps_outFile, regardless of modified by hPIC or not
+                if self.print_test:
+                    print('save SOLPS output file ', solps_outFile, 'as ', solps_outFile+'_t'+str(time))
+                shutil.copyfile(solps_outFile, solps_outFile+'_t'+str(time))
+
                 
-                ## 1 - read output of SOLPS from solpsOut.txt (one per child) - DONE?
+                # 4 - REFORMAT SOLPS OUTPUT FILE                
+                
+                ## read output of SOLPS from solpsOut.txt (one per child) - DONE?
                 print('re-format SOLPS output into FTX input: ')
                 #these three are used later as well, so define here
                 ftxInFileFormat=list(self.services.get_config_param('FTX_INPUT_FORMAT'))
                 ftxInFileName=ftxInFileFormat[0]+'_'+str(i)+'.'+ftxInFileFormat[1]
-                solps_outFile=self.solps_output_file[0]+'_'+str(i)+'.'+self.solps_output_file[1] #0=filename (solpsOut) ; 1=fomat (txt)
+                #solps_outFile=self.solps_output_file[0]+'_'+str(i)+'.'+self.solps_output_file[1] #not needed anymore, bc we're in the same loop 0=filename (solpsOut) ; 1=fomat (pkl)
                 p2ftx_log='log.plasmaOut2ftxIn'+'_t'+str(time) #rm cwd+'/'
 
                 self.plasmaOut2ftxIn={}
@@ -535,47 +638,15 @@ class parent_driver(Component):
                     print(' ')
                 sys.stdout.flush()
                 #self.plasmaOut2ftxIn.clear()
-                print('... done with plasmaOut2ftxIn \n')
-                
-                # 4 - add time to its own file
-                #  For now keep this section in driver 
-                #  Move to its own function is time parameter operations become more complex
-                print('write time input file:')
-                timeFileName=self.services.get_config_param('TIME_FILE_NAME')
-                print('\t file name: ', timeFileName)
-                timeFile=open(timeFileName, "w")
-                print('\t INIT_TIME : ', time)
-                print('\t END_TIME : ', time + self.time_step)
-                print('\t LOOP_TIME_STEP : ', self.time_step)
-                print('\t LOOP_N : ', t_count)
-                timeFile.write('INIT_TIME={0}\n'.format(time))
-                timeFile.write('END_TIME={0}\n'.format(time + self.time_step))
-                timeFile.write('LOOP_TIME_STEP={0}\n'.format(self.time_step))
-                timeFile.write('LOOP_N={0}\n'.format(t_count))
-                #print(' ')
-                sys.stdout.flush()
-                
-                #set start mode based on loop number ; change to driver's start mode is we implement restarting capabilities
-                if (t_count == 0):
-                    print('\t START_MODE = INIT')
-                    timeFile.write('START_MODE=INIT\n')
-                else:
-                    print('\t START_MODE = RESTART')
-                    timeFile.write('START_MODE=RESTART\n')
-                timeFile.close()
-                print(' ')
-                sys.stdout.flush()
-                
-                # 5 - copy ftxIn and timeFile to ftx input directory
-                print('copying input to FTX file')
+                print('... done with plasmaOut2ftxIn \n')                
+                ## END OF 4 - solpsOut --> ftxIn
+
+                #5- copy ftxIn to ftx input directory
+                print('copy input file to FTX input directory')
                 print('\t from: ', ftxInFileName) ##<-- without cwd: cwd+ftxInFileName
                 print('\t to: ', self.ftx_components[ftx_comp]['INPUT_DIR']+'/ftxInput.txt')
-                shutil.copyfile(ftxInFileName,self.ftx_components[ftx_comp]['INPUT_DIR']+'/ftxInput.txt') #rm cwd+'/'
-                print('copying time parameter ')
-                print('\t from: ', timeFileName)
-                print('\t to: ', self.ftx_components[ftx_comp]['INPUT_DIR']+'/'+timeFileName)
-                shutil.copyfile(timeFileName,self.ftx_components[ftx_comp]['INPUT_DIR']+'/'+timeFileName)
-                print('copying output file of SOLPS')
+                shutil.copyfile(ftxInFileName,self.ftx_components[ftx_comp]['INPUT_DIR']+'/ftxInput.txt')
+                print('copy SOLPS output file to FTX input directory')
                 print('\t from: ', solps_outFile)
                 print('\t to: ', self.ftx_components[ftx_comp]['INPUT_DIR']+'/solpsOut.pkl')
                 shutil.copyfile(solps_outFile,self.ftx_components[ftx_comp]['INPUT_DIR']+'/solpsOut.pkl') #modify ftx_input_dir to be driver dir when output comes from solps
@@ -585,18 +656,60 @@ class parent_driver(Component):
 
                 #save ftxIn and solpsOut for each loop (with time-stamp)
                 shutil.copyfile(solps_outFile, solps_outFile+'_t'+str(time)) #modify ftx_input_dir to be driver dir when output comes from solps
-                shutil.copyfile(ftxInFileName,ftxInFileName+'_t'+str(time)) #rm cwd+'/' #rm cwd+'/'
-                shutil.copyfile(timeFileName,timeFileName+'_t'+str(time))
+                shutil.copyfile(ftxInFileName,ftxInFileName+'_t'+str(time)) 
                 print('to save input files for each time-loop, copied:')
                 print('\t ', solps_outFile, ' as ', solps_outFile+'_t'+str(time))
-                print('\t ', ftxInFileName, ' as ', ftxInFileName+'_t'+str(time)) #<-- without cwd: cwd+ftxInFileName
-                print('\t ', timeFileName , ' as ', timeFileName+'_t'+str(time))
+                print('\t ', ftxInFileName, ' as ', ftxInFileName+'_t'+str(time))
                 sys.stdout.flush()
+                #end of 5 - save ftxIn
+                
                 #update plasma state file:
                 self.services.update_state()
-                
-            ## END OF solpsOut --> ftxIn and time-parameters
 
+                    
+            # 6 - add time to its own file
+            #  For now keep this section in driver
+            #  Better move to its own function/script
+            print('write time input file:')
+            timeFileName=self.services.get_config_param('TIME_FILE_NAME')
+            print('\t file name: ', timeFileName)
+            timeFile=open(timeFileName, "w")
+            print('\t INIT_TIME : ', time)
+            print('\t END_TIME : ', time + self.time_step)
+            print('\t LOOP_TIME_STEP : ', self.time_step)
+            print('\t LOOP_N : ', t_count)
+            timeFile.write('INIT_TIME={0}\n'.format(time))
+            timeFile.write('END_TIME={0}\n'.format(time + self.time_step))
+            timeFile.write('LOOP_TIME_STEP={0}\n'.format(self.time_step))
+            timeFile.write('LOOP_N={0}\n'.format(t_count))            
+            sys.stdout.flush()
+
+            
+            #set start mode based on loop number ; change to driver's start mode is we implement restarting capabilities
+            if (t_count == 0):
+                print('\t START_MODE = INIT')
+                timeFile.write('START_MODE=INIT\n')
+            else:
+                print('\t START_MODE = RESTART')
+                timeFile.write('START_MODE=RESTART\n')
+            timeFile.close()
+            print(' ')
+            sys.stdout.flush()
+
+            #copy time parameter to the input folder of each FTX subworkflow
+            print('copying time parameter: ')
+            for ftx_comp, ftx in list(self.ftx_components.items()):
+                print(' ')
+                #to get i, these two ways should work:
+                i=int(''.join(list(filter(str.isdigit, ftx_comp))))
+                print('\t from: ', timeFileName)
+                print('\t to: ', self.ftx_components[ftx_comp]['INPUT_DIR']+'/'+timeFileName)
+                shutil.copyfile(timeFileName,self.ftx_components[ftx_comp]['INPUT_DIR']+'/'+timeFileName)
+            shutil.copyfile(timeFileName,timeFileName+'_t'+str(time))
+            print('\t ', timeFileName , ' as ', timeFileName+'_t'+str(time))
+            sys.stdout.flush()
+            
+            
             print('\n')
             print('-------------------')
             print('-------------------')

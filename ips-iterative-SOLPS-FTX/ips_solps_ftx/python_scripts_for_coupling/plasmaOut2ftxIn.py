@@ -88,6 +88,11 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.pkl', ftxInFile='ftxIn.txt',print_t
         if (isinstance(solpsParams['Ti'],float) or isinstance(solpsParams['Ti'],int) or (isinstance(solpsParams['Ti'],np.ndarray) and (solpsParams['Ti'].size < len(solpsParams['plasmaSpecies'])))):
             if ('plasmaSpecies' in solpsParams):
                 for n in range(len(solpsParams['plasmaSpecies'])):
+                    #add numpy.squeeze to FIX:
+                    #Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future.
+                    #Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)                    
+                    solpsParams['Ti']=np.squeeze(solpsParams['Ti'])
+                    print('\t converted array Ti into scalar ', solpsParams['Ti'])
                     Ti.append(float(solpsParams['Ti']))
             else: #without plasmaSpecies, just leave as is
                 Ti=solpsParams['Ti']
@@ -100,6 +105,11 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.pkl', ftxInFile='ftxIn.txt',print_t
         if (isinstance(solpsParams['Te'],float) or isinstance(solpsParams['Te'],int) or (isinstance(solpsParams['Te'],np.ndarray) and (solpsParams['Te'].size < len(solpsParams['plasmaSpecies'])))):
             if ('plasmaSpecies' in solpsParams):
                 for n in range(len(solpsParams['plasmaSpecies'])):
+                    #add numpy.squeeze to FIX:
+                    #Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future.
+                    #Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+                    solpsParams['Te']=np.squeeze(solpsParams['Te'])
+                    print('\t converted array Te into scalar ', solpsParams['Te'])
                     Te.append(float(solpsParams['Te']))
             else: #without plasmaSpecies, just leave as is
                 Te=solpsParams['Te']
@@ -374,8 +384,7 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.pkl', ftxInFile='ftxIn.txt',print_t
         
         if k in ftxInputs:
             if print_test:
-                print('\t \t k = ', k)
-                print('\t \t v = ', v)
+                print('\t \t k = ', k , ' ; v = ', v)
                 sys.stdout.flush()
             print('\t \t ftx[',k,'] = ', ftxInputs[k])
         else:
@@ -388,17 +397,20 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.pkl', ftxInFile='ftxIn.txt',print_t
 
     # 3 - print ftxIn.txt - DONE
     print('\t write FTX input file:')
-    #driver gets ftxIn file name, not here 
-    #ftxInFileFormat=list(self.services.get_config_param('FTX_INPUT_FORMAT'))
-    #ftxInFileName=ftxInFileFormat[0]+str(i)+'.'+ftxInFileFormat[1]
     print('\t \t to file name: ', ftxInFile)
     ftxIn=open(ftxInFile, "w")
     for k,v, in ftxInputs.items():
+        #first check if its numpy array ; if so, turn into list (for Te and Ti, bc sqeeze above)
+        if isinstance(v,np.ndarray):
+            print('\t \t ', k, ' is a numpy array. Convert to list/ float / int before writing to file')
+            v_list=v.tolist()
+            v=v_list
+        
         if (isinstance(v, int) or isinstance(v, float) or isinstance(v, dict) or isinstance(v, str)):
             print(('\t \t {0} : {1}'.format(k, v)))
             ftxIn.write(('{0}={1}\n'.format(k, v)))
         else: #not float, int or string; assume it's list
-            print('type of', k, ' is ', type(v))
+            print('\t \t type of', k, ' is ', type(v))
             sys.stdout.flush()
             v_string=''
             for i in range(len(v)):
