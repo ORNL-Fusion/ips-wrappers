@@ -497,10 +497,10 @@ class parent_driver(Component):
                     print('read single angle value from file: ', hpicAngleFile)
                     print('\t using script read_impact_angle.scalar with inputs:')
                     print('\t t = ', time, ' ; print_test =  ; ', self.print_test, ' ; logFile =', readAngle_log)
-                    ftxImpactAngle = read_impact_angle.scalar(time=time, inputAngleFile=hpicAngleFile, print_test=self.print_test, logFile=readAngle_log)
+                    [ftxImpactAngle_D,ftxImpactAngle_C] = read_impact_angle.scalar(time=time, inputAngleFile=hpicAngleFile, print_test=self.print_test, logFile=readAngle_log)
                     sys.stdout.flush()
                     
-                    print('\t for time ', time, ' impact angle is ', ftxImpactAngle, ' deg')
+                    print('\t for time ', time, ' impact angles of D and C are ', ftxImpactAngle_D, ' and ', ftxImpactAngle_C,' deg')
                     #replace angle in solpsOut pkl file
                     orig_solps_outFile=self.solps_output_file[0]+'_'+str(i)+'_orig.'+self.solps_output_file[1]+'_t'+str(time)
                     temp_solps_outFile=self.solps_output_file[0]+'_'+str(i)+'_temp.'+self.solps_output_file[1]
@@ -510,9 +510,9 @@ class parent_driver(Component):
                     #if self.print_test:
                     #    print('\t before changing the angle, solpsOut dictionary is:')
                     #    print('\t', solpsOut_dic)
-                    solpsOut_dic['inputAngle']=ftxImpactAngle
+                    solpsOut_dic['inputAngle']=[ftxImpactAngle_D, ftxImpactAngle_C]
                     pickle.dump(solpsOut_dic, open(solps_outFile, "wb" ) ) #same file name, updated values
-                    print('changed solps dictionarys inputAngle  to ', ftxImpactAngle)
+                    print('changed solps dictionarys inputAngle to ', [ftxImpactAngle_D, ftxImpactAngle_C])
                     #if self.print_test:
                     #    print('\t after changing the angle, solpsOut dictionary is:')
                     #    print('\t', solpsOut_dic)
@@ -889,20 +889,21 @@ class parent_driver(Component):
 
             #for now, all FTX in DIMES; eventually implement check for grid point falling in rad_grid_name = Left, DIMES or right
             ave_Rft_array = np.array([ave_Rft]) #as array -->, dtype = np.float64)
-            print('TEST TEST: ave_Rft = ', ave_Rft, ' ave_Rft_array =', ave_Rft_array, ' and ave_Rft_array[0] =', ave_Rft_array[0])
+            #print('TEST TEST: ave_Rft = ', ave_Rft, ' ave_Rft_array =', ave_Rft_array, ' and ave_Rft_array[0] =', ave_Rft_array[0])
             RECYCF = updateSOLPSinput.calc_RECYCF(inputDat, 'fort.44', ['DIMES'], ave_Rft_array) #ave_Rft) 
             ave_Rtot_array = np.array([ave_Rtot])
             ave_twall_array = np.array([ave_twall])
-            print('TEST TEST: ave_Rtot = ', ave_Rtot, ' ave_Rtot_array =', ave_Rtot_array, ' and ave_Rtot_array[0] =', ave_Rtot_array[0])
-            print('TEST TEST: ave_twall = ', ave_twall, ' ave_twall_array =', ave_twall_array, ' and ave_twall_array[0] =', ave_twall_array[0])
+            #print('TEST TEST: ave_Rtot = ', ave_Rtot, ' ave_Rtot_array =', ave_Rtot_array, ' and ave_Rtot_array[0] =', ave_Rtot_array[0])
+            #print('TEST TEST: ave_twall = ', ave_twall, ' ave_twall_array =', ave_twall_array, ' and ave_twall_array[0] =', ave_twall_array[0])
             updateSOLPSinput.input_dat_update(orig_inputDat, inputDat, RECYCF, ave_Rtot_array, ave_twall_array, ['DIMES']) 
             shutil.copyfile(inputDat, new_inputDat)
+
+            print('Update values in ', inputDat)
             if self.print_test:
                 print('\t copy ', inputDat, 'as ', inputDat+'_updated_t'+str(time))
             
             # JUST FOR TESTING!!
-            print(' ')
-            print('\t TEST: compare original ', orig_inputDat, ' and new ', inputDat, ' files')
+            print('\t compare original ', orig_inputDat, ' and new ', inputDat, ' files')
             with open(orig_inputDat) as file_1:
                 file_1_text = file_1.readlines()
  
@@ -913,10 +914,12 @@ class parent_driver(Component):
             for line in difflib.unified_diff(
                     file_1_text, file_2_text, fromfile='file1.txt',
                     tofile='file2.txt', lineterm=''):
-                print('\t TEST: found difference between input.dat files: ', line)
+                print('\t found difference between input.dat files: ')
+                print('\t', line)
             file_1.close
             file_2.close
-                
+            print(' ')
+            
             for ftx_comp, ftx in list(self.ftx_components.items()):
                 del self.running_components['{}:driver:init'.format(ftx['sim_name'])]
                 del self.running_components['{}:driver:step'.format(ftx['sim_name'])] 
@@ -927,11 +930,11 @@ class parent_driver(Component):
 
 
             #copy updated files to input.dat, b2fstate... to self.solps_input_dir
-            print('TEST: update inputs to SOLPS before running next iteration...')
+            print('Update SOLPS input file before running next iteration...')
             solps_update_string=self.services.get_config_param('UPDATE_SOLPS_INPUTS')
             update_list=solps_update_string.split()
             for f in update_list:
-                print('\t TEST: update ', f, ' in solps input dir')
+                print('\t update ', f, ' in solps input dir')
                 shutil.copyfile(f, self.solps_input_dir+'/'+f)
             print('... done updating inputs to SOLPS')
             print(' ')

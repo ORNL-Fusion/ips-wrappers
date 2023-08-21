@@ -36,9 +36,10 @@ def scalar(time=0.0, inputAngleFile='hpicAngles.txt', print_test=False, logFile=
         init_t=float(l.split('\t')[0])
         end_t=float(l.split('\t')[1])
         if (time>=init_t) and (time<=end_t):
-            angle=float(l.split('\t')[2])
+            angle_D=float(l.split('\t')[2])
+            angle_C=float(l.split('\t')[3])
             print('\t for t=', time, ' init_t = ', init_t, ' end_t=', end_t)
-            print('\t found angle = ', angle)
+            print('\t found angle_D = ', angle_D , ' and angle_C = ', angle_C, ' deg')
             break;
     inF.close()
 
@@ -56,7 +57,7 @@ def scalar(time=0.0, inputAngleFile='hpicAngles.txt', print_test=False, logFile=
         sys.stdout = orig_stdout
         logF.close()
         
-    return angle
+    return [angle_D,angle_C]
 
 
 def distrib(time=0.0, fileName=None, print_test=False, logFile=None):

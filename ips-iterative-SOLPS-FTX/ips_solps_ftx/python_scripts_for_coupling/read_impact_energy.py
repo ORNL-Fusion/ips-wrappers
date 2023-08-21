@@ -39,7 +39,7 @@ def scalar(time=0.0, inputEnergyFile='hpicEnergy.txt', print_test=False, logFile
             energy_D=float(l.split('\t')[2])
             energy_C=float(l.split('\t')[3])
             print('\t for t=', time, ' init_t = ', init_t, ' end_t=', end_t)
-            print('\t found energy_D = ', energy_D, 'and energy_C = ', energy_C, ' eV')
+            print('\t found energy_D = ', energy_D, ' and energy_C = ', energy_C, ' eV')
             break;
     inF.close()
 

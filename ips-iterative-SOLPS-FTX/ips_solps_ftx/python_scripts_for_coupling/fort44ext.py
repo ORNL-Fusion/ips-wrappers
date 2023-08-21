@@ -29,8 +29,8 @@ def fort44ext(variable,filename, option=None): # e.g. variable = ua, filename='b
         if (line.split()[0] == '*eirene' and line.split()[3] == variable): 
             is_body = True
             nentry = int(line.split()[6])
-            print (nentry)
-            print (line)
+            #print ('\t nentry: ', nentry) #commented out by AL, Aug 2023
+            print ('\t', line)
 
             continue # data splitting and save start from the next line
         if is_body:

@@ -101,8 +101,9 @@ def find_numstrata_in_block14(lines, start_line, end_line):
                 numbers_in_line = [int(x) for x in lines[i + j].split()]
                 next_lines_numbers.extend(numbers_in_line)
                 count += len(numbers_in_line)
-                print('numbers_in_line',numbers_in_line)
-                print('next_lines_numbers',next_lines_numbers)
+                print(' ')
+                print('\t numbers_in_line',numbers_in_line)
+                print('\t next_lines_numbers',next_lines_numbers)
 
             if sum(next_lines_numbers) == arbitrary_number:
                 return arbitrary_number, i + num_lines + 1
@@ -222,13 +223,13 @@ def calc_RECYCF(inputdat_file, fort44_file, rad_grid_name, R_FT):
     nstra, end_line_numstrata_block = find_numstrata_in_block14(lines, line_block_14, line_block_15)
     
     nlim = int(lines[line_block_3b+1].split()[0])
-    print('nlim',nlim)
+    print('\t nlim',nlim)
     
     if end_line_numstrata_block != -1:
-        print(f"Numstrata block ends at line: {end_line_numstrata_block}")
+        print(f"\t Numstrata block ends at line: {end_line_numstrata_block}")
     else:
-        print("Numstrata block in not found.")
-    
+        print("\t Numstrata block in not found.")
+    print(' ')
     # get info from fort.44
     with open(fort44_file, "r") as f:
         # Read the first line
@@ -273,21 +274,21 @@ def calc_RECYCF(inputdat_file, fort44_file, rad_grid_name, R_FT):
     RECYCF = []
     
     for surfmod_name in rad_grid_name:
-        print(surfmod_name)
+        print('\t', surfmod_name)
         line_SURFMOD_def = find_line(lines[line_block_3a:line_block_3b], 'SURFMOD_'+surfmod_name)
         # former 3 line gives info of that strata (-2 contains geometry information)
     #    print(lines[line_block_3a+line_SURFMOD_def]) # SURFMOD line
         pol_location = int(lines[line_block_3a+line_SURFMOD_def-2].split()[2])-1
         rad_location_1 = lines[line_block_3a+line_SURFMOD_def-2].split()[3]
         rad_location_2 = lines[line_block_3a+line_SURFMOD_def-2].split()[4]
-        print('pol_location',pol_location)
-        print('rad_location_1',rad_location_1)
-        print('rad_location_2',rad_location_2)
+        print('\t pol_location',pol_location)
+        print('\t rad_location_1',rad_location_1)
+        print('\t rad_location_2',rad_location_2)
     
         matching_line = -1
     
-        print("end_line_numstrata_block + 1", end_line_numstrata_block + 1)
-        print("end_line_numstrata_block + 1 + nstra", end_line_numstrata_block + 1 + nstra)
+        print("\t end_line_numstrata_block + 1", end_line_numstrata_block + 1)
+        print("\t end_line_numstrata_block + 1 + nstra", end_line_numstrata_block + 1 + nstra)
     
     
         for i in range(end_line_numstrata_block + 1, end_line_numstrata_block + 1 + nstra):
@@ -297,17 +298,17 @@ def calc_RECYCF(inputdat_file, fort44_file, rad_grid_name, R_FT):
                 break
     
         if matching_line != -1:
-            print("strata number: ", matching_line)
+            print("\t strata number: ", matching_line)
         else:
-            print("cannnot find strata with given pol, rad info")
+            print("\t cannnot find strata with given pol, rad info")
     
         R_F_SOLPS = (wldra_2d[nlim+matching_line-1,0]+wldpa_2d[nlim+matching_line-1,0])/(wldna_2d[nlim+matching_line-1,0]+wldpp_2d[nlim+matching_line-1,0])
-        print('R_F_SOLPS',R_F_SOLPS)
+        print('\t R_F_SOLPS',R_F_SOLPS)
         R_FT_this = float(R_FT[R_FT_counter])
-        print('R_FT',R_FT_this)
+        print('\t R_FT',R_FT_this)
 
         RECYCF_this = R_FT_this/R_F_SOLPS
-        print('RECYCF',RECYCF_this)
+        print('\t RECYCF',RECYCF_this)
 
         RECYCF.append(RECYCF_this)
 
@@ -428,9 +429,9 @@ def input_dat_update(orig_inputdat_file, new_inputdat_file, RECYCF, RECYCT, Twal
     Twall = ["%.5E" % elem  for elem in Twall] # negative so already 12 digits
     RECYCF = [" %.5E" % elem for elem in RECYCF] # non-negative so need prefix ' ' to complete 12 digits
     RECYCT = [" %.5E" % elem for elem in RECYCT] # non-negative so need prefix ' ' to complete 12 digits
-    print('Twall = ', Twall)
-    print('RECYCF = ', RECYCF)
-    print('RECYCT = ', RECYCT)
+    print('\t Twall = ', Twall)
+    print('\t RECYCF = ', RECYCF)
+    print('\t RECYCT = ', RECYCT)
 
     # replace relevant lines in input.dat block 6a
     # find block *** 6a. General data for reflection model
@@ -442,15 +443,15 @@ def input_dat_update(orig_inputdat_file, new_inputdat_file, RECYCF, RECYCT, Twal
 
     surf_index = 0
     for surfmod_name in rad_grid_name: 
-        print(surfmod_name)
+        print('\t', surfmod_name)
         # find SURFMOD_name block within block 6a (before block 7)
         line_SURFMOD_def = find_line(lines[line_block_6a:line_block_7], surfmod_name)
 
         #print before replacement
         #print(lines[line_block_6a+line_SURFMOD_def]) # SURFMOD_name line
         #print(lines[line_block_6a+line_SURFMOD_def+1]) # 1st line ILREF ILSPT ISRS ISRC
-        print(lines[line_block_6a+line_SURFMOD_def+2]) # 2nd line ZNML EWALL EWBIN TRANSP(1,N) ...
-        print(lines[line_block_6a+line_SURFMOD_def+3]) # 3rd line RECYCF RECYCT RECPRM EXPPL ...
+        print('\t ', lines[line_block_6a+line_SURFMOD_def+2]) # 2nd line ZNML EWALL EWBIN TRANSP(1,N) ...
+        print('\t', lines[line_block_6a+line_SURFMOD_def+3]) # 3rd line RECYCF RECYCT RECPRM EXPPL ...
 
         # change Twall, RECYCF, RECYCT - replace lines in 12 digits input.dat format
         # EWALL: 2nd line, 12:23, RECYCF: 3rd line 0:11, RECYCT: 3rd line 12:23
@@ -461,16 +462,17 @@ def input_dat_update(orig_inputdat_file, new_inputdat_file, RECYCF, RECYCT, Twal
         surf_index += 1
 
         # print after replacement of Twall, RECYCF, RECYCT
-        print(lines[line_block_6a+line_SURFMOD_def+2])
-        print(lines[line_block_6a+line_SURFMOD_def+3])
+        print('\t', lines[line_block_6a+line_SURFMOD_def+2])
+        print('\t', lines[line_block_6a+line_SURFMOD_def+3])
 
     # write changes to new input.dat (test_inputdat.txt)
-    print('write new inputDat file to:', new_inputdat_file)
+    print('\t write new inputDat file to:', new_inputdat_file)
+    print(' ')
     with open(new_inputdat_file, 'w') as file:
         file.writelines(lines)
     file.close()
 
-
+    return ##added by AL, Aug 2023
 
 
 ### RUN SCRIPTS ###
