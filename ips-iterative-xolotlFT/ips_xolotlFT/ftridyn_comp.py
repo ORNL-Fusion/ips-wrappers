@@ -7,7 +7,7 @@ import glob
 import sys
 #import translate_xolotl_to_ftridyn
 #import translate_ftridyn_to_xolotl
-from .python_scripts_for_coupling import generate_ftridyn_input #new script to generate FTridyn input
+from ips_xolotlFT.python_scripts_for_coupling import generate_ftridyn_input #new script to generate FTridyn input
 import numpy as np
 import subprocess
 import re
@@ -181,32 +181,39 @@ class ftridynWorker(Component):
 
         with open('ftridyn_file_namelist.pkl', 'wb') as f:
             pickle.dump(list(reversed(file_namelist)), f)
-           
+
         pool_ftx = self.services.create_task_pool('pool_ftx')
-        for i in range(nFTpoolTasks):        
-                #poolInput_ftx='FTridyn_angle'+str(angleIn[j])
-                self.services.add_task('pool_ftx', 'task'+str(i), nFTrunsPerNode, cwd, 'python',self.FTMPI_EXEC,str(i),str(nFTrunsPerNode),str(self.FTRIDYN_EXE),"FTridyn.IN",task_ppn= nFTrunsPerNode,logfile='task_pool'+str(i)+'.log' )
+        for i in range(nFTpoolTasks):
+            task_pool_log='task_pool'+str(i)+'.log'
+            #poolInput_ftx='FTridyn_angle'+str(angleIn[j])
+            self.services.add_task('pool_ftx', 'task'+str(i), nFTrunsPerNode, cwd, 'python',self.FTMPI_EXEC,str(i),str(nFTrunsPerNode),str(self.FTRIDYN_EXE),"FTridyn.IN",task_ppn= nFTrunsPerNode,logfile=task_pool_log )
         ret_val = self.services.submit_tasks('pool_ftx')
         print(' ')
         print(('\t ret_val = {}'.format(ret_val)))
         exit_status = self.services.get_finished_tasks('pool_ftx')
         print(('\t exit status {} \n'.format(exit_status)))
         self.services.remove_task_pool('pool_ftx')
-        
+
+        for i in range(nFTpoolTasks):
+            task_pool_log='task_pool'+str(i)+'.log'
+            print('\t keep a copy of ',task_pool_log,' in every loop by moving to ',self.ft_folder)
+            shutil.move(task_pool_log,self.ft_folder+'/'+task_pool_log)
+
+            
         #write the path to the current working directory, so the driver can access the data
         outputPathString="outputPath="+cwd
         outputPathFile = open(self.PWD_PATH, "w")
         outputPathFile.write(outputPathString)
         outputPathFile.write('\n')
         outputPathFile.close()
-
+        
         print('\t path of FTRIDYNs output:')
         print('\t \t {} '.format(cwd))
         print('\t written to file: ')
         print('\t \t{} '.format(self.PWD_PATH))
         print(' ')
 
-
+        
         #post-processing: COMPRESS ALL OUTPUT INTO A GENERIC, SINGLE ZIP FILE AND ADD TO PLASMA STATE 
         #zippedFile=str(self.ft_folder)+'.zip'
         #if os.path.isfile(zippedFile):
