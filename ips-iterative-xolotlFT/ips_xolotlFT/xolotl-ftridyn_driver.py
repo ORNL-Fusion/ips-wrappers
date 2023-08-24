@@ -187,7 +187,7 @@ class xolotlFtridynDriver(Component):
                     self.time[k]=v
             print('\n')
             if self.print_test:
-                print('\t TEST: after reading parameters from config file time section, the time dictionary is:')
+                print('\t after reading parameters from config file time section, the time dictionary is:')
                 print('\t', self.time)
             print(' ')
             sys.stdout.flush()
@@ -214,7 +214,7 @@ class xolotlFtridynDriver(Component):
                 self.time['START_MODE']=self.driver['START_MODE']
 
         if self.print_test:
-            print('\t TEST: after reading parameters from config file, the time dictionary (in driver) is:')
+            print('\t after reading parameters from config file, the time dictionary (in driver) is:')
             print('\t', self.time)
             print(' ')
         #Check if/what's given in input file
@@ -227,7 +227,7 @@ class xolotlFtridynDriver(Component):
             self.time_temp=param_handler.read(self.INPUT_DIR+'/'+self.TIME_FILE)            
             
             if self.print_test:
-                print('\t TEST: after reading parameters from time file, the time_temp dictionary is:')
+                print('\t after reading parameters from time file, the time_temp dictionary is:')
                 print('\t', self.time_temp)
                 print(' ')
                 
@@ -259,7 +259,7 @@ class xolotlFtridynDriver(Component):
                     print(('\t reading string input parameter {0} = {1} '.format( k, v)))
 
             if self.print_test:
-                print('\t TEST: after copyting values from time_temp, the time dictionary is:')
+                print('\t after copyting values from time_temp, the time dictionary is:')
                 print('\t', self.time_temp)
             sys.stdout.flush()
             
@@ -504,7 +504,7 @@ class xolotlFtridynDriver(Component):
         print(' ')
             
         if self.print_test:
-            print('TEST: final PLASMA dictionary is: ')
+            print('final PLASMA dictionary is: ')
             for k,v in self.plasma.items():
                 print('\t ', k ,'=', v)
             print(' ')
@@ -861,8 +861,9 @@ class xolotlFtridynDriver(Component):
 
             #TO-DO: once it's working, add print_test
             estimated_end_time=round(rounded_time+rounded_loop_time_step, self.time_decimal)
-            print('TEST: rounded_time+rounded_loop_time_step = ', time+rounded_loop_time_step , ' ; estimated_end_time (rounded) = ', estimated_end_time)
-            print('\t before starting time-loop, checked that time step given in config file (rounded) is not longer than needed to reach the end of the simulation')
+            if self.print_test:
+                print('rounded_time+rounded_loop_time_step = ', time+rounded_loop_time_step , ' ; estimated_end_time (rounded) = ', estimated_end_time)
+                print('\t before starting time-loop, checked that time step given in config file (rounded) is not longer than needed to reach the end of the simulation')
             if estimated_end_time > end_time: #time+self.time['LOOP_TIME_STEP']>end_time:
                 rounded_loop_time_step=round(end_time-time,self.time_decimal)
                 rounded_start_stop=round(rounded_loop_time_step/10, self.time_decimal) #end_time/10.0
@@ -1136,7 +1137,7 @@ class xolotlFtridynDriver(Component):
                         with open(pkl_gy_file, "rb") as pf:
                             getYields_dic = pickle.load(pf)
                             if self.print_test:
-                                print('\t \t TEST: get_yields function returned dictionary:')
+                                print('\t \t get_yields function returned dictionary:')
                                 print('\t \t', getYields_dic)
                                 sys.stdout.flush()
                             if 'yields' in getYields_dic.keys():

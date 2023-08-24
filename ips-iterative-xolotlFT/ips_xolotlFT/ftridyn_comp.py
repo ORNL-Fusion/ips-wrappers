@@ -141,7 +141,7 @@ class ftridynWorker(Component):
 
         #if test:
         if print_test:
-            print('\t TEST: check that all arguments are read well by ftridyn-step \n')
+            print('\t check that all arguments are read well by ftridyn-step \n')
             for (k, v) in keywords.items():
                 print(('\t \t {0} = {1} '.format(k,v)))
 
@@ -173,15 +173,36 @@ class ftridynWorker(Component):
         nFTruns = len(file_namelist)
         nFTrunsPerNode = int(self.FTMPI_PPN)
         nFTrunNodes = int(self.FTMPI_NODES)
-        if(nFTruns <= nFTrunsPerNode*nFTrunNodes): 
+
+        #AL Aug 2023: task pool assignement can be inefficient with a single run,
+        # creates more tasks than needed bc it tries to balance the load --> handle 1 nFTrun separately
+
+        if (nFTruns == 1): 
+            nFTrunsPerNode=int(1)
+            nFTpoolTasks=int(1)
+            if print_test:
+                print('\t found', nFTruns ,' FTruns: ')
+                print('\t nFTrunsPerNode = ', nFTrunsPerNode)
+                print('\t nFTpoolTasks = ', nFTpoolTasks)
+        # more resources than cases --> check how many nodes & processes we need to balance load evenly
+        elif(nFTruns <= nFTrunsPerNode*nFTrunNodes):
             nFTrunsPerNode = int(math.ceil(1.0*nFTruns/nFTrunNodes))
-            nFTpoolTasks = nFTrunNodes
+            nFTpoolTasks = nFTrunNodes	
+            if print_test:
+                print('\t found more resources than FT runs (', nFTruns ,' ) :')
+                print('\t nFTrunsPerNode = ', nFTrunsPerNode)
+                print('\t nFTpoolTasks = ', nFTpoolTasks)
+        #more cases than resouces --> check how many nodes we need, but use all process available (minimize # runs at the end)
         else:
             nFTpoolTasks = int(math.ceil(1.0*nFTruns/nFTrunsPerNode))
+            if print_test:
+                print('\t found more FT runs (', nFTruns ,' )than resources: ')
+                print('\t nFTrunsPerNode = ', nFTrunsPerNode)
+                print('\t nFTpoolTasks = ', nFTpoolTasks)
 
         with open('ftridyn_file_namelist.pkl', 'wb') as f:
             pickle.dump(list(reversed(file_namelist)), f)
-
+        
         pool_ftx = self.services.create_task_pool('pool_ftx')
         for i in range(nFTpoolTasks):
             task_pool_log='task_pool'+str(i)+'.log'

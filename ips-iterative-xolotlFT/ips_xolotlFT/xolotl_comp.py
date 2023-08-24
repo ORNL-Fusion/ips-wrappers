@@ -60,7 +60,7 @@ class xolotlWorker(Component):
         
         # if TEST:
         if print_test:
-            print('\t TEST: check that all arguments are read well by xolotl-init and write Xolotl input file (from dictionary)')
+            print('\t check that all arguments are read well by xolotl-init and write Xolotl input file (from dictionary)')
             for (k, v) in keywords.items():
                 print(('\t \t {0} = {1}'.format(k, v)))
             print('\t ... done checking that all arguments are read well by xolotl-init ')
@@ -93,12 +93,13 @@ class xolotlWorker(Component):
             shutil.copyfile(self.NETWORK_FILE,networkFile_timeCopy)
             netFile_size=os.path.getsize(self.NETWORK_FILE)
             if print_test:
-                print('\t TEST: copied ',self.NETWORK_FILE,' as ' , networkFile_timeCopy)
+                print('\t copied ',self.NETWORK_FILE,' as ' , networkFile_timeCopy)
             
             if 'network_size_file' in keywords:
                 size_file=open(keywords['network_size_file'], 'w')
                 size_file.write(str(int(netFile_size)))
-                print('\t TEST: xolotl worker wrote ', netFile_size, ' in ', keywords['network_size_file'])
+                if print_test:
+                    print('\t xolotl worker wrote ', netFile_size, ' in ', keywords['network_size_file'])
                 size_file.close
             sys.stdout.flush()
             
@@ -107,8 +108,8 @@ class xolotlWorker(Component):
 
             netFile_tCopy_size=os.path.getsize(networkFile_timeCopy)
             if print_test:
-                print('\t TEST: in xolotl-worker, file size of ', self.NETWORK_FILE ,' is: ', netFile_size)
-                print('\t TEST: in xolotl-worker, file size of ', networkFile_timeCopy ,' is: ', netFile_tCopy_size)
+                print('\t in xolotl-worker, file size of ', self.NETWORK_FILE ,' is: ', netFile_size)
+                print('\t in xolotl-worker, file size of ', networkFile_timeCopy ,' is: ', netFile_tCopy_size)
                 
             if netFile_size != netFile_tCopy_size:
                 while  netFile_size != netFile_tCopy_size:
@@ -162,7 +163,7 @@ class xolotlWorker(Component):
 
         # if TEST mode:
         if print_test:
-            print('\t TEST: checking that all arguments are read well by xolotl-step')
+            print('\t checking that all arguments are read well by xolotl-step')
             for (k, v) in keywords.items():
                 print('\t \t', k, " = ", v) 
             print('\t ... done checking that all arguments are read well by xolotl-step ')
@@ -190,7 +191,7 @@ class xolotlWorker(Component):
                                                 self.XOLOTL_EXE, 'params.txt',task_ppn=self.task_ppn,logfile=xolotlLogFile)
             ret_val = self.services.wait_task(task_id)
             if print_test:
-                print('TEST: Xolotl run done, exited with ret_val = ', ret_val)
+                print('Xolotl run done, exited with ret_val = ', ret_val)
 
             statusFile=open(self.EXIT_STATUS, "r")
             exitStatus=statusFile.read().rstrip('\n')
