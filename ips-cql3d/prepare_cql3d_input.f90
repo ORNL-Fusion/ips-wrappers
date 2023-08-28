@@ -305,7 +305,7 @@ c     F2003-syntax: command_argument_count()/get_command_argument(,)
       write(*,*)'prepare_cql3d_input command line arguments: ',
      +  ips_mode,'  ',cql3d_mode,'  ',cql3d_output,'  ',cql3d_nml,
      +  '  ',restart,'  ',nsteps_str,'  ',deltat_str,'  ',ps_add_nml
-      if (enorm_str_present == .TRUE.) write(*,*) 'enorm_str'
+      if (enorm_str_present .eqv. .TRUE.) write(*,*) 'enorm_str'
 
 
 c-----------------------------------------------------------------------
