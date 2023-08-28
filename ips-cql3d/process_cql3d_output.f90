@@ -617,7 +617,7 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
 
       INQUIRE(FILE='ImChizz.inp_template', EXIST=file_exists)
       write (*,*) 'file_exists = ', file_exists
-      IF (file_exists .eq. .TRUE.) then
+      IF (file_exists .eqv. .TRUE.) then
 		  WRITE (*,*) "About to call write_inchizz_inp"
 		  CALL write_inchizz_inp
 	  ENDIF
@@ -625,7 +625,7 @@ c      allocate (powers(lrz, 13, ntotal, nt))  !Fix, 120813 of proc_rfmin_fp
       endif  !On cql3d_output.eq.'LH'
 
 
-      if (cql3d_output .eqv.'RW') then
+      if (cql3d_output .eq.'RW') then
       if(ps%nrho_rw.ne.(lrz+1)) then
          write(*,*)'STOP: problem with PS EC setup'
          write(*,*)'ps%nrho_ecrf,(lrz+1)= ',ps%nrho_rw,(lrz+1)
