@@ -1,7 +1,7 @@
 VPATH = $(PWD)
 OBJDIR= .
 
-include Makefile.include
+include Makefile.config.perlmutter 
 
 F90_SRC = $(shell ls *.f90)
 
