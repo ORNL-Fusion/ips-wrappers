@@ -621,14 +621,12 @@
          Q_int = 0.0_rspec
          do irho = 1,nprodt-1
             dVol = ps%vol(irho+1) - ps%vol(irho)
-            Q_ps = Q_ps + 0.5_rspec * (ps%ns(irho,0) + &
-                   ps%ns(irho+1,0)) * dVol
-         end do
+            Q_ps = Q_ps + ps%ns(irho,0)* dVol
+            end do
          do irho = 1,nproeq-1
             dVol_int = vol_int(irho+1) - vol_int(irho)
-            Q_int = Q_int +  0.5_rspec * (tmp_prof(irho) + &
-                   tmp_prof(irho+1)) * dVol_int
-         end do
+            Q_int = Q_int +  tmp_prof(irho)* dVol_int
+            end do
          Q_ps = Q_ps / ps%vol(nprodt)
          Q_int = Q_int / ps%vol(nprodt)
       write(*,*) '<n_e(m-3)-PS> =',  Q_ps
