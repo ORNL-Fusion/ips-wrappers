@@ -6,8 +6,6 @@ c
       include 'frname_decl.h'
       character*8 machinei
 
-      REAL RILIN
-
       ep100=1.d+100
 
 c..................................................................
@@ -209,15 +207,15 @@ c     of the profiles by subroutine smooth can lead to unphysical
 c     forms of the birth and deposition profiles.
 c--------------------------------------------------------------------
 c     ONETWO DIVERGENCE BELOW
-      nprim=1
-      nimp=0
+      nprim=1  !number of primary species. Needs to be equal to ngen.
+      nimp=0   !If impurities are present, should include at least =1.
       machinei="iter"
       if (machinei.eq."iter") go to 1660
       do 1650 i=1,5
         timbplt(i)=1000.
  1650 continue
-      beamon = 1000.
-      btime  = 0.
+      beamon = 1000.  ! Not used for anything
+      btime  = 0.     ! Not used for anything
       ibcur = 1
       itrapfi=0
       ibcx = 1
@@ -233,8 +231,8 @@ cNLremoved      fdbeam = 0.150e-3
 cBH091020:  Adding above defaults which were skipped for some unknown
 cBH091020:  reason, for machinei='iter'
 cBH091020:  Simply zeroing.
-      beamon = 0.
-      btime  = 0.
+      beamon = 0.  ! Not used for anything
+      btime  = 0.  ! Not used for anything
       ibcur = 0
       itrapfi=0
       ibcx = 0
@@ -262,7 +260,7 @@ c     ONETWO DIVERGENCE BELOW
       nsourc=1
 c
       if (ke.lt.3) then
-         write(*,*)'frinitl:  parameter ke needs to be .ge.3'
+         WRITE(*,*)'frinitl:  parameter ke needs to be .ge.3'
          stop
       endif
 c
@@ -286,7 +284,7 @@ c     DIII beam input
         bvdiv(i)   = .45
         ebkev(i)   = 80.0
         if (ke.lt.3) then
-           write(*,*)'frinitl:  parameter ke needs to be .ge.3'
+           WRITE(*,*)'frinitl:  parameter ke needs to be .ge.3'
            stop
         else
            fbcur(1,i) = .6
@@ -303,7 +301,7 @@ c     DIII beam input
         rpivot(i)  = 270.
         zpivot(i)  = 89.
         if (nap.lt.2) then
-           write(*,*)'frinitl:  parameter nap needs to be .ge.2'
+           WRITE(*,*)'frinitl:  parameter nap needs to be .ge.2'
            stop
         else
            ashape(1,i)='s-vert'
@@ -342,7 +340,7 @@ c     ITER BEAM INPUT.
         bhdiv(i)=.50
         bvdiv(i)=1.3
         if (ke.lt.3) then
-           write(*,*)'frinitl:  parameter ke needs to be .ge.3'
+           WRITE(*,*)'frinitl:  parameter ke needs to be .ge.3'
            stop
         else
            fbcur(1,i)=0.7
@@ -362,7 +360,7 @@ c     ITER BEAM INPUT.
         rpivot(i)=286.6
         zpivot(i)=0.0d0
         if (nap.lt.4) then
-           write(*,*)'frinitl:  parameter nap needs to be .ge.4'
+           WRITE(*,*)'frinitl:  parameter nap needs to be .ge.4'
            stop
         else
            ashape(1,i)='s-rect'
@@ -416,11 +414,32 @@ c     note izstrp=0 implies coronal equilibrium for impurity j in hexnb
 
 
       frmod="disabled"
+      !gyro-radius correction for NBI deposition
+      fr_gyro="disabled"
       frplt="enabled"
       nfrplt=300
       bmsprd=.03
       multiply="disabled"
       multiplyn=0
+
+      beamplse="disabled"  
+      beampon=0.d0
+      beampoff=0.d0
+
+c     defaults for reading NUBEAM particle birth pt list
+      read_birth_pts="disabled"
+      nbirth_pts_files=1
+      nbirth_pts=250000
+      do i=1,24
+         birth_pts_files(i)="notset"
+      enddo
+
+c     For removing NBI source at all psi outside of psicutoff:     
+      psicutoff=0.d0 ! if 0.0, no removal is done
+      ! The value of psicutoff can be determined from  
+      ! screen output of rho and psi values. 
+      ! Select one of psi(lr) values, set it in cqlinput.
+
 
       return
       end

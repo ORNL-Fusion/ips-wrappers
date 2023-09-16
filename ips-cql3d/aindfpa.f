@@ -4,8 +4,12 @@ c
       implicit integer (i-n), real*8 (a-h,o-z)
 
 c..................................................................
-c     Set defaults for input of variables in first namelist setup.
-c     Warning: should set only variables read in first namelist setup.
+c     Set defaults for input of variables in first namelist setup,
+c     now (as of 2007) also explicitly named setup0.
+c     As of 2017, also can denote the first setup as namelist fsetup.
+c     (fsetup worked around a problem with the pathscale compiler.)
+c     Warning: In this subroutine, should set only variables read 
+c     in first namelist setup/setup0/fsetup.
 c     This also shows which variables belong to the 1st namelist setup.
 c..................................................................
 
@@ -17,8 +21,17 @@ c.......................................................................
       ibox(2)="unset"
       ibox(3)="unset"
       iuser="unset"
-      ioutput(1)=6
-      ioutput(2)=0
+      ioutput(1)=0 !YuP[2020-10-21] was 6, but was not used anywhere
+      ! After 2020, the usage of ioutput(1):
+      ! ioutput(1)=0  means the printout to screen is reduced to a minimum,
+      !               leaving namelist printout, warning messages,
+      !               and physics-related values used or computed by code.
+      !               (default value ioutput(1)=0)
+      ! ioutput(1)=1  The above, and more printout - 
+      !               values of arrays for diagnostic purpose.
+      ! ioutput(1)=2  The above, and even more diagnostic printout.
+      ioutput(2)=0 ! No usage at present [2020]
+      
       mnemonic="mnemonic"
 
 c     Avoid some special calls, if special_calls=disabled in 
@@ -190,6 +203,142 @@ c.......................................................................
 c
 c
 c==================================================================
+      subroutine ainadjnl_fsetup_setup0(kopt)
+      !YuP[2017] 
+      implicit integer (i-n), real*8 (a-h,o-z)
+CMPIINSERT_INCLUDE
+      Save inlmod
+
+c..................................................................
+c     kopt=0: Test if &fsetup namelist sections in the cqlinput
+c             is present (instead of setup0, as in svn versions of CQL3D)
+c             If so, make copy of cqlinput to cqlinput_tmp
+c             Modify/rename $fsetup to &setup0 
+c     kopt=1: Restore original cqlinput (if modification was made)
+c     
+c     The usage of &fsetup was introduced by MIT and PPPL
+c     because of problems with Pathscale compiler 
+c(cannot read more than five letters in the name of namelist group)
+c..................................................................
+
+      character*128  command
+      character*8 line
+      character*9 line0
+      parameter (long_enough=100000)  !To accomodate namelist sections 
+                                       !written on one line
+      character(len=long_enough) :: line1   !Automatic array
+      character(len=long_enough+1) :: line2   !Automatic array
+
+c.......................................................................
+
+CMPIINSERT_IF_RANK_NE_0_RETURN
+
+      if (kopt.eq.0) then
+
+         inlmod=0
+         open(unit=4,file="cqlinput",delim='apostrophe',status="old") 
+ 1       read(unit=4,fmt=1003,end=2) line
+         if (line.eq." &fsetup" .or. line.eq." &FSETUP" .or. 
+     +       line.eq."&fsetup"  .or. line.eq."&FSETUP"  ) then
+             inlmod=inlmod+1
+           WRITE(*,*)'FSETUP namelist is present.'
+           WRITE(*,*)'cqlinput is adjusted to change FSETUP to SETUP0.'
+           WRITE(*,*)'After reading from the adjusted file,'
+           WRITE(*,*)'  it will be restored back.'
+           if (inlmod.eq.1) go to 2
+         endif
+         go to 1
+ 2       continue
+         
+         close(4)
+         
+ 1003    format(a8)
+         
+c.......................................................................
+c     Make copy if inlmod=1, and adjust nl structure
+c.......................................................................
+         
+c     Copy cqlinput to cqlinput_tmp
+
+         if (inlmod.le.0) then
+cBH180613           WRITE(*,*)'FSETUP namelist is absent (probably using SETUP0)'
+           goto 999 !Implies new namelist &setup0 is present (not $fsetup)
+            
+         else ! inlmod=1
+
+            !Save the original file as cqlinput_tmp
+            open(unit=4,file="cqlinput",delim='apostrophe',status="old")
+            open(unit=5,file="cqlinput_tmp",delim='apostrophe',
+     +           status="replace")
+ 3          read(unit=4,fmt='(a)',end=4) line1
+            len_line1=len_trim(line1)
+            if (len_line1.ge.(long_enough-1)) then
+               WRITE(*,*)'len_line1,long_enough',len_line1,long_enough
+               STOP 'Adjust long_enough'
+            endif
+            write(unit=5, fmt='(a)') trim(line1)
+            go to 3
+ 4          continue
+            close(4)
+            close(5)
+            
+c     Reopen cqlinput as new file, and put adjusted namelist into it.
+c     There are 2 &setup namelist sections.
+            open(unit=4,file="cqlinput",delim='apostrophe',
+     +           status="replace")
+            open(unit=5,file="cqlinput_tmp",delim='apostrophe',
+     +           status="old")
+            ifirst=0
+ 5          read(unit=5,fmt='(a)',end=6) line1
+            if ((line1(1:8).eq." &fsetup" .or. 
+     +          line1(1:8).eq." &FSETUP"  .or.
+     .          line1(1:7).eq."&fsetup"   .or. 
+     +          line1(1:7).eq."&FSETUP")
+     .           .and. (ifirst.eq.0)) then
+               ifirst=1
+               line2(1:8)=" &setup0"
+               line2(9:len(line1)+1)=line1(9:len(line1))
+            else
+               line2=line1(1:len(line1))
+            endif
+            write(unit=4, fmt='(a)') trim(line2)
+            go to 5
+ 6          continue
+            close(4)
+            close(5)
+            
+         endif ! inlmod
+         
+         go to 999
+         
+      elseif (kopt.eq.1) then
+         
+c.......................................................................
+c     If cqlinput changed, copy cqlinput_tmp back to cqlinput
+c.......................................................................
+         if (inlmod.eq.1) then
+            open(unit=5,file="cqlinput",delim='apostrophe',
+     +           status="replace")
+            open(unit=4,file="cqlinput_tmp",delim='apostrophe',
+     +           status="old")
+ 7          read(unit=4,fmt='(a)',end=8) line1
+            if (len_trim(line1).ge.(long_enough-1)) 
+     .           STOP 'Adjust long_enough'
+            write(unit=5, fmt='(a)') trim(line1)
+            go to 7
+ 8          continue
+            close(4)
+            close(5)
+         endif
+         
+      endif                     !on kopt
+      
+ 999  return
+      end
+
+c
+
+c==================================================================
       subroutine ain_transcribe(filename)
       implicit integer (i-n), real*8 (a-h,o-z)
 CMPIINSERT_INCLUDE
@@ -208,9 +357,10 @@ CMPIINSERT_IF_RANK_NE_0_RETURN
       WRITE(*,*)
       WRITE(*,*)  'ain_transcribe write of nl to stdout:'
       WRITE(*,*)  '[set nmlstout="disabled" to turn it off]'
+      WRITE(*,*)
 
       max_length=0
-      WRITE(*,*)'ain_transcibe: filename =',filename
+      WRITE(*,*)'ain_transcribe: filename =',filename
       inquire(file=filename,iostat=kiostat,opened=logic1,number=inumber)
       WRITE(*,*)'ain_transcribe: inquire on ',filename,
      1   ' opened=',logic1,'iostat=',kiostat,'unit=',inumber

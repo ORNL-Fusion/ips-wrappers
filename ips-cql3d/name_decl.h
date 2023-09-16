@@ -86,14 +86,17 @@ c.......................................................................
       real*8 mpwr,npwr,megy,negy,mtorloss,ntorloss,
      1  mpwrzeff,npwrzeff,mpwrvphi,npwrvphi,
      1  mpwrelec,npwrelec,mpwrxj,npwrxj
+     
+      real*8 zrelax,zrelax_exp
 
       common /readscal/
      1  xfac,xpctlwr,xpctmdl,xlwr,xmdl,xsinkm,
      1  yreset,ylower,yupper,
      1  mpwrzeff,npwrzeff,mpwrvphi,npwrvphi,mpwrxj,npwrxj,
      1  mpwrelec,npwrelec,
-     1  elecscal,enescal,zeffscal,vphiscal,tescal,tiscal
-
+     1  elecscal,enescal,zeffscal,zrelax,zrelax_exp,
+     &  vphiscal,tescal,tiscal,
+     1  bctimescal,bctshift
 c..................................................................
 c     VECTOR DIMENSIONED NAMELIST SETUP COMMON BLOCK.....
 c..................................................................
@@ -127,7 +130,7 @@ c..................................................................
      1  vphic(nbctimea),vphib(nbctimea),
      1  xjc(nbctimea),xjb(nbctimea),
      1  totcrt(nbctimea),
-     1  nplot(nplota),
+     1  nplot(nplota),nsave(nsavea),
      1  difus_type(ngena),difus_io(ngena),
      1  tavg1(ntavga),tavg2(ntavga)
 
@@ -329,7 +332,7 @@ c..................................................................
      1  enmin_npa,enmax_npa,fds_npa,
      1  atten_npa,adimeth,nonadi,
      1  efswtch,efswtchn,efiter,efflag,
-     1  curr_edge,efrelax,efrelax1,currerr
+     1  curr_edge,efrelax,efrelax1,efrelax_exp,currerr
 
       common/ar3d/
      1  difus_rshape(8),difus_vshape(4),difin(njenea),
@@ -364,7 +367,17 @@ c     ONETWO uses character*60 for eqdskin.
      1  methflag,
      1  povdelp,
      1  rtol,rmag,rbox,rboxdst,
-     1  zbox
+     1  zbox,
+     +  eq_miller_rmag,
+     +  eq_miller_zmag,
+     +  eq_miller_btor,
+     +  eq_miller_radmin,
+     +  eq_miller_cursign,
+     +  eq_miller_psimag,eq_miller_psilim,
+     +  eq_miller_psi_n,eq_miller_psi_m,
+     +  eq_miller_deltaedge,
+     +  eq_miller_kappa,
+     +  eq_miller_drr0
 
 
 c*********************************************************************
@@ -415,8 +428,9 @@ c-----------------------------------------------------------------------
       character*8  
      1  special_calls,cqlpmod,
      1  oldiag,
-     1  sbdry,scheck,ampfmod,eseswtch,
+     1  sbdry,scheck,ampfmod,ampfadd,eseswtch,
      1  updown
+!YuP[2019-12-26] Added ampfadd
 
 c      logical
       character*8
@@ -435,8 +449,9 @@ c      logical
      1  nontran, nofftran, nonelpr, noffelpr,
      1  nlrestrt,nlwritf,nummods,numixts,
      1  oldiag,
-     1  sbdry,scheck,ampfmod,eseswtch,
+     1  sbdry,scheck,ampfmod,ampfadd,eseswtch,
      1  updown,ampferr,nampfmax,nonampf
+!YuP[2019-12-26] Added ampfadd
 
       common /readvec/
      1  denpar(ntotala,0:lza+1),
@@ -445,7 +460,82 @@ c      logical
      1  temppar(ntotala,0:lza+1)
 
 
+      !---> For ADPAK data on impurity ionization states: YuP[2019-07-31]--[2019-09]
+      integer imp_bounde_collscat, imp_bounde_collslow
+      common /readscal/ imp_bounde_collscat, imp_bounde_collslow
+      character*8 adpak
+      integer imp_type, model_dens_nD0
+      character*8 imp_depos_method, imp_ne_method  !YuP[2019-12-05]
+      real*8 tstart_imp   !YuP[2019-12-05]
+      real*8 dens_nD0_b, dens_nD0_l
+      real*8 adpak_tau_r
+      common /readscal/ 
+     & adpak, imp_depos_method, imp_ne_method, imp_type, ! for gamafac.eq."hesslow" 
+     & model_dens_nD0, dens_nD0_b, dens_nD0_l, adpak_tau_r
 
+      !---> For pellet propagation/ablation model: [2019-09]
+      character*8 pellet
+      integer ipellet_method, ipellet_iter_max
+      real*8 
+     & pellet_Rstart, pellet_tstart, pellet_V, pellet_M0,
+     & pellet_rp0, pellet_rcloud1, pellet_rcloud2,
+     & pellet_pn, pellet_pt, pellet_pm,
+     & pellet_fract_rem, 
+     & pellet_iter_accur, pellet_Cablation,Gablation,
+     & pellet_rho, pellet_Mrem
+      common /readscal/ 
+     & pellet, pellet_Rstart, pellet_tstart, pellet_V, pellet_M0,
+     & pellet_rp0, pellet_rcloud1, pellet_rcloud2,
+     & pellet_pn, pellet_pt, pellet_pm,
+     & ipellet_method, pellet_fract_rem, 
+     & ipellet_iter_max, pellet_iter_accur, pellet_Cablation,Gablation,
+     & pellet_rho, pellet_Mrem
+     
+      !---> For new option iprote='prb-expt' :
+      real*8 
+     & temp_expt_Tend, temp_expt_tau0, temp_expt_tau1, 
+     & temp_expt_tstart(1:lrza),
+     & temp_expt_T0(ntotala,1:lrza),temp_expt_T1(ntotala,1:lrza)
+      common /readscal/ 
+     & temp_expt_Tend, temp_expt_tau0, temp_expt_tau1,
+     & temp_expt_tstart,
+     & temp_expt_T0,temp_expt_T1
+
+      !---> For new option iprone='prb-expt' :  !YuP[2020-03-18] Not ready
+!      real*8 
+!     & dens_expt_Tend, dens_expt_tau0, dens_expt_tau1, 
+!     & dens_expt_tstart(1:lrza),
+!     & dens_expt_T0(ntotala,1:lrza),dens_expt_T1(ntotala,1:lrza)
+!      common /readscal/ 
+!     & dens_expt_Tend, dens_expt_tau0, dens_expt_tau1,
+!     & dens_expt_tstart,
+!     & dens_expt_T0,dens_expt_T1
+
+      real*8 dens0_imp(0:lrza)  !YuP[2019-12-05], for imp_depos_method="instant"
+      ! Density of deposited impurity (before ionization).
+      common /readscal/ tstart_imp, dens0_imp 
+
+      !YuP[2020-07-02] Added, for usage in ainalloc,tdchief,cfpcoefn
+      character*8 cfp_integrals ! "enabled" or "disabled"(by default)
+      common /cfp_/ cfp_integrals
+      
+!-----------------------------------------------------------------------    
+!     BH,YuP[2021-01-21] namelist variables to read data files.
+!     (Initial purpose - coupling with NIMROD. 
+!      Can be extended to coupling with other codes.)
+      character*8 read_data ! 'disabled' or 'nimrod', for now.
+      character*128, dimension(101) :: read_data_filenames !list of files
+      ! Max number of files is 101, for now. 
+      ! For coupling with NIMROD, each file contains data at one time slice.
+      ! Therefore, it is recommended to match the max number of files
+      ! with value of nbctimea [set in param.h]
+      real*8 temp_min_data ![keV] Lower limit, to adjust Te and Ti data
+      ! In NIMROD data, Te and Ti may go down to ~0.3eV; not physical.
+      common /read_data_comm/ read_data, read_data_filenames,
+     &  temp_min_data
+!-----------------------------------------------------------------------      
+      
+     
 c.......................................................................
 c     Setup block for finite orbit width (FOW) calculations
 c.......................................................................
@@ -453,9 +543,7 @@ c.......................................................................
       character*16 outorb 
       character*38 file_fow_plt ! for saving data on orbit to a file
       common/fow_control/fow,outorb,file_fow_plt, nmu,npfi,
-     +                  nsteps_orb,nptsorb,i_orb_width,iorb2,
-     +  j0_ini,j0_end,inc_j0, i0_ini,i0_end,inc_i0,
-     +  j2_ini,j2_end,inc_j2, i2_ini,i2_end,inc_i2
+     +                  nsteps_orb,nptsorb,i_orb_width
       ! fow= 'enabled' or 'disabled' 
       ! outorb  ! 'detailed' or 'Not-detailed'
                 ! (saving/not-saving data to a file for plotting)  
@@ -473,8 +561,3 @@ c.......................................................................
                 ! see below, iorb2=0)
       ! i_orb_width ! 1 -> Normal finite-orbit-width calculations. 
                     ! 0 -> V_drift_perp is set to 0 (ZOW approximation)
-      ! iorb2  ! set to 1 to perform Runge-Kutta integration for tracing
-               ! SECONDARY orbits to midplane; 0 - no RK tracing.
-               ! This option (1) can be used for plotting orbits
-               ! (together with outorb="detailed"),
-               ! otherwise not needed.

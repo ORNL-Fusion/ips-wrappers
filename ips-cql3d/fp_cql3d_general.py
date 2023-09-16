@@ -461,7 +461,7 @@ class cql3d(Component):
 
 # Get cql3d_output_file file name <--> mnemonic from cqlinput file
         lines = get_lines('cqlinput')
-        cql3d_output_file = lines_to_variable_dict(lines)['MNEMONIC'].strip("'") + ".nc"
+        cql3d_output_file = lines_to_variable_dict(lines)['MNEMONIC'].strip("', ")+'.nc'
         print('cql3d_output_file = ', cql3d_output_file)
   
         log_file = open('log_process_cql3d_output', 'w')
