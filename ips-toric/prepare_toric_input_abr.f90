@@ -718,8 +718,8 @@
 ! Next update ps%nmini in the Plasma State with th new minority ion density profile, by mapping
 ! fracmin * ps%ns(:,0) from the PS grid to the ICRF rho grid:
 !
-         call ps_user_1dintrp_vec(ps%rho_icrf,x_orig, fracmin*ps%ns(:,0), &
-               ps%nmini(:,1),ierr )
+         call ps_user_1dintrp_vec(ps%rho_icrf, x_orig, fracmin*ps%ns(:,0), &
+               ps%nmini(:,1),ierr, interp=-1 )
          if(ierr .ne. 0) stop 'error interpolating new minority desnity profile onto PS grid'     
         endif
 !
