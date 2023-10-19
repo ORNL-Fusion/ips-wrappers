@@ -89,7 +89,7 @@ class massive_parallel_runner_init(Component):
                                                       '--input={}'.format(self.inscan_config_file),
                                                       '--output=inscan',
                                                       '--nsample={}'.format(self.batch_size),
-                                                      '--override={}'.format(self.current_batch),
+                                                      '--new={}'.format(self.current_batch),
                                                       logfile=log_file)
 
                 if self.services.wait_task(task_wait):
