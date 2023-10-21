@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /Usr/bin/env python
 
 """
 TORIC component. SF cleanup 05/2023
@@ -436,8 +436,8 @@ class toric (Component):
              #update pwrscale hdf5
              pwrscale_f = h5py.File('pwrscale.hdf5','r+')
              pwrscale_toric_dset = pwrscale_f['pfrac_toric']
-             pwrscale_toric_dset[0] = min_pwr_frac
-             pwrscale_toric_dset[1] = bulk_pwr_frac
+             pwrscale_toric_dset[0] = min_pwr_frac[0]
+             pwrscale_toric_dset[1] = bulk_pwr_frac[0]
              pwrscale_f.close()
              
         # Update plasma state files in plasma_state work directory

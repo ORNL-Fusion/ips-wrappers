@@ -100,6 +100,7 @@
       integer :: IPLTHT=0     !
       integer :: iclres=0     ! adds collisions around isolated ion-ion resonances
       integer :: bscale=12    ! blocksize scaling factor for parallel runs only
+      integer :: nant=1       ! number of RF antennas
       
       real(rspec) :: enhcol=1.0_rspec ! Collision enhancement factor
       real(rspec) :: dnures=1.0_rspec !width of layer for iclres (cm)
@@ -113,8 +114,10 @@
            nmod, ntt, nelm, nphi, pcblock
 
       REAL(rspec) :: &
-           freqcy, antlen, antlc, theant, zeff
+           freqcy, antlen, antlc, zeff
 
+      REAL(rspec), dimension(:) ::  theant(4)=0, antphipos(4)=0
+      
       integer, dimension(:) :: &
            inumin(nspmx) = 0
 
@@ -215,7 +218,7 @@
 
       namelist /toricainp/ &
            nvrb,   nmod,   ntt,    nelm,   nptvac, mxmvac, &
-           freqcy, nphi,   antlen, antlc,  theant, &
+           freqcy, nphi,   nant,   antlen, antlc,  theant, antphipos, &
            iflr,   ibpol,  iqtor,  icoll,  enhcol, &
            imdedg, iezvac, ibweld, icosig, iregax, &
            isol,   mastch, lenwrd, iout,   idlout, io_ncdf, &
@@ -431,6 +434,7 @@
       ! find the minority's bulk pair (defined q_min/m_min = 2 q_pair/m_pair)
       ! prevent accidentally tripping on impurity species by adding axi<6 req.
       pairspec = 0
+      WRITE(*,*) 'npsec_tha', ps%nspec_tha
       do i = 1,ps%nspec_tha
          if ((2.0_rspec*azi(i)/atm(i)==azi(minspec)/atm(minspec)).and.(azi(i)<6)) then
             pairspec = i
