@@ -1,0 +1,35 @@
+# IPS_ROOT must be defined before this file is included
+# ---------------------------------------------------------------------
+# Local configuration file
+# - set up for perlmutter by s.frank
+# ---------------------------------------------------------------------
+
+F90 = ftn 
+F90FLAGS = -g -fbacktrace -fbounds-check -fdollar-ok -ffixed-line-length-132 -ffree-line-length-none -Wno-padded -fallow-argument-mismatch -fno-align-commons 
+F90_MOD_INCLUDE_PREFIX = -I
+F90_INCLUDE_PREFIX = -I
+
+F90_FIXEDFORM_FLAG = -ffixed-form
+
+NTCCHOME=/global/cfs/cdirs/atom/atom-install-perlmutter/ntcc
+F90FLAGS += -I${NTCCHOME}/mod
+MKLHOME=$(CRAY_LD_LIBRARY_PATH)
+NETCDFHOME=$(NETCDF_DIR)
+NETCDFLIB= -L$(NETCDFHOME)/lib -lnetcdf
+NTCCLIB = -L$(NTCCHOME)/lib -lxplasma2 -lxplasma_debug -lgeqdsk_mds -lvaxonly -lnscrunch -lfluxav -lr8bloat -lpspline -lezcdf -llsode -llsode_linpack -lcomput -lportlib -lureadsub -lsmlib -lxplasma2
+PLASMA_STATE_LIB = -L$(NTCCHOME)/lib -lplasma_state -lps_xplasma2 -lplasma_state_kernel
+
+MDSPLUS_ROOT = $(NTCCHOME)
+MDSPLUSLIB = -L$(NTCCHOME)/lib -lmdstransp
+LIBS = $(PLASMA_STATE_LIB) $(NTCCLIB) $(MDSPLUSLIB) $(NETCDFLIB)
+
+F90_FIXEDFORM_SUFFIX1 = f90
+F90_FIXEDFORM_SUFFIX2 = f
+
+$(OBJDIR)/%.o : %.$(F90_FIXEDFORM_SUFFIX1)
+	$(F90) $(F90FLAGS) $(F90_FIXEDFORM_FLAG) $(F90_MOD_INCLUDE) -c $< -o $@
+
+
+$(OBJDIR)/%.o : %.$(F90_FIXEDFORM_SUFFIX2)
+	$(F90) $(F90FLAGS) $(F90_FIXEDFORM_FLAG)  $(F90_MOD_INCLUDE) -c $< -o $@
+
