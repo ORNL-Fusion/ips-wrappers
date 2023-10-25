@@ -82,13 +82,12 @@ class massive_parallel_runner_init(Component):
                 log_file = 'sample.log'
 
             if os.path.exists(self.current_batch):
-
                 task_wait = self.services.launch_task(self.NPROC,
                                                       self.services.get_working_dir(),
                                                       self.SAMPLE_EXE,
                                                       '--input={}'.format(self.inscan_config_file),
                                                       '--output=inscan',
-                                                      '--nsample={}'.format(self.batch_size),
+                                                      '--nscan={}'.format(self.batch_size),
                                                       '--new={}'.format(self.current_batch),
                                                       logfile=log_file)
 
@@ -103,7 +102,7 @@ class massive_parallel_runner_init(Component):
                                                       self.SAMPLE_EXE,
                                                       '--input={}'.format(self.inscan_config_file),
                                                       '--output=inscan',
-                                                      '--nsample={}'.format(self.batch_size),
+                                                      '--nscan={}'.format(self.batch_size),
                                                       logfile=log_file)
 
                 if self.services.wait_task(task_wait):
