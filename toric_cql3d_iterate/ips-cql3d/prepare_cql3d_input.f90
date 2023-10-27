@@ -70,7 +70,7 @@
       CHARACTER(len=16) :: cql3d_mode='LH'
       CHARACTER(len=16) :: rf_code='toric'
       CHARACTER(len=16) :: restart='disabled'
-      INTEGER :: nsteps = 1
+      INTEGER :: nsteps = 1, norf = 0
       REAL(KIND=rspec) :: arg_deltat = 0.001_rspec
       REAL(KIND=rspec) :: arg_enorm = 1000.0_rspec
       INTEGER :: arg_nsurfFP
@@ -82,7 +82,7 @@
      +    cur_state_file, cql3d_specs, 
      +    cql3d_mode, rf_code, restart,
      +    nsteps, arg_deltat, arg_enorm, arg_nsurfFP,
-     +    arg_rhoFPlo, arg_rhoFPhi, pscale
+     +    arg_rhoFPlo, arg_rhoFPhi, pscale, norf
 
       
       ! CQL3D NAMELISTS AND THEIR STORAGE
@@ -251,7 +251,11 @@
 
          !set up RF diffusion stuff
          if((rf_code.eq.'toric').or.(rf_code.eq.'aorsa'))then
-            rdcmod = 'format1'
+            if(norf.ne.1)then
+               rdcmod = 'format1'
+            else
+               rdcmod = 'disabled'
+            endif
             rdcfile(1) = 'du0u0_input'
             nrdc = 1
             nrdcspecies = 1
@@ -343,7 +347,11 @@
          iprozeff = 'disabled'
          
          !set number of diff coeffs
-         rdcmod = 'format1'
+         if(norf.ne.1)then
+            rdcmod = 'format1'
+         else
+            rdcmod = 'disabled'
+         endif
          rdcfile(1) = 'du0u0_input'
          nrdc = 1
          nrdcspecies = 1
@@ -426,7 +434,11 @@
          iprozeff = 'disabled' !must be disabled right now
          
          !set number of diff coeffs
-         rdcmod = 'format1'
+         if(norf.ne.1)then
+            rdcmod = 'format1'
+         else
+            rdcmod = 'disabled'
+         endif
          rdcfile(1) = 'du0u0_input_1'
          rdcfile(2) = 'du0u0_input_2'
          nrdc = 2

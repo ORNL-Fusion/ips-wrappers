@@ -222,6 +222,7 @@ class cql3d(Component):
         # if first powerscale iteration copy distribution function from first
         # powerscale iteration
         restart = 'disabled'
+        t0 = float(timeStamp)
         if os.path.isfile('./cql3d.nc'):
             if pwrscale_on and icount==0:
                 shutil.copyfile('cql3d.nc', 'cql3d.nc_ini')
@@ -232,16 +233,15 @@ class cql3d(Component):
                 restart = 'enabled'
                 shutil.copyfile('cql3d.nc','distrfunc.nc')
                  
-        #if deltat_str .eq. 0 then use timestep ramp from GENRAY/CQL sims
-        t0 = float(timeStamp)
+        #if deltat_str .eq. 0 then use timestep ramp from GENRAY/CQL sims        
         if(DELTAT_STR=='0'):
             if(t0 < 5):
-               DELTAT_STR = '0.00001'
+               DELTAT_STR = '0.00025'
             elif(t0<10):
-               DELTAT_STR = '0.0001'
-            elif(t0<30):
+               DELTAT_STR = '0.0005'
+            elif(t0<25):
                DELTAT_STR = '0.001'
-            elif(t0<40):
+            elif(t0<50):
                DELTAT_STR = '0.005'
             else:
                DELTAT_STR = '0.01'
@@ -257,7 +257,12 @@ class cql3d(Component):
             pwrscale_cql3d_dset = pwrscale_f['pfrac_cql3d']
         else:
             pwrscale = np.full(2,1.0)
-               
+
+        if t0 == 0.0:
+            norf_flag = 1
+        else:
+            norf_flag = 0
+            
         #Make input prep namelist
         nml_lines = ['&cql3d_prepare_nml\n']
         nml_lines.append(' cur_state_file = \"' + cur_state_file + '\",\n')
@@ -272,6 +277,7 @@ class cql3d(Component):
         nml_lines.append(' arg_rhoFPlo = ' + arg_rhoFPlo + ',\n')
         nml_lines.append(' arg_rhoFPhi = ' + arg_rhoFPhi + ',\n')
         nml_lines.append(' pscale = ' + str(pwrscale[0]) + ', ' + str(pwrscale[1]) + ',\n')
+        nml_lines.append(' norf = ' + str(norf_flag) + ',\n')
         nml_lines.append('/\n')
         put_lines('cql3d_prepare.nml',nml_lines)
         

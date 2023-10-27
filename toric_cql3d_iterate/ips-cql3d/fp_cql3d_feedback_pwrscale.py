@@ -257,7 +257,12 @@ class cql3d(Component):
             pwrscale_cql3d_dset = pwrscale_f['pfrac_cql3d']
         else:
             pwrscale = np.full(2,1.0)
-               
+
+        if t0 == 0.0:
+            norf_flag = 1
+        else:
+            norf_flag = 0
+            
         #Make input prep namelist
         nml_lines = ['&cql3d_prepare_nml\n']
         nml_lines.append(' cur_state_file = \"' + cur_state_file + '\",\n')
@@ -272,6 +277,7 @@ class cql3d(Component):
         nml_lines.append(' arg_rhoFPlo = ' + arg_rhoFPlo + ',\n')
         nml_lines.append(' arg_rhoFPhi = ' + arg_rhoFPhi + ',\n')
         nml_lines.append(' pscale = ' + str(pwrscale[0]) + ', ' + str(pwrscale[1]) + ',\n')
+        nml_lines.append(' norf = ' + str(norf_flag) + ',\n')
         nml_lines.append('/\n')
         put_lines('cql3d_prepare.nml',nml_lines)
         
