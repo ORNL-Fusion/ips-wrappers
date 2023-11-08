@@ -1,0 +1,27 @@
+&sconfig
+
+   ! name: shot_number  units: integer
+   ! description: integer shot number
+
+   shot_number = 1051206002
+
+   iAMU_S(1) = 2
+   iZatom_S(1) = 1
+   iZion_S(1) = 1
+
+   iAMU_RFMIN(1) = 1
+   iZatom_RFMIN(1) = 1
+   iZion_RFMIN(1) = 1
+
+   freq_ic(1) = 8.0d7
+   n_straps(1) = 0
+   max_n_straps = 0
+   R_ant(1) =  0.0
+   Z_ant(1) =  0.0
+   Z_mid_ant(1) =  0.0
+   num_nphi_vac(1) = 0
+   max_num_nphi_vac = 0
+   num_nphi(1) = 1
+   max_num_nphi = 1
+   nphi(1,1) = -10   
+/ 

@@ -1,0 +1,10 @@
+--------------------------------------------------------------------------------
+README - TORIC/CQL3D IPS Iterative Solver
+AUTHOR - SAM FRANK - frank@psfc.mit.edu
+DATE   - 10/2022
+--------------------------------------------------------------------------------
+
+This folder contains the IPS setup for the TORIC/CQL3D iterative solver for a
+single minority species. This case is based on the the ITER-He3 minority heating
+simulation in Lee et. al. Phys. Plasmas. 24, 052502 (2017), but the underlying
+code has recieved a number of updates.

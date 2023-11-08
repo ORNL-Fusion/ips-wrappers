@@ -1,0 +1,23 @@
+;unixfile (geqxpl):  enter file spec or "r":$
+'g_filename'
+;geqxpl:  data processing control option:$
+e
+;geqxpl:  data processing control option:$
+k
+;geqxpl:  enter no. of moments (btw 5 and 64):$
+32
+;geqxpl:  data processing control option:$
+h
+; enter "Y" for Hermite internal representation:$
+y
+;geqxpl:  data processing control option:$
+a
+;xplasma_debug_master: action option:$
+q
+;geqxpl:  write psipqgRZ NetCDF file? (Y/N):$
+e
+;unixfile (TORIC EQUIGS filename):  enter file spec or "r":$
+'equigs_filename'
+;unixfile (geqxpl):  enter file spec or "r":$
+Q
+

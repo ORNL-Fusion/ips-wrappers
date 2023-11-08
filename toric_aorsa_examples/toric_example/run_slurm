@@ -1,0 +1,18 @@
+#!/bin/bash -l
+#SBATCH -A m77
+#SBATCH -C cpu
+#SBATCH --qos=regular
+#SBATCH --time=24:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=128
+#SBATCH --output=log.slurm.stdOut
+
+cd $SLURM_SUBMIT_DIR   # optional, since this is the default behavior
+source $IPS_DIR/ips-wrappers/env.ips.perlmutter
+
+#broadcast TORIC to nodes to prevent timeouts from startup of large mpi jobs
+sbcast $TORIC /tmp/${USER}_Ptoric
+
+ips.py --config=MANTA.config --platform=conf.ips.perlmutter --log=log.framework 2>>log.stdErr 1>>log.stdOut
+egrep -i 'error' log.* > log.errors
+./setPermissions.sh

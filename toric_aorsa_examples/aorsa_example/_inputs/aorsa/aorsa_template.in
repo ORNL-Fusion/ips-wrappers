@@ -1,0 +1,45 @@
+ &aorsa2din
+  !resolution and proc grid spec
+  nmodesx = 128
+  nmodesy = 128
+  nprow = 32
+  npcol = 32
+  lmax = 3 !highest order bessel function retained
+
+  !antenna parameters
+  nstrap = 2 !number of straps
+  rant = 0.875 !location of the antenna in major radius R [m]
+  yant = 0.0 !location of the antenna in height vs midplane Z [m]
+  antlen = 0.32 !length of antenna straps [m]
+  xlt = 9.4e-02 !width of straps [m]
+  wd = 24.4e-02 !distance between straps [m]
+  dpsiant0 = 0.025 
+  antlc = 1.9 !propagation constant of antenna c/vphase
+  nphi_number = 1 !number of toroidal modes
+  nphi_array = 10 !toroidal mode number
+  phase_array = 0., 180.0, 0., 180.0,
+
+  !wdot and nonmax
+  enorm_factor = 0.0 !0.0 forces cql3d and aorsa to use the same enorm
+  nuper = 150 !number of parallel velocity space points used in 
+  nupar = 300
+
+  !noise control
+  z2_electron = 1 !use Ztable interpolation to damp spectral noise
+  upshift = 1
+  xkperp_cutoff = 0.5 !fraction of xkperp above which sig3 enhanced to short Epar noise
+  damping = 100.0 !enhancment factor for electron conductivity applied above xkperp_cutoff
+  delta0 = 4.0e-05 !numerical damping of berenstein waves
+
+  !computational box params
+  psilim = 0.999
+  ytop = 0.36
+  ybottom = -0.41
+  rwright = 0.91
+/
+
+&STATE
+/
+
+
+

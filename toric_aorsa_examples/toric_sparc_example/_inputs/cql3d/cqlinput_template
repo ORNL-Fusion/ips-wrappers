@@ -1,0 +1,130 @@
+ &setup0
+  ibox='pm_nersc',
+  iuser='sfrnk' ,
+  ioutput=6 ,
+  lrz=60,
+  noplots='enabled'
+  mnemonic='sparc_prd' ,
+  nlrestrt='disabled' ,
+  &end
+ 
+  &setup
+  bootst='disabled',
+  chang='enabled',
+  colmodl=3,
+  contrmin=1.e-12,
+  efiter='disabled',
+  efswtch='disabled',
+  eleccomp='disabled',
+  eoved=0.0
+  gamaset=18.0,
+  iactst='disabled',
+  idskf='disabled',
+  idskrf='disabled',
+  implct='enabled',
+  ineg='trunc_d', 
+  iproelec='spline',
+  iprone='spline',
+  iprote='spline',
+  iproti='spline',
+  iprozeff='disabled',
+  isigmas(1)=1,
+  isigmas(2)=1,
+  isigmas(3)=1,
+  isigmas(4)=1,
+  iy=300,
+  izeff='backgrnd',
+  jx=600,
+  lbdry=4*'consscal',
+  lbdry0='enabled',
+  locquas='disabled',
+  lz=60,
+  machine='toroidal',
+  manymat='disabled'
+  meshy='fixed_y',
+  mx=3,
+  ncont=20,
+  netcdfnm='enabled',
+  ngen=1,
+  nmax=2,
+  nrskip=1,
+  nstop=5 ,
+  numby=32,
+  partner='bramb',
+  plt3d='enabled',
+  pltd='enabled',
+  pltdn='disabled',
+  pltend='enabled',
+  pltfvs='enabled',
+  pltinput='enabled',
+  pltlim='disabled',
+  pltlimm=1000.,
+  pltmag=1.,
+  pltpowe='last',
+  pltprpp='enabled',
+  pltra='disabled',
+  pltrst='disabled',
+  pltsig='enabled',
+  pltstrm='disabled',
+  pltvecal='disabled',
+  pltvecc='disabled',
+  pltvece='disabled',
+  pltvecrf='disabled',
+  pltvflu='disabled',
+  psimodel='spline',
+  qsineut='disabled',
+  radcoord='sqtorflx',
+  rd=40.,
+  relativ='enabled',
+  rovera=1.e-6,
+  rzset='enabled',
+  sigmamod='enabled',
+  softxry='disabled',
+  syncrad='disabled',
+  tfac=0.75,
+  tfacz=1.,
+  xfac=+0.5,
+ 
+  &end
+ 
+  &trsetup
+  difusr=2.e+17,
+  pinch='simple',
+  relaxden=1.,
+  relaxtsp='disabled',
+  transp='disabled',
+  advectr=1.
+  &end
+ 
+  &sousetup
+  &end
+ 
+  &eqsetup
+  EQSOURCE='eqdsk   ',
+  EQDSKIN='eqdsk                                                                                                                                                                                                                                                           ',
+  BSIGN= -1.0000000000000000     ,
+  EQMOD='enabled ',
+  EQSYM='avg_zmag',
+  EQDSKALT='disabled',
+  &end
+ 
+  &rfsetup
+  RDCFILE='du0u0_input',
+  PWRSCALE= 155*1.0000000000000000       ,
+  RDC_UPAR_SIGN= 1.0000000000000000     ,
+  NRDC=1          ,
+  RDCMOD='format1 ',
+  RDC_CLIPPING='disabled',
+  NRDCSPECIES=1          ,           
+  RDCSCALE= 10*1.0000000000000000       ,
+  RDC_NETCDF='disabled',
+  &end
+ 
+  &frsetup
+  &end
+end
+end
+end
+LEAVE
+THESE
+HERE! 

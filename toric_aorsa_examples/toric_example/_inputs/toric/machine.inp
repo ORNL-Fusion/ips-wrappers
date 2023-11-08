@@ -1,0 +1,33 @@
+
+ &toric_mode
+  toricmode='toric',
+ /
+
+ &qldciinp
+  d_u = .005,
+ /
+
+
+ &toricainp
+  isol= 1,
+  nvrb   =   3,
+  nelm   = 500,
+  ntt    = 512,
+  nmod   = 255,
+  freqcy = 110.0E6,
+  nphi   = 30,
+  nant   = 1,
+  antlen = 50,
+  antlc  = 1.6,
+  theant = 0.0,
+  pcblock= 4,
+ /
+
+ &equidata
+  dist_plafars = 1.0
+  dist_plaant = 2.0
+  dist_plawall(1) = 10.
+  dist_plawall(2) = 10.
+  dist_plawall(3) = 10.
+  dist_plawall(4) = 10.
+ /

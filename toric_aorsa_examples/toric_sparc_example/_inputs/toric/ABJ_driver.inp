@@ -1,0 +1,5 @@
+&ABJ_DRIVER_NML
+ PROFILE_DATAFILE='cql3d.nc            ',
+ DISTRIBUTION='cql3d               ',
+ PROFILE='datafile            ',
+ /

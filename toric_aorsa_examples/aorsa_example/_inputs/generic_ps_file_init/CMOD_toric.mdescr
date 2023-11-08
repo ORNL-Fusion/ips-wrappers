@@ -1,0 +1,11 @@
+ &mdescr
+
+   ! name: tokamak_id  units: character
+   ! description: Tokamak (Machine Description) ID
+   tokamak_id = "CMOD"
+
+   ! name: lhrf_src_name  units: character
+   ! description:  number & name of LHRF sources
+   icrf_src_name(1) = "IC_1"
+
+ /
