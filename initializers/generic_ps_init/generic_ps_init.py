@@ -239,7 +239,7 @@ class generic_ps_init (Component):
                 self.services.exception(logMsg)
                 raise
 
-            cur_state_file = self.services.get_global_param('CURRENT_STATE')
+            cur_state_file = get_global_param(self, services, 'CURRENT_STATE')
 
             # Update ps%t0, ps%t1 and ps%tfinal.
             # Note ps%tinit stays the same in the plasma state file,

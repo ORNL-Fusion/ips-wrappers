@@ -367,17 +367,21 @@
          kspeci(2,1) = 'general'
          fmass(1)    = ps%m_alla(isp_min)*1.d+3
          bnumb(1)    = NINT(ps%q_alla(isp_min)/ps_xe)
-         call ps_rho_rezone(rho_bdy_rezon, ps%id_nmini(1),enein(1:nj,1),
-     +                      ierr, zonesmoo=.TRUE.)
 
          isp_min = ps%rfmin_to_alla(1)
          kspeci(1,2) = trim(ps%alla_name(isp_min))
          kspeci(2,2) = 'maxwell'
          fmass(2)    = ps%m_alla(isp_min)*1.d+3
          bnumb(2)    = NINT(ps%q_alla(isp_min)/ps_xe)
-         call ps_rho_rezone(rho_bdy_rezon, ps%id_nmini(1),enein(1:nj,2),
+         
+         !quick and dirty fix rf is normally run first and puts
+         !minority density into state, but in aorsa case it is not
+ 
+         call ps_rho_rezone(rho_bdy_rezon, ps%id_ns(0),enein(1:nj,1),
      +                      ierr, zonesmoo=.TRUE.)
-     
+         enein(1:nj,1) = ps%fracmin(1)*enein(1:nj,1)
+         enein(1:nj,2) = enein(1:nj,1)
+         
          !ion species data
          indx_loop=3
          do isp = 1,ps%nspec_tha
@@ -415,7 +419,7 @@
 
          call ps_rho_rezone(rho_bdy_rezon, ps%id_ns(0), enein(1:nj,indx_loop),
      +                         ierr, zonesmoo=.TRUE.)
-
+     
          call ps_rho_rezone(rho_bdy_rezon, ps%id_Ts(0), tein(1:nj), ierr,
      +     zonesmoo=.TRUE.)
          call ckerr('ps_rho_rezone (U2)',ierr)
@@ -436,8 +440,7 @@
      +   'Wrong RF code for FPed species needed toric got:', rf_code 
          stop
          endif 
-
-         WRITE(*,*) 'nspec_alla', ps%nspec_alla
+         
          nmax=ps%nspec_alla+1
          ngen=2
 
@@ -469,9 +472,11 @@
          kspeci(2,1) = 'general'
          fmass(1)    = ps%m_alla(isp_min)*1.d+3
          bnumb(1)    = NINT(ps%q_alla(isp_min)/ps_xe)
-         call ps_rho_rezone(rho_bdy_rezon, ps%id_nmini(1),enein(1:nj,1),
+         !quick and dirty fix rf is normally run first and puts
+         !minority density into state, but in aorsa case it is not
+         call ps_rho_rezone(rho_bdy_rezon, ps%id_ns(0),enein(1:nj,1),
      +                      ierr, zonesmoo=.TRUE.)
-
+         enein(1:nj,1) = ps%fracmin(1)*enein(1:nj,1)
      
          !find minorities "pair"
          ipairspec = 0
@@ -498,9 +503,8 @@
          kspeci(2,3) = 'maxwell'
          fmass(3)    = ps%m_alla(isp_min)*1.d+3
          bnumb(3)    = NINT(ps%q_alla(isp_min)/ps_xe)
-         call ps_rho_rezone(rho_bdy_rezon, ps%id_nmini(1),enein(1:nj,3),
-     +                      ierr, zonesmoo=.TRUE.)
-     
+         enein(1:nj,3) = enein(1:nj,1)
+         
          indx_loop=4
          do isp = 1,ps%nspec_tha
             kspeci(1,indx_loop) = trim(ps%alla_name(isp))

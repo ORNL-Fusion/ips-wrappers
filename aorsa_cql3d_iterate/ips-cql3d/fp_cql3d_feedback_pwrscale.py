@@ -308,7 +308,7 @@ class cql3d(Component):
         cpp_cql = int(2 * int(128/int(self.NPPN)))      
         task_id = services.launch_task(self.NPROC, cwd, self.CQL3D_BIN, whole_nodes=True, \
                                          task_cpp = cpp_cql, task_ppn=self.NPPN, logfile='log.cql3d')
-        retcode = services.wait_task(task_id, timeout=600.0,delay=10.)
+        retcode = services.wait_task(task_id, timeout=600.0,delay=15.)
         if (retcode != 0):
            print('Error executing command: ', cql3d_bin)
            services.error('Error executing cql3d')

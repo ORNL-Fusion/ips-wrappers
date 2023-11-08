@@ -137,6 +137,47 @@ class EPA_mdescr(Component):
 
         return
 
+    def restart(self, timeStamp):
+        print('model_EPA_mdescr.init() called')
+        print('adjustable model parameters = ', parameterList)
+
+        services = self.services
+
+# Copy current and prior state over to working directory
+        self.services.stage_state()
+
+        self.services.stage_input_files(self.INPUT_FILES)
+        cur_state_file = get_global_param(self, services,'CURRENT_STATE')
+        bin = os.path.join(self.BIN_PATH, 'model_EPA_mdescr')
+
+        log_file = open('log_model_epa_init', 'w')
+        
+        print('Executing ', [bin, cur_state_file, 'INIT', timeStamp])
+        retcode = subprocess.call([bin, cur_state_file, 'INIT', timeStamp], \
+                                  stdout = log_file,stderr = subprocess.STDOUT)
+        if (retcode != 0):
+            message = 'generic_ps_init: Error executing' + bin
+            print(message)
+            services.exception(message)
+            raise
+
+# Update (original) plasma state
+        services.update_state()
+
+# "Archive" output files in history directory
+        services.stage_output_files(timeStamp, self.OUTPUT_FILES)
+
+# Copy initial namelist file so original parameters will be available for time evolution
+        try:
+            shutil.copyfile('model_EPA_mdescr_input.nml', 'initial_input.nml')
+        except IOError as xxx_todo_changeme:
+            (errno, strerror) = xxx_todo_changeme.args
+            print('Error copying file %s to %s' % ('machine.inp' + suffix, 'machine.inp', strerror))
+            logMsg = 'Error copying machine.inp_<suffix> -> machine.inp'
+            services.exception(logMsg)
+            raise
+
+        return
 # ------------------------------------------------------------------------------
 #
 # STEP function

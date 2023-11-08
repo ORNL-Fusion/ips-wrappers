@@ -30,11 +30,12 @@ PROGRAM gacode_init
   CHARACTER (len=256) :: cur_state_file, cur_eqdsk_file, cur_gacode_file, antspec_file
   INTEGER :: nicrf=1
   DOUBLE PRECISION :: icrfpwr=0.D0, minfrac =0.D0
+  CHARACTER (len=256) :: addmin = 'None'
   LOGICAL :: antspec = .false.
   LOGICAL :: ministhermal = .false.
   namelist /ps_init_nml/ &
        cur_state_file, cur_eqdsk_file, cur_gacode_file, &
-       icrfpwr, minfrac, ministhermal, antspec, antspec_file  
+       icrfpwr, addmin, minfrac, ministhermal, antspec, antspec_file  
 
   ! Start of program logic
   ! -----------------------------------------------------------------------------
@@ -120,7 +121,7 @@ PROGRAM gacode_init
         amurf_tmp(1)    = nint(expro_mass(i))
         Zatomrf_tmp(1)  = nint(expro_z(i))
         Zionrf_tmp(1)   = nint(expro_z(i))
-     !set others as thermal
+     !set others as thermal   
      else 
         nspecth_tmp = nspecth_tmp+1
         j = j+1
@@ -135,6 +136,20 @@ PROGRAM gacode_init
      endif
   enddo
 
+  if (trim(addmin).ne.'None') then
+     nspecrf_tmp = 1
+     minid = expro_n_ion+1
+     if (trim(addmin).eq.'He3') then
+        amurf_tmp(1) = 3
+        Zatomrf_tmp(1) = 2
+        Zionrf_tmp(1) = 2
+     elseif (trim(addmin) .eq. 'H') then
+        amurf_tmp(1) = 1
+        Zatomrf_tmp(1) = 1
+        Zionrf_tmp(1) = 1
+     endif
+  endif   
+  
   !Set species properties and allocate into the plasma state
   CALL ps_namrd_slist_chk("S", ps_max_static, amu_tmp, &
        Zatom_tmp, Zion_tmp, ps%nspec_th, iout, ierr) 
@@ -247,9 +262,15 @@ PROGRAM gacode_init
      allocate(f0(ps%nrho))
      allocate(f1(ps%nrho))
      allocate(del(ps%nrho))
-     f0 = expro_ni(minid,:)/expro_ne(:) !initial minfract
+     if (trim(addmin).ne.'None')then
+        f0 = 0.0
+        Zmin = Zionrf_tmp(1) 
+     else
+        f0 = expro_ni(minid,:)/expro_ne(:) !initial minfract
+        Zmin = expro_z(minid)
+     endif
      f1(:) = minfrac                    !desired minfract
-     Zmin = expro_z(minid)
+     
      del = (f1 - f0)/(1.D0/Zmin - f1)
      expro_ne = expro_ne + expro_ne * del
      deallocate(f0,f1,del)
@@ -280,9 +301,15 @@ PROGRAM gacode_init
   !this will write the minority energies from the GACODE file, but you can ignore them
   !they aren't going to do anything in the TORIC wrappers as is
   if (minid.ne.0) then
-     call ps_user_1dintrp_vec(rho_zcntr,expro_rho,expro_ni(minid,:)*1.D19,ps%nmini(:,1),ierr)
-     call ps_user_1dintrp_vec(rho_zcntr,expro_rho,expro_Ti(minid,:),ps%eperp_mini(:,1),ierr)
-     call ps_user_1dintrp_vec(rho_zcntr,expro_rho,expro_Ti(minid,:),ps%epll_mini(:,1),ierr)
+     if (trim(addmin).ne.'None')then
+        call ps_user_1dintrp_vec(rho_zcntr,expro_rho,minfrac*expro_ne*1.D19,ps%nmini(:,0),ierr)
+        call ps_user_1dintrp_vec(rho_zcntr,expro_rho,expro_Ti(1,:),ps%eperp_mini(:,1),ierr)
+        call ps_user_1dintrp_vec(rho_zcntr,expro_rho,expro_Ti(1,:),ps%epll_mini(:,1),ierr)
+     else 
+        call ps_user_1dintrp_vec(rho_zcntr,expro_rho,expro_ni(minid,:)*1.D19,ps%nmini(:,1),ierr)
+        call ps_user_1dintrp_vec(rho_zcntr,expro_rho,expro_Ti(minid,:),ps%eperp_mini(:,1),ierr)
+        call ps_user_1dintrp_vec(rho_zcntr,expro_rho,expro_Ti(minid,:),ps%epll_mini(:,1),ierr)
+     endif
   endif
 
   !copy other quantities of interest into plasma state

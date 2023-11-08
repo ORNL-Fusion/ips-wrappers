@@ -104,6 +104,7 @@ class gacode_init (Component):
 
             #Optional params
             ic_rfpwr = self.try_get_config_param(services, 'RFPWR_IC',optional=True, default = '0.0')
+            ic_addmin = self.try_get_config_param(services, 'ICRF_ADDMIN',optional=True, default = 'None')
             ic_minfrac = self.try_get_config_param(services, 'ICRF_MINFRAC',optional=True, default = '0.0')
 
             ic_min_is_thermal_arg = self.try_get_config_param(services, 'MIN_IS_THERMAL',optional=True, default = 'F')
@@ -123,6 +124,12 @@ class gacode_init (Component):
                 ic_min_is_thermal = 'T'
             else:
                 ic_min_is_thermal = 'F'
+
+            if ic_addmin != 'None':
+                if ic_addmin.strip() in ['He3','HE3','he3','he-3','He-3','HE-3']:
+                    ic_addmin = 'He3'
+                elif ic_addmin.strip() in ['H','h']:
+                    ic_addmin = 'H'
                 
             # Generate state files as dummies so framework has complete set
             for file in ps_file_list:
@@ -168,6 +175,7 @@ class gacode_init (Component):
             nml_lines.append(' cur_eqdsk_file = \"' + cur_eqdsk_file + '\",\n')
             nml_lines.append(' cur_gacode_file = \"' + cur_gacode_file + '\",\n')
             nml_lines.append(' icrfpwr = ' + ic_rfpwr + ',\n')
+            nml_lines.append(' addmin = "' + ic_addmin +'",\n')
             nml_lines.append(' minfrac = ' + ic_minfrac + ',\n')
             nml_lines.append(' ministhermal = ' + ic_min_is_thermal + ',\n')
             nml_lines.append(' antspec = ' + antspec + ',\n')

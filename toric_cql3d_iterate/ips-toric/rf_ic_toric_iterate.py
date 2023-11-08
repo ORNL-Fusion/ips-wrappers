@@ -352,7 +352,7 @@ class toric (Component):
             task_id = services.launch_task(nproc_abj,cwd,abj_bin, \
                                            logfile=abj_log,whole_nodes=True, \
                                            task_ppn = nppn_abj, task_cpp= cpp_abj)
-            retcode = services.wait_task(task_id, timeout = 1800.0, delay = 10.0)
+            retcode = services.wait_task(task_id, timeout = 1800.0, delay = 15.0)
             if (retcode != 0):
                 services.error("ABJ Failed")
                 raise Exception("ABJ Failed")
@@ -376,7 +376,7 @@ class toric (Component):
                 
             task_id = services.launch_task(run_nproc, cwd, toric_bin, logfile=toric_log,\
                                            whole_nodes=True, task_ppn = run_nppn, task_cpp = coresPerProc)
-            retcode = services.wait_task(task_id, timeout = time_limit,delay=15.0)
+            retcode = services.wait_task(task_id, timeout = time_limit,delay=20.0)
             if (retcode == 0):
                 break
             else:
