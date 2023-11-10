@@ -9,6 +9,7 @@
 
 cd $SLURM_SUBMIT_DIR   # optional, since this is the default behavior
 source $IPS_DIR/ips-wrappers/env.ips.perlmutter
+source $IPS_DIR/ips-wrappers/env.execs.perlmutter
 
 #broadcast TORIC to nodes to prevent timeouts from startup of large mpi jobs
 sbcast $AORSA  /tmp/${USER}_xaorsa2d
