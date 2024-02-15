@@ -38,7 +38,7 @@ def v1(xp_parameters={}, print_test=False):
     sys.stdout.flush()
 
     if print_test:
-        print('\t TEST: for v1, handle_gripModel returns gridValue, rm_gridType and rm_gridValue')
+        print('\t for v1, handle_gripModel returns gridValue, rm_gridType and rm_gridValue')
         
     return [gridValue, rm_gridType, rm_gridParam]
 
@@ -76,7 +76,7 @@ def v2(xp_parameters={}, print_test=False):
         rm_regularGrid=True
         
     if print_test:
-        print('\t TEST: for v2, handle_gripModel returns gridType, gridValue and rm_grid')
+        print('\t for v2, handle_gripModel returns gridType, gridValue and rm_grid')
     sys.stdout.flush()
         
     return [gridType, gridValue, rm_grid, rm_regularGrid]

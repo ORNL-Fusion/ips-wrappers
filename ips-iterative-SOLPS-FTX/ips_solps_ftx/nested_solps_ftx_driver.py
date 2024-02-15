@@ -551,10 +551,10 @@ class parent_driver(Component):
                     #make copy of original (if file doesn't exist ; otherwise it was already copied in replacing angle)
                     if os.path.exists(orig_solps_outFile):
                         if self.print_test:
-                            print('\t TEST: ', orig_solps_outFile, 'already exists. no need to copy')
+                            print('\t ', orig_solps_outFile, 'already exists. no need to copy')
                     else:
                         if self.print_test:
-                            print('\t TEST: ', orig_solps_outFile, 'does not exists. make copy')
+                            print('\t ', orig_solps_outFile, 'does not exists. make copy')
                         shutil.copy(solps_outFile,orig_solps_outFile)
                     shutil.move(solps_outFile,temp_solps_outFile)
                     solpsOut_dic=pickle.load( open(temp_solps_outFile, "rb" ))

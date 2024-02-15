@@ -57,7 +57,7 @@ def ftridyn_to_xolotl_launch(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
         print_test=dic['print_test']
 
     if print_test:
-        print('\t TEST: dictionary in pkl file contains:')
+        print('\t dictionary in pkl file contains:')
         print('\t \t', dic)
 
     #if pikle file exists, read from pkl file:   
@@ -69,8 +69,6 @@ def ftridyn_to_xolotl_launch(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
         sys.stdout.flush()
 
         print(' ')
-        if print_test:
-            print('\t TEST:')
         #print lines if in test mode:
         #for each of the possible inputs to the script, check if given in pkl file
         if 'ftridynOnePrjOutput' in dic:
@@ -157,7 +155,7 @@ def ftridyn_to_xolotl_launch(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
                 print("\t \t \t WARNING: prj file is empty for angle ", angle[a])
             else:
                 if print_test:
-                    print("\t \t TEST: calculate sputtering yield for angle ", angle[a])
+                    print("\t \t calculate sputtering yield for angle ", angle[a])
                 nonZeroAngle+=1 #identify the first time that an angle contributes, to initialize n[]
                 depth1, bla1 = np.loadtxt(ftridynCurrentPrjOutput, usecols = (2,3) , unpack=True)
 
@@ -177,7 +175,7 @@ def ftridyn_to_xolotl_launch(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
                 if nonZeroAngle==1:
                     n=[]
                     if print_test:
-                        print("\t \t TEST: initialized n[] for angle ", angle[a])
+                        print("\t \t initialized n[] for angle ", angle[a])
                     for i in range(len(m)):
                         n.append(0)
 

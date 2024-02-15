@@ -12,7 +12,7 @@ def keepLastTS(inFile='xolotlStop.h5', outFile='netFile', print_test=False):
     #if TEST
     if print_test:
         print('\t called keepLastTS')
-        print('\t \t TEST: with input:')
+        print('\t \t with input:')
         print('\t \t', inFile)
     sys.stdout.flush()
     
@@ -23,7 +23,7 @@ def keepLastTS(inFile='xolotlStop.h5', outFile='netFile', print_test=False):
         print('\t \t succesfully opened ')
         print('\t \t', inFile)
         print(' ')
-        print('\t \t TEST: read concentrations of last TS')
+        print('\t \t read concentrations of last TS')
     
     ## Get the last time step saved in the file
     concGroup = f['concentrationsGroup']
@@ -44,7 +44,7 @@ def keepLastTS(inFile='xolotlStop.h5', outFile='netFile', print_test=False):
     
     #if TEST
     if print_test:
-        print('\t \t TEST: write into outFile: ')
+        print('\t \t write into outFile: ')
         print('\t \t', outFile)
         print(' ')
         sys.stdout.flush()
@@ -82,7 +82,7 @@ def keepLastTS(inFile='xolotlStop.h5', outFile='netFile', print_test=False):
     f.copy('networkGroup', fNew)
     #if TEST
     if print_test:
-        print('\t \t TEST: all information succesfully written into ')
+        print('\t \t all information succesfully written into ')
         print('\t \t', outFile)
 
         print('\t ...keepLastTS done!')

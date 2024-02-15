@@ -72,7 +72,7 @@ def xolotlToLay(tridynFile='last_TRIDYN.dat', totalDepth=0.0, logFile=None, prin
   
   #if test:
   if print_test:
-    print('\t TEST: from xolotlToLay, return nlines', nlines)
+    print('\t from xolotlToLay, return nlines', nlines)
 
   print(' ')
   sys.stdout.flush()

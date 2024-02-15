@@ -17,7 +17,7 @@ def v1(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat', print_test=Fals
 
     #if TEST
     if print_test:
-        print('\t \t TEST: with input')
+        print('\t \t with input')
         print('\t \t \t', inFile)
         print ("\t \t File exists:", str(path.exists(inFile)), '\n')
     sys.stdout.flush()
@@ -26,7 +26,7 @@ def v1(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat', print_test=Fals
     f = h5py.File(inFile, 'r')    
     #if TEST
     if print_test:
-        print('\t \t TEST: from binTRIDYN, opened inFile to read')
+        print('\t \t from binTRIDYN, opened inFile to read')
     concDset = f['concs']
     #if TEST
     if print_test:
@@ -46,7 +46,7 @@ def v1(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat', print_test=Fals
 
     #if TEST
     if print_test:
-        print('\t \t TEST: from binTRIDYN, initialized bins')
+        print('\t \t initialized bins')
         sys.stdout.flush()
     
     for k in range (0, nBins):#200):
@@ -99,7 +99,7 @@ def v1(inFile='last_TRIDYN_toBin.h5', outFile='last_TRIDYN.dat', print_test=Fals
     
     #if TEST
     if print_test:
-        print('\t \t TEST: from binTRIDYN, write output to output file \n')
+        print('\t \t write output to output file \n')
         sys.stdout.flush()
     
 ## Loop on all the elements
@@ -130,7 +130,7 @@ def v2(inFile='TRIDYN_0.h5', outFile='last_TRIDYN.dat', print_test=False):
     print('\t called binTRIDYN_tempGrid')
     
     if print_test:
-        print('\t \t TEST: with input')
+        print('\t \t with input')
         print('\t \t ', inFile)
         sys.stdout.flush()
     
@@ -143,7 +143,7 @@ def v2(inFile='TRIDYN_0.h5', outFile='last_TRIDYN.dat', print_test=False):
     
     ## Bin the concentrations
     if print_test:
-        print('\t \t TEST: read concDset \n')
+        print('\t \t read concDset \n')
     depthBin = []
     heBin = []
     vBin = []
@@ -155,7 +155,7 @@ def v2(inFile='TRIDYN_0.h5', outFile='last_TRIDYN.dat', print_test=False):
     nBins=int(math.floor(concDset[len(concDset)-1][0] * 2.0)+1)
 
     if print_test:
-        print('\t \t TEST: from binTRIDYN, initialized bins')
+        print('\t \t initialized bins')
         print('\t \t calculated bins')
     
     for k in range (0, nBins):#200):
@@ -203,7 +203,7 @@ def v2(inFile='TRIDYN_0.h5', outFile='last_TRIDYN.dat', print_test=False):
     outputFile = open(outFile, 'w')
 
     if print_test:
-        print('\t \t TEST: write output to output file \n')
+        print('\t \t write output to output file \n')
     
     ## Loop on all the elements
     for i in range(0, len(depthBin)):

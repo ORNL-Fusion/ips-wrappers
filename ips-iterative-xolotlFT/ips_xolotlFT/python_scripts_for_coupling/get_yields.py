@@ -67,7 +67,7 @@ def sputtering_and_reflection_launch(ftridynOneOutOutput='He_WOUT.dat',
             print_test=dic['print_test']
 
         if print_test:
-            print('\t TEST: dictionary in pkl file contains:')
+            print('\t dictionary in pkl file contains:')
             print('\t \t', dic)
         
         #for each of the possible inputs to the script, check if given in pkl file
@@ -184,7 +184,7 @@ def sputtering_and_reflection_launch(ftridynOneOutOutput='He_WOUT.dat',
     yieldOutput.append(totalRYield)
 
     if print_test:
-        print('\t \t TEST: yieldOutput = ', yieldOutput)
+        print('\t \t yieldOutput = ', yieldOutput)
     
     sys.stdout.flush()
 

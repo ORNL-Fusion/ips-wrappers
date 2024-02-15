@@ -33,7 +33,7 @@ def transferGrid(networkFile, print_test=False):
 	## Compute the new one
 	newGridSize = oldGridSize + nPoints
 	if print_test:
-		print('TEST: oldGridSize=', oldGridSize, '; newGridSize=', newGridSize)
+		print('\t \t oldGridSize=', oldGridSize, '; newGridSize=', newGridSize)
 	newVoidPortion = 100.0 * float(initSurf + nPoints) / float(newGridSize) #len(gridDset0) + nPoints)
 	if print_test:
 		print('\t \t New void portion:', newVoidPortion, 'with', newGridSize, ' grid points.')
@@ -67,7 +67,7 @@ def transferGrid(networkFile, print_test=False):
 	timestep = concGroup0.attrs['lastTimeStep']
 	## Open the concentration group at this time step
 	if print_test:
-		print('TEST: time step is', timestep)
+		print('time step is', timestep)
 	if (timestep == -1):
 		print('WARNING: network file was empty (timestep -1)')
 		print('\t will return old values')
@@ -122,5 +122,5 @@ def transferGrid(networkFile, print_test=False):
 	dataset[...] = indexArray
 
 	if print_test:
-		print('TEST: from transferGrid, returning newGridSize, voidPortion = ', newGridSize, newVoidPortion)
+		print('from transferGrid, returning newGridSize, voidPortion = ', newGridSize, newVoidPortion)
 	return [newGridSize, newVoidPortion]

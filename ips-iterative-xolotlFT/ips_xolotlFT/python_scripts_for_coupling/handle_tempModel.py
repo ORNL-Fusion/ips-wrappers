@@ -14,7 +14,7 @@ def v1(xp_parameters={},plasma={},print_test=False):
     print('\t running write_tempModel for Xolotl v1')
 
     if print_test:
-        print('\t TEST: with inputs:')
+        print('\t with inputs:')
         print('\t \t dictionary xp_parameters =', xp_parameters)
         print('\t \t dictionary plasma =' , plasma)
 
@@ -70,7 +70,7 @@ def v2(xp_parameters={},plasma={},print_test=False):
     print('\t running write_tempModel for Xolotl v2')  
 
     if print_test:
-        print('\t TEST: with inputs:')
+        print('\t with inputs:')
         print('\t \t xp_parameters = ', xp_parameters)
         print('\t \t plasma = ', plasma)
     print(' ')

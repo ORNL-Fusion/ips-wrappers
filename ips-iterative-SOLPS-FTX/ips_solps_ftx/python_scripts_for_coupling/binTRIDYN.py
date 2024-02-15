@@ -12,7 +12,7 @@ import sys
 def binTridyn(inFile='TRIDYN_0.h5', outFile='last_TRIDYN.dat'):
 
     print(' ')
-    print('TEST binTRIDYN tempGrid TEST binTRIDYN tempGrid TEST binTRIDYN tempGrid TEST')
+    #print('binTRIDYN tempGrid TEST binTRIDYN tempGrid TEST binTRIDYN tempGrid TEST')
     print('from binTRIDYN tempGrid, called with input')
     print(inFile)
     sys.stdout.flush()

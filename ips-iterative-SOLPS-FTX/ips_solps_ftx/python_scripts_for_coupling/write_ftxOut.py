@@ -126,29 +126,43 @@ def write_ftxOut(grid=20,
         D_frac=1
     print(' ')
     
-    #R_Xol: 1 - (D_content / fluence*D_fraction)
-    #fluence, column 2: 1st line  - last line
-    #D_content, column 4: 1st line  - last line
+    #R_Xol:
+    #old method: 1 - (D_content / fluence*D_fraction)
+    #            fluence, column 2: 1st line  - last line
+    #            D_content, column 4: 1st line  - last line
+    #new method: 1 - (D_content / D_fluence)
+    #            D fluence, column 3: 1st line  - last line
+    #            D_content, column 5: 1st line  - last line
+    
     retLines=open(retentionFile).readlines()
     R_Xol_firstLine=retLines[1]
     if (print_test):
         print('\t first line of retention file is : ', R_Xol_firstLine)
         print('\t R_Xol_firstLine.split(' ') = ', R_Xol_firstLine.split(' '))    
-    init_fluence=float(R_Xol_firstLine.split(' ')[1])
-    init_Dconc=float(R_Xol_firstLine.split(' ')[3])
-    print('\t initial fluence = ', init_fluence, ' and D_conc = ', init_Dconc)
+    #init_fluence=float(R_Xol_firstLine.split(' ')[1]) #this is total fluence ; old method
+    init_fluence=float(R_Xol_firstLine.split(' ')[2]) #new method
+    init_Dconc=float(R_Xol_firstLine.split(' ')[4])
+    print('\t initial D fluence = ', init_fluence, ' and D_conc = ', init_Dconc)
+    print(' ')
     R_Xol_lastLine=retLines[-1]
     if (print_test):
         print('\t last line of retention file is : ', R_Xol_lastLine)
         print('\t R_Xol_lastLine.split(' ') = ', R_Xol_lastLine.split(' '))
-    last_fluence=float(R_Xol_lastLine.split(' ')[1])
-    last_Dconc=float(R_Xol_lastLine.split(' ')[3])
-    print('\t last fluence = ', last_fluence, ' and D_conc = ', last_Dconc)
+    #last_fluence=float(R_Xol_lastLine.split(' ')[1]) #this is total fluence ; old method 
+    last_fluence=float(R_Xol_lastLine.split(' ')[2]) #new method
+    last_Dconc=float(R_Xol_lastLine.split(' ')[4])
+    print('\t last D fluence = ', last_fluence, ' and D_conc = ', last_Dconc)
+    print(' ')
     fluence=last_fluence-init_fluence
     D_conc=last_Dconc-init_Dconc
     print('\t total fluence =', fluence, ' and D_conc = ', D_conc)
-    RXol=1-(D_conc/(fluence*D_frac))
-    print('\t RXol = ', RXol)
+    #RXol=1-(D_conc/(fluence*D_frac)) # old method
+    if fluence>0:
+        RXol=1-(D_conc/fluence)
+        print('\t RXol = ', RXol)
+    else:
+        print('\t WARNING: fluence <= 0 ; RXol = 1')
+        RXol=1
     print(' ') 
     
     print('\t calculate Rtot=RFT+(1-RFT)*RXol, using RFT = ', RFT, ', RXol = ', RXol)

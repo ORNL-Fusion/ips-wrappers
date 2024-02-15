@@ -405,9 +405,12 @@ class xolotlFtridynDriver(Component):
         #delete Xolotl processes that are specified as false in ips.config
         print(' ')
         xp_processes={}
+        if self.print_test:
+            print('check for xp_processes to be deleted:')
         for k,v in self.XOLOTL_INPUT_PROCESSES.items(): #specified in ips.config
             xp_processes[k]=v
-
+            if self.print_test:
+                print('\t k=', k, ' v=', v)
         processList=self.xp.parameters['process'] #all processes, specified in param template
         processString=''
 
@@ -1465,13 +1468,24 @@ class xolotlFtridynDriver(Component):
                             worker_netFile_size=int(worker_network_sizeFile.readline())
                             worker_network_sizeFile.close
                             print('\t workers network file size is ', worker_netFile_size)
+                        if os.path.isfile(self.XOLOTL_NETWORK_FILE):
                             driver_netFile_size=int(os.path.getsize(self.XOLOTL_NETWORK_FILE))
                             print('\t driver network file size is ', driver_netFile_size)
+                        else:
+                            print('\t driver network file not found')
+                        if os.path.isfile(temp_network_file):
                             temp_netFile_size=int(os.path.getsize(temp_network_file))
                             print('\t temp network file size is ', temp_netFile_size)
+                        else:
+                            print('\t temp network file not found')
+                        if os.path.isfile(self.INPUT_DIR+'/'+self.XOLOTL_NETWORK_FILE):
                             inputDir_netFile_size=int(os.path.getsize(self.INPUT_DIR+'/'+self.XOLOTL_NETWORK_FILE))
                             print('\t input dir network file size is ', inputDir_netFile_size)
-                            sys.stdout.flush()
+                        else:
+                            print('\t input dir network file not found')
+                        sys.stdout.flush()
+
+                        if os.path.exists(network_size_file) and os.path.exists(self.INPUT_DIR+'/'+self.XOLOTL_NETWORK_FILE): #(inputDir_netFile_size):
                             #while worker_netFile_size != driver_netFile_size:
                             while worker_netFile_size != inputDir_netFile_size:
                                 print ('input dir and worker network sizes differ')
@@ -1479,24 +1493,21 @@ class xolotlFtridynDriver(Component):
                                 shutil.copyfile(self.INPUT_DIR+'/'+self.XOLOTL_NETWORK_FILE, self.XOLOTL_NETWORK_FILE)
                                 self.services.update_state()
                                 self.services.call(xolotl, 'init', timeStamp, dTime=time, time_decimal=self.time_decimal, xParameters=self.xp.parameters, network_size_file=network_size_file, output_file=outFile, print_test=self.print_test)
-                                if os.path.exists(network_size_file):
-                                    worker_network_sizeFile=open(network_size_file, 'r')
-                                    worker_netFile_size=int(worker_network_sizeFile.readline())
-                                    worker_network_sizeFile.close
-                                    print('\t updated workers network file size is ', worker_netFile_size)
-                                    driver_netFile_size=int(os.path.getsize(self.XOLOTL_NETWORK_FILE))
-                                    print('\t updated driver network file size is ', driver_netFile_size)
-                                    temp_netFile_size=int(os.path.getsize(temp_network_file))
-                                    print('\t updated temp network file size is ', temp_netFile_size)
-                                    inputDir_netFile_size=int(os.path.getsize(self.INPUT_DIR+'/'+self.XOLOTL_NETWORK_FILE))
-                                    print('\t updated input dir network file size is ', inputDir_netFile_size)
-                                    sys.stdout.flush()
-                                else:
-                                    print('WARNING: could not find network size file')
-                                    print('\t continue at your own risk ')
+
+                                worker_network_sizeFile=open(network_size_file, 'r')
+                                worker_netFile_size=int(worker_network_sizeFile.readline())
+                                worker_network_sizeFile.close
+                                print('\t updated workers network file size is ', worker_netFile_size)
+                                driver_netFile_size=int(os.path.getsize(self.XOLOTL_NETWORK_FILE))
+                                print('\t updated driver network file size is ', driver_netFile_size)
+                                temp_netFile_size=int(os.path.getsize(temp_network_file))
+                                print('\t updated temp network file size is ', temp_netFile_size)
+                                inputDir_netFile_size=int(os.path.getsize(self.INPUT_DIR+'/'+self.XOLOTL_NETWORK_FILE))
+                                print('\t updated input dir network file size is ', inputDir_netFile_size)
+                                sys.stdout.flush()
                             print('network file sizes are the same. continue with worker:step')
                         else:
-                            print('WARNING: could not find network size file')
+                            print('WARNING: could not find network size file or inputDir netFile size')
                             print('\t continue at your own risk ')
                         sys.stdout.flush()
                             
