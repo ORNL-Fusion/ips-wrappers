@@ -96,6 +96,33 @@ class xolotlFtridynDriver(Component):
             self.print_uq=False
         print(' ')
 
+        print(' ')
+        print('TEST TEST')
+        print('keywords:')
+        print(keywords)
+        print('TEST TEST')
+        print(' ')
+        
+        if 'H_PLASMA' in keywords:
+            self.H_PLASMA=keywords['H_PLASMA']
+            print('H_PLASMA defined in keywords as: ', self.H_PLASMA)
+        else:
+            print('no H_PLASMA defined in keywords. Check in FTX config file:')
+            try:
+                if self.H_PLASMA=='yes':
+                    print('\t H_PLASMA = yes.')
+                    print('\t H parameters will replace (and be called) D in Xolotl')
+                else: #self.H_PLASMA=='no':
+                    print('\t H PLASMA = no.')
+                    print('\t D represents D.')
+                #space here to define a 3rd model, 'mixed', if both D and H are in the plasma
+                #elif self.H_PLASMA='mixed' ; print('both D and H in plasma. Add them both to D in Xolotl')
+            except Exception as e:
+                print(e)
+                print('no H_PLASMA parameter found. Will assume to not be a H plasma')
+                self.H_PLASMA='no'
+        print(' ')
+            
         #test giving explicit wrapper path in modernized FTX workflow
         if self.print_test:
             try:
@@ -615,18 +642,51 @@ class xolotlFtridynDriver(Component):
                 inputAngle=self.ftridyn['inputAngle']
                 self.plasmaSpecies=self.ftridyn['plasmaSpecies']
                 self.fluxFraction=self.ftridyn['fluxFraction']
-        
+        print(' ')
         inputSpYield=self.ftridyn['inputSpYield'].split(' ')
         inputRYield=self.ftridyn['inputRYield'].split(' ')
         #inputFluxFraction=self.GITR_INPUT_PARAMETERS['inputFluxFraction'].split(' ')        
 
+        #cross-check H_plasma against plasmaSpecies
+        if self.H_plasma=='yes' and 'H' in plasmaSpecies:
+            print('H_plasma=yes; and checked that H in plasmaSpecies')
+            print('proceed with H_plasma=yes')
+        else:
+            print('self.H_plasma = ',self.H_plasma,' and plasmaSpecies = ', plasmaSpecies)
+            print('set H_plasma with no to avoid overwriting info of D with H in Xolotl')
+        print(' ')
+            
         for i in range(len(self.plasmaSpecies)): #self.plasmaSpecies.iteritems():
             prj=self.plasmaSpecies[i]
 
-            self.energyIn.append(float(inputEnergy[i]))
-            self.inAngle.append(float(inputAngle[i]))
-            self.spYield.append(float(inputSpYield[i]))
-            self.rYield.append(float(inputRYield[i]))
+            if len(inputEnergy)>=len(self.plasmaSpecies):
+                self.energyIn.append(float(inputEnergy[i]))
+            else:
+                print('\t TEST: WARNING: no sufficient entries for inputEnergy')
+                print('\t TEST: WARNING: append Ein = 0.0 )')
+                self.energyIn.append(float(0))
+
+            if len(inputAngle)>=len(self.plasmaSpecies):
+                self.inAngle.append(float(inputAngle[i]))
+            else:
+                print('\t TEST: WARNING: no sufficient entries for inputAngle')
+                print('\t TEST: WARNING: append Ain = 0.0 )')
+                self.inAngle.append(float(0))
+
+            if len(inputSpYield)>=len(self.plasmaSpecies):
+                self.spYield.append(float(inputSpYield[i]))
+            else:
+                print('\t TEST: WARNING: no sufficient entries for inputSpYield')
+                print('\t TEST: WARNING: append SpY = -1 (calculate) )')
+                self.spYield.append(float(-1))
+                
+            if len(inputRYield)>=len(self.plasmaSpecies):
+                self.rYield.append(float(inputRYield[i]))
+            else:
+                print('\t TEST: WARNING: no sufficient entries for inputRYield')
+                print('\t TEST: WARNING: append RY = -1 (calculate) )')
+                self.rYield.append(float(-1))
+
             #self.fluxFraction.append(float(inputFluxFraction[i]))
             print(('\t index {0}, species {1} '.format( i, self.plasmaSpecies[i])))
             print(('\t energy {0}, angle {1} '.format( self.energyIn[i] ,self.inAngle[i])))
@@ -981,7 +1041,7 @@ class xolotlFtridynDriver(Component):
 
             # B) RUN FTRIDYN
 
-            print('call F-TRIDYN:')
+            print('F-TRIDYN:')
             print(' ')
             for i in range(len(self.plasmaSpecies)): #self.plasmaSpecies.iteritems():
                 prj=self.plasmaSpecies[i]
@@ -1184,7 +1244,7 @@ class xolotlFtridynDriver(Component):
 
                 #if flux fraction == 0 or all weight angles == 0.0:
                 else:
-                    print(('Skip running FTridyn for {0}'.format(prj))) #, as fraction in plasma is {1}\n'.format(prj, self.gitr['fluxFraction'][i]))
+                    print(('\t Skip running FTridyn for {0}'.format(prj))) #, as fraction in plasma is {1}\n'.format(prj, self.gitr['fluxFraction'][i]))
                     if self.fluxFraction[i]==0:
                         print('\t as fraction in plasma is {}\n'.format(self.fluxFraction[i]))
                     if all(k==0 for k in self.weightAngle[i]):
@@ -1267,9 +1327,9 @@ class xolotlFtridynDriver(Component):
             else:
                 tridynDat_model = self.driver['xolotl_v']
                 
-            write_tridynDat.write_tridynDat(outFile=self.FT_OUTPUT_PROFILE_TEMP, tridynDat_model=tridynDat_model,
-                                            plasmaSpecies=self.plasmaSpecies, timeFolder=timeFolder, maxRangeXolotl=self.maxRangeXolotl,
-                                            fluxFraction=self.fluxFraction, rYield=self.rYield, xp_parameters=self.xp.parameters, print_test=self.print_test)
+            write_tridynDat.write_tridynDat(outFile=self.FT_OUTPUT_PROFILE_TEMP, tridynDat_model=tridynDat_model,plasmaSpecies=self.plasmaSpecies, 
+                                            timeFolder=timeFolder, maxRangeXolotl=self.maxRangeXolotl, fluxFraction=self.fluxFraction, 
+                                            rYield=self.rYield, H_plasma=self.H_plasma, xp_parameters=self.xp.parameters, print_test=self.print_test)
             sys.stdout.flush()
 
             if os.path.exists(self.FT_OUTPUT_PROFILE_TEMP):
@@ -1306,6 +1366,12 @@ class xolotlFtridynDriver(Component):
 
             #if something was implanted:
             #Xolotl parameter modifications that need to be done at every loop:
+
+            ##xolotl does not recognize H, but there's a branch that can handle it
+            ## switch H --> D in all inputs to Xolotl:
+            ##        plasmaSpecies
+            ##        tridyn.dat
+            
             
             ######################################
             ############## RUN XOLOTL ############

@@ -6,7 +6,7 @@
 import os
 import sys
 
-def write_tridynDat(outFile='tridyn.dat', tridynDat_model=1, plasmaSpecies=['He','W','D','T'], timeFolder='t0.0', maxRangeXolotl=[0.0, 0.0, 0.0, 0.0], fluxFraction=[0.0, 0.0, 0.0, 0.0], rYield=[1.0, 1.0, 1.0, 1.0], xp_parameters={},print_test=False ): #INPUTS HERE
+def write_tridynDat(outFile='tridyn.dat', tridynDat_model=1, plasmaSpecies=['He','W','D','T'], timeFolder='t0.0', maxRangeXolotl=[0.0, 0.0, 0.0, 0.0], fluxFraction=[0.0, 0.0, 0.0, 0.0], rYield=[1.0, 1.0, 1.0, 1.0], H_plasma=False, xp_parameters={},print_test=False ): #INPUTS HERE
     print(' ')
     print('from write_tridynDat, called with input')
     print('\t outFile =', outFile)
@@ -16,6 +16,7 @@ def write_tridynDat(outFile='tridyn.dat', tridynDat_model=1, plasmaSpecies=['He'
     print('\t maxRangeXolotl =', maxRangeXolotl)
     print('\t fluxFraction =', fluxFraction)
     print('\t rYield =', rYield)
+    print('\t H_plasma=', H_plasma)
     if print_test:
         print('\t xp_parameters = ',xp_parameters)
     else:

@@ -193,9 +193,20 @@ def plasmaOut2ftxIn(plasmaOutFile='plasmaOut.pkl', ftxInFile='ftxIn.txt',print_t
     if ('plasmaSpecies' in  solpsParams):
         #ftxInputs['plasmaSpecies'] = 'He W D T C'
         #C_f : different options for C in F-TRIDYN: _a, _b, _d... ; _f noted as "C for fusion"
-        ftxInputs['plasmaSpecies'] = ['He','W', 'D', 'T', 'C_f']
-        std_plasmaSpecies = ['He','W', 'D', 'T', 'C'] #output from SOLPS will contain C, not C_f
-        print('\t hard coded plasma species in ftx = ', ftxInputs['plasmaSpecies'] )
+        #ftxInputs['plasmaSpecies'] = ['He','W', 'D', 'T', 'C_f']
+        std_plasmaSpecies = ['He','W', 'D', 'T'] #output from SOLPS will contain C, not C_f ; handle that in FTRIDYN
+        ftxInputs['plasmaSpecies']=std_plasmaSpecies
+        print('\t hard coded (std) plasma species in ftx = ', std_plasmaSpecies) #, ftxInputs['plasmaSpecies'] )
+        print('\t Append any other that might be in SOLPS to ftxInputs[plasmaSpecies]')
+        for n in range(len(solpsParams['plasmaSpecies'])):
+            if solpsParams['plasmaSpecies'][n] in ftxInputs['plasmaSpecies']:
+                print('\t TEST: ', solpsParams['plasmaSpecies'][n] , ' already exists in ftxInputs[plasmaSpecies]')
+                print('\t TEST: skip adding')
+            else:
+                print('\t TEST: ', solpsParams['plasmaSpecies'][n] , ' does not exists in ftxInputs[plasmaSpecies]')
+                print('\t TEST: Add to list so Ein, Ain... are also computed for it')
+                ftxInputs['plasmaSpecies'].append(solpsParams['plasmaSpecies'][n])
+        print('\t TEST: final ftxInputs[plasmaSpecies] = ', ftxInputs['plasmaSpecies'])
         print('\n')
         
         #create a variable that's 1 if species exists ; 0 if it doesn't:

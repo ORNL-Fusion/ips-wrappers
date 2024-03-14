@@ -117,7 +117,16 @@ class parent_driver(Component):
         self.time_step = float(self.services.get_config_param('TIME_STEP'))
         self.init_loop_n = int(self.services.get_config_param('INIT_LOOP_N'))
         self.time_decimal = int(self.services.get_config_param('TIME_DECIMAL'))
-        
+
+        try:
+            self.H_plasma = str(self.services.get_config_param('H_PLASMA'))
+            print('TEST: defined as H plasma = ', self.H_plasma, 'in config file')
+            print('TEST: will pass to FTX and cross-check there against H being in plasmaSpecies')
+        except Exception as e:
+            print(e)
+            print('TEST: No H plasma value defined in config file. ')
+            print('TEST: Will not assign a value or pass it to FTX (default in FTX is no)')            
+            
         ftx_keys = {} 
 
 
@@ -195,12 +204,22 @@ class parent_driver(Component):
         print('\n')
         for i in range(0, num_ftx):
             ftx_comp = 'ftx_{}'.format(i)
+
+            print('-------- ', ftx_comp, ' --------\n')
             
             ftx_keys['LOG_FILE'] = 'log.{}'.format(ftx_comp)
             ftx_keys['SIM_NAME'] = ftx_comp
             ftx_keys['INPUT_DIR'] = 'input_{}'.format(ftx_comp)
             ftx_keys['INPUT_FILES'] = self.services.get_config_param('INPUT_FTX')
             ftx_keys['time_decimal'] = int(self.time_decimal)
+            try:
+                ftx_keys['H_PLASMA'] = str(self.H_plasma)
+                print('H_PLASMA=',self.H_plasma,'passed to ftx_keys')
+            except Exception as e:
+                print(e)
+                print('H_PLASMA will not be defined in ftx_keys.')
+            print(' ')
+                
             self.ftx_components[ftx_comp] = {
                                                 'sim_name'  : None, 
                                                 'init'      : None,
@@ -208,7 +227,6 @@ class parent_driver(Component):
                                                 'INPUT_DIR' : ftx_keys['INPUT_DIR'],
                                                 'LOG_FILE'  : ftx_keys['LOG_FILE']
                                                 }
-            print('-------- ', ftx_comp, ' --------\n')
             if (self.print_test):
                 print('Defined dictionary : ')
                 print('\t', (self.ftx_components[ftx_comp]))
