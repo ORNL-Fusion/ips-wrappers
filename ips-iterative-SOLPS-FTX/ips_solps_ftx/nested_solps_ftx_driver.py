@@ -120,15 +120,14 @@ class parent_driver(Component):
 
         try:
             self.H_plasma = str(self.services.get_config_param('H_PLASMA'))
-            print('TEST: defined as H plasma = ', self.H_plasma, 'in config file')
-            print('TEST: will pass to FTX and cross-check there against H being in plasmaSpecies')
+            print('\t Defined as H plasma = ', self.H_plasma, 'in config file')
+            print('\t pass this value to FTX ')
         except Exception as e:
             print(e)
-            print('TEST: No H plasma value defined in config file. ')
-            print('TEST: Will not assign a value or pass it to FTX (default in FTX is no)')            
+            print('\t No H plasma value defined in config file. ')
+            print('\t will not assign a value or pass it to FTX (default in FTX is no)')            
             
         ftx_keys = {} 
-
 
         #stage input files
         self.services.stage_input_files(self.INPUT_FILES)
@@ -212,23 +211,27 @@ class parent_driver(Component):
             ftx_keys['INPUT_DIR'] = 'input_{}'.format(ftx_comp)
             ftx_keys['INPUT_FILES'] = self.services.get_config_param('INPUT_FTX')
             ftx_keys['time_decimal'] = int(self.time_decimal)
-            try:
-                ftx_keys['H_PLASMA'] = str(self.H_plasma)
-                print('H_PLASMA=',self.H_plasma,'passed to ftx_keys')
-            except Exception as e:
-                print(e)
-                print('H_PLASMA will not be defined in ftx_keys.')
-            print(' ')
-                
+
             self.ftx_components[ftx_comp] = {
-                                                'sim_name'  : None, 
+                                                'sim_name'  : None,
                                                 'init'      : None,
                                                 'driver'    : None,
                                                 'INPUT_DIR' : ftx_keys['INPUT_DIR'],
                                                 'LOG_FILE'  : ftx_keys['LOG_FILE']
                                                 }
+
+            try:
+                ftx_keys['H_PLASMA'] = str(self.H_plasma)
+                print('H_PLASMA=',self.H_plasma,' passed to ftx_keys and ftx_comp')
+                self.ftx_components[ftx_comp]['H_PLASMA']=ftx_keys['H_PLASMA']
+
+            except Exception as e:
+                print(e)
+                print('H_PLASMA not defined in ftx_keys or ftx_comp')
+
+            print(' ')
             if (self.print_test):
-                print('Defined dictionary : ')
+                print('Defined FTX component dictionary as : ')
                 print('\t', (self.ftx_components[ftx_comp]))
 
             #  Input files will be staged from this directory.
@@ -258,7 +261,7 @@ class parent_driver(Component):
             print('Create_sub_workflow with parameters:')
             print('\t ftx_comp = ', ftx_comp)
             print('\t ftx_conf = ', ftx_input_dir+'/'+ftx_conf)
-            print('\t keys = ', ftx_keys)
+            print('\t override = ', ftx_keys)
             print('\t input_dir = ', self.ftx_components[ftx_comp]['INPUT_DIR'])
             print('\n')
             sys.stdout.flush()
@@ -270,11 +273,24 @@ class parent_driver(Component):
                                                                                               self.ftx_components[ftx_comp]['INPUT_DIR'])
             print('creating FTX sub-workflow DONE!')
             if (self.print_test):
-                print('FTX component is:') 
-                print('\t sim_name : ',self.ftx_components[ftx_comp]['sim_name'],'init : ',self.ftx_components[ftx_comp]['init'],'driver : ',self.ftx_components[ftx_comp]['driver'], ', INPUT_DIR : ', self.ftx_components[ftx_comp]['INPUT_DIR']) 
-                print('\t keys : ', ftx_keys)
+                print('FTX component is:')
+                print('\t sub_component name : ', ftx_comp)
+                print('\t with values : ', self.ftx_components[ftx_comp])
+                #print('\t sim_name : ',self.ftx_components[ftx_comp]['sim_name'],'init : ',self.ftx_components[ftx_comp]['init'],'driver : ',self.ftx_components[ftx_comp]['driver'], ', INPUT_DIR : ', self.ftx_components[ftx_comp]['INPUT_DIR']) 
+                #print('\t keys : ', ftx_keys)
             print('\n')
 
+
+        #TEST TO PASS H-PLASMA PARAMETER:
+        #print('\t TEST H-PLASMA: self.ftx_components = ', self.ftx_components)
+        #for ftx_comp, ftx in list(self.ftx_components.items()):
+        #    print('\t TEST H-PLASMA: subworkflow ', ftx_comp)
+        #    print('\t TEST H-PLASMA: with value ', ftx)
+        #    print('\t TEST H-PLASMA: self.ftx_components[sim_name] = ', self.ftx_components[ftx_comp]['sim_name'])
+        #    print('\t TEST H-PLASMA: self.ftx_components[init] = ', self.ftx_components[ftx_comp]['init'])
+        #    print('\t TEST H-PLASMA: self.ftx_components[driver] = ', self.ftx_components[ftx_comp]['driver'])
+        #    print('\t TEST H-PLASMA: self.ftx_components[ftx_comp] = ', self.ftx_components[ftx_comp])
+            
         print('-------------------------')
         print('DONE SETTING UP WORKFLOWS')
         print('-------------------------')

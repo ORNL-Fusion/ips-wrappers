@@ -44,6 +44,7 @@ def write_tridynDat(outFile='tridyn.dat', tridynDat_model=1, plasmaSpecies=['He'
     #                    header: prj cluster_size (1-refl)
     #                    only for all prj present in plasma & networkFile
     if (tridynDat_model==2):
+            
         for i in range(len(plasmaSpecies)):
             prj=plasmaSpecies[i]
             ft_output_profile_temp_prj=timeFolder+'/'+outFile+'_'+prj
@@ -55,7 +56,27 @@ def write_tridynDat(outFile='tridyn.dat', tridynDat_model=1, plasmaSpecies=['He'
             print(('\t \t fraction in plasma = {0} , and reflection = {1} '.format(fluxFraction[i], rYield[i])))
             print(('\t \t effective fraction (in plasma * (1-reflection)) = {} '.format(fluxFraction[i]*(1-rYield[i]))))
             sys.stdout.flush()
-            
+
+            if prj=='D' and H_plasma=='yes':
+                print('\t \t it is a H plasma ; store tridyn string values for H separately')
+                #prj='H'
+                iH=plasmaSpecies.index('H')
+                print('TEST TEST: index of H is ', iH)
+                ft_output_Hprofile_temp_prj=timeFolder+'/'+outFile+'_H'
+                Hprofile=open(ft_output_Hprofile_temp_prj, "r")
+                tridynHString=Hprofile.read().rstrip('\n')
+                combinedHTridynString=str(tridynHString)+str(maxRangeXolotl[iH])
+                Hprofile.close()
+
+                print('\t \t and overwrite values for D with values for H')
+                fluxFraction[i]=fluxFraction[iH]
+                rYield[i]=rYield[iH]
+                combinedTridynString=combinedHTridynString
+                print('TEST TEST: replaced:')
+                print('TEST TEST: fluxFraction to ', fluxFraction[i])
+                print('TEST TEST: rYield to ', rYield[i])
+                print('TEST TEST: combinedTridynString to ', combinedTridynString)
+                
             if (fluxFraction[i] > 0):
                 print('\t \t Write tridyn.dat line in new tridyn.dat format (model ', str(tridynDat_model),')')
                 # if not W, then the name in the tridyn.dat line is the same as prj
@@ -74,6 +95,7 @@ def write_tridynDat(outFile='tridyn.dat', tridynDat_model=1, plasmaSpecies=['He'
                         combinedFile.write("%s %s %s\n" %(prj,str(1),str(fluxFraction[i]*(1-rYield[i]))))
                         combinedFile.write("%s\n" %(combinedTridynString))
                 ##if D or T,  check position in netParam, i.e., index i=2,3 -> i-1 = 1 or 2 (no W in netParam)
+                ##for D, also check whether its a H plasma
                 elif prj=='D' or prj=='T':
                     if ('netParam' in xp_parameters):
                         if (xp_parameters['netParam'][i-1]==0):

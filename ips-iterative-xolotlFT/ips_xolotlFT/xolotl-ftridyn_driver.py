@@ -648,12 +648,12 @@ class xolotlFtridynDriver(Component):
         #inputFluxFraction=self.GITR_INPUT_PARAMETERS['inputFluxFraction'].split(' ')        
 
         #cross-check H_plasma against plasmaSpecies
-        if self.H_plasma=='yes' and 'H' in plasmaSpecies:
-            print('H_plasma=yes; and checked that H in plasmaSpecies')
-            print('proceed with H_plasma=yes')
+        if self.H_PLASMA=='yes' and 'H' in self.plasmaSpecies:
+            print('H_PLASMA = ',self.H_PLASMA,' ; and checked that H exists in plasmaSpecies')
+            print('proceed with H_PLASMA=yes')
         else:
-            print('self.H_plasma = ',self.H_plasma,' and plasmaSpecies = ', plasmaSpecies)
-            print('set H_plasma with no to avoid overwriting info of D with H in Xolotl')
+            print('self.H_PLASMA = ',self.H_PLASMA,' and plasmaSpecies = ', self.plasmaSpecies)
+            print('set H_PLASMA to "no" to avoid overwriting info of D with H in Xolotl')
         print(' ')
             
         for i in range(len(self.plasmaSpecies)): #self.plasmaSpecies.iteritems():
@@ -1329,7 +1329,7 @@ class xolotlFtridynDriver(Component):
                 
             write_tridynDat.write_tridynDat(outFile=self.FT_OUTPUT_PROFILE_TEMP, tridynDat_model=tridynDat_model,plasmaSpecies=self.plasmaSpecies, 
                                             timeFolder=timeFolder, maxRangeXolotl=self.maxRangeXolotl, fluxFraction=self.fluxFraction, 
-                                            rYield=self.rYield, H_plasma=self.H_plasma, xp_parameters=self.xp.parameters, print_test=self.print_test)
+                                            rYield=self.rYield, H_plasma=self.H_PLASMA, xp_parameters=self.xp.parameters, print_test=self.print_test)
             sys.stdout.flush()
 
             if os.path.exists(self.FT_OUTPUT_PROFILE_TEMP):
