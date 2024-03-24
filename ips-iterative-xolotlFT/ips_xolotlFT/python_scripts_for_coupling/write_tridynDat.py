@@ -58,24 +58,23 @@ def write_tridynDat(outFile='tridyn.dat', tridynDat_model=1, plasmaSpecies=['He'
             sys.stdout.flush()
 
             if prj=='D' and H_plasma=='yes':
-                print('\t \t it is a H plasma ; store tridyn string values for H separately')
-                #prj='H'
+                print('\t \t \t it is a H plasma:')
                 iH=plasmaSpecies.index('H')
-                print('TEST TEST: index of H is ', iH)
+                print('\t \t \t index of H is ', iH)
+                print('\t \t \t store tridyn string values for H separately')
                 ft_output_Hprofile_temp_prj=timeFolder+'/'+outFile+'_H'
                 Hprofile=open(ft_output_Hprofile_temp_prj, "r")
                 tridynHString=Hprofile.read().rstrip('\n')
                 combinedHTridynString=str(tridynHString)+str(maxRangeXolotl[iH])
                 Hprofile.close()
 
-                print('\t \t and overwrite values for D with values for H')
+                print('\t \t \t and overwrite values for D with values for H')                
                 fluxFraction[i]=fluxFraction[iH]
                 rYield[i]=rYield[iH]
                 combinedTridynString=combinedHTridynString
-                print('TEST TEST: replaced:')
-                print('TEST TEST: fluxFraction to ', fluxFraction[i])
-                print('TEST TEST: rYield to ', rYield[i])
-                print('TEST TEST: combinedTridynString to ', combinedTridynString)
+                print('\t \t \t for fluxFraction : ', fluxFraction[i], 'rYield : ', rYield[i] )
+                print('\t \t \t and combinedTridynString : ', combinedTridynString)
+                print(' ')
                 
             if (fluxFraction[i] > 0):
                 print('\t \t Write tridyn.dat line in new tridyn.dat format (model ', str(tridynDat_model),')')

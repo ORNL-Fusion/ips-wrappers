@@ -10,6 +10,7 @@ def write_ftxOut(grid=20,
                  log_ftx='log.ftx',
                  tridyn='tridyn.dat',
                  retentionFile='retentionOut.txt',
+                 H_plasma='no',
                  outFile='ftxOut.txt',
                  print_test=False,
                  logFile=None):
@@ -34,6 +35,7 @@ def write_ftxOut(grid=20,
         log_ftx=dic['log_ftx']
         tridyn=dic['tridyn']
         retentionFile=dic['retentionFile']
+        H_plasma=dic['H_plasma']
         outFile=dic['outFile']
         print_test=dic['print_test']
     else:
@@ -55,6 +57,7 @@ def write_ftxOut(grid=20,
         print('\t log_ftx = ', log_ftx)
         print('\t tridyn = ', tridyn)
         print('\t retentionFile = ', retentionFile)
+        print('\t H_plasma = ', H_plasma)
         print('\t print_test = ', print_test)
         print('\t logFile =', logFile)
 
@@ -88,9 +91,14 @@ def write_ftxOut(grid=20,
     #we only want the last occurrence of the string (latest value of RFT)
     #--> open file in reverse & the 1st time we find the string
     R_FT_lines=reversed(open(log_ftx).readlines())
-    R_FT_string="D :  spY"
-    if (print_test):
-        print('\t looking for R_FT_string : ', R_FT_string)    
+    if H_plasma=='yes':
+        R_FT_string="H :  spY"
+        if (print_test):
+            print('\t looking for R_FT_string for H : ', R_FT_string)
+    else:
+        R_FT_string="D :  spY"        
+        if (print_test):
+            print('\t looking for R_FT_string for D : ', R_FT_string)    
     for row in R_FT_lines:
         #if R_FT_string in R_FT_lines:
         if row.find(R_FT_string) != -1:

@@ -96,13 +96,6 @@ class xolotlFtridynDriver(Component):
             self.print_uq=False
         print(' ')
 
-        print(' ')
-        print('TEST TEST')
-        print('keywords:')
-        print(keywords)
-        print('TEST TEST')
-        print(' ')
-        
         if 'H_PLASMA' in keywords:
             self.H_PLASMA=keywords['H_PLASMA']
             print('H_PLASMA defined in keywords as: ', self.H_PLASMA)
@@ -662,29 +655,29 @@ class xolotlFtridynDriver(Component):
             if len(inputEnergy)>=len(self.plasmaSpecies):
                 self.energyIn.append(float(inputEnergy[i]))
             else:
-                print('\t TEST: WARNING: no sufficient entries for inputEnergy')
-                print('\t TEST: WARNING: append Ein = 0.0 )')
+                print('\t WARNING: no sufficient entries for inputEnergy')
+                print('\t WARNING: append Ein = 0.0 )')
                 self.energyIn.append(float(0))
 
             if len(inputAngle)>=len(self.plasmaSpecies):
                 self.inAngle.append(float(inputAngle[i]))
             else:
-                print('\t TEST: WARNING: no sufficient entries for inputAngle')
-                print('\t TEST: WARNING: append Ain = 0.0 )')
+                print('\t WARNING: no sufficient entries for inputAngle')
+                print('\t WARNING: append Ain = 0.0 )')
                 self.inAngle.append(float(0))
 
             if len(inputSpYield)>=len(self.plasmaSpecies):
                 self.spYield.append(float(inputSpYield[i]))
             else:
-                print('\t TEST: WARNING: no sufficient entries for inputSpYield')
-                print('\t TEST: WARNING: append SpY = -1 (calculate) )')
+                print('\t WARNING: no sufficient entries for inputSpYield')
+                print('\t WARNING: append SpY = -1 (calculate) )')
                 self.spYield.append(float(-1))
                 
             if len(inputRYield)>=len(self.plasmaSpecies):
                 self.rYield.append(float(inputRYield[i]))
             else:
-                print('\t TEST: WARNING: no sufficient entries for inputRYield')
-                print('\t TEST: WARNING: append RY = -1 (calculate) )')
+                print('\t WARNING: no sufficient entries for inputRYield')
+                print('\t WARNING: append RY = -1 (calculate) )')
                 self.rYield.append(float(-1))
 
             #self.fluxFraction.append(float(inputFluxFraction[i]))

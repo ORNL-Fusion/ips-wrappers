@@ -46,8 +46,6 @@ def read_lines(filename):
     f.close()
     return temp
 
-
-
 # Fine line number containing given word
 def find_line(lines,word):
     line_num = -1
@@ -272,12 +270,14 @@ def calc_RECYCF(inputdat_file, fort44_file, rad_grid_name, R_FT):
     
     R_FT_counter = 0
     RECYCF = []
+
+    print('scan over rad_grid_name: ', rad_grid_name)
     
     for surfmod_name in rad_grid_name:
         print('\t', surfmod_name)
         line_SURFMOD_def = find_line(lines[line_block_3a:line_block_3b], 'SURFMOD_'+surfmod_name)
         # former 3 line gives info of that strata (-2 contains geometry information)
-    #    print(lines[line_block_3a+line_SURFMOD_def]) # SURFMOD line
+        #print(lines[line_block_3a+line_SURFMOD_def]) # SURFMOD line
         pol_location = int(lines[line_block_3a+line_SURFMOD_def-2].split()[2])-1
         rad_location_1 = lines[line_block_3a+line_SURFMOD_def-2].split()[3]
         rad_location_2 = lines[line_block_3a+line_SURFMOD_def-2].split()[4]

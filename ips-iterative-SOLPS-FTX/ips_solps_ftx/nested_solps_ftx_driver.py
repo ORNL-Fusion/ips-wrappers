@@ -105,6 +105,22 @@ class parent_driver(Component):
             self.ftx_locs[i]=int(ftx_locs_string.split()[i])
         print('\t Running ', num_ftx, ' FTX simulation(s), for SOLPS grid point(s): ', self.ftx_locs)
         sys.stdout.flush()
+
+        #probably only need 'DIMES' for DIIID and 'Tungsten_FTX_1' for ITER
+        self.rad_grid_name=self.services.get_config_param('RAD_GRID_NAME').split() #list(self.services.get_config_param('RAD_GRID_NAME'))
+        print('User defined rad_grid_name : ', self.rad_grid_name)
+
+        #but might need the entire rad_grid_name in the future. Keep this if statement for now
+        #if device=='DIIID':
+	#    rad_grid_name = ['Left1', 'DIMES', 'Right1']
+        #    print('use rad_grid_name for ', device, ":", rad_grid_name)
+        #elif device=='ITER':
+        #    rad_grid_name = ['Left', 'Tungsten_FTX_1', 'Tungsten_FTX_2' 'Right']
+        #    print('use rad_grid_name for ', device, ":", rad_grid_name)
+        #else:
+        #    print('WARNING: unrecognized device: ', device, "no rad_grid_name defined (empty string) ")
+        #    rad_grid_name = [' ']
+        
         
         self.solps_output_file=list(self.services.get_config_param('SOLPS_OUTPUT_FORMAT'))
 
@@ -844,6 +860,13 @@ class parent_driver(Component):
                 self.write_ftxOut['logFile'] = write_ftxOut_log
                 self.write_ftxOut['outFile'] = ftxOutFileName #ftxOutFileStd #rm cwd+'/'
 
+                try:
+                    self.write_ftxOut['H_plasma'] = self.H_plasma
+                    print('H_plasma = ', self.H_plasma,' ; calculate recycling for H or D accordingly')
+                except:
+                    self.write_ftxOut['H_plasma']='no'
+                    print('H_plasma not defined ; calculate recycling for D')
+                
                 #to avoid overwritting, copy files with the ftx-index
                 if (self.print_test):
                     print('add ftx-index to files staged from subworkflow to avoid overwritting when multiple FTX run in parallel. copy:')
@@ -867,6 +890,7 @@ class parent_driver(Component):
                     print('\t log.ftx_{}'': '.format(i) , self.write_ftxOut['log_ftx'])
                     print('\t tridyn.dat: ',self.write_ftxOut['tridyn'])
                     print('\t retentionFile: ', self.write_ftxOut['retentionFile'])
+                    print('\t H_plasma: ', self.write_ftxOut['H_plasma'])
                     print('\t print_test: ', self.write_ftxOut['print_test'])
                     print('\t output logFile: ', 'log.write_ftxOut'+'_t'+str(time)) #<-- without cwd:
                     print('\t output file: ', ftxOutFileName) #ftxOutFileStd) #<-- without cwd:
@@ -895,7 +919,7 @@ class parent_driver(Component):
                 
 
             # SOLPS can only take average the FTX recycling factors
-            [ave_grid, ave_twall, ave_Rft, ave_Rxol, ave_Rtot] = average_SOLPS_input.average_SOLPS_input(ftxOut_file=self.write_ftxOut['outFile'], print_test=self.print_test, logFile=None)
+            [ave_grid, ave_twall, ave_Rft, ave_Rxol, ave_Rtot] = average_SOLPS_input.average_SOLPS_input(ftxOut_file=self.write_ftxOut['outFile'], print_test=self.print_test, logFile=None)  
 
             #save ftxOut for each loop (with time-stamp) ; move file so that it's not appended next iteration
             shutil.move(self.write_ftxOut['outFile'], ftxOutFileName+'_t'+str(time))
@@ -924,12 +948,12 @@ class parent_driver(Component):
             #for now, all FTX in DIMES; eventually implement check for grid point falling in rad_grid_name = Left, DIMES or right
             ave_Rft_array = np.array([ave_Rft]) #as array -->, dtype = np.float64)
             #print('TEST TEST: ave_Rft = ', ave_Rft, ' ave_Rft_array =', ave_Rft_array, ' and ave_Rft_array[0] =', ave_Rft_array[0])
-            RECYCF = updateSOLPSinput.calc_RECYCF(inputDat, 'fort.44', ['DIMES'], ave_Rft_array) #ave_Rft) 
+            RECYCF = updateSOLPSinput.calc_RECYCF(inputDat, 'fort.44', self.rad_grid_name, ave_Rft_array)
             ave_Rtot_array = np.array([ave_Rtot])
             ave_twall_array = np.array([ave_twall])
             #print('TEST TEST: ave_Rtot = ', ave_Rtot, ' ave_Rtot_array =', ave_Rtot_array, ' and ave_Rtot_array[0] =', ave_Rtot_array[0])
             #print('TEST TEST: ave_twall = ', ave_twall, ' ave_twall_array =', ave_twall_array, ' and ave_twall_array[0] =', ave_twall_array[0])
-            updateSOLPSinput.input_dat_update(orig_inputDat, inputDat, RECYCF, ave_Rtot_array, ave_twall_array, ['DIMES']) 
+            updateSOLPSinput.input_dat_update(orig_inputDat, inputDat, RECYCF, ave_Rtot_array, ave_twall_array, self.rad_grid_name) 
             shutil.copyfile(inputDat, new_inputDat)
 
             print('Update values in ', inputDat)
