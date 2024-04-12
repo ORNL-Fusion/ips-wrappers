@@ -114,21 +114,20 @@ class xolotlFtridynDriver(Component):
                 print(e)
                 print('no H_PLASMA parameter found. Will assume to not be a H plasma')
                 self.H_PLASMA='no'
-        print(' ')
-            
+        print(' ')        
+        
         #test giving explicit wrapper path in modernized FTX workflow
-        if self.print_test:
-            try:
-                self.SCRIPT
-                if self.SCRIPT == "":
-                    print('no explicit script path provided. use module loaded in environment')
-                else:
-                    print('using explicit path to wrapper')
-                    print(self.SCRIPT)
-            except Exception as e:
-                print(e)
-                print('no script variable defined. use module loaded in environment')
-            print(' ')
+        try:
+            self.SCRIPT
+            if self.SCRIPT == "":
+                print('no explicit script path provided. use module loaded in environment')
+            else:
+                print('using explicit path to wrapper')
+                print(self.SCRIPT)
+        except Exception as e:
+            print(e)
+            print('no script variable defined. use module loaded in environment')
+        print(' ')
             
         #stage input files
         print('staging input files {} '.format(self.INPUT_FILES))
@@ -562,7 +561,15 @@ class xolotlFtridynDriver(Component):
                 self.xp.parameters[mod]=val
                 print('\t ... write_tempModel succesfully returned: for Xolotl v1, temperature model: ', mod, val)
             elif(self.driver['xolotl_v']==2):
-                mod,val,rm_startTemp = handle_tempModel.v2(xp_parameters=self.xp.parameters,plasma=self.plasma, print_test=self.print_test)
+                try:
+                    print('bulk temperature ', self.driver['bulkT'],' (K) given externally')
+                    print('will be used if tempModel = heat')
+                except Exception as e:
+                    print('no bulk temperature defined explicitly')
+                    print('will use 300 K by default if needed')
+                    self.driver['bulkT']=300.0
+                    
+                mod,val,rm_startTemp = handle_tempModel.v2(xp_parameters=self.xp.parameters,plasma=self.plasma, bulkT=self.driver['bulkT'], print_test=self.print_test)
                 sys.stdout.flush()
                 self.xp.parameters['tempHandler']=mod
                 self.xp.parameters['tempParam']=val

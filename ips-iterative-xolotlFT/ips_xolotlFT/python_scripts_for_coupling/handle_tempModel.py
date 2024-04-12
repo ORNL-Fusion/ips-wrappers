@@ -57,7 +57,7 @@ def v1(xp_parameters={},plasma={},print_test=False):
             print('\t \t use fixed temperature (startTemp) specified by Xolotl (in config or default): ', val)            
         else:
             print('\t \t WARNING: no heat or temperature defined in PLASMAs output or Xolotls input')
-            print('\t \t \t use default value T = 300K')
+            print('\t \t \t use default value T = 300 K')
             mod='startTemp'
             val=300.0
 
@@ -65,7 +65,7 @@ def v1(xp_parameters={},plasma={},print_test=False):
     sys.stdout.flush()
     return [mod,val,rm_startTemp]
 
-def v2(xp_parameters={},plasma={},print_test=False):
+def v2(xp_parameters={},plasma={},bulkT=300.0,print_test=False):
 
     print('\t running write_tempModel for Xolotl v2')  
 
@@ -73,6 +73,7 @@ def v2(xp_parameters={},plasma={},print_test=False):
         print('\t with inputs:')
         print('\t \t xp_parameters = ', xp_parameters)
         print('\t \t plasma = ', plasma)
+        print('\t \t bulkT = ', bulkT)
     print(' ')
     sys.stdout.flush()
     
@@ -86,7 +87,7 @@ def v2(xp_parameters={},plasma={},print_test=False):
             if (isinstance(plasma['heat'],list) and (len(plasma['heat'])>1)):
                 val=[plasma['heat'][0]*1.0e-18, plasma['heat'][1]] 
             else:
-                val=[plasma['heat']*1.0e-18, 300.0] 
+                val=[plasma['heat']*1.0e-18, bulkT] 
             print('\t \t use heat given by PLASMA ', val , '(here used in W/nm2s = 1e-18 W/m2s)')
 
         elif 'heat' in xp_parameters:
@@ -95,7 +96,7 @@ def v2(xp_parameters={},plasma={},print_test=False):
             if (isinstance(xp_parameters['heat'],list) and (len(xp_parameters['heat'])>1)):
                 val=[xp_parameters['heat'][0], xp_parameters['heat'][1]]
             else:
-                val=[xp_parameters['heat'], 300.0] 
+                val=[xp_parameters['heat'], bulkT] 
             print('\t \t use heat given by Xolotl ', val) #if given by Xolotl, assume it's in Xolotl's units                                                                                           
 
         elif 'tempParam' in plasma:
@@ -121,15 +122,15 @@ def v2(xp_parameters={},plasma={},print_test=False):
         else:
             print('\t \t WARNING: no heat or other temperature model given in PLASMA or Xolotl. ')
             print('\t \t \t for xolotl version 2, use standard values: ')
-            print('\t \t \t tempHandler = constant ; tempParam = 300')
+            print('\t \t \t tempHandler = constant ; tempParam = bulkT (300 K by default)')
             mod='constant'
-            val=300.0
+            val=bulkT
     else:
         print('\t \t WARNING:  no tempHandler provided by xolotl or plasma parameters')
         print('\t \t \t for xolotl version 2, use standard values: ')
-        print('\t \t \t tempHandler = constant ; tempParam = 300')
+        print('\t \t \t tempHandler = constant ; tempParam = bulkT (300 K by default)')
         mod = 'constant'
-        val = 300.0
+        val = bulkT
 
     if 'startTemp' in xp_parameters:
         rm_startTemp=True

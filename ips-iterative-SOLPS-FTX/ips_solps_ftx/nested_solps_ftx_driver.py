@@ -266,7 +266,7 @@ class parent_driver(Component):
             for input_file in input_file_list:
                 print('\t', input_file)
                 #print('\t from submission directory to ', input_file , ' from ', self.SUBMIT_DIR, ' to ', self.ftx_components[ftx_comp]['INPUT_DIR']) #<-- without long paths 
-                shutil.copyfile(ftx_input_dir+'/'+input_file,self.ftx_components[ftx_comp]['INPUT_DIR']+'/'+input_file)
+                shutil.copyfile(ftx_input_dir+'/'+input_file+'_'+str(i),self.ftx_components[ftx_comp]['INPUT_DIR']+'/'+input_file)
             print('...done copying input files')
 
             ftx_conf = self.services.get_config_param('SUBWF_COMPONENT_CONF')+'_{}'.format(i)
