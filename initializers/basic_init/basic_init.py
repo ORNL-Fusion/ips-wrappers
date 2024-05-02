@@ -4,10 +4,10 @@
 basic_init.py  Batchelor (3-11-2018)
 
 Version 2.0 (Batchelor 10/31/2020)
-The purpose is to collect a complete set of initial state files and stage them to the 
-/work/state/ directory. It is simplified and adapted from generic_ps_init.py, but 
-eliminating reference to many features specific to plasma physics.  The immediate  
-application is to simple, example simulations which do not make use of the SWIM Plasma 
+The purpose is to collect a complete set of initial state files and stage them to the
+/work/state/ directory. It is simplified and adapted from generic_ps_init.py, but
+eliminating reference to many features specific to plasma physics.  The immediate
+application is to simple, example simulations which do not make use of the SWIM Plasma
 State system. The SWIM Plasma State need not be used at all, but can be.
 
 This script first touches all the files listed as STATE_FILES in the config file.  If
@@ -21,9 +21,9 @@ controlled by config parameters COPY_FILES and COPIED_FILES_NEW_NAMES
 COPY_FILES = list of files to be copied
 COPIED_FILES_NEW_NAMES = list of new names for files, must match COPY_FILES
 
-The term CURRENT_STATE refers to a SWIM PLASMA_STATE file if it is being used.  If a 
+The term CURRENT_STATE refers to a SWIM PLASMA_STATE file if it is being used.  If a
 CURRENT_STATE is specified in the simulation config file, this script adds the Plasma State
-variables to it -> run_id and time loop variables tinit, and tfinal.  
+variables to it -> run_id and time loop variables tinit, and tfinal.
 
 If more work needs to be done before the individual components do their own
 init, one can specify an INIT_HELPER_CODE (full path) in the config file which
@@ -34,10 +34,8 @@ they must also be specified in the [init] section of the config file.
 
 import subprocess
 import os
-# import utils.simple_assignment_file_edit as edit
-# import utils.get_IPS_config_parameters as config
 import simple_file_editing_functions as edit
-import simple_file_editing_functions as config
+import get_IPS_config_parameters as config
 from ipsframework import Component
 
 

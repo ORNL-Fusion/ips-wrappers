@@ -1,0 +1,7 @@
+*.o
+*.mod
+*.swp
+.depend
+make-result
+prepare_genray_input
+process_genray_output
