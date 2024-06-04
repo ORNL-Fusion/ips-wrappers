@@ -26,6 +26,7 @@ def ftridyn_to_xolotl_launch(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
                              angle=[0.0],
                              weightAngle=[1.0],
                              nBins=200,
+                             fitOrder=15,
                              prjRange=50.0, #in [A]
                              logFile=None,
                              print_test=False
@@ -105,6 +106,13 @@ def ftridyn_to_xolotl_launch(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
                 print('\t from pkl file, set dict value to nBins=', dic['nBins'])
         else:
             print('\t no value defined in pkl; use default for nBins=', nBins)
+
+        if 'fitOrder' in dic:
+            fitOrder=dic['fitOrder']
+            if print_test:
+                print('\t from pkl file, set dict value to fitOrder=', dic['fitOrder'])
+        else:
+            print('\t no value defined in pkl; use default for fitOrder=', fitOrder)
             
         if 'prjRange' in dic:
             prjRange=dic['prjRange']
@@ -185,7 +193,7 @@ def ftridyn_to_xolotl_launch(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
                 sys.stdout.flush()
 
     ## Fit with polynomials
-    fit = poly.polyfit(b, n, 15)
+    fit = poly.polyfit(b, n, fitOrder)
 
     ## Get the fit function
     fitFunc = poly.Polynomial(fit)
@@ -194,8 +202,13 @@ def ftridyn_to_xolotl_launch(ftridynOnePrjOutput='He_WDUMPPRJ.dat',
     outputFile = open('tridyn.dat', 'w')
     
     ## Write in the output file
-    outputFile.write("%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s \n" %(fit[0], fit[1], fit[2], fit[3], fit[4], fit[5], fit[6], fit[7], fit[8], fit[9], fit[10], fit[11], fit[12], fit[13], fit[14], fit[15]))
-    
+    for i in range(fitOrder+1):
+        #outputFile.write("%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s \n" %(fit[0], fit[1], fit[2], fit[3], fit[4], fit[5], fit[6], fit[7], fit[8], fit[9], fit[10], fit[11], fit[12], fit[13], fit[14], fit[15]))
+        outputFile.write("%s "%(fit[i]))
+    for i in range(15-fitOrder):
+        outputFile.write("0.0 ")
+    outputFile.write("\n")
+        
     ## Close the output file
     outputFile.close()
     

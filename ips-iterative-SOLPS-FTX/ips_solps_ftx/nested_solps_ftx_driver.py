@@ -14,10 +14,12 @@ import sys
 import pickle
 import difflib
 import numpy as np
-from ips_solps_ftx.python_scripts_for_coupling import plasmaOut2ftxIn
-from ips_solps_ftx.python_scripts_for_coupling import write_ftxOut
-#from ips_solps_ftx.python_scripts_for_coupling import SOLPS_heatflux_for_FTX #maybe generalize name
-from ips_solps_ftx.python_scripts_for_coupling import SOLPS_outputs_for_FTX
+#from ips_solps_ftx.python_scripts_for_coupling import plasmaOut2ftxIn # launch-vs-call scripts April 2024
+from ips_solps_ftx.python_scripts_for_coupling import plasmaOut2ftxIn_call
+#from ips_solps_ftx.python_scripts_for_coupling import write_ftxOut # launch-vs-call scripts April 2024
+from ips_solps_ftx.python_scripts_for_coupling import write_ftxOut_call
+#from ips_solps_ftx.python_scripts_for_coupling import SOLPS_outputs_for_FTX # launch-vs-call scripts April 2024
+from ips_solps_ftx.python_scripts_for_coupling import SOLPS_outputs_for_FTX_call
 from ips_solps_ftx.python_scripts_for_coupling import average_SOLPS_input
 from ips_solps_ftx.python_scripts_for_coupling import updateSOLPSinput
 from ips_solps_ftx.python_scripts_for_coupling import read_impact_angle
@@ -480,7 +482,7 @@ class parent_driver(Component):
                 pickle.dump(self.SOLPSoutputs, open(pkl_SOLPSoutputs_file, "wb" ) )
                 shutil.copyfile(pkl_SOLPSoutputs_file, 'SOLPSoutputs_'+str(i)+'.pkl')
 
-                print('Launch SOLPS_outputs_for_FTX ... ')
+                print('Call SOLPS_outputs_for_FTX ... ')
                 if (self.print_test):
                     print('\t with inputs: ')
                     print('\t rad_grid : ', self.SOLPSoutputs['rad_grid'])
@@ -494,23 +496,44 @@ class parent_driver(Component):
                 sys.stdout.flush()
 
                 SOLPSoutputs_script = 'SOLPS_outputs_for_FTX.py'
-                print('\t Launch python script: ')
+                print('\t Call python script: ')
                 print('\t', SOLPSoutputs_script)                
                 sys.stdout.flush()
                 
                 if self.print_test:
-                    print('\t launch task : ', SOLPSoutputs_script)
-                    print('\t with pkl file: ', 'SOLPSoutputs.pkl')
+                    print('\t call : ', SOLPSoutputs_script)
                     print('\t logFile : ', SOLPSoutputs_log)
                     print(' ')
-                task_id_SOLPSoutputs = self.services.launch_task(1,self.services.get_working_dir(),
-                                                                 SOLPSoutputs_script, logFile=SOLPSoutputs_log)
-                ret_val_SOLPSoutputs = self.services.wait_task(task_id_SOLPSoutputs)
 
-                if self.print_test:
-                    print('\t after running ', SOLPSoutputs_script)
-                    print('\t ret_val_SOLPSoutputs = ', ret_val_SOLPSoutputs)
-                    print(' ')
+                # launch-vs-call scripts April 2024
+                #PYTHON SCRIPT: RUN VS LAUNCH TASK
+                #option 1: script as launch task
+                #               use for large data gathering --> cases with many location or Ein/Ain distributions
+                #               but leads to many srun calls, has caused issues on Perlmutter (April 2024)
+                #               commented for now (April 2024) -- make it an option later
+                #task_id_SOLPSoutputs = self.services.launch_task(1,self.services.get_working_dir(),
+                #                                                 SOLPSoutputs_script, logFile=SOLPSoutputs_log)
+                #ret_val_SOLPSoutputs = self.services.wait_task(task_id_SOLPSoutputs)
+
+                #if self.print_test:
+                #    print('\t after running ', SOLPSoutputs_script)
+                #    print('\t ret_val_SOLPSoutputs = ', ret_val_SOLPSoutputs)
+                #    print(' ')
+                
+                #option 2: run as python script
+                #          use for small data gathering --> cases with few location and/or single Ein/Ain (no distributions)
+                #          but all calls run on the same node, have to wait, can lead to bottleneck --> not efficient
+                #          use it for now (April 2024) -- make it an option later
+                #          use the same dictionary in python call as in launch task (dump pickle) 
+
+                SOLPS_outputs_for_FTX_call.SOLPS_heatflux_for_FTX(rad_grid=self.SOLPSoutputs['rad_grid'],
+                                                                  b2fstate_file=self.SOLPSoutputs['b2fstate_file'],
+                                                                  b2fgmtry_file=self.SOLPSoutputs['b2fgmtry_file'],
+                                                                  fort44_file=self.SOLPSoutputs['fort44_file'],
+                                                                  pickleOutputFile=self.SOLPSoutputs['pickleOutputFile'],
+                                                                  print_test=self.SOLPSoutputs['print_test'],
+                                                                  logFile=self.SOLPSoutputs['logFile'])
+                                                 
                 sys.stdout.flush()
 
                 print('... done with SOLPSoutputs for ftx '+str(i)+' \n')
@@ -657,7 +680,7 @@ class parent_driver(Component):
                 pkl_p2ftx_file='plasmaOut2ftxIn.pkl' #rm cwd+'/'
                 pickle.dump(self.plasmaOut2ftxIn, open(pkl_p2ftx_file, "wb" ) )
 
-                print('Launch plasmaOut2ftxIn... ')
+                print('Call plasmaOut2ftxIn... ')
                 if (self.print_test):
                     print('\t with inputs: ')
                     print('\t input file: ', solps_outFile )#<-- without long paths: self.plasmaOut2ftxIn['plasmaOutFile'])
@@ -667,28 +690,45 @@ class parent_driver(Component):
                     print(' ')
                 sys.stdout.flush()
 
-                plasma2ftx_script = 'plasmaOut2ftxIn.py'
-                print('\t Launch python script: ')
+                plasma2ftx_script = 'plasmaOut2ftxIn_call.py'
+                print('\t Call python script: ')
                 print('\t',plasma2ftx_script)
                     
                 sys.stdout.flush()
                 if self.print_test:
-                    print('\t launch task : ', plasma2ftx_script)
-                    print('\t with pkl file: ', 'plasmaOut2ftxIn.pkl') # <-- without cwd: pkl_p2ftx_file)
+                    print('\t call : ', plasma2ftx_script)                    
                     print('\t logFile : ', 'log.plasmaOut2ftxIn'+'_t'+str(time)) #<-- without cwd: p2ftx_log)
-                    #<-- withiout long paths: print('\t self.services.get_working_dir() = ', self.services.get_working_dir())
-                
-                task_id_p2ftx = self.services.launch_task(1,self.services.get_working_dir(),
-                                                          plasma2ftx_script, logFile=p2ftx_log)
-                ret_val_p2ftx = self.services.wait_task(task_id_p2ftx)
-                
-                if self.print_test:
-                    print('\t after running ', plasma2ftx_script)
-                    print('\t ret_val_p2ftx = ', ret_val_p2ftx)
-                    print(' ')
+
+                # launch-vs-call scripts April 2024
+                #PYTHON SCRIPT: RUN VS LAUNCH TASK
+
+                #option 1: script as launch task
+                #          use for large data gathering --> cases with many location or Ein/Ain distributions
+                #          but leads to many srun calls, has caused issues on Perlmutter (April 2024)
+                #          commented for now (April 2024) -- make it an option later                
+                #task_id_p2ftx = self.services.launch_task(1,self.services.get_working_dir(),
+                #                                          plasma2ftx_script, logFile=p2ftx_log)
+                #ret_val_p2ftx = self.services.wait_task(task_id_p2ftx)
+                #
+                #if self.print_test:
+                #    print('\t after running ', plasma2ftx_script)
+                #    print('\t ret_val_p2ftx = ', ret_val_p2ftx)
+                #    print(' ')
+
+                #option 2: run as python script
+                #          use for small data gathering --> cases with few location and/or single Ein/Ain (no distributions)
+                #          but all calls run on the same node, have to wait, can lead to bottleneck --> not efficient
+                #          use it for now (April 2024) -- make it an option later
+                #          use the same dictionary in python call as in launch task (dump pickle)
+                plasmaOut2ftxIn_call.plasmaOut2ftxIn(plasmaOutFile=self.plasmaOut2ftxIn['plasmaOutFile'],
+                                                     ftxInFile=self.plasmaOut2ftxIn['ftxInFile'],
+                                                     print_test=self.plasmaOut2ftxIn['print_test'],
+                                                     logFile=self.plasmaOut2ftxIn['logFile'])
+
                 sys.stdout.flush()
-                #self.plasmaOut2ftxIn.clear()
-                print('... done with plasmaOut2ftxIn \n')                
+                
+                print('... done with plasmaOut2ftxIn \n')
+                sys.stdout.flush()
                 ## END OF 4 - solpsOut --> ftxIn
 
                 #5- copy ftxIn to ftx input directory
@@ -882,7 +922,7 @@ class parent_driver(Component):
                 pkl_ftxOut_file='write_ftxOut.pkl' #rm cwd+'/'
                 pickle.dump(self.write_ftxOut, open(pkl_ftxOut_file, "wb" ) )
 
-                print('Launch write_ftxOut...')
+                print('Call write_ftxOut...')
                 if (self.print_test):
                     print('\t with inputs:')
                     print('\t grid/location: ', self.write_ftxOut['grid'] )
@@ -897,23 +937,46 @@ class parent_driver(Component):
                     print(' ')
                 sys.stdout.flush()
 
-                write_ftxOut_script = 'write_ftxOut.py'
-                print('\t Launch python script: ')
+                write_ftxOut_script = 'write_ftxOut_call.py'
+                print('\t Call python script: ')
                 print('\t',write_ftxOut_script)
 
                 if self.print_test:
-                    print('\t launch task : ', write_ftxOut_script)
-                    print('\t with pkl file: ', 'write_ftxOut.pkl') # <-- without cwd: 
+                    print('\t call : ', write_ftxOut_script)
                     print('\t logFile : ', 'log.write_ftxOut'+'_t'+str(time)) #<-- without cwd                    
                 sys.stdout.flush()                    
-                    
-                task_id_ftxOut = self.services.launch_task(1,self.services.get_working_dir(),
-                                                        write_ftxOut_script, logFile=write_ftxOut_log)
-                ret_val_ftxOut = self.services.wait_task(task_id_ftxOut)
-                if self.print_test:
-                    print('\t after running ', write_ftxOut_script)
-                    print('\t ret_val_ftxOut = ', ret_val_ftxOut)
-                    print(' ')
+
+
+                # launch-vs-call scripts April 2024
+                #PYTHON SCRIPT: RUN VS LAUNCH TASK
+                #option 1: script as launch task
+                #               use for large data gathering --> cases with many location or Ein/Ain distributions
+                #               but leads to many srun calls, has caused issues on Perlmutter (April 2024)
+                #               commented for now (April 2024) -- make it an option later
+                #task_id_ftxOut = self.services.launch_task(1,self.services.get_working_dir(),
+                #                                        write_ftxOut_script, logFile=write_ftxOut_log)
+                #ret_val_ftxOut = self.services.wait_task(task_id_ftxOut)
+                #if self.print_test:
+                #    print('\t after running ', write_ftxOut_script)
+                #    print('\t ret_val_ftxOut = ', ret_val_ftxOut)
+                #    print(' ')
+
+                #option 2: run as python script
+                #                 use for small data gathering --> cases with few location and/or single Ein/Ain (no distributions)
+                #                 but all calls run on the same node, have to wait, can lead to bottleneck --> not efficient
+                #                 use it for now (April 2024) -- make it an option later
+                #                 use the same dictionary in python call as in launch task (dump pickle)
+
+                write_ftxOut_call.write_ftxOut(grid=self.write_ftxOut['grid'],
+                                               last_tridyn=self.write_ftxOut['last_tridyn'],
+                                               log_ftx=self.write_ftxOut['log_ftx'],
+                                               tridyn=self.write_ftxOut['tridyn'],
+                                               retentionFile=self.write_ftxOut['retentionFile'],
+                                               H_plasma=self.write_ftxOut['H_plasma'],
+                                               outFile=self.write_ftxOut['outFile'],
+                                               print_test=self.write_ftxOut['print_test'],
+                                               logFile=self.write_ftxOut['logFile'])
+                
                 sys.stdout.flush()
                 print('... done with write_ftxOut \n')
                 

@@ -8,8 +8,8 @@ import subprocess
 import numpy
 import shutil
 from ips_xolotlFT.python_scripts_for_coupling import translate_xolotl_to_ftridyn
-#import translate_ftridyn_to_xolotl_launch
-#import get_yields_launch
+from ips_xolotlFT.python_scripts_for_coupling import translate_ftridyn_to_xolotl_call # launch-vs-call scripts April 2024
+from ips_xolotlFT.python_scripts_for_coupling import get_yields_call # launch-vs-call scripts April 2024
 from ips_xolotlFT.python_scripts_for_coupling import binTRIDYN
 from ips_xolotlFT.python_scripts_for_coupling import param_handler
 import traceback
@@ -1112,6 +1112,15 @@ class xolotlFtridynDriver(Component):
                         ft_implProfiles_dictionary['prjRange']=maxRange
                         ft_implProfiles_dictionary['print_test']=self.print_test
 
+                        if 'fit_order' in self.driver:
+                            ft_implProfiles_dictionary['fitOrder']=int(self.driver['fit_order'])
+                            if self.print_test:
+                                print('implantation profile fitting order defined in config file as: ', ft_implProfiles_dictionary['fitOrder'])
+                        else:
+                            if self.print_test:
+                                print('no implantation profile fitting order defined in config. Use default, 15')
+                            ft_implProfiles_dictionary['fitOrder']=int(15)
+                            
                         #different grid keywords depending on Xolotl version:
                         if (self.driver['xolotl_v']==1): #'grid' in self.xp.parameters:
                             ft_implProfiles_dictionary['nBins']=self.xp.parameters['grid'][0]
@@ -1120,7 +1129,18 @@ class xolotlFtridynDriver(Component):
                         else:
                             ft_implProfiles_dictionary['nBins']=200
                             print('\t WARNING: xolotl_v not recognized; assume nBins=200')
-                                
+
+                        if 'nBins' in self.driver:
+                            ft_implProfiles_dictionary['nBins']=int(self.driver['nBins'])
+                            if self.print_test:
+                                print('implantation profile number of bins defined in config file as: ', ft_implProfiles_dictionary['nBins'])
+                                print('overwrite default value or number of grid parameters')
+                        else:
+                            if self.print_test:
+                                print('no implantation profile number of bins defined in config file ')
+                                print('continue with default value or number of grid parameters : ', ft_implProfiles_dictionary['nBins'])
+
+                            
                         ft_implProfiles_dictionary['logFile']=outFile
 
 
@@ -1132,20 +1152,42 @@ class xolotlFtridynDriver(Component):
                         try:
                             self.TRANSLATE_FT2XOL
                             ft_implProfile_script=self.TRANSLATE_FT2XOL
-                            print('\t Launch user-defined python script :  ')
+                            print('\t Run user-defined python script :  ')
                             print('\t', ft_implProfile_script)
                             
                         except: #DEFAULT PATH: 
-                            ft_implProfile_script = 'translate_ftridyn_to_xolotl.py'
-                            print('\t Launch default python script: ')
+                            ft_implProfile_script = 'translate_ftridyn_to_xolotl_call.py'
+                            print('\t Run default python script: ')
                             print('\t ',ft_implProfile_script)
 
                         sys.stdout.flush()
 
-                        task_id_impl = self.services.launch_task(1,self.services.get_working_dir(),
-                                                                 ft_implProfile_script, logfile='tridynPlotting.log')
-                        ret_val_impl = self.services.wait_task(task_id_impl)
+                        # launch-vs-call scripts April 2024                        
+                        # PYTHON SCRIPT: RUN VS LAUNCH TASK
+                        
+                        #option 1: script as launch task
+                        #          use for large data gathering --> cases with many location or Ein/Ain distributions
+                        #          but leads to many srun calls, has caused issues on Perlmutter (April 2024)
+                        #          commented for now (April 2024) -- make it an option later
+                        #task_id_impl = self.services.launch_task(1,self.services.get_working_dir(),
+                        #                                         ft_implProfile_script, logfile='tridynPlotting.log')
+                        #ret_val_impl = self.services.wait_task(task_id_impl)
 
+                        #option 2: run as python script
+                        #          use for small data gathering --> cases with few location and/or single Ein/Ain (no distributions)
+                        #          but all calls run on the same node, have to wait, can lead to bottleneck --> not efficient
+                        #          use it for now (April 2024) -- make it an option later
+                        #          use the same dictionary in python call as in launch task (dump pickle)
+                        translate_ftridyn_to_xolotl_call.ftridyn_to_xolotl(ftridynOnePrjOutput=ft_implProfiles_dictionary['ftridynOnePrjOutput'],
+                                                                           ftridynFolder=ft_implProfiles_dictionary['ftridynFolder'],
+                                                                           angle=ft_implProfiles_dictionary['angle'],
+                                                                           weightAngle=ft_implProfiles_dictionary['weightAngle'],
+                                                                           prjRange=ft_implProfiles_dictionary['prjRange'],
+                                                                           nBins=ft_implProfiles_dictionary['nBins'],
+                                                                           fitOrder=ft_implProfiles_dictionary['fitOrder'],
+                                                                           print_test=ft_implProfiles_dictionary['print_test'],
+                                                                           logFile=ft_implProfiles_dictionary['logFile'])
+                        
                     else: #if len(maxDepth)==0
                         print("\t nothing was implanted. maxRange and profile = 0 ")
                         maxRange=0.0
@@ -1182,36 +1224,58 @@ class xolotlFtridynDriver(Component):
                     try:
                         self.GET_YIELDS
                         ft_getYields_script=self.GET_YIELDS
-                        print('\t Launch user-defined python script : ')
+                        print('\t Run user-defined python script : ')
                         print('\t ', ft_getYields_script)
                         
                     except: #DEFAULT PATH:
-                        ft_getYields_script = 'get_yields.py'
-                        print('\t Launch default python script ')
+                        ft_getYields_script = 'get_yields_call.py'
+                        print('\t Run default python script ')
                         print('\t ', ft_getYields_script)
 
                     sys.stdout.flush()
 
-                    task_id_gy = self.services.launch_task(1,self.services.get_working_dir(),
-                                                           ft_getYields_script, logfile='get_yields.log')
-                    ret_val_gy = self.services.wait_task(task_id_gy)
+                    # launch-vs-call scripts April 2024
+                    # PYTHON SCRIPT: RUN VS LAUNCH TASK
+                    
+                    #option 1: script as launch task
+                    #          use for large data gathering --> cases with many location or Ein/Ain distributions
+                    #          but leads to many srun calls, has caused issues on Perlmutter (April 2024)
+                    #          commented for now (April 2024) -- make it an option later
+                    #task_id_gy = self.services.launch_task(1,self.services.get_working_dir(),
+                    #                                       ft_getYields_script, logfile='get_yields.log')
+                    #ret_val_gy = self.services.wait_task(task_id_gy)
 
-                    if os.path.exists(pkl_gy_file):
-                        with open(pkl_gy_file, "rb") as pf:
-                            getYields_dic = pickle.load(pf)
-                            if self.print_test:
-                                print('\t \t get_yields function returned dictionary:')
-                                print('\t \t', getYields_dic)
-                                sys.stdout.flush()
-                            if 'yields' in getYields_dic.keys():
-                                yields=getYields_dic['yields']
-                            else:
-                                yields=[0.0, 0.0]
-                        pf.close()
-                        print('\t reading the pickle file, get_yields returned [total SpY, total RY] = ', yields)
-                    else:
-                        print('\t WARNING! could not read yield from get_yields pickle file. Set to zero')
-                        yields=[0.0, 0.0]
+                    #if os.path.exists(pkl_gy_file):
+                    #    with open(pkl_gy_file, "rb") as pf:
+                    #        getYields_dic = pickle.load(pf)
+                    #        if self.print_test:
+                    #            print('\t \t get_yields function returned dictionary:')
+                    #            print('\t \t', getYields_dic)
+                    #            sys.stdout.flush()
+                    #        if 'yields' in getYields_dic.keys():
+                    #            yields=getYields_dic['yields']
+                    #        else:
+                    #            yields=[0.0, 0.0]
+                    #    pf.close()
+                    #    print('\t reading the pickle file, get_yields returned [total SpY, total RY] = ', yields)
+                    #else:
+                    #    print('\t WARNING! could not read yield from get_yields pickle file. Set to zero')
+                    #    yields=[0.0, 0.0]
+
+                    #option 2: run as python script
+                    #          use for small data gathering --> cases with few location and/or single Ein/Ain (no distributions)
+                    #          but all calls run on the same node, have to wait, can lead to bottleneck --> not efficient
+                    #          use it for now (April 2024) -- make it an option later
+                    #          use the same dictionary in python call as in launch task (dump pickle)
+                    yields=get_yields_call.sputtering_and_reflection(ftridynOneOutOutput=ft_getYields_dictionary['ftridynOneOutOutput'],
+                                                                     ftridynFolder=ft_getYields_dictionary['ftridynFolder'],
+                                                                     fNImpacts=ft_getYields_dictionary['fNImpacts'],
+                                                                     angle=ft_getYields_dictionary['angle'],
+                                                                     weightAngle=ft_getYields_dictionary['weightAngle'],
+                                                                     print_test=ft_getYields_dictionary['print_test'],
+                                                                     logFile=outFile)
+                    print('\t call to get_yields returned [total SpY, total RY] = ', yields)
+
                     
                     #overwrite spY value if mode is 'calculate'
                     if self.spYieldMode[i]=='calculate':
