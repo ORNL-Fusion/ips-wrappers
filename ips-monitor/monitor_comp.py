@@ -1199,6 +1199,7 @@ class monitor(Component):
             retcode = subprocess.call(cmd)
             if (retcode != 0):
                 logMsg = 'Error executing '.join(map(str, cmd))
+                print('cmd = ', cmd)
                 print('retcode = ', retcode)
                 print('logMsg =  ', logMsg)
                 self.services.error(logMsg)
