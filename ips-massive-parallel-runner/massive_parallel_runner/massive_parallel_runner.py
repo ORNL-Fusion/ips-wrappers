@@ -150,12 +150,20 @@ class massive_parallel_runner(Component):
             shutil.unpack_archive(lastest, '.')
             os.chdir('../')
 
-            task_wait = self.services.launch_task(1, self.services.get_working_dir(),
-                                                  self.MAKE_DATABASE_EXE,
-                                                  '--rdir=massive_parallel_runner_output_dir/SUMMARY',
-                                                  '--input={}'.format(self.database_config),
-                                                  '--output={}'.format(database),
-                                                  logfile=logfile)
+            if self.USE_EPED:
+                task_wait = self.services.launch_task(1, self.services.get_working_dir(),
+                                                      self.MAKE_DATABASE_EPED_EXE,
+                                                      '--rdir=massive_parallel_runner_output_dir/SUMMARY',
+                                                      '--model=eped1',
+                                                      '--output={}'.format(database),
+                                                      logfile=logfile)
+            else:
+                task_wait = self.services.launch_task(1, self.services.get_working_dir(),
+                                                      self.MAKE_DATABASE_EXE,
+                                                      '--rdir=massive_parallel_runner_output_dir/SUMMARY',
+                                                      '--input={}'.format(self.database_config),
+                                                      '--output={}'.format(database),
+                                                      logfile=logfile)
 
             if self.services.wait_task(task_wait):
                 self.services.error('massive_parallel_runner: step failed to make database')

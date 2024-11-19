@@ -140,13 +140,20 @@ class massive_serial_runner(Component):
             else:
                 logfile = 'make_db.log'
 
-            task_wait = self.services.launch_task(1, self.services.get_working_dir(),
-                                                  self.MAKE_DATABASE_EXE,
-                                                  '--rdir=massive_serial_runner_output_dir',
-                                                  '--input={}'.format(self.database_config),
-                                                  '--output={}'.format(database),
-                                                  '--ndir=0', #  FIXME: This command option works around a bug in makedb which shouldn't get called.
-                                                  logfile=logfile)
+            if self.USE_EPED:
+                task_wait = self.services.launch_task(1, self.services.get_working_dir(),
+                                                      self.MAKE_DATABASE_EPED_EXE,
+                                                      '--rdir=massive_parallel_runner_output_dir/SUMMARY',
+                                                      '--model=eped1',
+                                                      '--output={}'.format(database),
+                                                      logfile=logfile)
+            else:
+                task_wait = self.services.launch_task(1, self.services.get_working_dir(),
+                                                      self.MAKE_DATABASE_EXE,
+                                                      '--rdir=massive_parallel_runner_output_dir/SUMMARY',
+                                                      '--input={}'.format(self.database_config),
+                                                      '--output={}'.format(database),
+                                                      logfile=logfile)
 
             if self.services.wait_task(task_wait):
                 self.services.error('massive_serial_runner: step failed to make database')
