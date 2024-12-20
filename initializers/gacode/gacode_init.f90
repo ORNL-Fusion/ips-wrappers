@@ -130,6 +130,8 @@ PROGRAM gacode_init
         !fixes issue w/ assuming zion.eq.zatom that causes namrd to die
         if(expro_name(i).eq.'W')then
            Zatom_tmp(j)  = 74
+        else if (expro_name(i).eq.'Mo')then
+           Zatom_tmp(j)  = 42
         else
            Zatom_tmp(j)  = nint(expro_z(i))
         endif
@@ -149,6 +151,9 @@ PROGRAM gacode_init
         Zionrf_tmp(1) = 1
      endif
   endif   
+
+  !WRITE(*,*) 'Zion, Mion ', Zion_tmp, amu_tmp
+  !WRITE(*,*) 'Zionrf, Mionrf ', Zionrf_tmp, amurf_tmp
   
   !Set species properties and allocate into the plasma state
   CALL ps_namrd_slist_chk("S", ps_max_static, amu_tmp, &

@@ -87,7 +87,9 @@ program prepare_aorsa_input
   root = 'none'
 
   prfin = ps%power_ic(arg_src_indx)
-  freqcy = ps%freq_ic(arg_src_indx)
+  if (ps%freq_ic(arg_src_indx) > 0.0) then
+     freqcy = ps%freq_ic(arg_src_indx)
+  endif
   if (arg_nphi_indx .ne. 0) then
      nphi_number = ps%num_nphi(1)
      nphi_array = ps%nphi(arg_src_indx,:)
