@@ -264,7 +264,7 @@ class XY_curve:
     def __init__(self, x, y, **kwargs):
 
         if (type(x) == list or type(x) == np.ndarray or type(x) == np.ma.core.MaskedArray) and\
-                (type(y) == list or type(y) == np.ndarray or type(x) == np.ma.core.MaskedArray):
+                (type(y) == list or type(y) == np.ndarray or type(y) == np.ma.core.MaskedArray):
             self.x = x
             self.y = y
             self.kwargs = kwargs
