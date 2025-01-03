@@ -18,9 +18,9 @@ all: .depend
 	- $(MAKE) $(TARGETS)
 	@ for i in `echo $(EXECUTABLES)`; do \
 	   if [ -f $$i ]; then \
-                echo "SUCCESS building $$i" >> $(IPS_ROOT)/.make-result;\
+                echo "SUCCESS building $$i" >> make-result;\
         else \
-                echo "***FAILURE building $$i" >> $(IPS_ROOT)/.make-result;\
+                echo "***FAILURE building $$i" >> make-result;\
         fi;\
 	done;
 
