@@ -747,3 +747,4 @@ class genray(Component):
 
     def finalize(self, timestamp=0.0):
         print('genray.finalize() called')
+        return 0
