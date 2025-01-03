@@ -81,7 +81,7 @@ class basic_driver(Component):
 
 
       # Is this a simulation startup or restart
-        sim_mode = config.get_global_param(self, services,'SIMULATION_MODE')
+        sim_mode = get_global_param(self, services,'SIMULATION_MODE')
 
       # Get timeloop for simulation
         timeloop = services.get_time_loop()
@@ -133,7 +133,7 @@ class basic_driver(Component):
 
         print(' init sequence complete--ready for time loop')
 
-        INIT_ONLY = config.get_component_param(self, services, 'INIT_ONLY', optional = True)
+        INIT_ONLY = get_component_param(self, services, 'INIT_ONLY', optional = True)
         if INIT_ONLY in [True, 'true', 'True', 'TRUE']:
             message = 'INIT_ONLY: Intentional stop after INIT phase'
             print(message)
