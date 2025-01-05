@@ -1205,14 +1205,14 @@ class monitor(Component):
                 self.services.error(logMsg)
                 raise Exception(logMsg)
 
-       # copy pdf file to w3 directory
-            try:
-                shutil.copyfile(pdf_fileName,
-                                os.path.join(self.W3_DIR, self.pdfFile))
-            except IOError as xxx_todo_changeme2:
-                (errno, strerror) = xxx_todo_changeme2.args
-                print('Error copying file %s to %s: %s' % \
-                    (pdf_fileName, self.pdfFile, strerror))
+#        # copy pdf file to w3 directory
+#             try:
+#                 shutil.copyfile(pdf_fileName,
+#                                 os.path.join(self.W3_DIR, self.pdfFile))
+#             except IOError as xxx_todo_changeme2:
+#                 (errno, strerror) = xxx_todo_changeme2.args
+#                 print('Error copying file %s to %s: %s' % \
+#                     (pdf_fileName, self.pdfFile, strerror))
 
         print('monitor finalize finished')
         return 0
