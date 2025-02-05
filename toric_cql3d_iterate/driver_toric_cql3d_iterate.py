@@ -185,6 +185,11 @@ class toric_driver(Component):
         sym_root = services.get_config_param('SIM_ROOT')
         path = os.path.join(sym_root, 'PORTAL_RUNID')
         specs = services.get_config_param('SPECS')
+        if specs in ['CUSTOM','Custom','custom']:
+            custom_specs_list = self.get_config_param(services,'CUSTOM_SPECS').split(' ')
+            custom_specs = ", ".join(custom_specs_list)
+            N_gen = len(custom_specs_list)
+
         rfpwr_arg = services.get_config_param('RFPWR_IC')
 
         # If pwrscale is in config parameters use power rescaling
@@ -192,10 +197,12 @@ class toric_driver(Component):
         if arg_pwrscale!=None:
             if arg_pwrscale.strip() in [True, 'true', 'True', 'TRUE']: 
                 pwrscale_on = True
-                #create powerscale hdf5 file
-                pwrscale = np.full(2,1.0)
-                pfrac_toric = np.full(2,1.0)
-                pfrac_cql3d = np.full(2,1.0)
+                #create powerscale hdf5 file now uses ngena value to set maximum
+                #number of values in pwrscale hdf5
+                ngena = 4
+                pwrscale = np.full(ngena,1.0)
+                pfrac_toric = np.full(ngena,1.0)
+                pfrac_cql3d = np.full(ngena,1.0)
                 pwrtarget = float(rfpwr_arg)
                 pwrscale_f =h5py.File('pwrscale.hdf5','w')
                 pwrtarget_dset = pwrscale_f.create_dataset("pwrtarget",data=pwrtarget)
@@ -280,7 +287,23 @@ class toric_driver(Component):
                     print(message)
                     services.exception(message)
                     raise
-            
+            if(specs=='CUSTOM'):
+                for i in range(N_gen):
+                    toricMode = 'qldci'+str(i+1)
+                    if (i+1) == N_gen:
+                        save = True
+                    else:
+                        save = False
+                    try:
+                        services.call(rf_icComp, 'step', t, toric_Mode = toricMode, \
+                                      inumin_Mode = 'Maxwell', isol_Mode='1', \
+                                      save_output=save)
+                    except Exception:
+                        message = 'RF_LH qldci mode step failed'
+                        print(message)
+                        services.exception(message)
+                        raise
+                        
 
         # Iterate through the timeloop, or in this case iteration loop
         for t in tlist_str[1:len(timeloop)]:
@@ -380,6 +403,23 @@ class toric_driver(Component):
                     services.exception(message)
                     raise
 
+            if(specs=='CUSTOM'):
+                for i in range(N_gen):
+                    toricMode = 'qldci'+str(i+1)
+                    if (i+1) == N_gen:
+                        save = True
+                    else:
+                        save = False
+                    try:
+                        services.call(rf_icComp, 'step', t, toric_Mode = toricMode, \
+                                      inumin_Mode = 'Maxwell', isol_Mode='1', \
+                                      save_output=save)
+                    except Exception:
+                        message = 'RF_LH qldci mode step failed'
+                        print(message)
+                        services.exception(message)
+                        raise
+            
             if 'MONITOR' in port_names:
                 self.component_call(services, 'MONITOR', monitorComp, 'step', t)
 

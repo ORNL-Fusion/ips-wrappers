@@ -14,12 +14,14 @@
       ! (For genray, it is necessary to rename "output" in the plasma state to
       ! avoid conflict with genray namelist /output/. For cql3d, it is benign.)
       USE plasma_state_mod, ps_output_local => output
-
+      
       USE swim_global_data_mod, only : 
      1 rspec, ispec,          ! kind specification for real (64-bit)
      1 swim_error,            ! error routine
      1 swim_filename_length   ! length of filename string
-    
+
+      use strings
+      
       implicit integer (i-n), real*8 (a-h,o-z) ! SF ...kill me now
 
       ! program parameters
@@ -33,18 +35,33 @@
       REAL(KIND=rspec), parameter :: zero=0.0_rspec 
       REAL(KIND=rspec), parameter :: one=1.0_rspec
 
+      ! CQL3D NAMELISTS AND THEIR STORAGE
+      !----------------------------------------------------------------
+      include 'param.h'
+      include 'name_decl.h'
+      include 'frname_decl.h'
+      include 'name.h'
+      include 'frname.h'
+
       ! program variables
       !----------------------------------------------------------------
       INTEGER :: inp_unit,ierr
 
       integer nj,njp1,nrho,l
-      integer isp, ipairspec
+      integer isp, ipairspec, indx_loop
       REAL(KIND=rspec) :: dryain,rfmin_chargemass,spec_chargemass
 
       integer, dimension(:), allocatable :: incl_species !indicator for
                                           !species to send to genray.
-      integer iargs, isp_min
+      integer iargs, isp_min, isp_fus, ncustom, indxmin
 
+      integer, dimension(ngena) :: alla2custom
+      
+      !characters
+      CHARACTER(len=16) :: base_rdc_str
+      character(len=2) :: istr
+      CHARACTER(len=16) :: rfmistr, fusnstr,state_var
+      
       !Unified plasma parameter arrays (in ps%nspec_alla list)
       !abridged thermal species + all fast species combined.
       REAL(KIND=rspec), dimension(:), allocatable :: rho_bdy_rezon
@@ -57,11 +74,11 @@
       integer :: cclist(ps_ccount)  ! State partial copy controls.
                                     ! Ps_ccount is number of known
                                     ! components in the PS.
-
+      
       !Setup some allocatable variables from PS, which will be
       !checked if allocated:
       REAL(KIND=rspec),dimension(:),allocatable :: nbeami,nmini,nfusi
-      
+
       ! program namelist variables
       !----------------------------------------------------------------
       character(len =swim_string_length) ::
@@ -76,22 +93,14 @@
       INTEGER :: arg_nsurfFP
       REAL(KIND=rspec) :: arg_rhoFPlo = 0.01_rspec
       REAL(KIND=rspec) :: arg_rhoFPhi = 0.95_rspec
-      REAL(KIND=rspec), dimension(2) :: pscale = 1.0_rspec
+      REAL(KIND=rspec), dimension(ngena) :: pscale = 1.0_rspec
+      CHARACTER(len=16), dimension(ngena) :: spec_list = 'NONE'
       
       namelist /cql3d_prepare_nml/
      +    cur_state_file, cql3d_specs, 
      +    cql3d_mode, rf_code, restart,
      +    nsteps, arg_deltat, arg_enorm, arg_nsurfFP,
-     +    arg_rhoFPlo, arg_rhoFPhi, pscale, norf
-
-      
-      ! CQL3D NAMELISTS AND THEIR STORAGE
-      !----------------------------------------------------------------
-      include 'param.h'
-      include 'name_decl.h'
-      include 'frname_decl.h'
-      include 'name.h'
-      include 'frname.h'
+     +    arg_rhoFPlo, arg_rhoFPhi, pscale, norf, spec_list
 
       ! ---Begin Program Logic----------
       
@@ -550,7 +559,190 @@
          call ps_rho_rezone(rho_bdy_rezon, ps%id_Zeff, zeffin(1:nj), ierr,
      +                      zonesmoo=.TRUE.)
          call ckerr('ps_rho_rezone (U2)',ierr)
-     
+
+      !the custom case that can assign an arbitrary species to the general species
+      !first it will loop over all the species in the plasma state and find their
+      !corresponding alla index and link them to their general species index specified
+      !in cql3d_specs by their ordering   
+      elseif(cql3d_specs .eq.'CUSTOM')then
+         write(*,*) 'MODE IS CUSTOM'
+         write(*,*) 'SPECIES TO BE EVOLVED: ',spec_list
+         
+         !determine the number of species in the custom list
+         ncustom = 0
+         indxmin = 0
+         indxe = 0
+         DO i=1,ngena
+            if (spec_list(i) .ne. 'NONE') then
+               !convert list to upper case and trim for string compare purposes later
+               spec_list(i) = trim(to_upper(spec_list(i)))
+               ncustom = ncustom + 1
+               if ((spec_list(i) .eq. 'H') .or. (spec_list(i) .eq. 'HE3')) then
+                  indxmin = ncustom
+               elseif (spec_list(i) .eq. 'E') then
+                  indxe = ncustom
+               endif
+            end if
+         END DO
+
+         if (ncustom.eq.0) then
+            WRITE(*,*) 'No species found in speclist'
+            stop
+         endif
+
+         !set up plasma profiles and diffusion
+         iprone = 'spline'
+         iprote = 'spline'
+         iproti = 'spline'
+         iprozeff = 'disabled'
+         
+         !set up general species
+         WRITE(*,*) 'nspec_alla', ps%nspec_alla
+         nspec_allap1 = ps%nspec_alla+1
+         nmax=nspec_allap1
+         ngen=ncustom
+         if (ngen.gt.nmax)then
+            WRITE(*,*) 'more species set to be evolved than exist in state'
+            WRITE(*,*) 'nspec in state : ', nspec_allap1
+            WRITE(*,*) 'ncustom : ', ncustom
+            stop
+         endif
+         
+         !preset some diffusion quantities
+         base_rdc_str = 'du0u0_input_'
+         nrdc = ncustom
+         rdcscale(:) = 1.d0
+         if((rf_code.eq.'toric').or.(rf_code.eq.'aorsa'))then
+            rdc_netcdf = 'disabled'
+            if (norf.ne.1) then
+               rdcmod = 'format1'
+            else
+               rdcmod = 'disabled'
+            endif
+         elseif(rf_code.eq.'genray')then
+            rdcmod = 'disabled'
+            !SF finish later
+         elseif(norf.ne.1)then
+            WRITE(*,*)
+     + 'unsupported RF code expected (genray, aorsa, toric) got: ',rf_code
+            stop
+         endif
+
+         ! loop over general species
+         isp_min=-1
+         do i=1,NCUSTOM
+            ! find the corresponding species in the plasma state
+            ! note that the 
+            rfmistr = "_rfmi"
+            fusnstr = "_fusn"
+            isp=-1
+            do j=0,ps%nspec_alla
+               state_var = to_upper(trim(ps%alla_name(j)))
+               if (state_var.eq.spec_list(i))then
+                  isp=j
+               elseif (state_var.eq.(spec_list(i)//rfmistr))then
+                  isp=j
+                  isp_min = isp
+               elseif (state_var.eq.(spec_list(i)//fusnstr))then
+                  isp=j
+                  ips_fus = isp
+               end if
+            enddo
+            if (isp.eq.-1) then
+               WRITE(*,*) 'Species not found in plasma state: ', spec_list(i)
+               stop
+            endif
+            
+            ! set up species 
+            kspeci(1,i) = trim(ps%alla_name(isp))
+            kspeci(2,i) = 'general'
+            fmass(i) = ps%m_alla(isp_min)*1.d+3
+            bnumb(i) = NINT(ps%q_alla(isp_min)/ps_xe)
+
+            ! profiles (assumes only one fusion species and minority species)
+            if (isp_min.eq.isp)then
+               call ps_rho_rezone(rho_bdy_rezon, ps%id_nmini(1),enein(1:nj,i),
+     +                      ierr, zonesmoo=.TRUE.)
+            elseif (isp_fus.eq.isp)then
+               call ps_rho_rezone(rho_bdy_rezon, ps%id_nfusi(1), enein(1:nj,i),
+     +                         ierr, zonesmoo=.TRUE.)
+            else
+               call ps_rho_rezone(rho_bdy_rezon, ps%id_ns(isp),enein(1:nj,i),
+     +                      ierr, zonesmoo=.TRUE.)
+            end if
+            call ckerr('ps_rho_rezone (U2)',ierr)
+            
+            ! set up rf diffusion for species
+            if((rf_code.eq.'toric').or.(rf_code.eq.'aorsa'))then
+               write(istr,*) i
+               istr=adjustl(istr)
+               rdcfile(i) = trim(base_rdc_str)//trim(istr)
+               nrdcspecies(i) = i
+               rdcscale(i) = pscale(i)
+            elseif(rf_code.eq.'genray')then
+               !SF finish later   
+            endif
+         enddo
+
+         !set the maxwellian species
+         indx_loop = ncustom
+         do i=0,ps%nspec_tha
+            kspeci(1,indx_loop) = trim(ps%alla_name(isp))
+            kspeci(2,indx_loop) = 'maxwell'
+            fmass(indx_loop) = ps%m_alla(isp)*1.d+3
+            bnumb(indx_loop) = NINT(ps%q_alla(isp)/ps_xe)
+            call ps_rho_rezone(rho_bdy_rezon, ps%id_ns(isp), enein(1:nj,indx_loop),
+     +                         ierr, zonesmoo=.TRUE.)
+            call ckerr('ps_rho_rezone (U2)',ierr)
+            indx_loop = indx_loop+1
+         enddo
+
+         !special treatment for rfmin and fusion if they exist
+         if (ps%nspec_rfmin>0)then
+            isp_min = ps%rfmin_to_alla(1)
+            kspeci(1,indx_loop) = trim(ps%alla_name(isp_min))
+            kspeci(2,indx_loop) = 'maxwell'
+            fmass(indx_loop)    = ps%m_alla(isp_min)*1.d+3
+            bnumb(indx_loop)    = NINT(ps%q_alla(isp_min)/ps_xe)
+            call ps_rho_rezone(rho_bdy_rezon, ps%id_nmini(1), enein(1:nj,indx_loop),
+     +                         ierr, zonesmoo=.TRUE.)
+            call ckerr('ps_rho_rezone (U2)',ierr)
+            indx_loop = indx_loop+1      
+         endif
+  
+         if (ps%nspec_fusion>0)then
+            isp_fus = ps%sfus_to_alla(1)
+            kspeci(1,indx_loop) = trim(ps%alla_name(isp_fus))
+            kspeci(2,indx_loop) = 'maxwell'
+            fmass(indx_loop)    = ps%m_alla(isp_fus)*1.d+3
+            bnumb(indx_loop)    = NINT(ps%q_alla(isp_fus)/ps_xe)
+            call ps_rho_rezone(rho_bdy_rezon, ps%id_nfusi(1), enein(1:nj,indx_loop),
+     +                         ierr, zonesmoo=.TRUE.)
+            call ckerr('ps_rho_rezone (U2)',ierr)      
+         endif
+
+         !output check for written species
+         WRITE(*,*) 'Added following species to CQL3D input:'
+         do i=1,nmax + ngen
+             WRITE(*,*) trim(kspeci(1,i)),' ', trim(kspeci(2,i)), fmass(i), bnumb(i)
+         ENDDO
+         
+         !temperature profiles (note cql3d does not presently support
+         !different ion temperatures across species, this is not hard to fix
+         !if willing to modify cql3d)
+         call ps_rho_rezone(rho_bdy_rezon, ps%id_Ts(0), tein(1:nj), ierr,
+     +     zonesmoo=.TRUE.)
+         call ckerr('ps_rho_rezone (U2)',ierr)
+         
+         call ps_rho_rezone(rho_bdy_rezon, ps%id_Ts(1), tiin(1:nj), ierr,
+     +     zonesmoo=.TRUE.)
+         call ckerr('ps_rho_rezone (U2)',ierr)
+
+         !zeff profiles
+         call ps_rho_rezone(rho_bdy_rezon, ps%id_Zeff, zeffin(1:nj), ierr,
+     +                      zonesmoo=.TRUE.)
+         call ckerr('ps_rho_rezone (U2)',ierr)
+
       endif
       
       !loop voltage profiles SF giving error on compile?
@@ -583,11 +775,9 @@
 
       end program prepare_cql3d_input
 
-
 c----------------------------------------------------------------
+c helpers
 c----------------------------------------------------------------
-
-
 
       SUBROUTINE ckerr(sbrtn,ierr)
       character*(*), intent(in) :: sbrtn
@@ -597,6 +787,3 @@ c----------------------------------------------------------------
          stop
       ENDIF
       END SUBROUTINE ckerr
-
-
-      

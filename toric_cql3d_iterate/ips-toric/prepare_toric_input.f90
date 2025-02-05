@@ -58,14 +58,16 @@
       integer:: arg_nfpsurf = 0
       real(rspec):: arg_fplo=0.1_rspec
       real(rspec):: arg_fphi=0.99_rspec
+      CHARACTER(len=16), dimension(nspmx) :: spec_list = 'NONE'
+      
       
       !program namelist block
       !----------------------------------------------------------------
       namelist /toric_prepare_nml/ &
            cur_state_file, cur_geq_file, &
            arg_toric_mode, arg_inumin_mode, &
-           arg_enorm, arg_specs, arg_src_indx, arg_nphi_indx, &
-           arg_nfpsurf, arg_fplo, arg_fphi, &
+           arg_enorm, arg_specs, spec_list, arg_src_indx, &
+           arg_nphi_indx, arg_nfpsurf, arg_fplo, arg_fphi, &
            force_defaults
       
       !------TORIC Namelist inputs-------------
@@ -431,30 +433,89 @@
          nspec=nspmx
       END IF
 
-      ! find the minority's bulk pair (defined q_min/m_min = 2 q_pair/m_pair)
-      ! prevent accidentally tripping on impurity species by adding axi<6 req.
-      pairspec = 0
-      WRITE(*,*) 'npsec_tha', ps%nspec_tha
-      do i = 1,ps%nspec_tha
-         if ((2.0_rspec*azi(i)/atm(i)==azi(minspec)/atm(minspec)).and.(azi(i)<6)) then
-            pairspec = i
+      ! if in custom mode determine species indexes
+      if (trim(arg_specs).eq.'CUSTOM')then
+         write(*,*) 'MODE IS CUSTOM'
+         write(*,*) 'SPECIES TO BE EVOLVED: ',spec_list
+         
+         !determine the number of species in the custom list
+         ncustom = 0
+         indxmin = 0
+         indxe = 0
+         DO i=1,nspmx
+            if (spec_list(i) .ne. 'NONE') then
+               !convert list to upper case and trim for string compare purposes later
+               spec_list(i) = trim(to_upper(spec_list(i)))
+               ncustom = ncustom + 1
+               if ((spec_list(i) .eq. 'H') &
+                    .or. (spec_list(i) .eq. 'HE3')) then
+                  indxmin = ncustom
+               elseif (spec_list(i) .eq. 'E') then
+                  indxe = ncustom
+               endif
+            end if
+         END DO
+            
+         if (ncustom.eq.0) then
+            WRITE(*,*) 'No species found in speclist'
+            stop
          endif
-      enddo
-      IF (pairspec == 0) WRITE(*,*) 'No minority/bulk pair found'
-
+         
+         do i=1,NCUSTOM
+            ! find the corresponding species in the plasma state
+            rfmistr = "_rfmi"
+            fusnstr = "_fusn"
+            isp=-1
+            do j=0,ps%nspec_alla
+               state_var = to_upper(trim(ps%alla_name(j)))
+               if (state_var.eq.spec_list(i))then
+                  isp=j
+               elseif (state_var.eq.(spec_list(i)//rfmistr))then
+                  isp=j
+                  isp_min = isp
+               elseif (state_var.eq.(spec_list(i)//fusnstr))then
+                  isp=j
+                  ips_fus = isp
+               end if
+            enddo
+            if (isp.eq.-1) then
+               WRITE(*,*) 'Species not found in plasma state: ', spec_list(i)
+               stop
+            endif
+            inumin(isp)=1
+         enddo
+      endif
+      
       ! if nonmaxwellian turn on minority nonmax dist
       if ((trim(arg_specs).eq.'MIN').and. &
            (trim(arg_inumin_mode) .eq. 'nonMaxwell'))then
          inumin(minspec) = 1
       endif
       
-      ! turn on nonmax dielectric for both bulk and 
-      ! minority
-      if ((trim(arg_specs).eq.'MIN+').and. &
-           (trim(arg_inumin_mode) .eq. 'nonMaxwell'))then
-         inumin(minspec) = 1
-         inumin(pairspec) = 1
+      ! turn on nonmax dielectric for evolving species
+      if (trim(arg_inumin_mode).eq.'nonMaxwell')then
+         if (trim(arg_specs).eq.'MIN')then
+            inumin(minspec)=1
+         elseif (trim(arg_specs).eq.'MIN+')then
+            ! find the minority's bulk pair (defined q_min/m_min = 2 q_pair/m_pair)
+            ! prevent accidentally tripping on impurity species by adding axi<6 req.
+            pairspec = 0
+            WRITE(*,*) 'npsec_tha', ps%nspec_tha
+            do i = 1,ps%nspec_tha
+               if ((2.0_rspec*azi(i)/atm(i)==azi(minspec)/atm(minspec)) &
+                  .and.(azi(i)<6)) then
+                  pairspec = i
+               endif
+            enddo
+            IF (pairspec == 0) WRITE(*,*) 'No minority/bulk pair found'
+            inumin(minspec) = 1
+            inumin(pairspec) = 1
+         elseif (trim(arg_specs).eq.'CUSTOM')then
+            
+            
+         endif
       endif
+      
      
       if (toricmode == 'qldci1') then
          toricmode = 'qldci_CQL3D'

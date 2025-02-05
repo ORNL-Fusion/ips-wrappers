@@ -243,6 +243,14 @@ class toric (Component):
         cur_cql_file = self.try_get_config_param(services,'CURRENT_CQL')
         specs = self.try_get_config_param(services,'SPECS')
         arg_icrfpower = self.try_get_config_param(services,'RFPWR_IC')
+
+        # if in minority heating mode the simulation will automatically
+        # detect. otherwise, in custom mode you must specify the species by
+        # their EXACT name used in your inputs. 
+        if specs in ['CUSTOM','Custom','custom']:
+            custom_specs_list = self.try_get_config_param(services,'CUSTOM_SPECS').split(' ')
+            custom_specs = ", ".join(custom_specs_list)
+
         #optional global config params
         arg_enorm = '0.0'
         arg_nsurf_FP = '60'
@@ -262,14 +270,11 @@ class toric (Component):
 
         # Set working directory and output path
         cwd = os.getcwd()
-        toric_log = os.path.join(workdir, 'log.toric')
-        if arg_toric_Mode == 'qldci':
-            toric_log = os.path.join(workdir, 'log.toric_qldci')
-        if arg_toric_Mode == 'qldci1':
-            toric_log = os.path.join(workdir, 'log.toric_qldci1')
-        if arg_toric_Mode == 'qldci2':
-            toric_log = os.path.join(workdir, 'log.toric_qldci2')
-
+        if arg_toric_Mode == 'toric':
+            toric_log = os.path.join(workdir, 'log.toric')
+        else:
+            log_name = "log.toric_"+arg_toric_Mode
+            toric_log = os.path.join(workdir, log_name)
 
         # Generate namelist for input preparation script
         nml_lines = ['&toric_prepare_nml \n']
@@ -284,6 +289,8 @@ class toric (Component):
         nml_lines.append(' arg_fplo = ' + arg_rhoFPlo + ',\n')
         nml_lines.append(' arg_fphi = ' + arg_rhoFPhi + ',\n')
         nml_lines.append(' force_defaults = ' + arg_force_defaults + ',\n')
+        if specs in ['CUSTOM','Custom','custom']:
+            nml_lines.append(' spec_list =' + custom_specs + ',\n')
         nml_lines.append(' /\n')
         put_lines('toric_prepare.nml',nml_lines)
 

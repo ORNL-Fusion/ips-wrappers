@@ -24,7 +24,8 @@ all: .depend
         fi;\
 	done;
 
-prepare_cql3d_input: prepare_cql3d_input.o aindflt.o  aindfpa.o  eqindflt.o  frinitl.o urfindfl.o  zcunix.o
+prepare_cql3d_input: strings.o prepare_cql3d_input.o aindflt.o  aindfpa.o  eqindflt.o  frinitl.o urfindfl.o  zcunix.o
+	$(F90) -c strings.f90
 	$(F90) -o $@ $^ $(LIBS)
 
 process_cql3d_output: process_cql3d_output.o

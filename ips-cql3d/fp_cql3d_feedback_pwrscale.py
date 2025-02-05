@@ -43,12 +43,6 @@ class cql3d(Component):
             services.error('fp_cql3d_general: error getting config parameters CURRENT_STATE CURRENT_EQDSK')
             raise Exception('rf_ic_gneray: error getting config parameters CURRENT_STATE CURRENT_EQDSK')
 
-
-        #try:
-        #     cur_ImChizz_inp_file = services.get_config_param('CURRENT_ImChizz_inp')
-        #except:
-        #    print('no ImChizz_inp file found')
-
         
     # Get component-specific configuration parameters. Note: Not all of these are
     # used in 'init' but if any are missing we get an exception now instead of

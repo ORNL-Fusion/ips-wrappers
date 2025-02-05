@@ -189,7 +189,11 @@ class cql3d(Component):
         cur_eqdsk_file = services.get_config_param('CURRENT_EQDSK')
         cur_cql_file = services.get_config_param('CURRENT_CQL')
         fp_specs = services.get_config_param('SPECS')
+        if fp_specs in ['CUSTOM','Custom','custom']:
+            custom_specs_list = self.try_get_config_param(services,'CUSTOM_SPECS').split(' ')
+            custom_specs = ", ".join(custom_specs_list)
 
+        
         # optional global config params
         arg_enorm = self.try_get_config_param(services,'ENORM', optional = True, default = '0.0')
         arg_nsurf_FP = self.try_get_config_param(services,'NSURF_FP', optional = True, default = '60')
@@ -278,6 +282,8 @@ class cql3d(Component):
         nml_lines.append(' arg_rhoFPhi = ' + arg_rhoFPhi + ',\n')
         nml_lines.append(' pscale = ' + str(pwrscale[0]) + ', ' + str(pwrscale[1]) + ',\n')
         nml_lines.append(' norf = ' + str(norf_flag) + ',\n')
+        if fp_specs in ['CUSTOM','Custom','custom']:
+            nml_lines.append(' spec_list =' + custom_specs + ',\n')
         nml_lines.append('/\n')
         put_lines('cql3d_prepare.nml',nml_lines)
         
