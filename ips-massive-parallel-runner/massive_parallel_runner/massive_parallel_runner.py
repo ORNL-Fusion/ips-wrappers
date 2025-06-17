@@ -56,7 +56,7 @@ class massive_parallel_runner(Component):
 
 #  Keys for the massiver parallel subworkflow.
             keys = {
-                'PWD'            : '{}/massive_parallel_runner_input_dir'.format(os.getcwd()),
+                'PWD'            : os.getcwd(),
                 'SIM_NAME'       : 'massive_parallel_runner_sub',
                 'LOG_FILE'       : 'log.massive_parallel_runner',
                 'NNODES'         : self.services.get_config_param('MSR_NNODES'),
@@ -145,9 +145,10 @@ class massive_parallel_runner(Component):
                 logfile = 'make_db.log'
 
             os.chdir('massive_parallel_runner_output_dir')
-            filenames = glob.glob('*')
-            lastest = max(filenames, key=os.path.getctime)
-            shutil.unpack_archive(lastest, '.')
+            filenames = glob.glob('*.tar.gz')
+            if len(filenames) > 0:
+                lastest = max(filenames, key=os.path.getctime)
+                shutil.unpack_archive(lastest, '.')
             os.chdir('../')
 
             if self.USE_EPED:
