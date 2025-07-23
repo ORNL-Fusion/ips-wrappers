@@ -231,6 +231,8 @@ program process_toric_output
   print*, 'process_toric_output: cur_state_file = ', trim(cur_state_file)
   CALL ps_get_plasma_state(ierr, trim(cur_state_file))
 
+  write(*,*) 'igot to 1 ps%nmini = ', ps%nmini
+
   CALL assert( ierr==0,' process toric: ps_get_plasma_state: ierr=',ierr )
 
   print *,"freq_ic, picrf  alloc?",allocated(ps%freq_ic),allocated(ps%picrf_srcs)
@@ -559,19 +561,33 @@ program process_toric_output
 
 ! PTB end
 
+! DBB 7/2025
+  write(*,*) 'got here'
+  write(*,*) 'shape(ps%rho_icrf) = ', shape(ps%rho_icrf), '  shape(ps%rho= ', shape(ps%rho),&
+    & '  shape(ps%ns) = ', shape(ps%ns),'  shape(ps%nmini) = ', shape(ps%nmini)
+      if(allocated(ps%nmini)) then
+              write(*,*) ' ps%fracmin*ps%ns(:,0) = ', ps%fracmin*ps%ns(:,0)
+              call ps_user_rezone1(ps%rho, ps%rho_icrf, ps%fracmin*ps%ns(:,0), ps%nmini(:,1), ierr)
+       end if
+ ! end DBB 7/2025
 
+  write(*,*) 'igot to 2 ps%nmini = ', ps%nmini
     !--------------------------------------------------------------------------    !
     ! Store the data in partial plasma_state file
     !--------------------------------------------------------------------------
 
+
+  write(*,*) 'igot to 3 ps%nmini = ', ps%nmini
+  
 	CALL PS_WRITE_UPDATE_FILE('RF_IC_'//cur_state_file, ierr)
 	WRITE (*,*) "Stored Partial RF Plasma State"   
-
+  write(*,*) 'igot to 4 ps%nmini = ', ps%nmini
 !write the state file to optional filename, can also take optional state
-  CALL ps_store_plasma_state(ierr , trim(cur_state_file))
+  CALL ps_store_plasma_state(ierr) ! , trim(cur_state_file))
   CALL assert( ierr == 0, 'cannot open state in prepare toric output', ierr )
+  write(*,*) 'igot to 5 ps%nmini = ', ps%nmini
 
-!JCW diagnostic output
+  !JCW diagnostic output
   if (debug) then
     print*, ' ps%rho_icrf = ', ps%rho_icrf
     print*, ' '
