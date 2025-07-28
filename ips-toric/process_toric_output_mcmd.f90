@@ -2,7 +2,7 @@ program process_toric_output
 
   !---------------------------------------------------------------------
   ! processing toric output
-  !last update on 04/02/08 by JCW to move PS setup to do_toric_init and 
+  !last update on 04/02/08 by JCW to move PS setup to do_toric_init and
   !                        handle rezoning of variable sized power arrays
   !     update on 03/18/08 by JCW to handle remapping of psi_pol->psi_tor
   !John C. Wright 02/28/07 based on L. Berry's process_aorsa_output program
@@ -10,9 +10,9 @@ program process_toric_output
   !
   !--------------------------------------------------------------------
   !
- 
+
   ! State elements are traditional f77 integer, floating point, and character
-  ! string scalars and arrays all contained within a large container data 
+  ! string scalars and arrays all contained within a large container data
   ! type "plasma_state".  Two instances of this container data type are
   ! declared in the module "plasma_state_mod":
   !
@@ -20,12 +20,12 @@ program process_toric_output
   !   psp -- the prior or "committed" state (completed, prior timestep)
   !
   ! Elements of the state can be referenced directly using the standard
-  ! f95 syntax-- e.g. ps%nrho is the size of one of the radial flux 
+  ! f95 syntax-- e.g. ps%nrho is the size of one of the radial flux
   ! coordinate "rho" grids in the state.
   !
   ! State elements can be directly modified by codes that use the plasma
-  ! state-- although this should be done carefully.  Generally, items in 
-  ! the state are meant to be shared between multiple components of the 
+  ! state-- although this should be done carefully.  Generally, items in
+  ! the state are meant to be shared between multiple components of the
   ! IPS; conventions for use of the state data will need to evolve.
   !
   ! States will be mapped to NetCDF files.  The module "plasma_state_mod"
@@ -56,7 +56,7 @@ program process_toric_output
   !       Update state MHD equilibrium from G-eqdsk file <g-filename>
   !          (could also be an MDSplus G-eqdsk timeslice from an experiment).
   !       Compute state quantities derived from the equilibrium
-  !       Arrays such as enclosed volumes (m^3) ps%vol(1:ps%nrho_eq) are 
+  !       Arrays such as enclosed volumes (m^3) ps%vol(1:ps%nrho_eq) are
   !       filled in.
   !
   !    SUBROUTINE ps_store_plasma_state(ierr)
@@ -120,7 +120,7 @@ program process_toric_output
   !       takes precedence over ideriv, if both are present.  The dimensioning
   !       of INT array ideriv1s must match dimensioning of ID exactly.
   !
-  !       If neither ideriv nor ideriv1s are specified, the interpolating 
+  !       If neither ideriv nor ideriv1s are specified, the interpolating
   !       function value is evaluated with no derivatives.
   !
   !       iccw_th would only be needed if a profile f(theta) is ever defined.
@@ -141,13 +141,13 @@ program process_toric_output
   ! Profile rezoning integration:
   !
   !    SUBROUTINE PS_RHO_REZONE(...) for "conservative" rezoning
-  !      of profiles f(rho) 
+  !      of profiles f(rho)
   !      (rezoning to 1d of profiles f(rho,theta) will be done but is
   !      not yet implemented -- DMC 16 Oct 2006).
   !
   !    SUBROUTINE PS_RHOTH_REZONE(...) for "conservative" rezoning
   !      of profiles f(rho,theta) -- not yet implemented DMC 16 Oct 2006
-  ! 
+  !
   !-----------------------------------
   ! Implementation of interpolation and rezoning-- the "visible" state
   ! elements ps%* and psp%* are not the entire state.  When interpolation
@@ -167,9 +167,9 @@ program process_toric_output
             & rspec, ispec, &               ! int: kind specification for real and integer
 !            & swim_string_length, &         ! length of strings for names, files, etc.
             & swim_error                    ! error routine
-    
+
   USE netcdf !toric solution file is in nc format
-    
+
 !--------------------------------------------------------------------------
 !
 !   Data declarations
@@ -182,10 +182,10 @@ program process_toric_output
 !   the toric output data is in a file called toric.nc
 !
 !--------------------------------------------------------------------------
-   
 
 
- 
+
+
   IMPLICIT NONE
   real(rspec), allocatable :: rhon(:), dvol(:), redotje_int(:),  &
     & redotji_int(:,:), wdote_int(:,:), wdoti_int(:,:,:),tpwi(:,:), &
@@ -194,7 +194,7 @@ program process_toric_output
     & CdensFW(:), CdensIBW(:), cdicrf_tmp(:), cdicrf_int(:)
   real(rspec):: frequency, tpwe(2),tpw, CtotFW, CtotIBW
   logical, parameter:: debug=.false.
-    
+
   integer, parameter :: swim_string_length = 256  !for compatibility LAB
 
 
@@ -203,14 +203,13 @@ program process_toric_output
   INTEGER :: ierr, n, id_ncdf, imode, nspec, id_temp, i, j
   integer :: istat, nmhd
   integer :: nnoderho, iarg
-  real(rspec), allocatable :: nmini_temp(:)
 
   character(len =swim_string_length) :: cur_state_file, ncdfvarname
 
   write(*,*) ' -- get (restore) plasma state from file -- '
   ! this call retrieves the plasma state at the present ps%, and
   ! previous time steps psp%
-  
+
   CALL get_arg_count(iarg)
   SELECT CASE (iarg)
 
@@ -231,8 +230,6 @@ program process_toric_output
   print*, 'process_toric_output: cur_state_file = ', trim(cur_state_file)
   CALL ps_get_plasma_state(ierr, trim(cur_state_file))
 
-  write(*,*) 'igot to 1 ps%nmini = ', ps%nmini
-
   CALL assert( ierr==0,' process toric: ps_get_plasma_state: ierr=',ierr )
 
   print *,"freq_ic, picrf  alloc?",allocated(ps%freq_ic),allocated(ps%picrf_srcs)
@@ -243,20 +240,20 @@ program process_toric_output
 
   print *,  '   number of species = ', ps%nspec_alla, ps%nspec_th
 
- if (debug) then 
+ if (debug) then
     if (allocated(ps%rho_icrf) .eqv. .TRUE.) then
        print*,   '   radial grid points for icrf = ', ps%nrho_icrf
        print*,   '   ps%rho_icrf = ', allocated(ps%rho_icrf), size(ps%rho_icrf), ps%rho_icrf
     endif
  endif
- 
+
 
 !##  print *,"RF alloc?",allocated(ps%picrf_srcs),size(ps%picrf_srcs)
 !##  print*,   '   number of icrf sources = ', ps%nicrf_src
 !##  print *,  '   number of species = ', ps%nspec_alla, ps%nspec_th
 !##  print*,   '   radial grid points for icrf = ', ps%nrho_icrf
 !##  print*,   '   ps%rho_icrf = ', allocated(ps%rho_icrf), size(ps%rho_icrf), ps%rho_icrf
- 
+
 
 !get some run parameters
   imode=NF90_NOWRITE !read only mode(default), dataset id returned in id_ncdf
@@ -358,7 +355,7 @@ program process_toric_output
   ierr = nf90_get_var(id_ncdf,id_temp,tpwe(2))
   tpw = sum(tpwe)+sum(tpwi)
 
-! PTB - begins 
+! PTB - begins
 
 ! area in m^2 / dpsi
   ierr = nf90_inq_varid(id_ncdf,"Spec_area",id_temp)
@@ -366,19 +363,19 @@ program process_toric_output
 
 ! Current density driven by FW's (A/m^2/MW)-> Note the toric.nc file is wrong ! This should be in (A/m^2/W)
   ierr = nf90_inq_varid(id_ncdf,"CurDensFW",id_temp)
-  ierr = nf90_get_var(id_ncdf,id_temp,CdensFW) 
+  ierr = nf90_get_var(id_ncdf,id_temp,CdensFW)
 
 ! Current density driven by IBW (A/m^2/MW) -> Note the toric.nc file is wrong ! This should be in (A/m^2/W)
   ierr = nf90_inq_varid(id_ncdf,"CurDensIBW",id_temp)
-  ierr = nf90_get_var(id_ncdf,id_temp,CdensIBW) 
+  ierr = nf90_get_var(id_ncdf,id_temp,CdensIBW)
 
 ! Total current driven by FW's (A/MW) -> Note the toric.nc file is wrong ! This should be in (A/W)
   ierr = nf90_inq_varid(id_ncdf,"TotCurrFW",id_temp)
-  ierr = nf90_get_var(id_ncdf,id_temp,CtotFW) 
+  ierr = nf90_get_var(id_ncdf,id_temp,CtotFW)
 
 ! Total current driven by IBW (A/MW) -> Note the toric.nc file is wrong ! This should be in (A/W)
   ierr = nf90_inq_varid(id_ncdf,"TotCurrIBW",id_temp)
-  ierr = nf90_get_var(id_ncdf,id_temp,CtotIBW) 
+  ierr = nf90_get_var(id_ncdf,id_temp,CtotIBW)
 
 ! PTB - ends
 
@@ -418,7 +415,7 @@ program process_toric_output
 !j    print *,'Allocating RF in prepare_input'
 !j    ps%freq_ic(1)=frequency/1.e6
 
-!j    CALL ps_alloc_plasma_state(ierr) 
+!j    CALL ps_alloc_plasma_state(ierr)
 !j    CALL assert( ierr == 0, trim(cur_state_file)//' ps_alloc_plasma_state: ierr=',ierr )
 
 ! use mtrhon, but interpolated to nnoderho mesh on which poloidal flux is uniform
@@ -440,7 +437,7 @@ program process_toric_output
   ! see plasma_state_definition_mod.f90 for details on state variables
 !j  CALL assert( nnoderho == ps%nrho_icrf, 'toric-state power dimension inconsistancy', nnoderho)
 !should implement interpolation here in case of failure.
-  
+
   ! check to species consistency--not all species will have RF
   CALL assert( ps%nspec_th <= 30, 'state ion species greater than 30: ', ps%nspec_th )
 
@@ -456,7 +453,7 @@ program process_toric_output
 !     dvol(i) = dvol(i) * ( prhon(i)-prhon(i-1) )
 !  end do
 !  dvol(1)=dvol(2) !not used, but just to be careful
-! 
+!
 !dvol = delta V/ delta prhon
 !prhon is uniform
 
@@ -506,8 +503,8 @@ program process_toric_output
 
   CALL ps_user_rezone1(trhon,rho,wdot_tmp,ps%picrf_srcs(:,j, 0), &
       ierr, nonorm = .True.)
- 
-  if (debug) then 
+
+  if (debug) then
     print*,'wdot_tmp e interp',sum(ps%picrf_srcs(:,j, 0)),size(ps%picrf_srcs(:,j, 0))
     print*,ps%picrf_srcs(:,j, 0)
   endif
@@ -515,14 +512,14 @@ program process_toric_output
 
 
   if(ps%nspec_th >= 1) then
-     do i=1,nspec   ! PTB nspec_th 
+     do i=1,nspec   ! PTB nspec_th
 !store icrf power in ions for each source
         wdot_tmp= (wdoti_int(1,i,:)+wdoti_int(2,i,:))*dvol(:)
 !        CALL interp_linear(trhon(:),wdot_tmp,rho(:),ps%picrf_srcs(:,j, i))
 
         CALL ps_user_rezone1(trhon,rho,wdot_tmp,ps%picrf_srcs(:,j, i), &
             ierr, nonorm = .True.)
- 
+
 !sum over sources
         ps%picrf_totals(:,i) = ps%picrf_totals(:,i) +  ps%picrf_srcs(:, j, i)
 !sum over species
@@ -536,9 +533,9 @@ program process_toric_output
 
 ! PTB begins
 ! Create the array of driven current (in A) per zone - cdicrf_tmp
-! First get the specific areas correct. 
+! First get the specific areas correct.
 ! Need to multiply by dPsi = 1/(nnoderoho-1) since the toric.nc file stores d(Area) / dPsi.
-! Also need to divide by 2*pi since darea comes from dvol which has a 2*pi in it. 
+! Also need to divide by 2*pi since darea comes from dvol which has a 2*pi in it.
 
   darea = darea / (2.0_rspec * 3.14159_rspec * real(nnoderho-1,rspec))
   if (debug) print*,'area',sum(darea),'m^2'
@@ -562,27 +559,9 @@ program process_toric_output
 ! PTB end
 
 ! DBB 7/2025
-  write(*,*) 'got here'
-  write(*,*) 'shape(ps%rho_icrf) = ', shape(ps%rho_icrf), '  shape(ps%nmini) = ', shape(ps%nmini)
-  write(*,*) 'shape(ps%rho= ', shape(ps%rho),'  shape(ps%ns) = ', shape(ps%ns)
-  write(*,*) 'shape(ps%rho= ', shape(ps%rho),'  shape(ps%ns) = ', shape(ps%ns)
-  write(*,*) 'shape(ps%ns(:,0)) = ', shape(ps%ns(:,0))  
-
-  write(*,*) 'ps%fracmin = ', ps%fracmin
-  write(*,*) 'ps%ns(:,0) = ', ps%ns(:,0)
-!  write(*,*) ' ps%fracmin*ps%ns(:,0) = ',  ps%fracmin*ps%ns(:,0)
       if(allocated(ps%nmini)) then
-           allocate (nmini_temp(size(ps%rho)))
-           do i = 1, size(ps%rho)-1
-             nmini_temp(i) = ps%ns(i,0)
-             nmini_temp(i) = ps%fracmin(1)*nmini_temp(i)
-           end do 
-              write(*,*) 'nmini_temp = ', nmini_temp 
           call ps_user_rezone1(ps%rho, ps%rho_icrf, ps%fracmin(1)*ps%ns(:,0), ps%nmini(:,1), ierr)
-!          call ps_user_rezone1(ps%rho, ps%rho_icrf, nmini_temp, ps%nmini(:,1), ierr) 
       end if
- write(*,*) 'Got to there'
-!      stop
  ! end DBB 7/2025
 
 !  write(*,*) 'igot to 2 ps%nmini = ', ps%nmini
@@ -592,9 +571,9 @@ program process_toric_output
 
 
 !  write(*,*) 'igot to 3 ps%nmini = ', ps%nmini
-  
+
   CALL PS_WRITE_UPDATE_FILE('RF_IC_'//cur_state_file, ierr)
-  WRITE (*,*) "Stored Partial RF Plasma State"   
+  WRITE (*,*) "Stored Partial RF Plasma State"
   write(*,*) 'igot to 4 ps%nmini = ', ps%nmini
 !write the state file to optional filename, can also take optional state
   CALL ps_store_plasma_state(ierr, trim(cur_state_file))
@@ -618,7 +597,7 @@ program process_toric_output
        &    cdicrf_tmp, CdensFW, CdensIBW )
 
   contains
-    
+
   subroutine assert( lcond, mesg, ivalue )
     logical, intent(in) :: lcond
     character*(*),intent(in) :: mesg
@@ -716,7 +695,7 @@ program process_toric_output
     !
     !    Note that the user may request extrapolation.  This occurs whenever
     !    a T_INTERP value is less than the minimum T_DATA or greater than the
-    !    maximum T_DATA.  In that case, linear extrapolation is used.  
+    !    maximum T_DATA.  In that case, linear extrapolation is used.
     !
     !  Modified:
     !

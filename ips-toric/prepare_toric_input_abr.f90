@@ -48,9 +48,9 @@
       integer :: nvrb=3       ! Generally three vector components
 ! Poloidal resolution
       integer :: ntt = 64
-      integer :: nmod =31     ! nmod will be set as nmod=ntt/2-1, 
+      integer :: nmod =31     ! nmod will be set as nmod=ntt/2-1,
                               ! unless user enters a non-zero positive value
-                              ! less than ntt/2-1 to conserve memory at 
+                              ! less than ntt/2-1 to conserve memory at
                               ! the cost of efficiency.
 ! Radial resolution: Number of radial elements in the plasma
       integer :: nelm = 240
@@ -80,13 +80,13 @@
       integer ::   imdedg=2   ! JPW pollution scheme for vacuum layer modelling
       integer ::   iezvac=1   ! Ez suppressed in vacuum
       integer ::   icoll=0    ! No collisions
-      integer ::   iclres=0   ! adds collisions around isolated ion-ion 
+      integer ::   iclres=0   ! adds collisions around isolated ion-ion
                               ! resonances. Use with care!
-      integer ::   iregax=1   ! turn on regularization at the magnetic axis 
+      integer ::   iregax=1   ! turn on regularization at the magnetic axis
                               ! (changes equil near axis a bit)
       integer ::   bscale=12  ! blocksize scaling factor for parallel runs only
       integer ::   pcblock=4  ! number of processors used for the sub-blocks
-      logical ::   use_incore=.true. 
+      logical ::   use_incore=.true.
                               ! default is to use in-core memory
                               ! but be careful to have enough processors
 
@@ -96,7 +96,7 @@
 ! many of the parameters
       integer ::   io_ncdf = 1
 
-! Wave and antenna parameters (default values for now, later 
+! Wave and antenna parameters (default values for now, later
 !   use ps%ant_model file for machine state)
       integer     :: nphi=10
       real(rspec) :: freqcy=80.e6_rspec
@@ -123,7 +123,7 @@
       character(50) :: scratchpath = '/scratch/scratchdirs/u1565/tmp'
 
 ! Namelist for numerical magnetic equilibrium
-! PTB - changed the deafult fitting for the MHD equilibrium form Chebyschev 
+! PTB - changed the deafult fitting for the MHD equilibrium form Chebyschev
 ! polynomials to splines as the they seem to work better, especially near
 ! the separatrix.
 !     integer :: nmhd, intchb=7
@@ -147,7 +147,7 @@
      &             atm(nspmx)=0._rspec,       azi(nspmx)=0._rspec
 
       real(rspec), dimension(:) ::                                   &
-     &             aconc(nspmx)=0._rspec,     tempic(nspmx)=0._rspec,& 
+     &             aconc(nspmx)=0._rspec,     tempic(nspmx)=0._rspec,&
      &             tisepr(nspmx)=0._rspec,    glti(nspmx)=0._rspec,  &
      &             pptii(nspmx)=0._rspec,     pptie(nspmx)=0._rspec
 
@@ -167,7 +167,7 @@
 
 
 !TORIC namelist blocks (some variables are not written for simplification)
-!Most of these variables are described in man_toric and 
+!Most of these variables are described in man_toric and
 !initalized in t4_mod_public.F
 
 !originally in t4_aamain.F
@@ -199,21 +199,21 @@
      &   dist_plafars,   dist_plaant,    dist_plawall,  &
      &   inputpath,      equil_file,     profnt_file
 
-! This namelist group was added to specify parameters controlling nonthermal 
+! This namelist group was added to specify parameters controlling nonthermal
 ! ion populations such as the ICRF minority in the machine.inp file.
 ! This namelist group is NOT written to the torica.inp file. It only
 ! serves to transfer information between the machine.inp file and the
-! Fortran wrappers do_toric_init and prepare_toric_input. 
+! Fortran wrappers do_toric_init and prepare_toric_input.
 
       namelist /nonthermals/ &
      &   fracmin, q_rfmin, qatom_rfmin, m_rfmin, rfmin_name, &
-     &   kdens_rfmin, isThermal 
+     &   kdens_rfmin, isThermal
 
 ! Namelist in torica.inp for transfering data to process output
       namelist /ips/ toric_to_alla
 !other variables for output of profiles
     integer :: nprodt, nproeq, kdiff_idens=1, kdiff_itemp=1
-    
+
 !Not used yet
     real(rspec) :: prfin
 !I/O units
@@ -226,14 +226,14 @@
 !
 !--------------------------------------------------------------------------
 !JCW we leave this here for future use, but no S_ variables are being used right now
-!6 Mar 2007   
+!6 Mar 2007
     !-----------------------------------
     ! Time at beginning and end of time step
     !-----------------------------------
     REAL (KIND = rspec) ::     &
       & S_t0,                  &   ! time at beginning of step [msec]
       & S_t1                       ! time at end of step [msec]
-   
+
     !-----------------------------------
     ! Basic Geometry
     !-----------------------------------
@@ -246,63 +246,63 @@
         S_r_max,               & ! major radius of outside of bounding box [m]
         S_z_min,               & ! Z of bottom of bounding box [m]
         S_z_max                  ! Z of top of bounding box [m]
-            
+
     !-----------------------------------
     ! Particle Species
     !-----------------------------------
-    
+
     INTEGER :: S_nspec       ! number of ion species = nspec_th + nspec_nonMax
 
     !-----------------------------------
     ! Main (thermal) Plasma Species
     !-----------------------------------m
-    
+
     integer, parameter :: nrho_max = 220
 !   integer, parameter :: n_spec_th_max = 5
     integer, parameter :: n_spec_th_max = 30
 !   integer, parameter :: n_spec_max = 7
     integer, parameter :: n_spec_max = 32
-    integer, parameter :: n_spec_nm_max = 3 
+    integer, parameter :: n_spec_nm_max = 3
 
-    
-    
+
+
     INTEGER :: S_nspec_th                      ! number of thermal ion species
     character(len = 32) ::  &
         S_s_name(0:n_spec_max)                 ! names of main species, (0:nspec_th)
     REAL (KIND = rspec) :: &
         S_q_s(0:n_spec_th_max),              & ! charge of species s [C], (0:nspec_th)
      &  S_m_s(0:n_spec_th_max)                 ! mass of species s [kg], (0:nspec_th)
-    
+
     INTEGER :: S_nrho_n          ! number of rho values in thermal species density grid
     REAL (KIND = rspec) :: &
         S_rho_n_grid(nrho_max),            & ! rho values in density grid, (1:nrho_n)
      &  S_n_s(nrho_max, 0:n_spec_th_max),  & ! density profile of species s, (1:nrho_n, 0:nspec_th)
      &  S_q_impurity(nrho_max),            & ! effective impurity charge profile, (1:nrho_n)
      &  S_m_impurity(nrho_max)               ! effective impurity mass profile, (1:nrho_n)
- 
+
     INTEGER :: S_nrho_T                  ! number of rho values in temperature grid
     REAL (KIND = rspec) :: &
         S_rho_T_grid(nrho_max),       &  ! rho values in temperature grid, (1:nrho_T)
       & S_T_s(nrho_max, 0:n_spec_th_max) ! Temperature profile of species s, (1:nrho_T, 0:nspec_th)
- 
+
     INTEGER :: S_nrho_v_par      ! number of main rho values in parallel velocity grid
 !    REAL (KIND = rspec), ALLOCATABLE :: &
 !        PS_rho_v_par_grid(:),   & ! rho values in parallel velocity grid, (1:nrho_v_par)
-!      & PS_v_par_s(:, :)        & ! v parallel profile of species s, 
+!      & PS_v_par_s(:, :)        & ! v parallel profile of species s,
                                    ! (1:nrho_v_par, 0:nspec_th)
- 
+
     !-----------------------------------
     ! Non-Maxwellian Species
     !-----------------------------------
-    
+
     INTEGER :: S_nspec_nonMax    ! number of non-Maxwellian species
     character(len=32), dimension(n_spec_nm_max ) :: &
         S_nonMax_name         ! names of non-Maxwellian species, (1:nspec_nonMax)
-    
+
     REAL (KIND = rspec), dimension(n_spec_nm_max ) :: &
         S_q_nonMax_s,       & ! charge of species s [C], (1:nspec_nonMax)
         S_m_nonMaX_s          ! mass of species s [kg], (1:nspec_nonMax)
-    
+
     INTEGER :: S_ntheta_n        ! number of theta values in 2D density grid
 
     REAL (KIND = rspec), ALLOCATABLE :: &
@@ -310,11 +310,11 @@
                                  ! (1:nrho_n, 1:ntheta_n, 1:nspec_nonMax)
 
     REAL (KIND = rspec), ALLOCATABLE :: &
-        S_n_nonMax_s(:, :)   ! Flux surface average density profile of 
+        S_n_nonMax_s(:, :)   ! Flux surface average density profile of
                               ! non-Maxwellian species s, (1:nrho_n, 1:nspec_nonMax)
- 
+
     character(len = swim_string_length) :: &
-        S_dist_fun_s         ! distribution function of non-Maxwellian  
+        S_dist_fun_s         ! distribution function of non-Maxwellian
                               ! species s, (1:nspec_nonMax) N.B. For now a distribution
                               ! function type is a file name
 
@@ -330,7 +330,7 @@
     !-----------------------------------
 
     character(len = swim_string_length) :: S_eqdsk_file   ! eqdisk file
-        
+
     REAL (KIND = rspec) ::  &
         S_B_axis               ! Field at magnetic axis [T]
 
@@ -345,13 +345,13 @@
     !       RF_frequency, etc.  (vs. adding another dimension to the arrays).
     !   Assumption 2 : each source involves invoking another executable.
     !--------------------------------------------------------------------------
-   
-    
+
+
     INTEGER :: S_nrf_src         ! number of RF sources
        ! names of rf sources, (1:nrf_src)
-        
- 
-    character(len = swim_string_length) :: S_ant_model_src !file name for antenna model 
+
+
+    character(len = swim_string_length) :: S_ant_model_src !file name for antenna model
     !---------------------------------------------------------------------------
     ! Note:
     ! Antenna model is currently defined in a file. The PREPARE_CODE_INPUT program
@@ -369,25 +369,25 @@
     !
     !  N.B. In this scheme the toroidal mode number comes in through the antenna model
     !  The antenna geometry should eventually come from one of the standard machine
-    !  definition files. 
+    !  definition files.
     !
     !---------------------------------------------------------------------------
-  
-  
+
+
     ! RF Outputs that go back into the Plasma State.  Profiles are flux surface averages.
-    
+
     ! N.B. We will want to put in 2D power deposition profiles, but I don't think they
     ! are needed for our initial coupling
-        
+
     INTEGER ::  &
         S_nrho_prf,    &   ! number rho values for RF power deposition grid
         S_ntheta_prf       ! number of theta values in 2D RF power dep grid
-        
+
     REAL (KIND = rspec), ALLOCATABLE :: &
         S_rho_prf_grid(:), &        ! rho values in RF power deposition grid, (1:nrho__prf)
-        S_prf2D_src_s(:,:,:,:),   & ! 2D Power deposition from each source into each 
+        S_prf2D_src_s(:,:,:,:),   & ! 2D Power deposition from each source into each
                                         ! species, (1:nrho__prf, 1:nrf_src, 0:nspec)
-        S_prf_src_s(:,:,:)    ! Power deposition profile from each source into each 
+        S_prf_src_s(:,:,:)    ! Power deposition profile from each source into each
                               ! species, (1:nrho__prf, 1:nrf_src, 0:nspec)
 
 ! Total rf power deposition profile into each species summed over sources, (1:nrho__prf, 0:nspec)
@@ -395,16 +395,16 @@
 
 ! # of rho values for RF current drive grid for each species
     integer :: S_nrho_cdrf(n_spec_max)
-        
+
     REAL (KIND = rspec), ALLOCATABLE :: &
         S_rho_cdrf_grid(:),    & ! rho values in RF current drive grid, (1:nrho__cdrf)
         S_cdrf_src_s(:,:,:),   & ! Driven current profile from each source, in each species
                                  ! (1:nrho__cdrf, 1:nrf_src, 1:nspec_nonMax)
         S_cdrf_total_s(:,:)      ! Total current driven by all sources in each species
-    
- 
+
+
     character(len = swim_string_length), dimension(n_spec_nm_max)  :: &
-        S_ql_operator          ! quasilinear operator for each non Maxwellian--file name 
+        S_ql_operator          ! quasilinear operator for each non Maxwellian--file name
                                ! species, (1:nspec_nonMax)
     character(len = swim_string_length), dimension(n_spec_nm_max) :: &
         S_distribution_fun     ! distribution function for each non Maxwellian species
@@ -415,10 +415,10 @@
        S_nspec,S_nspec_th,S_s_name, S_q_s, S_m_s,  &
        S_nrho_n, S_rho_n_grid, S_n_s, S_q_impurity, S_m_impurity, &
        S_nrho_T, S_rho_T_grid , S_T_S !, S_ant_model_src, S_ql_operator, &
-       !S_distribution_fun     
+       !S_distribution_fun
 
 
-! END  PLASMA STATE DATA that will be given to toric via a namelist 
+! END  PLASMA STATE DATA that will be given to toric via a namelist
 ! BEGIN executable section
 !--------------------------------------------------------------------------------------
 
@@ -442,7 +442,7 @@
 
       call getlun(inp_unit,ierr)  ;  call getlun(out_unit,ierr)
 
- 
+
       call ps_get_plasma_state(ierr,trim(cur_state_file))
       if(ierr .ne. 0) stop 'cannot get plasma state to get profiles '
 
@@ -451,20 +451,20 @@
 !     nspec = ps%nspec_th !+1 !toric includes electrons in species count
 ! PTB - begins
 ! Use the abridged species list index count (nspec_alla) that includes:
-! Electrons,1 fully stripped light ion, 2 model impurity ions, and up to 3 non-thermal ion species 
+! Electrons,1 fully stripped light ion, 2 model impurity ions, and up to 3 non-thermal ion species
 ! (energetic NBI + energetic minority ion + fast fusion alpha)
 ! TORIC expects the ion species list to include all thermal ions plus the non-thermal species
 ! PTB - ends
 !
 
-! Read in partial namelist with override values such as resolution, or mode      
+! Read in partial namelist with override values such as resolution, or mode
 
-! Flexibility for case specific settings, only include values which you want to 
-! override the defaults. 
+! Flexibility for case specific settings, only include values which you want to
+! override the defaults.
 
 ! Do not set NSPEC in the machine.inp file if you want to use nspec = ps%nspec_alla + 1 because
 ! this will override the setting of NSPEC above !!!
-      
+
       write(*,*) 'Prepare toric input reading machine.inp'
       open(unit=inp_unit, file='machine.inp', status='old', &
               form='formatted')
@@ -493,7 +493,7 @@
       ! note that in the plasma state, index 0 is electrons.
       ! Toric has integer normalized units and charges
 ! PTB - begins
-! read ion species charge states and masses from the plasma State 
+! read ion species charge states and masses from the plasma State
 ! PTB atm(1:nspec) = NINT(ps%m_s(1:nspec)/ps_mp)
 ! PTB azi(1:nspec) = NINT(ps%q_s(1:nspec)/ps_xe)
       zeff = ps%zeff(1)
@@ -502,8 +502,8 @@
 ! JCW create toric to alla mapping in file:toric_alla_map.txt
 !     First nspec_tha entries are just 1:nspec_tha
 !     Then add index for non-therma species
-      isp = ps%nspec_tha 
-      
+      isp = ps%nspec_tha
+
       toric_to_alla(1:isp)=(/ (i, i=1,isp) /)
       if (allocated(ps%nbeami)) then
          isp = isp + 1
@@ -527,10 +527,10 @@
       endif
 
 
-      nspec = isp 
+      nspec = isp
       mainsp = 1
 ! PTB - ends
-      
+
 !toric doesn't use these right now, but output them in state namelist for
 !possible future use
       s_s_name(0:ps%nspec_th) = ps%s_name(0:ps%nspec_th)
@@ -543,7 +543,7 @@
       toricmode='toric'
       open(unit=out_unit, file='torica.inp',                &
         status = 'unknown', form = 'formatted',delim='quote')
-      
+
       write(out_unit, nml = toric_mode)
       write(out_unit, nml = toricainp)
       write(out_unit, nml = equidata)
@@ -565,7 +565,7 @@
       allocate( bb_prof(nprodt))
       allocate( x_orig (nprodt-1))
       allocate( x_toric (nprodt))
-! PTB ends 
+! PTB ends
 
       open(unit=out_unit, file=profnt_file,              &
          status = 'unknown', form = 'formatted')
@@ -614,7 +614,7 @@
                vol_int(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS volume onto Toric grid'
 !
-! PTB Compare the volume average of the orginal density profile from the Plasma State 
+! PTB Compare the volume average of the orginal density profile from the Plasma State
 ! and the volume average of the interpolated profile
 !
          Q_ps = 0.0_rspec
@@ -666,10 +666,10 @@
 !
 ! (1) Write the neutral beam injection data to the Toric equidt.data file:
 !
-! First interpolate the NBI density [nbeami(:,1)] from the NuBeam grid onto the Toric input data 
+! First interpolate the NBI density [nbeami(:,1)] from the NuBeam grid onto the Toric input data
 ! grid. Then write it to the equidt.data file.
 !
-      if(allocated(ps%nbeami)) then 
+      if(allocated(ps%nbeami)) then
        isp = ps%snbi_to_alla(1)
          write(*,*) "Fast ion name, A, Z = ", trim(ps%alla_name(isp)), &
      &              NINT(ps%m_alla(isp)/ps_mp), NINT(ps%q_alla(isp)/ps_xe)
@@ -679,7 +679,7 @@
          write(out_unit,'(A4,I2.2)')  'n_i_',isp
          write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
 !
-! Next interpolate the NBI energies [eperp_beami(:,1) and epll_beami(:,1)] from the NuBeam grid 
+! Next interpolate the NBI energies [eperp_beami(:,1) and epll_beami(:,1)] from the NuBeam grid
 ! onto the Toric input data grid. Then compute the equivalent temperature profile for the NBI and
 ! write it to the equidt.data file.
 !
@@ -701,7 +701,7 @@
          write(*,*) "Fast ion name, A, Z = ", trim(ps%alla_name(isp)), &
      &              NINT(ps%m_alla(isp)/ps_mp), NINT(ps%q_alla(isp)/ps_xe)
 !
-! First interpolate the electron density [ps%ns(:,0] from the PS grid onto the Toric input data 
+! First interpolate the electron density [ps%ns(:,0] from the PS grid onto the Toric input data
 ! grid. Then write it to the equidt.data file.
 !
 ! If (kdens_rfmin .EQ. 'fraction') then assume PS data is not available for nmini and instead
@@ -714,24 +714,18 @@
          tmp_prof(:) = fracmin * tmp_prof(:)
          write(out_unit,'(A4,I2.2)')  'n_rfmin_',isp
          write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
-! 
+!
 ! Next update ps%nmini in the Plasma State with th new minority ion density profile, by mapping
 ! fracmin * ps%ns(:,0) from the PS grid to the ICRF rho grid:
 !
-  write(*,*) 'shape(ps%rho_icrf) = ', shape(ps%rho_icrf), '  shape(x_orig = ', shape(x_orig),&
-    & '  shape(ps%ns) = ', shape(ps%ns),'  shape(ps%nmini) = ', shape(ps%nmini)
-
-!  call ps_user_rezone1(ps%rho, ps%rho_icrf, fracmin*ps%ns(:,0), ps%nmini(:,1), ierr)
-
-
 !write the state file to optional filename, can also take optional state
-  CALL ps_store_plasma_state(ierr , trim(cur_state_file))
+!  CALL ps_store_plasma_state(ierr , trim(cur_state_file))
 
 
 !       call ps_user_1dintrp_vec(ps%rho_icrf,x_orig, fracmin*ps%ns(:,0), &
 !       call ps_user_1dintrp_vec(ps%rho_icrf,ps%rho, fracmin*ps%ns(:,0), &
 !               ps%nmini(:,1),ierr,-1 )
-!         if(ierr .ne. 0) stop 'error interpolating new minority desnity profile onto PS grid'     
+!         if(ierr .ne. 0) stop 'error interpolating new minority desnity profile onto PS grid'
         endif
 !
 ! If (kdens_rfmin .EQ. 'data') then assume nmini is available in the PS, read it, and interpolate
@@ -743,7 +737,7 @@
          if(ierr .ne. 0) stop 'error interpolating PS minority density profile onto Toric grid'
          write(out_unit,'(A4,I2.2)')  'n_rfmin_',isp
          write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
-        endif        
+        endif
 !
 ! If isThermal=1 then assume the RF minority tail temperature is equal to the bulk ion temperature.
 ! Set the minority tail temperature equal to the temperature profile of the first bulk ion species
@@ -756,11 +750,11 @@
                tmp_prof(:),ierr )
          if(ierr .ne. 0) stop 'error interpolating PS RF minority temperature profile onto Toric grid'
          write(out_unit,'(5E16.9)')  tmp_prof !keV
-         endif 
+         endif
 !
-! If isThermal=2 then assume the RF minority tail temperature data is available in the PS. In this 
-! case just interpolate the ICRF minority energies [eperp_mini(:,1) and epll_mini(:,1)] from the ICRF 
-! grid (rho_icrf) onto the Toric input data grid. Then compute the equivalent temperature profile for 
+! If isThermal=2 then assume the RF minority tail temperature data is available in the PS. In this
+! case just interpolate the ICRF minority energies [eperp_mini(:,1) and epll_mini(:,1)] from the ICRF
+! grid (rho_icrf) onto the Toric input data grid. Then compute the equivalent temperature profile for
 ! the RF minority profile. Finally write this array to the equidt.data file.
 !
          if (ps%isThermal(1) .eq. 2) then
@@ -772,15 +766,15 @@
           if(ierr .ne. 0) stop 'error interpolating PS RF minority parallel energy profile onto Toric grid'
           tmp_prof = 0.667 * (aa_prof + bb_prof)
           write(out_unit,'(5E16.9)')  tmp_prof !keV
-         endif         
+         endif
       endif
 !
 ! (3) Write the fast fusion alpha data to the Toric equidt.data file:
 !
-! First interpolate the alpha density [nfusi(:,1)] from the fusion grid onto the Toric input data 
+! First interpolate the alpha density [nfusi(:,1)] from the fusion grid onto the Toric input data
 ! grid. Then write it to the equidt.data file.
 !
-      if(allocated(ps%nfusi)) then 
+      if(allocated(ps%nfusi)) then
        isp = ps%sfus_to_alla(1)
          write(*,*) "Fast ion name, A, Z = ", trim(ps%alla_name(isp)), &
      &              NINT(ps%m_alla(isp)/ps_mp), NINT(ps%q_alla(isp)/ps_xe)
@@ -790,7 +784,7 @@
          write(out_unit,'(A4,I2.2)')  'n_i_',isp
          write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
 !
-! Next interpolate the alpha energies [eperp_fusi(:,1) and epll_fusi(:,1)] from the fusion grid 
+! Next interpolate the alpha energies [eperp_fusi(:,1) and epll_fusi(:,1)] from the fusion grid
 ! onto the Toric input data grid. Then compute the equivalent temperature profile for the NBI and
 ! write it to the equidt.data file.
 !
@@ -803,7 +797,7 @@
           tmp_prof = 0.667 * (aa_prof + bb_prof)
           write(out_unit,'(A4,I2.2)')  't_i_',isp
           write(out_unit,'(5E16.9)')  tmp_prof !keV
-      endif  
+      endif
 !
 ! Update Plasma State with new information - ps%nmini, ps%eperp_mini, ps%epll_mini
 !
@@ -827,15 +821,15 @@
    contains
 
       subroutine zone_check(rho, x_out, x_in)
-    
+
       ! unravel zone points to boundary points
 
       REAL(KIND=rspec), intent(in) :: rho(:)  !nrho grid values
       REAL(KIND=rspec), intent(in) :: x_in(:)  !nrho-1 zone values
       REAL(KIND=rspec), intent(out) :: x_out(:)  !nrho boundary values
-      
+
       integer :: irho,nrho
- 
+
       nrho=size(x_out)
 !assume there is a ghost point x_in(-1)=x_in(1), now we have nrho pts in x_in
 !we still have no condition on the wall, so make f''=0 there
