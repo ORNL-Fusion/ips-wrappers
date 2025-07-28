@@ -564,21 +564,17 @@ program process_toric_output
       end if
  ! end DBB 7/2025
 
-!  write(*,*) 'igot to 2 ps%nmini = ', ps%nmini
     !--------------------------------------------------------------------------    !
     ! Store the data in partial plasma_state file
     !--------------------------------------------------------------------------
 
 
-!  write(*,*) 'igot to 3 ps%nmini = ', ps%nmini
 
   CALL PS_WRITE_UPDATE_FILE('RF_IC_'//cur_state_file, ierr)
   WRITE (*,*) "Stored Partial RF Plasma State"
-  write(*,*) 'igot to 4 ps%nmini = ', ps%nmini
 !write the state file to optional filename, can also take optional state
   CALL ps_store_plasma_state(ierr, trim(cur_state_file))
   CALL assert( ierr == 0, 'cannot open state in prepare toric output', ierr )
-  write(*,*) 'igot to 5 ps%nmini = ', ps%nmini
 
   !JCW diagnostic output
   if (debug) then
