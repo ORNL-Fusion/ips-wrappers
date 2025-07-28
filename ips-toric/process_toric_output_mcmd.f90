@@ -196,7 +196,6 @@ program process_toric_output
   logical, parameter:: debug=.false.
     
   integer, parameter :: swim_string_length = 256  !for compatibility LAB
-     
 
 
   !------------------------------------
@@ -204,6 +203,7 @@ program process_toric_output
   INTEGER :: ierr, n, id_ncdf, imode, nspec, id_temp, i, j
   integer :: istat, nmhd
   integer :: nnoderho, iarg
+  real(rspec), allocatable :: nmini_temp(:)
 
   character(len =swim_string_length) :: cur_state_file, ncdfvarname
 
@@ -563,27 +563,41 @@ program process_toric_output
 
 ! DBB 7/2025
   write(*,*) 'got here'
-  write(*,*) 'shape(ps%rho_icrf) = ', shape(ps%rho_icrf), '  shape(ps%rho= ', shape(ps%rho),&
-    & '  shape(ps%ns) = ', shape(ps%ns),'  shape(ps%nmini) = ', shape(ps%nmini)
+  write(*,*) 'shape(ps%rho_icrf) = ', shape(ps%rho_icrf), '  shape(ps%nmini) = ', shape(ps%nmini)
+  write(*,*) 'shape(ps%rho= ', shape(ps%rho),'  shape(ps%ns) = ', shape(ps%ns)
+  write(*,*) 'shape(ps%rho= ', shape(ps%rho),'  shape(ps%ns) = ', shape(ps%ns)
+  write(*,*) 'shape(ps%ns(:,0)) = ', shape(ps%ns(:,0))  
+
+  write(*,*) 'ps%fracmin = ', ps%fracmin
+  write(*,*) 'ps%ns(:,0) = ', ps%ns(:,0)
+!  write(*,*) ' ps%fracmin*ps%ns(:,0) = ',  ps%fracmin*ps%ns(:,0)
       if(allocated(ps%nmini)) then
-              write(*,*) ' ps%fracmin*ps%ns(:,0) = ', ps%fracmin*ps%ns(:,0)
-              call ps_user_rezone1(ps%rho, ps%rho_icrf, ps%fracmin*ps%ns(:,0), ps%nmini(:,1), ierr)
-       end if
+           allocate (nmini_temp(size(ps%rho)))
+           do i = 1, size(ps%rho)-1
+             nmini_temp(i) = ps%ns(i,0)
+             nmini_temp(i) = ps%fracmin(1)*nmini_temp(i)
+           end do 
+              write(*,*) 'nmini_temp = ', nmini_temp 
+          call ps_user_rezone1(ps%rho, ps%rho_icrf, ps%fracmin(1)*ps%ns(:,0), ps%nmini(:,1), ierr)
+!          call ps_user_rezone1(ps%rho, ps%rho_icrf, nmini_temp, ps%nmini(:,1), ierr) 
+      end if
+ write(*,*) 'Got to there'
+!      stop
  ! end DBB 7/2025
 
-  write(*,*) 'igot to 2 ps%nmini = ', ps%nmini
+!  write(*,*) 'igot to 2 ps%nmini = ', ps%nmini
     !--------------------------------------------------------------------------    !
     ! Store the data in partial plasma_state file
     !--------------------------------------------------------------------------
 
 
-  write(*,*) 'igot to 3 ps%nmini = ', ps%nmini
+!  write(*,*) 'igot to 3 ps%nmini = ', ps%nmini
   
-	CALL PS_WRITE_UPDATE_FILE('RF_IC_'//cur_state_file, ierr)
-	WRITE (*,*) "Stored Partial RF Plasma State"   
+  CALL PS_WRITE_UPDATE_FILE('RF_IC_'//cur_state_file, ierr)
+  WRITE (*,*) "Stored Partial RF Plasma State"   
   write(*,*) 'igot to 4 ps%nmini = ', ps%nmini
 !write the state file to optional filename, can also take optional state
-  CALL ps_store_plasma_state(ierr) ! , trim(cur_state_file))
+  CALL ps_store_plasma_state(ierr, trim(cur_state_file))
   CALL assert( ierr == 0, 'cannot open state in prepare toric output', ierr )
   write(*,*) 'igot to 5 ps%nmini = ', ps%nmini
 

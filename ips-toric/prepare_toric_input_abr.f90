@@ -721,7 +721,7 @@
   write(*,*) 'shape(ps%rho_icrf) = ', shape(ps%rho_icrf), '  shape(x_orig = ', shape(x_orig),&
     & '  shape(ps%ns) = ', shape(ps%ns),'  shape(ps%nmini) = ', shape(ps%nmini)
 
-  call ps_user_rezone1(ps%rho, ps%rho_icrf, fracmin*ps%ns(:,0), ps%nmini(:,1), ierr)
+!  call ps_user_rezone1(ps%rho, ps%rho_icrf, fracmin*ps%ns(:,0), ps%nmini(:,1), ierr)
 
 
 !write the state file to optional filename, can also take optional state
