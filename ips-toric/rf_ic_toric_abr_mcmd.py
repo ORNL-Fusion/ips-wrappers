@@ -79,7 +79,7 @@ class toric (Component):
         except:
             logMsg = 'rf_ic_toric_mcmd: error in getting log.toric path'
             self.services.exception(logMsg)
-            raise 
+            raise
         toric_log = self.toric_log
 
 
@@ -89,7 +89,7 @@ class toric (Component):
         except Exception:
             logMsg = 'Error in call to stage_state()'
             self.services.exception(logMsg)
-            raise 
+            raise
 
       # Get input files
         try:
@@ -128,6 +128,10 @@ class toric (Component):
 
       # run TORIC init
         do_input = os.path.join(self.BIN_PATH, 'do_toric_init_abr')
+        command = do_input + ' ' + cur_state_file
+        print('running = ', command)
+        services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+          event_comment =  command)
         retcode = subprocess.call([do_input,cur_state_file])
         if (retcode != 0):
             logMsg = 'Error in call to toric_init'
@@ -140,7 +144,7 @@ class toric (Component):
         except Exception:
             logMsg = 'Error in call to update_state()'
             self.services.exception(logMsg)
-            raise 
+            raise
 
       # Archive output files
       # N.B.  do_toric_init does not produce a complete set of TORIC output
@@ -156,7 +160,7 @@ class toric (Component):
         except Exception:
             logMsg = 'Error in call to stage_output_files()'
             self.services.exception(logMsg)
-            raise 
+            raise
 
         return 0
 
@@ -193,7 +197,7 @@ class toric (Component):
         except:
             logMsg = 'rf_ic_toric_mcmd: error in getting log.toric path'
             self.services.exception(logMsg)
-            raise 
+            raise
 
         return 0
 
@@ -223,7 +227,7 @@ class toric (Component):
         except:
             logMsg = 'Error in call to stage_state()'
             self.services.exception(logMsg)
-            raise 
+            raise
 
       # Get input files
         try:
@@ -231,7 +235,7 @@ class toric (Component):
         except:
             logMsg = 'Error in call to stage_input_files()'
             self.services.exception(logMsg)
-            raise 
+            raise
 
       # Copy machine.inp_<suffix> to generic file name -> machine.inp if there is
       # a suffix
@@ -259,7 +263,7 @@ class toric (Component):
                 'machine.inp', strerror)))
                 logMsg = 'Error copying machine.inp_<suffix> -> machine.inp'
                 services.exception(logMsg)
-                raise 
+                raise
 
         prepare_input = os.path.join(self.BIN_PATH, 'prepare_toric_input_abr')
         process_output  = os.path.join(self.BIN_PATH, 'process_toric_output_mcmd')
@@ -364,7 +368,7 @@ class toric (Component):
         except:
             logMsg = 'Error in call to merge_current_state(' + partial_file + ')'
             self.services.exception(logMsg)
-            raise 
+            raise
 
       # Archive output files
         try:
@@ -372,7 +376,7 @@ class toric (Component):
         except:
             logMsg = 'Error in call to stage_output_files()'
             self.services.exception(logMsg)
-            raise 
+            raise
 
         return 0
 
