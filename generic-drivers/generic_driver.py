@@ -2,14 +2,14 @@
 
 # Version 10.5 (Batchelor 9-12-2019)
 # Eliminated import get_lines, put_lines, edit_nml_file, get_global_param, and
-# get_component_param.  Get these from /ips-wrappers/utilities.  Needs to be on 
+# get_component_param.  Get these from /ips-wrappers/utilities.  Needs to be on
 # PYTHON_PATH.
 
 # Version 10.4 (Batchelor 7/29/2018)
 # Eliminated all reference to NEXT_STATE
 
 # Version 10.3 (Batchelor 4/25/2017)
-# Added capabiity to terminate simulation after INIT phase based on optional config 
+# Added capabiity to terminate simulation after INIT phase based on optional config
 # parameter INIT_ONLY == True.
 
 # Version 10.2 (Batchelor 4/21/2017)
@@ -30,7 +30,7 @@
 
 # Version 9 (Batchelor 3/9/2011) N.B. Gone as of version 10.4
 # Eliminates copying of NEXT_STATE to CURRENT_STATE in the pres_tep_logic function
-# This copy clobbers plasma state merges of partial states.  It was already 
+# This copy clobbers plasma state merges of partial states.  It was already
 # eliminated from the concurrent_driver.py.  Components are free to still write
 # NEXT_STATE and other components can read it if they want to communicate that
 # way.
@@ -39,7 +39,7 @@
 # Adds generic awareness of RF_EC component
 
 # Version 7 (Batchelor 11/19/2010)
-# Now writes a file in SIM_ROOT called "PORTAL_RUNID" that contains the 
+# Now writes a file in SIM_ROOT called "PORTAL_RUNID" that contains the
 # PORTAL_RUNID number of the present run.  On restart it appends the new runid
 # to the file so there is a record of all portal run id numbers associated with
 # this simulation.
@@ -50,7 +50,7 @@
 
 # version 5 (Batchelor 5/21/2010)
 
-# This version also has the additions needed to allow checkpoint/restart.  The 
+# This version also has the additions needed to allow checkpoint/restart.  The
 # initialization section of the STEP function below now checks to see if config
 # parameter SIMULATION_MODE = 'RESTART'.  If so the restart function is called for
 # all components other than the INIT comoponent and the DRIVER component itself.
@@ -69,19 +69,19 @@
 # called during the time loop steps.  Therefore it is no longer necessary to have a
 # different driver for each combination of components to be used.  In this version
 # the components looked for are: EPA, RF_IC, RF_LH, NB, FP, FUS, and MONITOR. It also
-# supports exception handling. When other components are available we will add them. 
+# supports exception handling. When other components are available we will add them.
 #
 # The time loop for this version is simple and explicit.  It steps first through all the
-# source components (RF, NB, FUS, FP), then steps the EPA and finally the MONITOR.  As 
+# source components (RF, NB, FUS, FP), then steps the EPA and finally the MONITOR.  As
 # with any driver the user can easily customize for any time stepping algorithm he wants.
 #
 # Note that this version launches the components using the services.call() function.  The
-# framework normally launches jobs using MPI = APRUN, which requires an MPP allocation.  
-# So either the job must be submitted via a batch script with an MPP repo specification, 
-# or one must start an interactive session. It can't be launched from the command line 
-# unless the machine configuration file (e.g. franklin.conf) is modified to contain 
-# "MPIRUN=eval" instead of "MPIRUN=aprun". The intention is to write a companion to this 
-# driver that uses the Python subprocess.call() to launch components.  Then the IPS can 
+# framework normally launches jobs using MPI = APRUN, which requires an MPP allocation.
+# So either the job must be submitted via a batch script with an MPP repo specification,
+# or one must start an interactive session. It can't be launched from the command line
+# unless the machine configuration file (e.g. franklin.conf) is modified to contain
+# "MPIRUN=eval" instead of "MPIRUN=aprun". The intention is to write a companion to this
+# driver that uses the Python subprocess.call() to launch components.  Then the IPS can
 # be started from the command line but the job will be restricted to one processor.
 #
 # This version also has some of the additions needed to allow checkpoint/restart but
@@ -139,7 +139,7 @@ class generic_driver(Component):
 
         # INIT is already instantiated by the framework. This adds it to port_dict
         if 'INIT' in port_names:
-            initComp = services.get_port('INIT') 
+            initComp = services.get_port('INIT')
             if(initComp == None):
                 print('Error accessing INIT component')
                 raise
@@ -155,7 +155,7 @@ class generic_driver(Component):
             port_dict['EPA'] = epaComp
             port_id_list.append(epaComp)
             print (' ')
-       
+
         if 'RF_EC' in port_names:
             rf_ecComp = services.get_port('RF_EC')
             if(rf_ecComp == None):
@@ -164,7 +164,7 @@ class generic_driver(Component):
             port_dict['RF_EC'] = rf_ecComp
             port_id_list.append(rf_ecComp)
             print (' ')
-        
+
         if 'RF_IC' in port_names:
             rf_icComp = services.get_port('RF_IC')
             if(rf_icComp == None):
@@ -173,7 +173,7 @@ class generic_driver(Component):
             port_dict['RF_IC'] = rf_icComp
             port_id_list.append(rf_icComp)
             print (' ')
-        
+
         if 'RF_LH' in port_names:
             rf_lhComp = services.get_port('RF_LH')
             if(rf_lhComp == None):
@@ -200,7 +200,7 @@ class generic_driver(Component):
             port_dict['FUS'] = fusComp
             port_id_list.append(fusComp)
             print (' ')
- 
+
         if 'FP' in port_names:
             fpComp = services.get_port('FP')
             if(fpComp == None):
@@ -214,7 +214,7 @@ class generic_driver(Component):
             monitorComp = services.get_port('MONITOR')
             if(monitorComp == None):
                 print('Error accessing MONITOR component')
-                raise       
+                raise
             port_dict['MONITOR'] = monitorComp
             port_id_list.append(monitorComp)
             print (' ')
@@ -229,19 +229,19 @@ class generic_driver(Component):
 
       # Initialize components in PORTS list for startup or restart
         print (' ')
-        
+
         init_mode = 'init'
         if sim_mode == 'RESTART' : init_mode = 'restart'
 
         if 'EPA' in port_names:
             self.component_call(services, 'EPA', epaComp, init_mode, t)
-        
+
         if 'RF_EC' in port_names:
             self.component_call(services, 'RF_EC', rf_ecComp, init_mode, t)
-        
+
         if 'RF_IC' in port_names:
             self.component_call(services, 'RF_IC', rf_icComp, init_mode, t)
-        
+
         if 'RF_LH' in port_names:
             self.component_call(services, 'RF_LH', rf_lhComp, init_mode, t)
 
@@ -275,7 +275,7 @@ class generic_driver(Component):
         print(' init sequence complete--ready for time loop')
 
         INIT_ONLY = get_component_param(self, services, 'INIT_ONLY', optional = True)
-        if INIT_ONLY in [True, 'true', 'True', 'TRUE']:   
+        if INIT_ONLY in [True, 'true', 'True', 'TRUE']:
             message = 'INIT_ONLY: Intentional stop after INIT phase'
             print(message)
             return
@@ -343,7 +343,7 @@ class generic_driver(Component):
 
         services.checkpoint_components(port_id_list, t, Force = True)
         self.checkpoint(t)
-      
+
       # Post simulation: call finalize on each component
         print (' ')
 
@@ -380,17 +380,17 @@ class generic_driver(Component):
 
     def checkpoint(self, timestamp=0.0):
         print('generic_driver.checkpoint() called')
-        
+
 
 # ------------------------------------------------------------------------------
 #
-# finalize function 
+# finalize function
 #
 # ------------------------------------------------------------------------------
 
     def finalize(self, timestamp = 0):
-      # Driver finalize - nothing to be done
-        pass
+        print('generic_driver: finalize() called')
+        return
 
 # "Private" driver methods
 
@@ -405,11 +405,11 @@ class generic_driver(Component):
                 message = comp_mode_string + ' failed'
                 print(message)
                 services.exception(message)
-                raise 
-            
+                raise
+
             return
-    
-    
+
+
     # Pre Step Logic
     def pre_step_logic(self, services, timeStamp):
 
@@ -429,7 +429,7 @@ class generic_driver(Component):
             print('generic_driver pre_step_logic: power_ic = ', power_ic)
 
         ps.close()
-        
+
         print('generic_driver pre_step_logic: timeStamp = ', timeStamp)
-        
+
         return
