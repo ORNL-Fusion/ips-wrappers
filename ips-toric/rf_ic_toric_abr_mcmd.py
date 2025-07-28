@@ -290,6 +290,10 @@ class toric (Component):
         print('power = ', power_ic)
         if(-0.02 < power_ic < 0.02):
             print(zero_RF_IC_power)
+            command = zero_RF_IC_power + ' ' + cur_state_file
+            print('running = ', command)
+            services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+               event_comment =  command)
             retcode = subprocess.call([zero_RF_IC_power, cur_state_file])
             if (retcode != 0):
                 logMsg = 'Error executing ' + prepare_input
@@ -317,11 +321,15 @@ class toric (Component):
         else:
 
             if not os.path.isfile(prepare_input):
-                logMsg = 'Cannot fine TORIC prepare_input binary: ' + prepare_input
+                logMsg = 'Cannot find TORIC prepare_input binary: ' + prepare_input
                 self.services.error(logMsg)
                 raise Exception(logMsg)
 
             # Call TORIC prepare_input to generate torica.inpp
+            command = prepare_input + ' ' + cur_state_file
+            print('running = ', command)
+            services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+                event_comment =  command)
             retcode = subprocess.call([prepare_input, cur_state_file]) #, cur_eqdsk_file])
             if (retcode != 0):
                 logMsg = 'Error executing ' + prepare_input
@@ -330,6 +338,9 @@ class toric (Component):
 
             # Call xeqdsk_setup to generate eqdsk.out file
             print(('prepare_eqdsk', prepare_eqdsk, cur_eqdsk_file))
+            command = prepare_eqdsk + ' ' + cur_eqdsk_file
+            services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+                event_comment =  command)
 
             retcode = subprocess.call([prepare_eqdsk, \
                                        '@equigs_gen', '/g_filename='+cur_eqdsk_file,\
@@ -350,6 +361,10 @@ class toric (Component):
                 raise Exception(logMsg)
 
             # Call process_output
+            command = process_output + ' ' + cur_state_file
+            print('running = ', command)
+            services.send_portal_event(event_type = 'COMPONENT_EVENT',\
+                event_comment =  command)
             # First rename default fort.* to expected names by component method as of toric5 r918 from ipp
             os.rename('fort.9','toric_cfg.nc')
             os.rename('fort.21','toric.nc')
