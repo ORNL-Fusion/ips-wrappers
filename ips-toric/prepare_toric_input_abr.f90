@@ -714,18 +714,6 @@
          tmp_prof(:) = fracmin * tmp_prof(:)
          write(out_unit,'(A4,I2.2)')  'n_rfmin_',isp
          write(out_unit,'(5E16.9)')  tmp_prof*cubic_cm !M^-3 to cm^-3
-!
-! Next update ps%nmini in the Plasma State with th new minority ion density profile, by mapping
-! fracmin * ps%ns(:,0) from the PS grid to the ICRF rho grid:
-!
-!write the state file to optional filename, can also take optional state
-!  CALL ps_store_plasma_state(ierr , trim(cur_state_file))
-
-
-!       call ps_user_1dintrp_vec(ps%rho_icrf,x_orig, fracmin*ps%ns(:,0), &
-!       call ps_user_1dintrp_vec(ps%rho_icrf,ps%rho, fracmin*ps%ns(:,0), &
-!               ps%nmini(:,1),ierr,-1 )
-!         if(ierr .ne. 0) stop 'error interpolating new minority desnity profile onto PS grid'
         endif
 !
 ! If (kdens_rfmin .EQ. 'data') then assume nmini is available in the PS, read it, and interpolate
