@@ -20,7 +20,9 @@
 
       !program variables
       !---------------------------------------------------------------
-      integer :: ierr, i, isp, iwarn, irho, minspec, pairspec, toric_to_alla(8) ! PTB
+      integer :: ierr, i, j, isp, iwarn, irho, minspec,pairspec
+      integer :: indxmin, indxe, isp_min, isp_fus, ncustom
+      integer :: toric_to_alla(8) ! PTB
       logical :: lex
 
       !other variables for output of profiles
@@ -44,6 +46,7 @@
       real(rspec) :: tol_zero = 1.0E-12_rspec, dVol, dVol_int, Q_ps, Q_int
 
       character(16):: outfile='torica.inp'
+      character(5):: fusnstr, rfmistr
       
       !program namelist variables
       !----------------------------------------------------------------
@@ -59,7 +62,7 @@
       real(rspec):: arg_fplo=0.1_rspec
       real(rspec):: arg_fphi=0.99_rspec
       CHARACTER(len=16), dimension(nspmx) :: spec_list = 'NONE'
-      
+      character(len =swim_string_length) :: state_var
       
       !program namelist block
       !----------------------------------------------------------------
@@ -393,6 +396,7 @@
       endif
 
       ! overwrite deltapsi in qldciinp
+      write(*,*) ps%nrho_eq
       deltapsi = ps%psipol(ps%nrho_eq)
       
       ! overwrite Zeff (not particularily important in TORIC so just set naively)
@@ -475,7 +479,7 @@
                   isp_min = isp
                elseif (state_var.eq.(spec_list(i)//fusnstr))then
                   isp=j
-                  ips_fus = isp
+                  isp_fus = isp
                end if
             enddo
             if (isp.eq.-1) then
@@ -793,4 +797,26 @@
 
       END subroutine getlun
 
+      function to_upper(strIn) result(strOut)
+        ! Adapted from http://www.star.le.ac.uk/~cgp/fortran.html (25 May 2012)
+        ! Original author: Clive Page
+
+        implicit none
+
+        character(len=*), intent(in) :: strIn
+        character(len=len(strIn)) :: strOut
+        integer :: i,j
+
+        do i = 1, len(strIn)
+           j = iachar(strIn(i:i))
+           if (j>= iachar("a") .and. j<=iachar("z") ) then
+              strOut(i:i) = achar(iachar(strIn(i:i))-32)
+           else
+              strOut(i:i) = strIn(i:i)
+           end if
+        end do
+        
+      end function to_upper
+
+      
       end program prepare_toric_input

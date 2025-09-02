@@ -285,7 +285,7 @@ PROGRAM gacode_init
      ps%kdens_rfmin = "data"
   endif
   call ps_user_1dintrp_vec(rho_zcntr,expro_rho,expro_ne*1.D19,ps%ns(:,0),ierr)
-  ps%isThermal(1) = 1
+  !ps%isThermal(1) = 1
   
   !ions
   j=1
