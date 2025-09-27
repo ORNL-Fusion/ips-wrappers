@@ -47,8 +47,8 @@ PROGRAM gacode_init
         form = 'formatted', iostat = ierr)
   
   IF (ierr .ne. 0) THEN
-	CALL SWIM_error ('open', 'generic_ps_init.f90',ps_init_nml_file)
-	WRITE (*,*) 'generic_ps_init.f90: Cannot open ', TRIM(ps_init_nml_file)
+	CALL SWIM_error ('open', 'gacode_init.f90',ps_init_nml_file)
+	WRITE (*,*) 'gacode_init.f90: Cannot open ', TRIM(ps_init_nml_file)
 	call exit(1)
   END IF
 
@@ -101,12 +101,15 @@ PROGRAM gacode_init
   j=0
   do i=1,expro_n_ion
      !find the rf minority species (if there is one)
+     
+     !fast ions see if alphas or not
      if ((expro_type(i).eq.'[fast]').and.(expro_name(i).ne.'He')) then
         nspecrf_tmp = 1
         minid = i
         amurf_tmp(1)    = nint(expro_mass(i))
         Zatomrf_tmp(1)  = nint(expro_z(i))
         Zionrf_tmp(1)   = nint(expro_z(i))
+        
      !if fast helium ash set as fusion product
      elseif ((expro_type(i).eq.'[fast]').and.(expro_name(i).eq.'He'))then
         nspecfus_tmp = 1
@@ -114,6 +117,8 @@ PROGRAM gacode_init
         amufus_tmp(1)    = nint(expro_mass(i))
         Zatomfus_tmp(1)  = nint(expro_z(i))
         Zionfus_tmp(1)   = nint(expro_z(i))
+
+     !icrf ions but type='thermal', case 3He or H if ministhermal==.True.
      elseif (((expro_name(i).eq.'He3').or.(expro_name(i).eq.'H')) &
         .and.(ministhermal))then
         nspecrf_tmp = 1
@@ -121,6 +126,7 @@ PROGRAM gacode_init
         amurf_tmp(1)    = nint(expro_mass(i))
         Zatomrf_tmp(1)  = nint(expro_z(i))
         Zionrf_tmp(1)   = nint(expro_z(i))
+ 
      !set others as thermal   
      else 
         nspecth_tmp = nspecth_tmp+1
@@ -138,7 +144,7 @@ PROGRAM gacode_init
      endif
   enddo
 
-  if (trim(addmin).ne.'None') then
+  if (trim(addmin).ne.'None') then  !JCW rf species with ICRF_ADDMIN
      nspecrf_tmp = 1
      minid = expro_n_ion+1
      if (trim(addmin).eq.'He3') then
@@ -152,10 +158,9 @@ PROGRAM gacode_init
      endif
   endif   
 
-  !WRITE(*,*) 'Zion, Mion ', Zion_tmp, amu_tmp
-  !WRITE(*,*) 'Zionrf, Mionrf ', Zionrf_tmp, amurf_tmp
-  
+!------------------------------------------------------------------------!
   !Set species properties and allocate into the plasma state
+  
   CALL ps_namrd_slist_chk("S", ps_max_static, amu_tmp, &
        Zatom_tmp, Zion_tmp, ps%nspec_th, iout, ierr) 
   WRITE(*,*) 'gacode_init: Thermal species read in. ierr=', ierr
@@ -168,7 +173,8 @@ PROGRAM gacode_init
 
   CALL ps_namrd_slist_chk("RFMIN", ps_max_static, amurf_tmp,  &
        Zatomrf_tmp, Zionrf_tmp, ps%nspec_rfmin, iout, ierr) 
-  WRITE(*,*) 'gacode_init: RF species read in. ierr=', ierr
+  WRITE(*,*) 'gacode_init: RF species read in. nspec_rfmin, ierr=', &
+       ps%nspec_rfmin,ierr
   IF(IERR.NE.0) RETURN
 
   !allocate ion cyclotron source in plasma state
@@ -227,7 +233,8 @@ PROGRAM gacode_init
      WRITE(iout,*) ' ?ps_sconfig_read: ps_merge_species_lists error.'
      RETURN
   ENDIF
-
+!------------------------------------------------------------------------
+  
   !allocate rho array size
   ps%nrho = expro_n_exp
   if(ps%nspec_rfmin.gt.0) ps%nrho_icrf = ps%nrho

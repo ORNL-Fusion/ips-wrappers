@@ -38,7 +38,7 @@ class gacode_init (Component):
     # step function
     #
     # Calls fortran executable init_gacode and reads in a GACODE file then
-    # maps the GACODE file values into the plasma state file
+    # maps the GACODE file values into the plasma state file, JCW why isnt gacode_init called in init() method?
     # ---------------------------------------------------------------------------
     def step(self, timestamp):
         print(' ')
@@ -120,15 +120,15 @@ class gacode_init (Component):
                 antspec = 'F'
                 antspec_file = 'None'
 
-            if ic_min_is_thermal_arg in ['T','True','TRUE','true']:
+            if ic_min_is_thermal_arg.capitalize() in ['T','True']
                 ic_min_is_thermal = 'T'
             else:
                 ic_min_is_thermal = 'F'
 
             if ic_addmin != 'None':
-                if ic_addmin.strip() in ['He3','HE3','he3','he-3','He-3','HE-3']:
+                if ic_addmin.strip().capitalize() in ['He3','He-3']:
                     ic_addmin = 'He3'
-                elif ic_addmin.strip() in ['H','h']:
+                elif ic_addmin.strip().capitalize() in ['H']:
                     ic_addmin = 'H'
                 
             # Generate state files as dummies so framework has complete set

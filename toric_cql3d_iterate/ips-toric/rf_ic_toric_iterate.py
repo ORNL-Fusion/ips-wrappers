@@ -247,7 +247,7 @@ class toric (Component):
         # if in minority heating mode the simulation will automatically
         # detect. otherwise, in custom mode you must specify the species by
         # their EXACT name used in your inputs. 
-        if specs in ['CUSTOM','Custom','custom']:
+        if specs.lower() == 'custom':
             custom_specs_list = self.try_get_config_param(services,'CUSTOM_SPECS').split(' ')
             custom_specs = ", ".join(custom_specs_list)
 
@@ -289,7 +289,7 @@ class toric (Component):
         nml_lines.append(' arg_fplo = ' + arg_rhoFPlo + ',\n')
         nml_lines.append(' arg_fphi = ' + arg_rhoFPhi + ',\n')
         nml_lines.append(' force_defaults = ' + arg_force_defaults + ',\n')
-        if specs in ['CUSTOM','Custom','custom']:
+        if specs.lower() == 'custom':
             nml_lines.append(' spec_list =' + custom_specs + ',\n')
         nml_lines.append(' /\n')
         put_lines('toric_prepare.nml',nml_lines)

@@ -7,7 +7,7 @@ A simple component script to run the GENRAY code from provided input files
 """
 import shutil
 import get_IPS_config_parameters as config
-from component import Component
+from ipsframework import Component
 
 class GENRAY_basic (Component):
     def __init__(self, services, config):

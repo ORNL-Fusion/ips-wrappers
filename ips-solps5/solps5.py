@@ -10,7 +10,7 @@ import sys,os,shutil
 import subprocess
 from numpy import *
 
-from component import Component
+from ipsframework import Component
 
 class solps5(Component):
 

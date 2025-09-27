@@ -5,7 +5,7 @@ import subprocess
 import getopt
 import shutil
 import math
-from component import Component
+from ipsframework import Component
 from Scientific.IO.NetCDF import *
 import Numeric
 from plasmastate import *

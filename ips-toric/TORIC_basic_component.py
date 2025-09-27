@@ -9,7 +9,7 @@ Input files required are: torica.inp, equidt.data, equigs.data.
 import shutil
 import os
 import get_IPS_config_parameters as config
-from component import Component
+from ipsframework import Component
 
 class TORIC_basic (Component):
     def __init__(self, services, config):
@@ -78,6 +78,18 @@ class TORIC_basic (Component):
         # Rename default fort.* to expected names by component method as of toric5 r918 from ipp
         os.rename('fort.9','toric_cfg.nc')
         os.rename('fort.21','toric.nc')
+        os.rename('fort.10','toric.sol')
+
+        try:
+            import plasma.toric_tools as toric
+
+        #import matplotlib.pyplot as plt
+        #plt.ioff()
+            Run=toric.toric_analysis("toric.nc",mode='ICRF',idebug=False, toric_data='toric_cfg.nc')
+            Run.info()
+            Run.threeplots();
+        except Exception as e:
+            print(f"An unexpected error occurredi generating toric plots: {e}")
 
 # "Archive" output files in history directory
         try:

@@ -7,7 +7,8 @@ A simple component script to run the CQL3D code from provided input files
 """
 import shutil
 import get_IPS_config_parameters as config
-from component import Component
+from ipsframework import Component
+
 
 class CQL3D_basic (Component):
     def __init__(self, services, config):

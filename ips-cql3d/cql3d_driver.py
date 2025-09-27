@@ -9,7 +9,7 @@ import subprocess
 import getopt
 import shutil
 import math
-from component import Component
+from ipsframework import Component
 
 class cql3dDriver(Component):
 

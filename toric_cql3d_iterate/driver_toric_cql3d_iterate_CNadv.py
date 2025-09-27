@@ -11,7 +11,7 @@ import subprocess
 import getopt
 import shutil
 import math
-from component import Component
+from ipsframework import Component
 from netCDF4 import *
 
 class toric_driver(Component):

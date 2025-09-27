@@ -283,10 +283,11 @@ class toric_driver(Component):
                                   inumin_Mode = 'Maxwell' , isol_Mode = '1', \
                                   save_output = 'True')
                 except Exception:
-                    message = 'RF_LH qldci mode step failed'
+                    message = 'RF_IC qldci mode step failed'
                     print(message)
                     services.exception(message)
                     raise
+                
             if(specs=='CUSTOM'):
                 for i in range(N_gen):
                     toricMode = 'qldci'+str(i+1)
@@ -299,7 +300,7 @@ class toric_driver(Component):
                                       inumin_Mode = 'Maxwell', isol_Mode='1', \
                                       save_output=save)
                     except Exception:
-                        message = 'RF_LH qldci mode step failed'
+                        message = 'RF_IC qldci mode step failed'
                         print(message)
                         services.exception(message)
                         raise

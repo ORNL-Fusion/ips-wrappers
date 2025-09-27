@@ -3,7 +3,7 @@
 import sys
 import os
 import subprocess
-from component import Component
+from ipsframework import Component
 import time
 import shutil
 from stat import *
