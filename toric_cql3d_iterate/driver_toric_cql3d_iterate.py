@@ -342,13 +342,21 @@ class toric_driver(Component):
                     pwrscale_bulk_ratio = pwrscale_toric_dset[1]/pwrscale_cql3d_dset[1]
                     print('pwrscale_min_ratio', pwrscale_min_ratio)
                     print('pwrscale_bulk_ratio', pwrscale_bulk_ratio)
-                    
-                    if ((pwrscale_min_ratio > 1.05)or(pwrscale_min_ratio<0.95)) or \
-                       ((pwrscale_bulk_ratio > 1.05)or(pwrscale_bulk_ratio<0.95)):
-                        pwrscale_dset[0] = pwrscale_min_ratio*pwrscale_dset[0]
-                        pwrscale_dset[1] = pwrscale_bulk_ratio*pwrscale_dset[1]
+                    if specs=='MIN':
+                        if (pwrscale_min_ratio > 1.05)or(pwrscale_min_ratio<0.95):
+                            pwrscale_dset[0] = pwrscale_min_ratio*pwrscale_dset[0]
+                        else:
+                            running = False
+                    elif specs=='MIN+':        
+                        if ((pwrscale_min_ratio > 1.05)or(pwrscale_min_ratio<0.95)) or \
+                           ((pwrscale_bulk_ratio > 1.05)or(pwrscale_bulk_ratio<0.95)):
+                            pwrscale_dset[0] = pwrscale_min_ratio*pwrscale_dset[0]
+                            pwrscale_dset[1] = pwrscale_bulk_ratio*pwrscale_dset[1]
+                        else:
+                            running = False
                     else:
-                        running = False
+                        raise ValueError("Unrecognized specs setting in config file")
+                    
                     print('pwrscale iter: ', icount, ' pwrscale ', np.array(pwrscale_dset))
                     print('toric_pfrac', np.array(pwrscale_toric_dset))
                     print('cql3d_pfrac', np.array(pwrscale_cql3d_dset))
