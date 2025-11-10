@@ -266,6 +266,10 @@ class genray(Component):
 
     # -----------------------------------------------------------------------------
     def set_genray_EC_parameters(self, input_file, t, times_parameters_list):
+    # For each launcher figures out alfast, betast, and ptot at time t and writes these
+    # into input_file (presumably the genray.in file).  Also returns the ptot list
+    # to determine whether the power on all launchers is zero.
+    # Uses edit_nml_file() from module simple_file_editing_functions.
 
         times_list = times_parameters_list[0]
         alfast_list = times_parameters_list[1]
@@ -294,6 +298,8 @@ class genray(Component):
         lines = edit_nml_file(lines, 'betast', betast_t, separator=',')
         lines = edit_nml_file(lines, 'powtot', powtot_t, separator=',')
         put_lines(input_file, lines)
+
+        return powtot_t
 
 # ------------------------------------------------------------------------------
 #
@@ -572,11 +578,25 @@ class genray(Component):
         print('cur_state_file = ', cur_state_file)
         ps = Dataset(cur_state_file, 'r', format='NETCDF3_CLASSIC')
         if rfmode == 'EC':
-            rf_power = ps.variables['power_ec'][:]
-            ps.close()
-            total_rf_power = sum(rf_power)
-            print('Total EC power = ', total_rf_power)
-            zero_rf_power_bin_string = 'ZERO_EC_POWER_BIN'
+            # If EC parameters are programmed from config file, set parameters in
+            # genray.in and get ptot_list from set_genray_EC_parameters
+            if programming:
+                # Get t0 from plasma state
+                ps = Dataset(cur_state_file, 'r', format='NETCDF3_CLASSIC')
+                t0 = ps.variables['t0'].getValue()
+                ps.close()
+                # set parameters for time = t0
+                rf_power = self.set_genray_EC_parameters(
+                    "genray.in", t0, times_parameters_list)
+	            total_rf_power = sum(rf_power)
+	            zero_rf_power_bin_string = 'ZERO_EC_POWER_BIN'
+
+            else: # Get power from plasma state
+				rf_power = ps.variables['power_ec'][:]
+				ps.close()
+				total_rf_power = sum(rf_power)
+				print('Total EC power = ', total_rf_power)
+				zero_rf_power_bin_string = 'ZERO_EC_POWER_BIN'
 
         # If EC parameters are programmed from config file, set parameters in
         # genray.in
@@ -585,7 +605,7 @@ class genray(Component):
                 ps = Dataset(cur_state_file, 'r', format='NETCDF3_CLASSIC')
                 t0 = ps.variables['t0'].getValue()
                 ps.close()
-                # set parameters those for time = t0
+                # set parameters for time = t0
                 self.set_genray_EC_parameters(
                     "genray.in", t0, times_parameters_list)
 
@@ -605,11 +625,17 @@ class genray(Component):
         if(total_rf_power < zero_rf_power_threshold):
             zero_RF_power = get_component_param(
                 self, services, zero_rf_power_bin_string)
-            retcode = subprocess.call([zero_RF_power, cur_state_file])
-            if (retcode != 0):
-                message = 'Error executing ', zero_rf_power_bin
-                self.services.error(message)
-                raise Exception(message)
+            command = zero_RF_power + ' ' + cur_state_file
+            print('running = ', command)
+            services.send_portal_event(event_type='COMPONENT_EVENT',
+                                       event_comment=command)
+            retcode = subprocess.call(command.split(), stdout=log_file,
+
+#             retcode = subprocess.call([zero_RF_power, cur_state_file])
+#             if (retcode != 0):
+#                 message = 'Error executing ', zero_rf_power_bin
+#                 self.services.error(message)
+#                 raise Exception(message)
 
             # N.B. zero_RF_power does not produce a complete set of GENRAY output
             #      files.  This causes an error in stage_output_files().  To
@@ -618,7 +644,7 @@ class genray(Component):
             for file in self.OUTPUT_FILES.split():
                 subprocess.call(['touch', file])
 
-    # Or actually run GENRAY
+    # Or actually run GENRAY.  First run prepare_input_bin.
         if(total_rf_power > zero_rf_power_threshold):
             # Call prepare_input - step
             print('rf_genray step: calling prepare_input')
@@ -639,8 +665,14 @@ class genray(Component):
                 services.error('Error executing genray prepare_input')
                 raise Exception('Error executing genray prepare_input')
 
-    # Launch genray - N.B: Path to executable is in config parameter
-    # GENRAY_BIN
+            # Running preparing_genray_input will clobber power_ec in genray.in
+            # because ps%power_ec(:) is not updated until after genray runs.  So
+            # redo set_genray_EC_parameters whjich puts is back in genray.in
+
+			rf_power = self.set_genray_EC_parameters(
+				"genray.in", t0, times_parameters_list)
+
+    # Launch genray - N.B: Path to executable is in config parameter GENRAY_BIN
             print('rf_genray: launching genray')
             cwd = services.get_working_dir()
             task_id = services.launch_task(
