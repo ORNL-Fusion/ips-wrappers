@@ -630,6 +630,7 @@ class genray(Component):
             services.send_portal_event(event_type='COMPONENT_EVENT',
                                        event_comment=command)
             retcode = subprocess.call(command.split(), stdout=log_file,
+                                      stderr=subprocess.STDOUT)
 
 #             retcode = subprocess.call([zero_RF_power, cur_state_file])
 #             if (retcode != 0):
