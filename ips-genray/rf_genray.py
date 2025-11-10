@@ -588,15 +588,15 @@ class genray(Component):
                 # set parameters for time = t0
                 rf_power = self.set_genray_EC_parameters(
                     "genray.in", t0, times_parameters_list)
-	            total_rf_power = sum(rf_power)
-	            zero_rf_power_bin_string = 'ZERO_EC_POWER_BIN'
+                total_rf_power = sum(rf_power)
+                zero_rf_power_bin_string = 'ZERO_EC_POWER_BIN'
 
             else: # Get power from plasma state
-				rf_power = ps.variables['power_ec'][:]
-				ps.close()
-				total_rf_power = sum(rf_power)
-				print('Total EC power = ', total_rf_power)
-				zero_rf_power_bin_string = 'ZERO_EC_POWER_BIN'
+                rf_power = ps.variables['power_ec'][:]
+                ps.close()
+                total_rf_power = sum(rf_power)
+                print('Total EC power = ', total_rf_power)
+                zero_rf_power_bin_string = 'ZERO_EC_POWER_BIN'
 
         # If EC parameters are programmed from config file, set parameters in
         # genray.in
@@ -669,8 +669,8 @@ class genray(Component):
             # because ps%power_ec(:) is not updated until after genray runs.  So
             # redo set_genray_EC_parameters whjich puts is back in genray.in
 
-			rf_power = self.set_genray_EC_parameters(
-				"genray.in", t0, times_parameters_list)
+            rf_power = self.set_genray_EC_parameters(
+                "genray.in", t0, times_parameters_list)
 
     # Launch genray - N.B: Path to executable is in config parameter GENRAY_BIN
             print('rf_genray: launching genray')
