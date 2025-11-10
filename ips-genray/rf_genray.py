@@ -600,14 +600,14 @@ class genray(Component):
 
         # If EC parameters are programmed from config file, set parameters in
         # genray.in
-            if programming:
-                # Get t0 from plasma state
-                ps = Dataset(cur_state_file, 'r', format='NETCDF3_CLASSIC')
-                t0 = ps.variables['t0'].getValue()
-                ps.close()
-                # set parameters for time = t0
-                self.set_genray_EC_parameters(
-                    "genray.in", t0, times_parameters_list)
+#             if programming:
+#                 # Get t0 from plasma state
+#                 ps = Dataset(cur_state_file, 'r', format='NETCDF3_CLASSIC')
+#                 t0 = ps.variables['t0'].getValue()
+#                 ps.close()
+#                 # set parameters for time = t0
+#                 self.set_genray_EC_parameters(
+#                     "genray.in", t0, times_parameters_list)
 
         if rfmode == 'LH':
             rf_power = ps.variables['power_lh'][:]
