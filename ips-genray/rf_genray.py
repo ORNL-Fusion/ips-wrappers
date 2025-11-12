@@ -1,13 +1,20 @@
 #! /usr/bin/env python
 
 """
-Multi-frequency, config file programmable version: Batchelor (9/3/2018)
+Multi-frequency: Batchelor (11/11/2025)
 Supports both RFMODE = EC and LH.  Launcher power and launcher aiming programming is only
 implemented for ECH, so far.
 
 """
 
 # Working notes:
+# 11/11/2025 DBB
+# This is a simplified version.  A previous version that was used with the TSC code
+# allowed for detection of zero RF power and time programming of power and aiming angle.
+# Since TSC is no longer used, and there has been no recent call for such programming
+# I have reverted to a simpler version and stripped that coding out.  However is is still
+# around in a version called programmable_rf_genray.py.
+
 # 5/1/2020 DBB
 # Converted 2to3 (on 4/29/2020), did reformating with autopep8, did further cleaning with
 # flake8.  Removed unused loads of sys,getopt,string, and reference to unused cql_file
@@ -141,165 +148,6 @@ class genray(Component):
         Component.__init__(self, services, config)
         print('Created %s' % (self.__class__))
 
-# ----------------------------------------------------------------------------------------------
-# Utility functions
-# ----------------------------------------------------------------------------------------------
-
-    def piecewise_constant(self, x, x_points, y_points):
-
-        # Function that is piecewise constant within zones defined by x_points.
-        # x = function argument
-        # x_points = monotonically increasing list of x values
-        # y_points = list of function values at the x_points, must be same length as x_points
-        #
-        # If x < x_points[0] returns zero
-        # If x >= x_points[i] - eps and x < x_points[i+1] returns y_points[i]
-        # If x > x_points[-1] returns y_points[-1]
-        #
-        # Since floating equality is always problematic, x is considered to be in the ith
-        # zone if it is within -eps of x[i] where eps is small.
-
-        eps = 10.0**(-10)
-
-        if len(x_points) != len(y_points):
-            raise Exception(
-                'piecewise_constant: len(x_points != len(y_points)')
-
-        if x < x_points[0]:
-            return 0.0
-        elif x > x_points[-1] - eps:
-            return y_points[-1]
-        else:
-            j_up = 1
-            # Find the index of the x_point just above x.
-            while x > x_points[j_up] - eps:
-                j_up = j_up + 1
-            return y_points[j_up - 1]
-
-# ----------------------------------------------------------------------------------------------
-
-    def time_points_and_parameters(self, n_launchers):
-
-        # Does initializations for set_genray_EC_parameters() defined below.
-        # Gets the ECH launcher programming parameters from the [EC_launcher] section of the
-        # config file:
-        # LAUNCHERx_TIME, LAUNCHERx_alfast, LAUNCHERx_betast, LAUNCHERx_powtot_MW
-        # Does a little checking for consistency and returns a 4 element list of lists
-        # [times_list, alfast_list, betast_list, powtot_list]
-        # Where times_list and  parameers lists are length = n_launchers and contain
-        # lists with the time points and associated parameters for each of the launchers.
-        # Thus the shape of the returned list is (4,n_launchers, len(launcherx_TIME)) for
-        # x = 1 to n_launchers. It also converts powers to Watts so as to be consistent with
-        # plasma state.
-
-        times_list = []
-        alfast_list = []
-        betast_list = []
-        powtot_list = []
-        for i in range(n_launchers):
-            launcher_name = 'LAUNCHER' + str(i + 1)
-
-            # get time points for this launcher
-            name = launcher_name + '_TIMES'
-            time_expr = 'self.' + name + '.split()'
-            try:
-                str_time_points = eval(time_expr)
-            except BaseException:
-                message = 'error in getting EC_launcher config parameters ' + name
-                print(message)
-                self.services.error(message)
-                raise Exception(message)
-            print(name, ' = ', str_time_points)
-
-            # get alfasts for this launcher
-            name = launcher_name + '_alfast'
-            expr = 'self.' + name + '.split()'
-            try:
-                str_alfast = eval(expr)
-            except BaseException:
-                message = 'error in getting EC_launcher config parameters ' + name
-                print(message)
-                self.services.error(message)
-                raise Exception(message)
-            print(name, ' = ', str_alfast)
-
-            # get betasts for this launcher
-            name = launcher_name + '_betast'
-            expr = 'self.' + name + '.split()'
-            try:
-                str_betast = eval(expr)
-            except BaseException:
-                message = 'error in getting EC_launcher config parameters ' + name
-                print(message)
-                self.services.error(message)
-                raise Exception(message)
-            print(name, ' = ', str_betast)
-
-            # get powtots for this launcher
-            name = launcher_name + '_powtot_MW'
-            expr = 'self.' + name + '.split()'
-            try:
-                str_powtot_MW = eval(expr)
-            except BaseException:
-                message = 'error in getting EC_launcher config parameters ' + name
-                print(message)
-                self.services.error(message)
-                raise Exception(message)
-            print(name, ' = ', str_powtot_MW)
-
-            # check that times and parameters have same length
-            if len(str_time_points) != len(str_powtot_MW):
-                message = 'error: ', launcher_name, \
-                    ' time points and parameters have different lengths'
-                print(message)
-                self.services.error(message)
-                raise Exception(message)
-
-            # Convert to float, convert powers to Watts, and append to full
-            # lists
-            times_list.append([float(x) for x in str_time_points])
-            alfast_list.append([float(x) for x in str_alfast])
-            betast_list.append([float(x) for x in str_betast])
-            powtot_list.append([10.0**6 * float(x) for x in str_powtot_MW])
-
-        return [times_list, alfast_list, betast_list, powtot_list]
-
-    # -----------------------------------------------------------------------------
-    def set_genray_EC_parameters(self, input_file, t, times_parameters_list):
-    # For each launcher figures out alfast, betast, and ptot at time t and writes these
-    # into input_file (presumably the genray.in file).  Also returns the ptot list
-    # to determine whether the power on all launchers is zero.
-    # Uses edit_nml_file() from module simple_file_editing_functions.
-
-        times_list = times_parameters_list[0]
-        alfast_list = times_parameters_list[1]
-        betast_list = times_parameters_list[2]
-        powtot_list = times_parameters_list[3]
-
-        # get parameters for each launcher at this time
-        n_launchers = len(times_list)
-        alfast_t = []
-        betast_t = []
-        powtot_t = []
-        for i in range(n_launchers):
-            alfast_launcher_t = self.piecewise_constant(
-                t, times_list[i], alfast_list[i])
-            alfast_t.append(alfast_launcher_t)
-            betast_launcher_t = self.piecewise_constant(
-                t, times_list[i], betast_list[i])
-            betast_t.append(betast_launcher_t)
-            powtot_launcher_t = self.piecewise_constant(
-                t, times_list[i], powtot_list[i])
-            powtot_t.append(powtot_launcher_t)
-
-        # change parameters in namelist file
-        lines = get_lines(input_file)
-        lines = edit_nml_file(lines, 'alfast', alfast_t, separator=',')
-        lines = edit_nml_file(lines, 'betast', betast_t, separator=',')
-        lines = edit_nml_file(lines, 'powtot', powtot_t, separator=',')
-        put_lines(input_file, lines)
-
-        return powtot_t
 
 # ------------------------------------------------------------------------------
 #
@@ -336,22 +184,6 @@ class genray(Component):
         GENRAYNML = get_component_param(self, services, 'GENRAYNML')
         ADJ_READ = get_component_param(self, services, 'ADJ_READ')
         PS_ADD_NML = get_component_param(self, services, 'PS_ADD_NML')
-
-        # Get [rf_genray_EC] programming configuration parameters, if present
-        n_launchers = 0
-        programming = False
-        try:
-            n_launchers = int(self.N_LAUNCHERS_PROGRAMMED)
-        except BaseException:
-            print('\nNo launcher programming in config file')
-
-        if n_launchers > 0:
-            programming = True
-            print('Programming for ', n_launchers, ' launchers')
-            times_parameters_list = self.time_points_and_parameters(
-                n_launchers)
-        else:
-            print('\nUsing launcher parmeters in plasma state')
 
     # Copy plasma state files over to working directory
         try:
@@ -414,15 +246,6 @@ class genray(Component):
             print('Error executing genray init ', prepare_input_bin)
             services.error('Error executing genray init')
             raise Exception('Error executing genray init')
-
-    # If parameters are programmed from config file set parameters in genray.in
-        if programming:
-            # Get t0 from plasma state
-            ps = Dataset(cur_state_file, 'r', format='NETCDF3_CLASSIC')
-            t0 = ps.variables['t0'].getValue()
-            ps.close()
-            # set parameters those for time = t0
-            self.set_genray_EC_parameters(
                 "genray.in", t0, times_parameters_list)
 
     # Copy generic cur_state.cdf -> current plasma state file
@@ -500,21 +323,6 @@ class genray(Component):
             raise Exception(
                 'genray restart: error in getting config parameters')
 
-        # Get [rf_genray_EC] programming configuration parameters, if present
-        n_launchers = 0
-        programming = False
-        try:
-            n_launchers = int(self.N_LAUNCHERS_PROGRAMMED)
-        except BaseException:
-            print('\nCould not get launcher programming from config file')
-
-        if n_launchers > 0:
-            programming = True
-            times_parameters_list = self.time_points_and_parameters(
-                n_launchers)
-        else:
-            print('\nUsing ECH launcher parmeters in plasma state')
-
         return 0
 
 # ------------------------------------------------------------------------------
@@ -572,135 +380,55 @@ class genray(Component):
         adj_read = self.ADJ_READ
         ps_add_nml = self.PS_ADD_NML
 
-# Check if RF power is zero (or effectively zero).  If true don't run GENRAY just
-# run zero_RF_power fortran code
-        zero_rf_power_threshold = 0.001
-        print('cur_state_file = ', cur_state_file)
-        ps = Dataset(cur_state_file, 'r', format='NETCDF3_CLASSIC')
-        if rfmode == 'EC':
-            # If EC parameters are programmed from config file, set parameters in
-            # genray.in and get ptot_list from set_genray_EC_parameters
-            if programming:
-                # Get t0 from plasma state
-                ps = Dataset(cur_state_file, 'r', format='NETCDF3_CLASSIC')
-                t0 = ps.variables['t0'].getValue()
-                ps.close()
-                # set parameters for time = t0
-                rf_power = self.set_genray_EC_parameters(
-                    "genray.in", t0, times_parameters_list)
-                total_rf_power = sum(rf_power)
-                zero_rf_power_bin_string = 'ZERO_EC_POWER_BIN'
 
-            else: # Get power from plasma state
-                rf_power = ps.variables['power_ec'][:]
-                ps.close()
-                total_rf_power = sum(rf_power)
-                print('Total EC power = ', total_rf_power)
-                zero_rf_power_bin_string = 'ZERO_EC_POWER_BIN'
+    # Run GENRAY.  First run prepare_input_bin.
+		# Call prepare_input - step
+		print('rf_genray step: calling prepare_input')
 
-        # If EC parameters are programmed from config file, set parameters in
-        # genray.in
-#             if programming:
-#                 # Get t0 from plasma state
-#                 ps = Dataset(cur_state_file, 'r', format='NETCDF3_CLASSIC')
-#                 t0 = ps.variables['t0'].getValue()
-#                 ps.close()
-#                 # set parameters for time = t0
-#                 self.set_genray_EC_parameters(
-#                     "genray.in", t0, times_parameters_list)
+		log_file = open('log_prepare_genray_input_step', 'w')
+		mode = 'step'
+		command = prepare_input_bin + ' ' + mode + ' ' + rfmode + ' ' +\
+			isource_string + ' ' + genraynml + ' ' + adj_read + ' ' + ps_add_nml
 
-        if rfmode == 'LH':
-            rf_power = ps.variables['power_lh'][:]
-            ps.close()
-            total_rf_power = sum(rf_power)
-            print('Total LH power = ', total_rf_power)
-            zero_rf_power_bin_string = 'ZERO_LH_POWER_BIN'
+		print('running = ', command)
+		services.send_portal_event(event_type='COMPONENT_EVENT',
+								   event_comment=command)
 
-        if rfmode not in ['EC', 'LH']:
-            message = 'rf_genray.py: Unimplemented rfmode = ' + rfmode
-            print(message)
-            services.exception(message)
-            raise
-
-        if(total_rf_power < zero_rf_power_threshold):
-            zero_RF_power = get_component_param(
-                self, services, zero_rf_power_bin_string)
-            command = zero_RF_power + ' ' + cur_state_file
-            print('running = ', command)
-            services.send_portal_event(event_type='COMPONENT_EVENT',
-                                       event_comment=command)
-            retcode = subprocess.call(command.split(), stdout=log_file,
-                                      stderr=subprocess.STDOUT)
-
-#             retcode = subprocess.call([zero_RF_power, cur_state_file])
-#             if (retcode != 0):
-#                 message = 'Error executing ', zero_rf_power_bin
-#                 self.services.error(message)
-#                 raise Exception(message)
-
-            # N.B. zero_RF_power does not produce a complete set of GENRAY output
-            #      files.  This causes an error in stage_output_files().  To
-            #      solve this we generate a dummy set of output files here with
-            #      system call 'touch'
-            for file in self.OUTPUT_FILES.split():
-                subprocess.call(['touch', file])
-
-    # Or actually run GENRAY.  First run prepare_input_bin.
-        if(total_rf_power > zero_rf_power_threshold):
-            # Call prepare_input - step
-            print('rf_genray step: calling prepare_input')
-
-            log_file = open('log_prepare_genray_input_step', 'w')
-            mode = 'step'
-            command = prepare_input_bin + ' ' + mode + ' ' + rfmode + ' ' +\
-                isource_string + ' ' + genraynml + ' ' + adj_read + ' ' + ps_add_nml
-
-            print('running = ', command)
-            services.send_portal_event(event_type='COMPONENT_EVENT',
-                                       event_comment=command)
-
-            retcode = subprocess.call(command.split(), stdout=log_file,
-                                      stderr=subprocess.STDOUT)
-            if (retcode != 0):
-                print('Error executing genray: ', prepare_input_bin)
-                services.error('Error executing genray prepare_input')
-                raise Exception('Error executing genray prepare_input')
-
-            # Running preparing_genray_input will clobber power_ec in genray.in
-            # because ps%power_ec(:) is not updated until after genray runs.  So
-            # redo set_genray_EC_parameters whjich puts is back in genray.in
-
-            rf_power = self.set_genray_EC_parameters(
-                "genray.in", t0, times_parameters_list)
+		retcode = subprocess.call(command.split(), stdout=log_file,
+								  stderr=subprocess.STDOUT)
+		if (retcode != 0):
+			print('Error executing genray: ', prepare_input_bin)
+			services.error('Error executing genray prepare_input')
+			raise Exception('Error executing genray prepare_input')
 
     # Launch genray - N.B: Path to executable is in config parameter GENRAY_BIN
-            print('rf_genray: launching genray')
-            cwd = services.get_working_dir()
-            task_id = services.launch_task(
-                self.NPROC, cwd, self.GENRAY_BIN, logfile='log.genray')
-            retcode = services.wait_task(task_id)
-            if (retcode != 0):
-                print('Error executing command: ', self.GENRAY_BIN)
-                services.error('Error executing genray')
-                raise Exception('Error executing genray')
+		print('rf_genray: launching genray')
+		cwd = services.get_working_dir()
+		task_id = services.launch_task(
+			self.NPROC, cwd, self.GENRAY_BIN, logfile='log.genray')
+		retcode = services.wait_task(task_id)
+		if (retcode != 0):
+			print('Error executing command: ', self.GENRAY_BIN)
+			services.error('Error executing genray')
+			raise Exception('Error executing genray')
 
         # Call process_output - step
-            print('rf_genray step: calling process_output')
+		print('rf_genray step: calling process_output')
 
-            log_file = open('log_process_genray_output', 'w')
-            mode = 'step'
-            command = process_output_bin + ' ' + rfmode + ' ' + isource_string
+		log_file = open('log_process_genray_output', 'w')
+		mode = 'step'
+		command = process_output_bin + ' ' + rfmode + ' ' + isource_string
 
-            print('running', command)
-            services.send_portal_event(event_type='COMPONENT_EVENT',
-                                       event_comment=command)
+		print('running', command)
+		services.send_portal_event(event_type='COMPONENT_EVENT',
+								   event_comment=command)
 
-            retcode = subprocess.call(command.split(), stdout=log_file,
-                                      stderr=subprocess.STDOUT)
-            if (retcode != 0):
-                print('Error executing genray init ', process_output_bin)
-                services.error('Error executing genray process_output')
-                raise Exception('Error executing genray process_output')
+		retcode = subprocess.call(command.split(), stdout=log_file,
+								  stderr=subprocess.STDOUT)
+		if (retcode != 0):
+			print('Error executing genray init ', process_output_bin)
+			services.error('Error executing genray process_output')
+			raise Exception('Error executing genray process_output')
 
     # Copy generic genray output to  partial plasma state file
         try:
