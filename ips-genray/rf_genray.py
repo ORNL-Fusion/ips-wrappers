@@ -382,53 +382,53 @@ class genray(Component):
 
 
     # Run GENRAY.  First run prepare_input_bin.
-		# Call prepare_input - step
-		print('rf_genray step: calling prepare_input')
+        # Call prepare_input - step
+        print('rf_genray step: calling prepare_input')
 
-		log_file = open('log_prepare_genray_input_step', 'w')
-		mode = 'step'
-		command = prepare_input_bin + ' ' + mode + ' ' + rfmode + ' ' +\
-			isource_string + ' ' + genraynml + ' ' + adj_read + ' ' + ps_add_nml
+        log_file = open('log_prepare_genray_input_step', 'w')
+        mode = 'step'
+        command = prepare_input_bin + ' ' + mode + ' ' + rfmode + ' ' +\
+            isource_string + ' ' + genraynml + ' ' + adj_read + ' ' + ps_add_nml
 
-		print('running = ', command)
-		services.send_portal_event(event_type='COMPONENT_EVENT',
-								   event_comment=command)
+        print('running = ', command)
+        services.send_portal_event(event_type='COMPONENT_EVENT',
+                                   event_comment=command)
 
-		retcode = subprocess.call(command.split(), stdout=log_file,
-								  stderr=subprocess.STDOUT)
-		if (retcode != 0):
-			print('Error executing genray: ', prepare_input_bin)
-			services.error('Error executing genray prepare_input')
-			raise Exception('Error executing genray prepare_input')
+        retcode = subprocess.call(command.split(), stdout=log_file,
+                                  stderr=subprocess.STDOUT)
+        if (retcode != 0):
+            print('Error executing genray: ', prepare_input_bin)
+            services.error('Error executing genray prepare_input')
+            raise Exception('Error executing genray prepare_input')
 
     # Launch genray - N.B: Path to executable is in config parameter GENRAY_BIN
-		print('rf_genray: launching genray')
-		cwd = services.get_working_dir()
-		task_id = services.launch_task(
-			self.NPROC, cwd, self.GENRAY_BIN, logfile='log.genray')
-		retcode = services.wait_task(task_id)
-		if (retcode != 0):
-			print('Error executing command: ', self.GENRAY_BIN)
-			services.error('Error executing genray')
-			raise Exception('Error executing genray')
+        print('rf_genray: launching genray')
+        cwd = services.get_working_dir()
+        task_id = services.launch_task(
+            self.NPROC, cwd, self.GENRAY_BIN, logfile='log.genray')
+        retcode = services.wait_task(task_id)
+        if (retcode != 0):
+            print('Error executing command: ', self.GENRAY_BIN)
+            services.error('Error executing genray')
+            raise Exception('Error executing genray')
 
         # Call process_output - step
-		print('rf_genray step: calling process_output')
+        print('rf_genray step: calling process_output')
 
-		log_file = open('log_process_genray_output', 'w')
-		mode = 'step'
-		command = process_output_bin + ' ' + rfmode + ' ' + isource_string
+        log_file = open('log_process_genray_output', 'w')
+        mode = 'step'
+        command = process_output_bin + ' ' + rfmode + ' ' + isource_string
 
-		print('running', command)
-		services.send_portal_event(event_type='COMPONENT_EVENT',
-								   event_comment=command)
+        print('running', command)
+        services.send_portal_event(event_type='COMPONENT_EVENT',
+                                   event_comment=command)
 
-		retcode = subprocess.call(command.split(), stdout=log_file,
-								  stderr=subprocess.STDOUT)
-		if (retcode != 0):
-			print('Error executing genray init ', process_output_bin)
-			services.error('Error executing genray process_output')
-			raise Exception('Error executing genray process_output')
+        retcode = subprocess.call(command.split(), stdout=log_file,
+                                  stderr=subprocess.STDOUT)
+        if (retcode != 0):
+            print('Error executing genray init ', process_output_bin)
+            services.error('Error executing genray process_output')
+            raise Exception('Error executing genray process_output')
 
     # Copy generic genray output to  partial plasma state file
         try:
