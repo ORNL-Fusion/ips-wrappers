@@ -246,7 +246,6 @@ class genray(Component):
             print('Error executing genray init ', prepare_input_bin)
             services.error('Error executing genray init')
             raise Exception('Error executing genray init')
-                "genray.in", t0, times_parameters_list)
 
     # Copy generic cur_state.cdf -> current plasma state file
         try:
