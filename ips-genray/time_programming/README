@@ -1,0 +1,8 @@
+11/17/2025 DBB
+This is a version that was used with the TSC code. It allowed for detection of zero
+RF power and time programming of power and aiming angle from parameters in the .config file.
+Since TSC is no longer used, and there has been no recent call for such programming
+I have reverted to a simpler version and stripped that coding out.  This is the version 
+that has the time programming.  Also there is a config file that has time programming
+parameters for an ITER case with 5 launchers, from an old run set up for Francesca Poli.
+
