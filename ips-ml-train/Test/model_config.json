@@ -1,17 +1,10 @@
 {
 	"inputs" : [
-	    {"name" : "r",         "upper_range" : 2.2,  "lower_range" : 1.4},
-	    {"name" : "a",         "upper_range" : 0.94, "lower_range" : 0.4},
-	    {"name" : "kappa",     "upper_range" : 2.0,  "lower_range" : 1.7},
-	    {"name" : "delta",     "upper_range" : 0.65, "lower_range" : 0.5},
-	    {"name" : "bt",        "upper_range" : 7.0,  "lower_range" : 3.0},
-	    {"name" : "ip",        "upper_range" : 12.0, "lower_range" : 0.74},
-	    {"name" : "fgw_ped",   "upper_range" : 1.0,  "lower_range" : 0.2},
-	    {"name" : "nepeak",    "upper_range" : 2.0,  "lower_range" : 1.5},
-	    {"name" : "betan",     "upper_range" : 4.5,  "lower_range" : 2.5},
-	    {"name" : "betan_ped", "upper_range" : 1.2,  "lower_range" : 0.5}
+            {"name" : "r",    "upper_range" : 4.7,  "lower_range" : 3.3 },
+            {"name" : "pinj", "upper_range" : 50.0, "lower_range" : 20.0}
 	],
 	"outputs" : [
-	    {"name" : "ibs", "upper_range" : 12.0, "lower_range" : 0.74}
+            {"name" : "fbs",  "upper_range" : 1.0,    "lower_range" : 0.0},
+            {"name" : "pfus", "upper_range" : 1000.0, "lower_range" : 0.0}
 	]
 }

@@ -15,6 +15,7 @@ import subprocess
 import math
 import shutil
 from configobj import ConfigObj
+import glob
 
 #-------------------------------------------------------------------------------
 #
@@ -55,11 +56,11 @@ class massive_parallel_runner(Component):
 
 #  Keys for the massiver parallel subworkflow.
             keys = {
-                'PWD'            : self.services.get_config_param('PWD'),
+                'PWD'            : os.getcwd(),
                 'SIM_NAME'       : 'massive_parallel_runner_sub',
                 'LOG_FILE'       : 'log.massive_parallel_runner',
                 'NNODES'         : self.services.get_config_param('MSR_NNODES'),
-                'INPUT_DIR_SIM'  : 'massive_parallel_runner_input_dir',
+                'INPUT_DIR_SIM'  : '{}/massive_parallel_runner_input_dir'.format(os.getcwd()),
                 'OUTPUT_DIR_SIM' : '{}/massive_parallel_runner_output_dir'.format(os.getcwd())
             }
 
@@ -100,18 +101,21 @@ class massive_parallel_runner(Component):
 #  the orginal working directory after extraction.
             with ZipState.ZipState(ms_state, 'r') as zip_ref:
                 zip_ref.extractall()
-            with ZipState.ZipState('input.zip', 'r') as input_ref:
-                input_ref.extractall()
-
-            override = ConfigObj(infile=self.services.get_config_param('MSR_SERIAL_NODE_CONFIG'), interpolation='template', file_error=True)
-            override['INPUT_DIR_SIM'] = os.getcwd()
-            override.write()
 
             override2 = ConfigObj(infile=self.services.get_config_param('MSR_MODEL_CONFIG'), interpolation='template', file_error=True)
             override2['INPUT_DIR_SIM'] = os.getcwd()
             override2.write()
 
-            os.chdir('../')
+            if os.path.exists('input'):
+                shutil.rmtree('input')
+            os.mkdir('input')
+
+            shutil.copy2('input.zip', 'input')
+            os.chdir('input')
+            with ZipState.ZipState('input.zip', 'r') as input_ref:
+                input_ref.extractall()
+
+            os.chdir('../../')
 
 #-------------------------------------------------------------------------------
 #
@@ -140,13 +144,27 @@ class massive_parallel_runner(Component):
             else:
                 logfile = 'make_db.log'
 
-            task_wait = self.services.launch_task(1, self.services.get_working_dir(),
-                                                  self.MAKE_DATABASE_EXE,
-                                                  '--rdir=massive_parallel_runner_output_dir',
-                                                  '--input={}'.format(self.database_config),
-                                                  '--output={}'.format(database),
-                                                  '--ndir=0', #  FIXME: This command option works around a bug in makedb which shouldn't get called.
-                                                  logfile=logfile)
+            os.chdir('massive_parallel_runner_output_dir')
+            filenames = glob.glob('*.tar.gz')
+            if len(filenames) > 0:
+                lastest = max(filenames, key=os.path.getctime)
+                shutil.unpack_archive(lastest, '.')
+            os.chdir('../')
+
+            if self.USE_EPED:
+                task_wait = self.services.launch_task(1, self.services.get_working_dir(),
+                                                      self.MAKE_DATABASE_EPED_EXE,
+                                                      '--rdir=massive_parallel_runner_output_dir/SUMMARY',
+                                                      '--model=eped1',
+                                                      '--output={}'.format(database),
+                                                      logfile=logfile)
+            else:
+                task_wait = self.services.launch_task(1, self.services.get_working_dir(),
+                                                      self.MAKE_DATABASE_EXE,
+                                                      '--rdir=massive_parallel_runner_output_dir/SUMMARY',
+                                                      '--input={}'.format(self.database_config),
+                                                      '--output={}'.format(database),
+                                                      logfile=logfile)
 
             if self.services.wait_task(task_wait):
                 self.services.error('massive_parallel_runner: step failed to make database')
